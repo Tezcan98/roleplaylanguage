@@ -1,0 +1,10 @@
+{
+  "name": "yilmaz-ailesi",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Hikayeli, 3D rol yapma oyunuyla Türkçe öğrenme",
+  "type": "module",
+  "scripts": {
+    "start": "npx --yes http-server -c-1 -p 8080 ."
+  }
+}
