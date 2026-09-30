@@ -102,6 +102,7 @@ export const STORY = {
         anne: ['yard', 'laundry', 'laundry'],
         dede: ['yard', 'pergolaSeat', 'sitBench'],
         baba: ['yard', 'car', 'repair'],
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazar · Bölüm 4', title: 'Öğleden sonra',
