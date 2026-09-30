@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 /**
  * Loads GLB models listed in assets/manifest.json. Each entry is either a path string or
  * `{ path, rotateY, fit }`. Unlisted ids simply have no model and keep their procedural look.
  */
 export class ModelLibrary {
-  #loader = new GLTFLoader();
+  #loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder); // gltf-transform --compress meshopt
   #cache = new Map();
 
   constructor(entries = {}) {
