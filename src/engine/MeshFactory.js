@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 /**
  * Primitive + material helpers shared by every procedural builder.
@@ -7,29 +8,36 @@ import * as THREE from 'three';
 export class MeshFactory {
   #materials = new Map();
 
-  constructor(textures) { this.textures = textures; }
+  /** @param {{ standard?: boolean }} opts — standard: PBR materials (high quality), else Lambert */
+  constructor(textures, { standard = true } = {}) {
+    this.textures = textures;
+    this.Material = standard ? THREE.MeshStandardMaterial : THREE.MeshLambertMaterial;
+    this.base = standard ? { roughness: 0.88, metalness: 0 } : {};
+  }
 
   mat(spec, extra = {}) {
     const key = JSON.stringify([spec, extra]);
     if (this.#materials.has(key)) return this.#materials.get(key);
     let m;
     if (typeof spec === 'number') {
-      m = new THREE.MeshLambertMaterial({ color: spec, ...extra });
+      m = new this.Material({ color: spec, ...this.base, ...extra });
     } else {
       const { tex, repeat = [1, 1], color = 0xffffff } = spec;
-      m = new THREE.MeshLambertMaterial({ color, map: this.textures.get(tex, repeat), ...extra });
+      m = new this.Material({ color, map: this.textures.get(tex, repeat), ...this.base, ...extra });
     }
     this.#materials.set(key, m);
     return m;
   }
 
   /** A fresh (uncached) material, for things whose colour changes at runtime. */
-  uniqueMat(color, extra = {}) { return new THREE.MeshLambertMaterial({ color, ...extra }); }
+  uniqueMat(color, extra = {}) { return new this.Material({ color, ...this.base, ...extra }); }
 
   shadow(m, cast = true) { m.castShadow = cast; m.receiveShadow = true; return m; }
   mesh(geo, spec) { return this.shadow(new THREE.Mesh(geo, spec instanceof THREE.Material ? spec : this.mat(spec))); }
 
   box(w, h, d, spec) { return this.mesh(new THREE.BoxGeometry(w, h, d), spec); }
+  /** Box with softly rounded edges (characters, cushions). */
+  rbox(w, h, d, spec, r = 0.05) { return this.mesh(new RoundedBoxGeometry(w, h, d, 2, Math.min(r, w / 2, h / 2, d / 2)), spec); }
   sphere(r, spec, seg = 12) { return this.mesh(new THREE.SphereGeometry(r, seg, Math.max(6, (seg * 0.75) | 0)), spec); }
   cyl(rt, rb, h, spec, seg = 10) { return this.mesh(new THREE.CylinderGeometry(rt, rb, h, seg), spec); }
   cone(r, h, spec, seg = 8) { return this.mesh(new THREE.ConeGeometry(r, h, seg), spec); }

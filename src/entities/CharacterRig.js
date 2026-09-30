@@ -9,20 +9,20 @@ export function buildRig(mf, o) {
   g.add(body);
   const limb = (w, h, c, x, y) => {
     const p = new THREE.Group(); p.position.set(x, y, 0);
-    p.add(mf.at(mf.box(w, h, w, c), 0, -h / 2, 0));
+    p.add(mf.at(mf.rbox(w, h, w, c, w * 0.35), 0, -h / 2, 0));
     body.add(p); return p;
   };
   const legL = limb(0.24, 0.8, o.pants, -0.15, 0.8), legR = limb(0.24, 0.8, o.pants, 0.15, 0.8);
   if (o.skirt) body.add(mf.at(mf.cyl(0.3, 0.52, 0.85, o.skirt, 12), 0, 0.58, 0));
-  const torso = mf.at(mf.box(0.62, 0.75, 0.36, o.shirt), 0, 1.18, 0);
+  const torso = mf.at(mf.rbox(0.62, 0.75, 0.36, o.shirt, 0.1), 0, 1.18, 0);
   body.add(torso);
   if (o.apron) body.add(mf.at(mf.box(0.48, 0.95, 0.03, 0xFFFFFF), 0, 0.95, 0.2));
-  if (o.vest) body.add(mf.at(mf.box(0.64, 0.6, 0.38, o.vest), 0, 1.22, 0));
+  if (o.vest) body.add(mf.at(mf.rbox(0.64, 0.6, 0.38, o.vest, 0.1), 0, 1.22, 0));
   const armL = limb(0.17, 0.68, o.shirt, -0.41, 1.52), armR = limb(0.17, 0.68, o.shirt, 0.41, 1.52);
   [armL, armR].forEach((a) => a.add(mf.at(mf.sphere(0.1, o.skin, 8), 0, -0.74, 0)));
 
   const head = new THREE.Group(); head.position.y = 1.84; body.add(head);
-  head.add(mf.sphere(0.3, o.skin, 16));
+  head.add(mf.sphere(0.3, o.skin, 20));
   [-0.1, 0.1].forEach((x) => head.add(mf.at(mf.sphere(0.04, 0x1B2440, 8), x, 0.03, 0.27)));
   if (o.hair) {
     const h = mf.mesh(new THREE.SphereGeometry(0.32, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), o.hair);
@@ -50,9 +50,9 @@ export const RIG_PROPS = {
   },
   jacket(mf, rig) {
     const c = 0xB5482E;
-    const g = mf.group(mf.at(mf.box(0.68, 0.7, 0.4, c), 0, 1.2, 0), mf.at(mf.box(0.08, 0.6, 0.02, 0xE0B04A), 0, 1.2, 0.21));
+    const g = mf.group(mf.at(mf.rbox(0.68, 0.7, 0.4, c, 0.1), 0, 1.2, 0), mf.at(mf.box(0.08, 0.6, 0.02, 0xE0B04A), 0, 1.2, 0.21));
     rig.body.add(g);
-    const sleeves = [rig.armL, rig.armR].map((a) => { const s = mf.at(mf.box(0.2, 0.5, 0.2, c), 0, -0.25, 0); a.add(s); return s; });
+    const sleeves = [rig.armL, rig.armR].map((a) => { const s = mf.at(mf.rbox(0.2, 0.5, 0.2, c, 0.07), 0, -0.25, 0); a.add(s); return s; });
     return { set visible(v) { g.visible = v; sleeves.forEach((s) => { s.visible = v; }); }, get visible() { return g.visible; } };
   },
 };

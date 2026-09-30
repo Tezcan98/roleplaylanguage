@@ -12,11 +12,12 @@ export class Game {
   tick() {
     const dt = Math.min(this.#clock.getDelta(), 0.05);
     const t = (this.t += dt);
-    const { modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
+    const { foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
     const playing = modes.base === 'play';
 
     time.update(dt);
-    lighting.update();
+    lighting.update(dt, t);
+    foliage.tick(t);
     controller.update(dt, t);
     cast.update(dt, t);
     items.update(dt, t);

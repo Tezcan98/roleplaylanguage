@@ -14,6 +14,10 @@ import { TextureFactory } from './engine/TextureFactory.js';
 import { MeshFactory } from './engine/MeshFactory.js';
 import { ModelLibrary, PropFactory } from './engine/ModelLibrary.js';
 import { CameraController } from './engine/CameraController.js';
+import { PostFX } from './engine/PostFX.js';
+import { SkyDome } from './engine/SkyDome.js';
+import { Fireflies } from './engine/Fireflies.js';
+import { Foliage } from './engine/Foliage.js';
 
 import { LocationManager } from './world/LocationManager.js';
 import { HouseInterior } from './world/locations/HouseInterior.js';
@@ -78,22 +82,28 @@ const params = new URLSearchParams(location.search);
 const host = document.getElementById('ui');
 
 // --- core ---
+const settings = new Settings();
+const quality = params.get('quality') ?? settings.get('quality', 'medium');
 const bus = new EventBus();
 const state = new GameState();
 const modes = new ModeStack();
 
 // --- engine ---
-const ctx = new RenderContext();
+const ctx = new RenderContext(document.body, { quality });
 const textures = new TextureFactory(ctx.renderer);
 await textures.loadOverrides(manifest.textures);
-const mf = new MeshFactory(textures);
+const mf = new MeshFactory(textures, { standard: quality !== 'low' });
 const models = new ModelLibrary(manifest.models);
-const kit = { mf, props: new PropFactory(models) };
+const kit = { mf, props: new PropFactory(models), quality };
+if (quality !== 'low') ctx.setPostFX(new PostFX(ctx, { ao: quality === 'high' }));
 const camera = new CameraController(ctx);
 
 // --- world ---
 const time = new TimeSystem(state, bus);
-const lighting = new DayNightLighting(ctx, time);
+const lighting = new DayNightLighting(ctx, time, {
+  sky: new SkyDome(ctx.scene),
+  fireflies: new Fireflies(ctx.scene, { area: { x: [-14, 14], z: [-8, 18] }, count: quality === 'low' ? 40 : 90 }),
+});
 const world = new LocationManager({ scene: ctx.scene, bus, lighting, kit });
 world.register(new HouseInterior()).register(new Yard());
 world.setLinks(LINKS);
@@ -113,6 +123,7 @@ const vocab = new Vocabulary(state, bus);
 const input = new InputSystem(joystick);
 const player = new Player('ahmet', PLAYER_LOOK, { mf, models });
 ctx.scene.add(player.group);
+lighting.follow = player.position;
 const npcs = new Map(Object.entries(NPCS).map(([id, def]) => [id, new Npc(id, def, { mf, models })]));
 const cast = new CastDirector({ npcs, world, player });
 const travel = new TravelService({ world, player, cast, camera, fader, state });
@@ -123,7 +134,6 @@ story.setContext(gameCtx);
 const controller = new PlayerController({ player, input, world, modes, cast });
 
 // --- dialogue ---
-const settings = new Settings();
 const progressShown = new Set();
 const tts = new CharacterVoices({
   neural: new PiperTTS({
@@ -210,7 +220,7 @@ new MainMenu(host, {
   })),
 });
 
-const game = new Game({ modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug

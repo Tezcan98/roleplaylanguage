@@ -1,10 +1,8 @@
 import * as THREE from 'three';
 
-// hour → sky colour keyframes (outdoor)
-const SKY = [
-  [0, 0x0B1026], [5, 0x1B2A4A], [6.3, 0xF3B58A], [8, 0x9ED2F5], [17, 0x9ED2F5],
-  [18.8, 0xF08A5D], [20.3, 0x2B2F5A], [21.5, 0x0B1026], [24, 0x0B1026],
-];
+// hour → colour keyframes
+const TOP = [[0, 0x050A1C], [5, 0x0E1A3A], [6.3, 0x4A6FA5], [8, 0x3F8FD8], [17, 0x3F8FD8], [18.8, 0x4A5FA0], [20.3, 0x1A1F45], [21.5, 0x050A1C], [24, 0x050A1C]];
+const HORIZON = [[0, 0x0B1026], [5, 0x1B2A4A], [6.3, 0xF3B58A], [8, 0xCFE8F7], [17, 0xCFE8F7], [18.8, 0xF6A26B], [20.3, 0x3B3565], [21.5, 0x0B1026], [24, 0x0B1026]];
 const ROOM = new THREE.Color(0x2A1E15);
 
 function sample(keys, h) {
@@ -15,27 +13,17 @@ function sample(keys, h) {
   return new THREE.Color(keys[0][1]);
 }
 
-/** Drives sun, sky, fog, stars and lamps from the in-game clock. */
+/**
+ * Drives sun, sky dome, fog, lamps and fireflies from the in-game clock.
+ * The shadow camera follows the player so shadows stay sharp.
+ */
 export class DayNightLighting {
   #lamps = [];
+  #dir = new THREE.Vector3();
 
-  constructor(ctx, time) {
-    this.ctx = ctx;
-    this.time = time;
-    this.stars = this.#makeStars();
-    this.moon = new THREE.Mesh(new THREE.SphereGeometry(2.2, 16, 12), new THREE.MeshBasicMaterial({ color: 0xF4F1DE, fog: false }));
-    ctx.scene.add(this.stars, this.moon);
-  }
-
-  #makeStars() {
-    const n = 500, pos = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) {
-      const a = Math.random() * Math.PI * 2, e = 0.15 + Math.random() * 1.3, r = 90;
-      pos.set([Math.cos(a) * Math.cos(e) * r, Math.sin(e) * r, Math.sin(a) * Math.cos(e) * r], i * 3);
-    }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    return new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 0.6, fog: false, transparent: true }));
+  constructor(ctx, time, { sky, fireflies } = {}) {
+    Object.assign(this, { ctx, time, sky, fireflies });
+    this.follow = new THREE.Vector3();
   }
 
   /** Called on location change: builds point lights for the location's lamps. */
@@ -50,39 +38,40 @@ export class DayNightLighting {
     this.location = location;
   }
 
-  update() {
+  update(dt, t) {
     const { scene, hemi, sun } = this.ctx;
     const h = this.time.hour % 24;
-    const sky = sample(SKY, h);
-    const day = THREE.MathUtils.clamp(Math.sin((h - 6) / 14 * Math.PI) * 2, 0, 1); // 0 at night, 1 midday
+    const top = sample(TOP, h), horizon = sample(HORIZON, h);
+    const day = THREE.MathUtils.clamp(Math.sin((h - 6) / 14 * Math.PI) * 2, 0, 1);
     const night = 1 - THREE.MathUtils.smoothstep(day, 0, 0.25);
     const indoor = this.location?.indoor;
 
-    // sun arc (east → west), moon on the opposite side
+    // sun arc east → west; at night the "sun" light becomes dim moonlight
     const a = (h - 6) / 14 * Math.PI;
-    sun.position.set(Math.cos(a) * 30, Math.max(6, Math.sin(a) * 32), 12);
+    this.#dir.set(Math.cos(a), Math.max(0.2, Math.sin(a)), 0.4).normalize();
+    const lightDir = night > 0.5 ? new THREE.Vector3(-0.5, 0.8, 0.3).normalize() : this.#dir;
+    sun.target.position.copy(this.follow);
+    sun.position.copy(this.follow).addScaledVector(lightDir, 40);
     sun.intensity = (indoor ? 1.2 : 3) * day + 0.35 * night;
-    sun.color.set(day > 0.2 ? 0xfff4dc : 0x9FB4FF);
-    if (night > 0.5) sun.position.set(-20, 26, 10);
+    const warm = day > 0 && day < 0.6 ? 1 - day / 0.6 : 0; // golden hour
+    sun.color.set(night > 0.5 ? 0x9FB4FF : 0xFFF4DC).lerp(new THREE.Color(0xFFB27A), warm * 0.6);
     hemi.intensity = 0.5 + 1.9 * day;
     hemi.color.set(0xffffff).lerp(new THREE.Color(0x8090C0), night);
 
     if (indoor) {
-      scene.background.copy(ROOM);
+      scene.background = ROOM;
       scene.fog.color.copy(ROOM);
       scene.fog.near = 30; scene.fog.far = 60;
-      (this.location.windows || []).forEach((m) => m.color.copy(sky).lerp(new THREE.Color(0xffffff), 0.25 * day));
+      (this.location.windows || []).forEach((m) => m.color.copy(horizon).lerp(top, 0.3));
     } else {
-      scene.background.copy(sky);
-      scene.fog.color.copy(sky);
-      scene.fog.near = 35; scene.fog.far = 75 + night * 40;
+      scene.background = horizon;
+      scene.fog.color.copy(horizon);
+      scene.fog.near = 30; scene.fog.far = 80 + night * 30;
     }
-    this.stars.visible = !indoor && night > 0.05;
-    this.stars.material.opacity = night;
-    this.moon.visible = !indoor && night > 0.3;
-    this.moon.position.set(-40, 45, -60);
+    this.sky?.update(dt, { visible: !indoor, top, horizon, sunDir: this.#dir, day, night, center: this.follow });
+    this.fireflies?.update(t, indoor ? 0 : night);
     const lampOn = THREE.MathUtils.clamp((0.35 - day) * 4, 0, 1);
     this.#lamps.forEach((l) => { l.intensity = 14 * lampOn; });
-    (this.location?.glows || []).forEach((m) => m.emissive?.setScalar(0.9 * lampOn));
+    (this.location?.glows || []).forEach((m) => { m.emissive?.set(0xFFC66B).multiplyScalar(0.9 * lampOn); });
   }
 }

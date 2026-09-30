@@ -2,9 +2,13 @@ import * as THREE from 'three';
 
 /** Owns the WebGL renderer, the scene graph root, the camera and the two global lights. */
 export class RenderContext {
-  constructor(host = document.body) {
-    const r = new THREE.WebGLRenderer({ antialias: true });
-    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  /** @param {{ quality?: 'high' | 'medium' | 'low' }} opts — low: lower resolution and shadow map, no post FX */
+  constructor(host = document.body, { quality = 'high' } = {}) {
+    this.quality = quality;
+    const r = new THREE.WebGLRenderer({ antialias: quality === 'low', powerPreference: 'high-performance' });
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 2 : 1.25));
+    r.toneMapping = THREE.ACESFilmicToneMapping;
+    r.toneMappingExposure = 1.05;
     r.setSize(innerWidth, innerHeight);
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -20,8 +24,11 @@ export class RenderContext {
     this.sun = new THREE.DirectionalLight(0xfff4dc, 3);
     this.sun.position.set(18, 30, 12);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(2048, 2048);
-    Object.assign(this.sun.shadow.camera, { left: -32, right: 32, top: 32, bottom: -32, near: 1, far: 90 });
+    const sm = quality === 'low' ? 1024 : 2048;
+    this.sun.shadow.mapSize.set(sm, sm);
+    this.sun.shadow.bias = -0.0004;
+    this.sun.shadow.normalBias = 0.02;
+    Object.assign(this.sun.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 90 });
     this.scene.add(this.hemi, this.sun, this.sun.target);
 
     addEventListener('resize', () => this.resize());
@@ -41,5 +48,11 @@ export class RenderContext {
     return { x: (p.x + 1) / 2 * innerWidth, y: (1 - p.y) / 2 * innerHeight, z: p.z };
   }
 
-  render() { this.renderer.render(this.scene, this.camera); }
+  /** Optional post-processing (set by main for the high quality setting). */
+  setPostFX(fx) { this.postfx = fx; }
+
+  render() {
+    if (this.postfx) this.postfx.render();
+    else this.renderer.render(this.scene, this.camera);
+  }
 }

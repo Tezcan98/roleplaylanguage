@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Location } from '../Location.js';
+import { Foliage } from '../../engine/Foliage.js';
 
 const DARK = { tex: 'darkWood' };
 
@@ -117,6 +118,16 @@ export class Yard extends Location {
       tree(Math.cos(a) * r, Math.sin(a) * r, 0.9 + Math.random() * 0.7);
     }
     [[15, 11, 1.1], [7, 15, 1], [-17, -9, 1.2]].forEach(([x, z, s]) => { tree(x, z, s); C.addCircle(x, z, 0.6); });
+
+    // meadow: grass tufts and flowers everywhere nothing else is
+    const C2 = this.collision;
+    const clear = [
+      [-1.8, 1.8, -11, 24], [6, 12, -5.8, -0.2], [-10.8, -5.2, -6.3, -1.7], [-13.6, -8.4, 5.5, 8.5], [-5.2, -1.2, -8.2, -7.0],
+    ];
+    const blocked = (x, z) => (x + 3) ** 2 + (z + 5) ** 2 < 27
+      || clear.some(([x0, x1, z0, z1]) => x > x0 && x < x1 && z > z0 && z < z1)
+      || C2.boxes.some(([x0, x1, z0, z1]) => x > x0 - 0.3 && x < x1 + 0.3 && z > z0 - 0.3 && z < z1 + 0.3);
+    add(Foliage.meadow({ area: { x: [-23.5, 23.5], z: [-23.5, 23.5] }, count: kit.quality === 'low' ? 2500 : 9000, flowers: kit.quality === 'low' ? 200 : 600, blocked }));
 
     // fence with a garden gate on the south side (the road to school)
     const post = (x, z) => add(mf.at(mf.box(0.18, 1, 0.18, DARK), x, 0.5, z));

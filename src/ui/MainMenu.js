@@ -13,13 +13,21 @@ export class MainMenu {
     const voice = el('input', { attrs: { type: 'checkbox', id: 'neuralVoices' } });
     voice.checked = settings.get('neuralVoices', true);
     voice.addEventListener('change', () => settings.set('neuralVoices', voice.checked));
+    const quality = el('select', { attrs: { id: 'quality' } }, [
+      el('option', { text: 'Yüksek (güçlü ekran kartı)', attrs: { value: 'high' } }),
+      el('option', { text: 'Orta (bilgisayar)', attrs: { value: 'medium' } }),
+      el('option', { text: 'Düşük (telefon)', attrs: { value: 'low' } }),
+    ]);
+    quality.value = settings.get('quality', 'medium');
+    quality.addEventListener('change', () => { settings.set('quality', quality.value); location.reload(); });
     this.root = el('div', { class: 'overlay open' }, [el('div', { class: 'card' }, [
       el('h1', { class: 'big', text: 'Yılmaz Ailesi' }),
       el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
       el('button', { class: 'btn', text: 'Hikayeye başla', attrs: { type: 'button' }, on: { click: () => { this.hide(); onStart(); } } }),
       el('button', { class: 'btn alt', text: 'Nasıl oynanır?', attrs: { type: 'button' }, on: { click: () => { help.style.display = help.style.display === 'block' ? 'none' : 'block'; } } }),
       help,
-      el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler (ilk kullanımda ~120 MB indirir)' })]),
+      el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler (Piper)' })]),
+      el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
     ])]);
     host.append(this.root);
   }
