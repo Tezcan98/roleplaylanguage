@@ -39,6 +39,10 @@ import { StoryDirector } from './systems/StoryDirector.js';
 import { TravelService } from './systems/TravelService.js';
 import { InteractionSystem, NpcInteractions, ItemInteractions, HotspotInteractions } from './systems/InteractionSystem.js';
 import { QuestMarker } from './systems/QuestMarker.js';
+import { FreeActionSystem } from './systems/FreeActionSystem.js';
+import { ToySystem } from './systems/ToySystem.js';
+import { Ball } from './entities/Ball.js';
+import { Cat } from './entities/Cat.js';
 
 import { ActivityRegistry } from './activities/Activity.js';
 import { ChoiceActivity } from './activities/ChoiceActivity.js';
@@ -72,6 +76,7 @@ import { NPCS, PLAYER_LOOK, VOICES } from './content/characters.js';
 import { DIALOGUES } from './content/dialogues.js';
 import { ITEMS } from './content/items.js';
 import { HOTSPOTS, LINKS } from './content/hotspots.js';
+import { FREE_ACTIONS, HOUSE_RULES } from './content/freeActions.js';
 
 async function loadManifest() {
   try { const r = await fetch('assets/manifest.json', { cache: 'no-cache' }); return r.ok ? await r.json() : {}; } catch { return {}; }
@@ -174,8 +179,20 @@ effects
   .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); });
 story.setEffects(effects);
 
+// --- free roam ---
+const free = new FreeActionSystem({
+  actions: FREE_ACTIONS, rules: HOUSE_RULES, ctx: gameCtx, cast, world, dialogue, vocab, time, labels, toasts, tts, bus,
+  clock: () => game.t,
+});
+effects.register('free', (id) => free.perform(id));
+const toys = new ToySystem({ world, player, free, tts });
+const yard = world.get('yard');
+toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', range: 1.2, onUse: (b) => b.kick(player.position) });
+toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
+
 // --- interaction ---
 const interactions = new InteractionSystem([
+  toys,
   new NpcInteractions({ cast, dialogue }),
   new ItemInteractions({ items }),
   new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts, effects, bus, ctx: gameCtx }),
@@ -220,8 +237,8 @@ new MainMenu(host, {
   })),
 });
 
-const game = new Game({ foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

@@ -40,5 +40,7 @@ export class Location {
   }
 
   setActive(on) { this.group.visible = on; }
+  /** Short visual effect for a free action ('tv', 'water'…); locations override as needed. */
+  play(anim) {}
   update(dt, t) { this.animated.forEach((fn) => fn(dt, t)); }
 }

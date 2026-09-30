@@ -10,6 +10,7 @@ export const EV = Object.freeze({
   CHAPTER: 'chapter:started',
   HOTSPOT: 'hotspot:used',
   FLAG: 'flag:set',
+  FREE_ACTION: 'free:action',
   DIALOGUE_OPEN: 'dialogue:opened',
   DIALOGUE_CLOSE: 'dialogue:closed',
   THINK: 'think',

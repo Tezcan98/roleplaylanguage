@@ -1,0 +1,66 @@
+/**
+ * Things Ahmet can do any time, outside the quest chain. Each one teaches a few words,
+ * takes some in-game time and may break a house rule (see HOUSE_RULES).
+ *
+ * { label, think (bubble over Ahmet), say (what he learns to say), words, minutes, anim? }
+ */
+export const FREE_ACTIONS = {
+  tv: {
+    label: 'Televizyon izle', think: 'Çizgi film izliyorum!', say: 'Televizyon izledim.', minutes: 30, anim: 'tv',
+    words: [['televizyon', 'television'], ['çizgi film', 'cartoon'], ['izlemek', 'to watch']],
+  },
+  water: {
+    label: 'Su iç', think: 'Oh, soğuk su!', say: 'Bir bardak su içtim.', minutes: 2,
+    words: [['su', 'water'], ['bardak', 'glass'], ['içmek', 'to drink']],
+  },
+  read: {
+    label: 'Kitap oku', think: 'Bu kitap çok güzel.', say: 'Kitap okudum.', minutes: 20,
+    words: [['kitap', 'book'], ['okumak', 'to read'], ['sayfa', 'page']],
+  },
+  window: {
+    label: 'Pencereden bak',
+    think: (c) => (c.isNight ? 'Dışarısı karanlık. Gökyüzünde ay var.' : 'Hava güneşli. Kuşlar uçuyor.'),
+    say: (c) => (c.isNight ? 'Hava karanlık.' : 'Hava güneşli.'),
+    minutes: 2,
+    words: (c) => (c.isNight ? [['karanlık', 'dark'], ['ay', 'moon'], ['yıldız', 'star']] : [['güneşli', 'sunny'], ['kuş', 'bird'], ['hava', 'weather / air']]),
+  },
+  wash: {
+    label: 'Elini yıka', think: 'Ellerim tertemiz!', say: 'Ellerimi yıkadım.', minutes: 3,
+    words: [['el', 'hand'], ['yıkamak', 'to wash'], ['temiz', 'clean']],
+  },
+  water_garden: {
+    label: 'Bahçeyi sula', think: 'Domatesler su içiyor!', say: 'Bahçeyi suladım.', minutes: 15, anim: 'water',
+    words: [['sulamak', 'to water'], ['bahçe', 'garden'], ['bitki', 'plant']],
+  },
+  ball: {
+    label: 'Topa vur', think: 'Gol!', say: 'Top oynadım.', minutes: 5,
+    words: [['top', 'ball'], ['vurmak', 'to kick / hit'], ['gol', 'goal']],
+  },
+  cat: {
+    label: 'Kediyi sev', think: 'Miyav! Kedi mutlu.', say: 'Kediyi sevdim.', minutes: 3,
+    words: [['kedi', 'cat'], ['sevmek', 'to love / to pet'], ['mutlu', 'happy']],
+  },
+};
+
+/**
+ * House rules. When a free action matches `on` and `when(ctx)` is true, the action is
+ * stopped and `by` reacts: face to face (dialogue `node`) if in the same place,
+ * otherwise by calling out from afar (`shout`).
+ */
+export const HOUSE_RULES = [
+  {
+    id: 'tv-at-table', on: 'tv', by: 'anne', node: 'warnTvMeal',
+    when: (c) => ['d1-breakfast', 'd1-dinner'].includes(c.chapter),
+    shout: ['Ahmet! Sofrada televizyon yok!', 'Ahmet! No TV at the table!'],
+  },
+  {
+    id: 'tv-with-duty', on: 'tv', by: 'anne', node: 'warnTvWork',
+    when: (c) => c.hasDuty,
+    shout: ['Ahmet! Önce işini bitir, sonra televizyon!', 'Ahmet! Finish your job first, then TV!'],
+  },
+  {
+    id: 'tv-bedtime', on: 'tv', by: 'anne', node: 'warnTvNight',
+    when: (c) => c.chapter === 'd1-night' && c.reached('goodnight'),
+    shout: ['Ahmet! Yatma saati geldi!', "Ahmet! It's bedtime!"],
+  },
+];

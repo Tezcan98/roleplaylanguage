@@ -45,6 +45,7 @@ export class Yard extends Location {
       return g;
     });
     C.addBox(5.9, 6.7, -11.6, -11);
+    this.hotspot('yard.tap', 6.9, -10.4, 1.2);
 
     // vine pergola with breakfast table
     const P = this.prop(kit, 'prop.pergola', -8, 0, -4, 0, () => {
@@ -87,6 +88,7 @@ export class Yard extends Location {
       add(mf.at(mf.sphere(0.26, { tex: 'leaves' }, 8), x, 0.62, z));
     }
     this.anchor('garden', 9, 0.2, Math.PI);
+    this.hotspot('yard.garden', 12.4, -3, 1.4);
 
     // old car with a flat tyre
     this.prop(kit, 'prop.car', -11, 0, 7, 0, () => {

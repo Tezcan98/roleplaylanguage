@@ -1,3 +1,7 @@
+import { FREE_ACTIONS } from './freeActions.js';
+
+const free = (id) => ({ label: FREE_ACTIONS[id].label, use: [`free:${id}`] });
+
 /**
  * What fixed spots in the world do. Keys match hotspot ids declared by locations.
  * `travel: [location, anchor]`, `use: effects[]`, `available(ctx)` hides the action,
@@ -24,6 +28,12 @@ export const HOTSPOTS = {
     label: 'Okula git', lockedLabel: 'Bahçe kapısı', use: ['chapter'],
     locked: (c) => (c.q === 'go-school' ? null : ['Okul yolu. Bugün okula gitmiyorsun.', "The road to school. You're not going today."]),
   },
+  'house.tv': free('tv'),
+  'house.kitchen': free('water'),
+  'house.shelf': free('read'),
+  'house.window': free('window'),
+  'yard.tap': free('wash'),
+  'yard.garden': free('water_garden'),
   'house.bed': {
     label: 'Yat, uyu', use: ['chapter'],
     available: (c) => c.q === 'sleep',

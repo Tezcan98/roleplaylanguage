@@ -123,6 +123,20 @@ export const DIALOGUES = {
         options: [{ tr: 'Sana da anne!', en: 'You too, mom!', do: ['quest'] }] },
       gn3: { say: 'Hadi yatağına! Uyku vakti.', en: 'Off to bed! Sleep time.', words: [['yatak', 'bed'], ['uyku', 'sleep']], options: [{ tr: 'Tamam.', en: 'Okay.' }] },
 
+      // --- house rules (opened by FreeActionSystem) ---
+      warnTvMeal: { say: 'Ahmet! Sofrada televizyon izlenmez. Kapat onu!', en: "Ahmet! We don't watch TV at the table. Switch it off!", words: [['kapatmak', 'to switch off']],
+        options: [{ tr: 'Tamam anne, kapatıyorum.', en: "Okay mom, I'm switching it off.", next: 'sorry' }, { tr: 'Ama çizgi film var!', en: "But there's a cartoon on!", next: 'noBut' }] },
+      warnTvWork: { say: 'Ahmet! İşin bitmedi, televizyon sonra!', en: "Ahmet! Your job isn't done, TV later!", words: [['iş', 'job / work'], ['sonra', 'later']],
+        options: [{ tr: 'Haklısın anne.', en: "You're right, mom.", next: 'sorry' }, { tr: 'Beş dakika, lütfen!', en: 'Five minutes, please!', next: 'noBut' }] },
+      warnTvNight: { say: 'Saat çok geç! Televizyon yok, yatağa!', en: "It's very late! No TV, to bed!", words: [['geç', 'late']],
+        options: [{ tr: 'Peki anne.', en: 'All right, mom.', next: 'sorry' }] },
+      noBut: { say: 'Aması yok! Önce kurallar.', en: 'No buts! Rules first.', words: [['kural', 'rule']],
+        options: [{ tr: 'Peki…', en: 'Okay…', next: 'sorry' }] },
+      sorry: { ask: 'speak', say: 'Ne diyoruz?', en: 'What do we say?', expect: ['Özür dilerim anne', 'Özür dilerim'], show: 'Özür dilerim anne.', showEn: "I'm sorry, mom.",
+        words: [['özür dilerim', "I'm sorry"]], next: 'forgive' },
+      forgive: { say: 'Aferin, seni seviyorum. Hadi, işine dön.', en: 'Good, I love you. Go on, back to your job.', words: [['sevmek', 'to love']],
+        options: [{ tr: 'Ben de seni seviyorum anne!', en: 'I love you too, mom!' }] },
+
       // --- Monday morning ---
       m1: { ask: 'order', say: 'Günaydın uykucu! İyi uyudun mu?', en: 'Good morning sleepyhead! Did you sleep well?', words: [['uykucu', 'sleepyhead'], ['uyumak', 'to sleep']],
         answer: 'Günaydın anne, çok iyi uyudum.', answerEn: 'Good morning mom, I slept very well.', next: 'm2' },

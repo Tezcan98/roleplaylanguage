@@ -8,7 +8,7 @@ export class NpcInteractions {
   find(pos) {
     let best = 2.8, npc = null;
     for (const n of this.cast.present()) { const d = dist(n.position, pos); if (d < best) { best = d; npc = n; } }
-    return npc && { label: `${npc.def.short} ile konuş`, dist: best, run: () => this.dialogue.open(npc.id) };
+    return npc && { label: `${npc.def.short} ile konuş`, dist: best, priority: 1, run: () => this.dialogue.open(npc.id) };
   }
 }
 
@@ -17,7 +17,7 @@ export class ItemInteractions {
   constructor({ items }) { this.items = items; }
   find(pos) {
     const it = this.items.pickable(pos);
-    return it && { label: it.verb, dist: dist(it.mesh.position, pos), run: () => this.items.pick(it) };
+    return it && { label: it.verb, dist: dist(it.mesh.position, pos), priority: 2, run: () => this.items.pick(it) };
   }
 }
 
@@ -31,16 +31,19 @@ export class HotspotInteractions {
   }
 
   find(pos) {
+    let best = null;
     for (const h of this.world.current.hotspots.values()) {
       const rule = this.rules[h.id];
       const d = dist(h.pos, pos);
-      if (!rule || d > h.radius || rule.available?.(this.ctx) === false) continue;
+      if (!rule || d > h.radius || rule.available?.(this.ctx) === false || (best && best.dist < d)) continue;
       const label = typeof rule.label === 'function' ? rule.label(this.ctx) : rule.label;
       const locked = rule.locked?.(this.ctx);
-      if (locked) return { label: rule.lockedLabel ?? label, dist: d, run: () => this.toasts.show(...locked) };
-      return { label, dist: d, run: () => this.use(h.id, rule) };
+      const priority = rule.use?.every((e) => e.startsWith('free:')) ? 0 : 1; // free-roam fun yields to story actions
+      best = locked
+        ? { label: rule.lockedLabel ?? label, dist: d, priority, run: () => this.toasts.show(...locked) }
+        : { label, dist: d, priority, run: () => this.use(h.id, rule) };
     }
-    return null;
+    return best;
   }
 
   use(id, rule) {
@@ -51,7 +54,8 @@ export class HotspotInteractions {
 }
 
 /**
- * Asks every provider what the player could do here and offers the closest one.
+ * Asks every provider what the player could do here and offers the most important,
+ * then closest one (priority: quest item 2 > people and doors 1 > free-roam fun 0).
  * New kinds of interaction = new provider; nothing else changes.
  */
 export class InteractionSystem {
@@ -62,7 +66,9 @@ export class InteractionSystem {
     if (!this.modes.is('play')) return null;
     for (const p of this.providers) {
       const a = p.find(playerPos);
-      if (a && (!this.current || a.dist < this.current.dist)) this.current = a;
+      if (!a) continue;
+      const c = this.current, pa = a.priority ?? 0, pc = c?.priority ?? 0;
+      if (!c || pa > pc || (pa === pc && a.dist < c.dist)) this.current = a;
     }
     return this.current;
   }

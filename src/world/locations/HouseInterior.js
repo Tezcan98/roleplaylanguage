@@ -10,6 +10,8 @@ export class HouseInterior extends Location {
     super({ id: 'house', name: 'Ev', indoor: true, bounds: { x: [-5.6, 5.6], z: [-4.1, 4.4] } });
   }
 
+  play(anim) { if (anim === 'tv') this.tvTime = 5; }
+
   build(kit) {
     const { mf } = kit, C = this.collision, add = (m) => this.add(m);
     const noCast = (m) => { m.castShadow = false; return add(m); };
@@ -68,14 +70,12 @@ export class HouseInterior extends Location {
     // TV
     this.prop(kit, 'prop.tv', 5.6, 0, -0.5, -Math.PI / 2, () => {
       const g = mf.group(mf.at(mf.box(1.8, 0.6, 0.6, DARK), 0, 0.3, 0.1), mf.at(mf.box(1.5, 0.9, 0.1, 0x1B2440), 0, 1.1, 0));
-      const screen = mf.at(mf.box(1.35, 0.75, 0.02, 0x5B7FA6), 0, 1.1, 0.06);
-      screen.name = 'screen';
-      g.add(screen);
+      this.tvScreen = mf.uniqueMat(0x2A3550, { emissive: 0x000000 });
+      g.add(mf.at(new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.75, 0.02), this.tvScreen), 0, 1.1, 0.06));
       return g;
     });
     C.addBox(5.2, 6, -1.5, 0.5);
     this.hotspot('house.tv', 4.5, -0.5, 1.6);
-    this.tvScreen = null;
 
     // kitchen corner
     this.prop(kit, 'prop.kitchen', 4.3, 0, -4.2, 0, () => {
@@ -90,6 +90,8 @@ export class HouseInterior extends Location {
     add(mf.at(mf.cyl(0.2, 0.2, 0.04, 0x2A1E15, 14), 3.8, 0.98, -4.2));
     C.addBox(2.6, 6, -4.6, -3.7);
     this.anchor('kitchen', 3.6, -3.3, Math.PI);
+    this.hotspot('house.kitchen', 5.0, -3.2, 1.2);
+    this.hotspot('house.window', 2, -3.9, 1.3);
 
     // bookshelf
     this.prop(kit, 'prop.bookshelf', -5.75, 0, -3, Math.PI / 2, () => {
@@ -99,6 +101,7 @@ export class HouseInterior extends Location {
       return g;
     });
     C.addBox(-6, -5.4, -3.95, -2.05);
+    this.hotspot('house.shelf', -4.9, -3.4, 1.1);
 
     // study desk + chair
     this.prop(kit, 'prop.desk', -5.5, 0, -0.6, Math.PI / 2, () => {
@@ -139,6 +142,15 @@ export class HouseInterior extends Location {
     add(mf.at(mf.cyl(0.2, 0.16, 0.4, 0xB5482E, 10), 5.5, 0.2, 1.1));
     add(mf.at(mf.ico(0.4, { tex: 'leaves' }), 5.5, 0.75, 1.1));
     C.addCircle(5.5, 1.1, 0.4);
+
+    // TV flicker while watching
+    this.tvTime = 0;
+    this.animated.push((dt, t) => {
+      if (!this.tvScreen) return;
+      this.tvTime = Math.max(0, this.tvTime - dt);
+      if (this.tvTime > 0) this.tvScreen.emissive.setHSL((t * 0.4) % 1, 0.6, 0.35 + Math.sin(t * 9) * 0.08);
+      else this.tvScreen.emissive.setScalar(0);
+    });
 
     this.anchor('start', 0.8, -2.6, 0);
     this.anchor('sofraGuest', -0.8, 1.7, Math.PI);

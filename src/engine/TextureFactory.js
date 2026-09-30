@@ -221,6 +221,16 @@ const GENERATORS = {
   curtain(g, s) {
     for (let x = 0; x < s; x += 16) { g.fillStyle = (x / 16) % 2 ? '#F4E6C8' : '#E7D3A8'; g.fillRect(x, 0, 16, s); }
   },
+  ball(g, s) {
+    g.fillStyle = '#F7F7F2'; g.fillRect(0, 0, s, s);
+    g.fillStyle = '#1B1B1B';
+    for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) {
+      const cx = (x + (y % 2) * 0.5) * s / 4 + s / 8, cy = y * s / 4 + s / 8, r = s / 14;
+      g.beginPath();
+      for (let k = 0; k < 5; k++) { const a = k / 5 * Math.PI * 2 - Math.PI / 2; g.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); }
+      g.fill();
+    }
+  },
   paper(g, s) {
     g.fillStyle = '#FFF9EC'; g.fillRect(0, 0, s, s);
     g.strokeStyle = '#D9C7A3';

@@ -10,6 +10,8 @@ export class GameContext {
   get chapter() { return this.story.chapter?.id ?? null; }
   get loc() { return this.world.current?.id ?? null; }
   get isNight() { return this.time.isNight; }
+  /** Ahmet has been given a job he hasn't finished yet. */
+  get hasDuty() { const q = this.story.quest; return !!q && !q.final; }
   get words() { return this.vocab.size; }
   reached(questId) { return this.story.reached(questId); }
   has(kind) { return this.inventory.count(kind) > 0; }
