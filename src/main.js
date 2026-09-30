@@ -43,6 +43,9 @@ import { OrderActivity } from './activities/OrderActivity.js';
 import { SpeakActivity } from './activities/SpeakActivity.js';
 import { DialogueController } from './dialogue/DialogueController.js';
 import { WebSpeechTTS } from './services/speech/TextToSpeech.js';
+import { PiperTTS } from './services/speech/PiperTTS.js';
+import { CharacterVoices } from './services/speech/CharacterVoices.js';
+import { Settings } from './services/Settings.js';
 import { WebSpeechRecognizer, RemoteSpeechRecognizer, ScriptedRecognizer } from './services/speech/SpeechRecognizer.js';
 import { LanguageDetector } from './services/speech/LanguageDetector.js';
 import { AnswerMatcher } from './services/speech/AnswerMatcher.js';
@@ -61,7 +64,7 @@ import { ListModal } from './ui/ListModal.js';
 import { DialogueView } from './ui/DialogueView.js';
 
 import { STORY } from './content/story.js';
-import { NPCS, PLAYER_LOOK } from './content/characters.js';
+import { NPCS, PLAYER_LOOK, VOICES } from './content/characters.js';
 import { DIALOGUES } from './content/dialogues.js';
 import { ITEMS } from './content/items.js';
 import { HOTSPOTS, LINKS } from './content/hotspots.js';
@@ -120,7 +123,21 @@ story.setContext(gameCtx);
 const controller = new PlayerController({ player, input, world, modes, cast });
 
 // --- dialogue ---
-const tts = new WebSpeechTTS();
+const settings = new Settings();
+const progressShown = new Set();
+const tts = new CharacterVoices({
+  neural: new PiperTTS({
+    onProgress: (voice, f) => {
+      const step = Math.floor(f * 4); // toast at 0/25/50/75%
+      if (progressShown.has(`${voice}${step}`)) return;
+      progressShown.add(`${voice}${step}`);
+      toasts.show(`Doğal ses indiriliyor… %${Math.round(f * 100)}`, 'Downloading natural voice (first time only)');
+    },
+  }),
+  fallback: new WebSpeechTTS('tr-TR'),
+  voices: VOICES,
+  enabled: () => settings.get('neuralVoices', true),
+});
 // ?fakemic → scripted answers (tests); manifest.sttEndpoint → Whisper server; else browser STT
 const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
   : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
@@ -183,7 +200,9 @@ bus.on(EV.ITEM_PICKED, ({ item, isNew }) => {
 cast.apply(STORY.chapters[0].cast);
 travel.place('yard', 'houseDoor', { silent: true });
 new MainMenu(host, {
+  settings,
   onStart: () => fader.run(() => story.startChapter(0, () => {
+    tts.preload();
     modes.setBase('play');
     document.body.classList.remove('menu');
     const think = story.chapter.think;
@@ -195,4 +214,4 @@ const game = new Game({ modes, time, lighting, controller, cast, items, world, i
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

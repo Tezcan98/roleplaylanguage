@@ -4,15 +4,23 @@ Köyde yaşayan bir ailenin hikayesi içinde Türkçe öğreten 3D rol yapma oyu
 
 ## Çalıştırma
 
-ES modülleri `file://` üzerinden yüklenmez, bu yüzden bir yerel sunucu gerekir:
+ES modülleri `file://` üzerinden yüklenmez, bu yüzden yerel sunucu gerekir:
 
 ```bash
-npm start                  # http://localhost:8080
-# ya da
-python3 -m http.server 8080
+npm run voices   # bir kez: Piper Türkçe sesleri assets/voices/ içine indirir (~120 MB)
+npm start        # http://localhost:8080
 ```
 
-`?debug` ile açınca `window.__game` üzerinden sistemlere erişilebilir (otomatik test için).
+`npm start`, COOP/COEP başlıklarıyla sunan bir sunucudur (`tools/serve.mjs`). Bu başlıklar sayesinde ses motoru çok çekirdekli çalışır ve cümle başına süre ~1 sn'ye iner.
+
+URL parametreleri:
+- `?debug`: `window.__game` üzerinden sistemlere erişim (otomatik test için).
+- `?fakemic`: mikrofon yerine beklenen cevabı "duyan" sahte tanıyıcıyı kullanır (test için).
+
+## Ses
+
+- **Konuşma (TTS):** Piper nöral sesleri (`fahrettin`, `fettah`, CC0), `services/speech/piper.worker.js` içinde ONNX ile çalışır. Her karakterin sesi ve perdesi `content/characters.js` → `VOICES` içinde tanımlı. Model hazır olana kadar tarayıcının kendi sesi aynı perdeyle konuşur. Ekranda görünen satır arka planda önceden sentezlenir.
+- **Dinleme (STT):** varsayılan olarak tarayıcının Web Speech API'si kullanılır. `assets/manifest.json` içine `"sttEndpoint": "http://.../stt"` eklenirse ses kaydı bu sunucuya gönderilir (Whisper gibi bir sunucu, `{ text, language, language_probability }` döndürmeli). Whisper'ın dil tespiti, oyuncunun gerçekten Türkçe konuşup konuşmadığını doğrular. Sunucu yoksa `LanguageDetector` metin üzerinden tahmin yapar.
 
 ## Mimari
 

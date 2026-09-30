@@ -50,6 +50,7 @@ export class DialogueController {
     const hidden = type === 'listen';
     this.node = node;
     this.lastLine = node.say;
+    this.tts.warm?.(node.say, this.talking);
     if (hidden) this.view.setLine('🔊 …', 'Listen carefully', true);
     else this.view.setLine(node.say, node.en);
     this.view.setHint(null);
@@ -61,6 +62,7 @@ export class DialogueController {
     const activity = this.#activity = this.activities.create(type);
     const result = await activity.mount(this.view.slot, {
       ...node,
+      speaker: this.talking,
       onWrong: () => { this.view.setLine(hidden ? '🔊 Hayır, tekrar dinle!' : 'Hayır, tekrar dene!', 'Try again!', hidden); this.view.setHint(node.hint); },
     });
     if (session !== this.#session || !this.talking) return; // closed or moved on meanwhile
@@ -81,7 +83,7 @@ export class DialogueController {
 
   #learn(node) { (node.words || []).forEach(([tr, en]) => this.vocab.learn(tr, en)); }
 
-  speak() { if (this.lastLine) this.tts.speak(this.lastLine); }
+  speak() { if (this.lastLine && this.talking) this.tts.speak(this.lastLine, { speaker: this.talking }); }
 
   close() {
     if (!this.talking) return;

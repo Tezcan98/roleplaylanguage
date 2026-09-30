@@ -59,7 +59,7 @@ export class SpeakActivity extends Activity {
         el('div', { class: 'speak-row' }, [
           this.mic,
           noMic ? el('span', { class: 'fb', text: 'Tarayıcın ses tanımayı desteklemiyor. Okuyunca mikrofona bas.' }) : null,
-          !spec.hide && el('button', { class: 'chipbtn', html: `${ICONS.speaker} Örnek`, attrs: { type: 'button' }, on: { click: () => tts.speak(target) } }),
+          !spec.hide && el('button', { class: 'chipbtn', html: `${ICONS.speaker} Örnek`, attrs: { type: 'button' }, on: { click: () => tts.speak(target, { speaker: 'ahmet' }) } }),
           skip,
         ]),
         heard, fb,

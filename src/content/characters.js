@@ -1,4 +1,16 @@
-/** Who's who: looks (for the procedural rig), portrait SVG and labels. */
+/** Who's who: looks (for the procedural rig), portrait SVG, labels and voices. */
+
+/**
+ * Piper voices (CC0: fahrettin, fettah). `pitch` shifts them per character.
+ * dfki is CC BY-NC-SA, so it is not used in a paid product.
+ */
+export const VOICES = {
+  default: { id: 'tr_TR-fahrettin-medium', pitch: 1 },
+  ahmet: { id: 'tr_TR-fettah-medium', pitch: 1.3 },
+  anne: { id: 'tr_TR-fettah-medium', pitch: 1.2 },
+  baba: { id: 'tr_TR-fahrettin-medium', pitch: 1.0 },
+  dede: { id: 'tr_TR-fahrettin-medium', pitch: 0.86 },
+};
 export const PLAYER_LOOK = { shirt: 0xFFC845, pants: 0x2F6FDB, skin: 0xF2C49B, hair: 0x5B3A29, scale: 0.78, props: ['jacket'] };
 
 export const NPCS = {

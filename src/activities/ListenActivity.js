@@ -8,10 +8,10 @@ import { el, ICONS } from '../ui/dom.js';
 export class ListenActivity extends ChoiceActivity {
   mount(container, spec) {
     const { tts } = this.services;
-    const play = (rate) => tts.speak(spec.say, rate ? { rate } : undefined);
+    const play = (rate = 1) => tts.speak(spec.say, { speaker: spec.speaker, rate });
     this.bar = el('div', { class: 'listen-row' }, [
       el('button', { class: 'chipbtn primary', html: `${ICONS.speaker} Dinle`, attrs: { type: 'button' }, on: { click: () => play() } }),
-      el('button', { class: 'chipbtn', text: '🐢 Yavaş', attrs: { type: 'button' }, on: { click: () => play(0.6) } }),
+      el('button', { class: 'chipbtn', text: '🐢 Yavaş', attrs: { type: 'button' }, on: { click: () => play(0.7) } }),
     ]);
     this.prompt = el('p', { class: 'act-prompt', text: spec.prompt ?? 'Ne dedi? Dinle ve seç.' });
     container.append(this.prompt, this.bar);
