@@ -10,10 +10,13 @@
  * Chapter `enter`: effects run when the chapter starts. A dialogue/hotspot effect
  * `chapter` moves the story on.
  */
+const VILLAGE_NPCS = { muhtar: ['village', 'muhtar', 'stand'], bakkal: ['village', 'bakkal', 'stand'] };
+
 const FAMILY_AT_SOFRA = {
   dede: ['house', 'sofraN', 'sitFloor'],
   baba: ['house', 'sofraW', 'sitFloor'],
   anne: ['house', 'sofraE', 'sitFloor'],
+  ...VILLAGE_NPCS,
 };
 
 const laundryCount = (c) => c.count('camasir');
@@ -26,6 +29,7 @@ export const STORY = {
         anne: ['house', 'kitchen', 'cook'],
         dede: ['yard', 'garden', 'garden'],
         baba: ['yard', 'car', 'repair'],
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazar · Bölüm 1', title: 'Canım sıkılıyor',
@@ -138,6 +142,7 @@ export const STORY = {
         anne: ['house', 'kitchen', 'cook'],
         baba: ['house', 'sedirL', 'watchTv'],
         dede: null, // already asleep
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazar · Bölüm 6', title: 'Gece',
@@ -158,6 +163,7 @@ export const STORY = {
         anne: ['house', 'kitchen', 'cook'],
         dede: ['yard', 'garden', 'garden'],
         baba: null, // gone to work
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazartesi · Bölüm 7', title: 'Okul sabahı',

@@ -11,6 +11,14 @@ import { nextTale, taleNodes, TALES } from './tales.js';
  *   speak  — expect: ['accepted', ...], show?: 'what to read'
  */
 export const DIALOGUES = {
+  muhtar: { start(ctx) { return ctx.q === 'go-school' ? 'school' : 'idle'; }, nodes: {
+    idle: { say: 'Hoş geldin evlat! Ben köyün muhtarı Hasan.', en: 'Welcome! I am Hasan, the village headman Hasan.', words: [['köy','village'],['meydan','square'],['muhtar','village headman']], options: [{ tr: 'Merhaba muhtar amca!', en: 'Hello, uncle muhtar!' }] },
+    school: { say: 'Okul yolu bahçe kapısından. Geç kalma!', en: 'The school road is through the garden gate. Do not be late!', words: [['yol','road'],['geç kalmak','to be late']], options: [{ tr: 'Teşekkür ederim muhtar amca!', en: 'Thank you, uncle muhtar!' }] },
+  } },
+  bakkal: { start() { return 'shop'; }, nodes: {
+    shop: { say: 'Hoş geldin! Bakkalda ekmek, süt, peynir ve zeytin var.', en: 'Welcome! The shop has bread, milk, cheese and olives.', words: [['bakkal','grocer'],['ekmek','bread'],['süt','milk'],['peynir','cheese'],['zeytin','olive']], options: [{ tr: 'Bir ekmek lütfen.', en: 'One bread, please.' }, { tr: 'Sadece bakıyorum.', en: 'I am just looking.' }] },
+  } },
+
   anne: {
     start(ctx) {
       switch (ctx.q) {

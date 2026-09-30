@@ -14,6 +14,8 @@ export const VOICES = {
 export const PLAYER_LOOK = { shirt: 0xFFC845, pants: 0x2F6FDB, skin: 0xF2C49B, hair: 0x5B3A29, scale: 0.78, props: ['jacket'] };
 
 export const NPCS = {
+  muhtar: { name: 'Hasan Muhtar', short: 'Muhtar', role: 'muhtar · village headman', look: { shirt: 0x6B7A45, pants: 0x4B4F58, skin: 0xE9B98F, hair: 0x5A4638, mustache: 0x4A352A, scale: 1.0 }, face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#E8D6A8"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M16 31q3-13 16-13t16 13q-5-5-16-5t-16 5z" fill="#5A4638"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M24 43q8-6 16 0q-8 3-16 0z" fill="#4A352A"/></svg>' },
+  bakkal: { name: 'Mehmet Bakkal', short: 'Bakkal', role: 'bakkal · grocer', look: { shirt: 0xD08A42, pants: 0x3E536B, skin: 0xF0C09A, hair: 0x2E2926, mustache: 0x382A22, apron: true, scale: 0.98 }, face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#F0D2A6"/><circle cx="32" cy="36" r="16" fill="#F0C09A"/><path d="M16 30q4-13 16-13t16 13q-5-4-16-4t-16 4z" fill="#2E2926"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M24 43q8-5 16 0q-8 3-16 0z" fill="#382A22"/></svg>' },
   anne: {
     name: 'Ayşe Anne', short: 'Anne', role: 'anne · mom',
     look: { shirt: 0xC8456A, skirt: 0x7A3552, pants: 0x7A3552, skin: 0xF2C49B, hair: 0x7A4A2E, bun: true, apron: true, scale: 0.95 },
