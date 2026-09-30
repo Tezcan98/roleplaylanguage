@@ -2,12 +2,12 @@
 export class WebSpeechTTS {
   constructor(lang = 'tr-TR', rate = 0.9) { this.lang = lang; this.rate = rate; }
 
-  speak(text) {
+  speak(text, { rate = this.rate } = {}) {
     if (!window.speechSynthesis || !text) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = this.lang;
-    u.rate = this.rate;
+    u.rate = rate;
     const voice = speechSynthesis.getVoices().find((v) => v.lang?.toLowerCase().startsWith(this.lang.slice(0, 2)));
     if (voice) u.voice = voice;
     speechSynthesis.speak(u);

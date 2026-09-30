@@ -25,7 +25,7 @@ export class QuestMarker {
       if (loc === here) pos = this.#tmp.copy(n.position).setY(2.75 * n.group.scale.y);
     } else if (t.item || t.kind) {
       const P = this.player.position;
-      const candidates = (t.item ? [this.items.get(t.item)] : this.items.ofKind(t.kind)).filter((i) => i && !this.items.isTaken(i));
+      const candidates = (t.item ? [this.items.get(t.item)] : this.items.ofKind(t.kind)).filter((i) => i && this.items.exists(i));
       candidates.sort((a, b) => a.mesh.position.distanceTo(P) - b.mesh.position.distanceTo(P));
       const it = candidates.find((i) => i.location === here) ?? candidates[0];
       loc = it?.location;

@@ -99,3 +99,27 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{
 .blist .tr{font-weight:800}
 .blist .en2{color:var(--muted);font-weight:700}
 .empty{grid-column:1/-1;color:var(--muted);font-weight:700}
+
+/* ---------- activities ---------- */
+.act-prompt{font:600 15px Fredoka,sans-serif;color:#8A5A12;margin:0}
+.line.hiddenline{color:var(--muted);font-style:italic}
+.listen-row{display:flex;gap:8px;flex-wrap:wrap}
+.chipbtn{min-height:44px;border-radius:12px;border:2px solid var(--wood);background:#fff;padding:0 14px;font:800 15px Nunito,sans-serif;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.chipbtn.primary{background:var(--gold)}
+.speak-target{font:700 22px Fredoka,sans-serif;margin:0;color:var(--wood)}
+.speak-target.masked{color:var(--muted);font-size:17px}
+.speak-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.mic{width:72px;height:72px;border-radius:50%;border:3px solid var(--wood);background:var(--gold);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 var(--wood)}
+.mic.rec{background:#E4574A;color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.07)}}
+.transcript{font-weight:800;font-size:16px;min-height:22px}
+.fb{font-weight:800;font-size:14px}
+.fb.ok{color:#3E8E4A}
+.fb.bad{color:#B83A3A}
+.answer-line{min-height:52px;border:2px dashed var(--wood);border-radius:10px;padding:6px;display:flex;flex-wrap:wrap;gap:6px;background:#fff}
+.answer-line.bad{border-color:#B83A3A;animation:shake .3s}
+.answer-line.ok{border-color:#3E8E4A;background:#EAF6EA}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.tiles{display:flex;flex-wrap:wrap;gap:6px}
+.tile{min-height:40px;border-radius:10px;border:2px solid var(--wood);background:#FFF9EC;padding:0 12px;font:800 16px Nunito,sans-serif;cursor:pointer;color:var(--ink);box-shadow:0 2px 0 var(--wood);display:inline-flex;align-items:center}
+.tile:disabled{visibility:hidden}

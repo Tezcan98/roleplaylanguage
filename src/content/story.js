@@ -1,11 +1,23 @@
 /**
- * The story script. A chapter fixes the time, where everyone is and the quest chain.
- * Characters only move between chapters, so nobody teleports in front of the player.
+ * The story script. A chapter fixes the day and time, where everyone is (`cast`:
+ * npc → [location, anchor, behaviour] or null when away) and a quest chain.
+ * Characters only move between chapters — behind a fade — so nobody teleports in view.
  *
  * Quest fields: id, title, obj/en (string or ctx => string), target (or ctx => target),
- * complete ({ pick: kind } | { enter: locationId }; default: a dialogue `quest` effect),
- * minutes (in-game time the task takes), intro (card shown when it starts), final.
+ * complete ({ pick: kind } | { enter: locationId } | { use: hotspotId } | { flag: name };
+ * default: a dialogue `quest` effect), after (effects once done), minutes (in-game time
+ * the task takes), intro (card), final.
+ * Chapter `enter`: effects run when the chapter starts. A dialogue/hotspot effect
+ * `chapter` moves the story on.
  */
+const FAMILY_AT_SOFRA = {
+  dede: ['house', 'sofraN', 'sitFloor'],
+  baba: ['house', 'sofraW', 'sitFloor'],
+  anne: ['house', 'sofraE', 'sitFloor'],
+};
+
+const laundryCount = (c) => c.count('camasir');
+
 export const STORY = {
   chapters: [
     {
@@ -16,7 +28,7 @@ export const STORY = {
         baba: ['yard', 'car', 'repair'],
       },
       intro: {
-        num: 'Bölüm 1', title: 'Canım sıkılıyor',
+        num: 'Pazar · Bölüm 1', title: 'Canım sıkılıyor',
         text: 'Pazar sabahı. Ahmet evde. Televizyonda hiçbir şey yok. Annesi mutfakta çay demliyor.',
         en: "Sunday morning. Ahmet is at home. There's nothing on TV. His mom is brewing tea in the kitchen.",
       },
@@ -28,7 +40,7 @@ export const STORY = {
         {
           id: 'talk-dede', title: 'Dedeye merhaba', obj: 'Dedenle konuş', en: 'Talk to your grandpa', target: { npc: 'dede' },
           intro: {
-            num: 'Bölüm 2', title: 'Avluda',
+            num: 'Pazar · Bölüm 2', title: 'Avluda',
             text: 'Dışarısı güneşli. Dede bahçede, baba arabanın başında. Herkesin bir işi var!',
             en: "It's sunny outside. Grandpa's in the garden, dad's at the car. Everyone has a job!",
           },
@@ -49,19 +61,120 @@ export const STORY = {
           minutes: 15,
         },
         {
-          id: 'tomatoes', title: 'Kahvaltı',
+          id: 'tomatoes', title: 'Domates',
           obj: (c) => (c.count('domates') >= 3 ? 'Domatesleri annene götür (evde)' : `Bahçeden domates topla (${c.count('domates')}/3)`),
           en: (c) => (c.count('domates') >= 3 ? 'Take the tomatoes to mom (at home)' : 'Pick tomatoes in the garden'),
           target: (c) => (c.count('domates') >= 3 ? { npc: 'anne' } : { kind: 'domates' }),
           minutes: 20,
         },
-        { id: 'free', title: 'Afiyet olsun!', obj: 'Serbestçe dolaş, konuş', en: 'Explore and chat freely', target: null, final: true },
       ],
-      outro: {
-        num: 'Bölüm sonu', title: 'Afiyet olsun!', button: 'Dolaşmaya devam',
-        text: (words) => `Bütün görevleri bitirdin. ${words} kelime öğrendin. Şimdi serbestçe dolaşabilir, herkesle konuşabilirsin.`,
-        en: 'You finished every quest. Now you can explore and chat with everyone.',
+    },
+
+    {
+      id: 'd1-breakfast', day: 1, time: '09:30', location: 'house', spawn: 'sofraGuest',
+      cast: FAMILY_AT_SOFRA,
+      intro: {
+        num: 'Pazar · Bölüm 3', title: 'Kahvaltı',
+        text: 'Bütün aile sofrada. Sıcak çay, peynir, zeytin, domates… Ama ekmek nerede?',
+        en: 'The whole family is at the table. Hot tea, cheese, olives, tomatoes… But where is the bread?',
       },
+      quests: [
+        { id: 'bread', title: 'Dedenin isteği', obj: 'Dedeni dinle', en: 'Listen to grandpa', target: { npc: 'dede' } },
+        {
+          id: 'bring-bread', title: 'Ekmek',
+          obj: (c) => (c.has('ekmek') ? 'Ekmeği dedene ver' : 'Mutfaktan ekmeği al'),
+          en: (c) => (c.has('ekmek') ? 'Give the bread to grandpa' : 'Get the bread from the kitchen'),
+          target: (c) => (c.has('ekmek') ? { npc: 'dede' } : { item: 'ekmek' }),
+          minutes: 5,
+        },
+        { id: 'tea', title: 'Çay', obj: 'Babanla konuş', en: 'Talk to your dad', target: { npc: 'baba' }, minutes: 15 },
+        { id: 'thanks-mom', title: 'Eline sağlık', obj: 'Annene teşekkür et', en: 'Thank your mom', target: { npc: 'anne' }, minutes: 20 },
+      ],
+    },
+
+    {
+      id: 'd1-afternoon', day: 1, time: '14:00', location: 'yard', spawn: 'houseDoor',
+      cast: {
+        anne: ['yard', 'laundry', 'laundry'],
+        dede: ['yard', 'pergolaSeat', 'sitBench'],
+        baba: ['yard', 'car', 'repair'],
+      },
+      intro: {
+        num: 'Pazar · Bölüm 4', title: 'Öğleden sonra',
+        text: 'Güneş tepede. Annem çamaşırları ipe astı. Dede asmanın altında dinleniyor.',
+        en: 'The sun is high. Mom hung the laundry on the line. Grandpa is resting under the vine.',
+      },
+      quests: [
+        { id: 'laundry-listen', title: 'Annenin sesi', obj: 'Annenle konuş, dikkatle dinle', en: 'Talk to mom and listen carefully', target: { npc: 'anne' } },
+        {
+          id: 'laundry', title: 'Çamaşırlar',
+          obj: (c) => (laundryCount(c) >= 3 ? 'Çamaşırları annene ver' : `İpteki çamaşırları topla (${laundryCount(c)}/3)`),
+          en: (c) => (laundryCount(c) >= 3 ? 'Give the laundry to mom' : 'Collect the laundry from the line'),
+          target: (c) => (laundryCount(c) >= 3 ? { npc: 'anne' } : { kind: 'camasir' }),
+          minutes: 20,
+        },
+        { id: 'masal', title: 'Dedenin masalı', obj: 'Dedenin yanına otur, masal dinle', en: 'Sit with grandpa and listen to a tale', target: { npc: 'dede' }, complete: { flag: 'tale-kazan' }, after: ['chapter'], minutes: 60 },
+      ],
+    },
+
+    {
+      id: 'd1-dinner', day: 1, time: '19:30', location: 'house', spawn: 'sofraGuest',
+      cast: FAMILY_AT_SOFRA,
+      enter: ['wear:jacket:off'],
+      intro: {
+        num: 'Pazar · Bölüm 5', title: 'Akşam yemeği',
+        text: 'Hava karardı. Annem mercimek çorbası yaptı. Herkes sofrada, günü konuşuyor.',
+        en: 'It got dark. Mom made lentil soup. Everyone is at the table, talking about the day.',
+      },
+      quests: [
+        { id: 'dinner-dad', title: 'Bugün ne yaptın?', obj: 'Babana gününü anlat (sesli)', en: 'Tell dad about your day (out loud)', target: { npc: 'baba' } },
+        { id: 'dinner-mom', title: 'Sıcak çorba', obj: 'Annenle konuş', en: 'Talk to mom', target: { npc: 'anne' }, minutes: 40 },
+      ],
+    },
+
+    {
+      id: 'd1-night', day: 1, time: '21:30', location: 'house', spawn: 'sofraGuest',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'watchTv'],
+        dede: null, // already asleep
+      },
+      intro: {
+        num: 'Pazar · Bölüm 6', title: 'Gece',
+        text: 'Saat dokuz buçuk. Dışarısı karanlık. Dede uyudu. Yarın pazartesi, okul var!',
+        en: "It's half past nine. It's dark outside. Grandpa is asleep. Tomorrow is Monday — school!",
+      },
+      quests: [
+        { id: 'mom-night', title: 'Yarın okul var', obj: 'Annenle konuş', en: 'Talk to mom', target: { npc: 'anne' } },
+        { id: 'take-book', title: 'Kitap', obj: 'Raftan kitabını al', en: 'Take your book from the shelf', target: { item: 'kitap' }, complete: { pick: 'kitap' }, minutes: 5 },
+        { id: 'goodnight', title: 'İyi geceler', obj: 'Annene iyi geceler de (sesli)', en: 'Say good night to mom (out loud)', target: { npc: 'anne' }, minutes: 5 },
+        { id: 'sleep', title: 'Uyku', obj: 'Yatağına git', en: 'Go to bed', target: { hotspot: 'house.bed' }, complete: { use: 'house.bed' } },
+      ],
+    },
+
+    {
+      id: 'd2-morning', day: 2, time: '07:30', location: 'house', spawn: 'bedside',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        dede: ['yard', 'garden', 'garden'],
+        baba: null, // gone to work
+      },
+      intro: {
+        num: 'Pazartesi · Bölüm 7', title: 'Okul sabahı',
+        text: 'Günaydın! Kuşlar ötüyor. Baba işe gitti. Bugün okulun ilk günü.',
+        en: "Good morning! Birds are singing. Dad has gone to work. Today is the first day of school.",
+      },
+      quests: [
+        { id: 'wake', title: 'Günaydın', obj: 'Annene günaydın de', en: 'Say good morning to mom', target: { npc: 'anne' }, minutes: 20 },
+        { id: 'jacket2', title: 'Mont', obj: 'Montunu al', en: 'Take your jacket', target: { item: 'mont2' }, complete: { pick: 'mont' }, minutes: 2 },
+        { id: 'go-school', title: 'Okul yolu', obj: 'Bahçe kapısından okula git', en: 'Go to school through the garden gate', target: { hotspot: 'yard.gate' }, final: true },
+      ],
     },
   ],
+
+  outro: {
+    num: 'Şimdilik bu kadar', title: 'Devam edecek…', button: 'Dolaşmaya devam',
+    text: (c) => `Harika bir gün! ${c.words} kelime öğrendin. Okul bölümü yakında.`,
+    en: 'What a day! The school chapter is coming soon.',
+  },
 };

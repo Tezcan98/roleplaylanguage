@@ -8,6 +8,8 @@ export const EV = Object.freeze({
   QUEST: 'quest:changed',
   QUEST_DONE: 'quest:completed',
   CHAPTER: 'chapter:started',
+  HOTSPOT: 'hotspot:used',
+  FLAG: 'flag:set',
   DIALOGUE_OPEN: 'dialogue:opened',
   DIALOGUE_CLOSE: 'dialogue:closed',
   THINK: 'think',

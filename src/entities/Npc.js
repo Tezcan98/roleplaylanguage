@@ -14,6 +14,14 @@ export class Npc extends Character {
 
   get name() { return this.def.name; }
 
+  /** Seated characters turn only their head towards the player. */
+  #headTowards(player) {
+    let d = Math.atan2(player.position.x - this.position.x, player.position.z - this.position.z) - this.group.rotation.y;
+    while (d > Math.PI) d -= Math.PI * 2;
+    while (d < -Math.PI) d += Math.PI * 2;
+    return d;
+  }
+
   /** Put the NPC somewhere. Only called behind a fade or while the player is elsewhere. */
   station(location, anchor, behaviorName = 'stand') {
     this.location = location.id;
@@ -24,7 +32,11 @@ export class Npc extends Character {
   }
 
   setBehavior(name) {
-    Object.keys(this.rig.props).forEach((p) => this.showProp(p, false));
+    const r = this.rig;
+    r.body.position.y = 0;
+    r.body.rotation.x = 0;
+    r.legL.rotation.x = r.legR.rotation.x = 0;
+    Object.keys(r.props).forEach((p) => this.showProp(p, false));
     this.behavior = Behaviors[name] ?? Behaviors.stand;
     (this.behavior.props || []).forEach((p) => this.showProp(p, true));
   }
@@ -33,12 +45,14 @@ export class Npc extends Character {
     super.update(dt);
     const b = this.behavior, near = b.turnToPlayerWithin && Math.hypot(player.position.x - this.position.x, player.position.z - this.position.z) < b.turnToPlayerWithin;
     if (this.talking || near) {
-      this.faceTowards(player.position, 0.15);
+      if (!b.seated) this.faceTowards(player.position, 0.15);
       (b.talk ?? Behaviors.stand.pose)(this.rig, t);
     } else {
       this.turnTo(this.home.rot, 0.05);
       b.pose(this.rig, t);
     }
-    if (this.talking) this.rig.head.position.y = 1.84 + Math.abs(Math.sin(t * 8)) * 0.02;
+    this.rig.head.position.y = 1.84 + (this.talking ? Math.abs(Math.sin(t * 8)) * 0.02 : 0);
+    if (b.seated && this.talking) this.rig.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.#headTowards(player)));
+    else this.rig.head.rotation.y *= 0.9;
   }
 }

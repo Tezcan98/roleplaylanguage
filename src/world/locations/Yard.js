@@ -72,6 +72,12 @@ export class Yard extends Location {
     [[-2.5, -2], [2.5, -2], [-2.5, 2], [2.5, 2]].forEach(([x, z]) => C.addCircle(P.position.x + x, P.position.z + z, 0.3));
     C.addBox(-9.1, -6.9, -4.6, -3.4);
 
+    // clothesline (çamaşır ipi)
+    [-4.8, -1.6].forEach((x) => { add(mf.at(mf.cyl(0.05, 0.06, 1.8, { tex: 'bark' }, 6), x, 0.9, -7.6)); C.addCircle(x, -7.6, 0.15); });
+    add(mf.at(mf.box(3.2, 0.015, 0.015, 0xF4F1DE), -3.2, 1.72, -7.6));
+    this.anchor('laundry', -5.4, -6.9, Math.PI * 0.75);
+    this.anchor('pergolaSeat', -8, -2.85, Math.PI);
+
     // vegetable garden
     add(mf.at(mf.box(6, 0.12, 5, { tex: 'dirt', repeat: [2, 2], color: 0x9A6E4E }), 9, 0.06, -3));
     for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) {
@@ -112,11 +118,21 @@ export class Yard extends Location {
     }
     [[15, 11, 1.1], [7, 15, 1], [-17, -9, 1.2]].forEach(([x, z, s]) => { tree(x, z, s); C.addCircle(x, z, 0.6); });
 
-    // fence
-    for (let i = -24; i <= 24; i += 2) [[i, -24], [i, 24], [-24, i], [24, i]].forEach(([x, z]) => add(mf.at(mf.box(0.18, 1, 0.18, DARK), x, 0.5, z)));
-    [[0, -24, 48, 0], [0, 24, 48, 0], [-24, 0, 0, 48], [24, 0, 0, 48]].forEach(([x, z, w, d]) => {
-      add(mf.at(mf.box(w || 0.08, 0.08, d || 0.08, DARK), x, 0.75, z));
-      add(mf.at(mf.box(w || 0.08, 0.08, d || 0.08, DARK), x, 0.4, z));
-    });
+    // fence with a garden gate on the south side (the road to school)
+    const post = (x, z) => add(mf.at(mf.box(0.18, 1, 0.18, DARK), x, 0.5, z));
+    for (let i = -24; i <= 24; i += 2) {
+      [[i, -24], [-24, i], [24, i]].forEach(([x, z]) => post(x, z));
+      if (Math.abs(i) > 1) post(i, 24);
+    }
+    const rail = (x, z, w, d) => [0.75, 0.4].forEach((y) => add(mf.at(mf.box(w, 0.08, d, DARK), x, y, z)));
+    rail(0, -24, 48, 0.08); rail(-24, 0, 0.08, 48); rail(24, 0, 0.08, 48);
+    rail(-12.75, 24, 22.5, 0.08); rail(12.75, 24, 22.5, 0.08);
+    this.prop(kit, 'prop.gate', 0, 0, 24, 0, () => mf.group(
+      mf.at(mf.box(0.2, 2.2, 0.2, DARK), -1.4, 1.1, 0), mf.at(mf.box(0.2, 2.2, 0.2, DARK), 1.4, 1.1, 0),
+      mf.at(mf.box(3.2, 0.25, 0.25, DARK), 0, 2.2, 0),
+      mf.at(mf.box(1.6, 0.45, 0.06, { tex: 'lightWood' }), 0, 2.65, 0)));
+    add(mf.ground(2.4, 17, { tex: 'dirt', repeat: [1, 6] }, 0.021)).position.z = 15.5;
+    this.hotspot('yard.gate', 0, 22.8, 1.9);
+    this.anchor('gate', 0, 22, Math.PI);
   }
 }

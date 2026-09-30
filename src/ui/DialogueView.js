@@ -34,7 +34,12 @@ export class DialogueView {
   close() { this.root.classList.remove('open'); this.slot.replaceChildren(); }
   get isOpen() { return this.root.classList.contains('open'); }
 
-  setLine(tr, en) { this.line.textContent = tr; this.en.textContent = en || ''; this.en.hidden = !en; }
+  setLine(tr, en, muted = false) {
+    this.line.textContent = tr;
+    this.line.classList.toggle('hiddenline', muted);
+    this.en.textContent = en || '';
+    this.en.hidden = !en;
+  }
   setHint(text) { this.hint.style.display = text ? 'block' : 'none'; this.hint.replaceChildren(el('b', { text: 'İpucu: ' }), text || ''); }
   setWords(list) {
     this.words.replaceChildren(...(list || []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { text: `= ${en}` })])));

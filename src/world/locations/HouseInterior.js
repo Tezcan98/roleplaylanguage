@@ -74,6 +74,8 @@ export class HouseInterior extends Location {
       return g;
     });
     C.addBox(5.2, 6, -1.5, 0.5);
+    this.hotspot('house.tv', 4.5, -0.5, 1.6);
+    this.tvScreen = null;
 
     // kitchen corner
     this.prop(kit, 'prop.kitchen', 4.3, 0, -4.2, 0, () => {
@@ -119,7 +121,7 @@ export class HouseInterior extends Location {
       mf.at(mf.box(0.9, 0.18, 0.45, 0xF4E6C8), 0, 0.65, -0.85),
       mf.at(mf.box(2, 0.9, 0.1, DARK), 0, 0.45, -1.2)));
     C.addBox(3.9, 5.9, 1.85, 4.25);
-    this.anchor('bedside', 3.2, 1.6, Math.PI / 2);
+    this.hotspot('house.bed', 3.3, 3.0, 1.5);
 
     // coat rack (the jacket item hangs here)
     add(mf.at(mf.cyl(0.05, 0.05, 1.9, DARK, 8), -5.3, 0.95, 3.9));
@@ -139,6 +141,8 @@ export class HouseInterior extends Location {
     C.addCircle(5.5, 1.1, 0.4);
 
     this.anchor('start', 0.8, -2.6, 0);
+    this.anchor('sofraGuest', -0.8, 1.7, Math.PI);
+    this.anchor('bedside', 2.8, 2.6, -Math.PI / 2);
     this.anchor('door', -4.9, 2.1, Math.PI / 2);
   }
 }

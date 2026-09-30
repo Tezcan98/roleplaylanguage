@@ -1,7 +1,19 @@
 /**
- * Idle animations for NPCs (Strategy pattern). A behaviour poses the rig every frame and
- * declares which props it needs. Add a new one here without touching Npc.
+ * Idle animations for NPCs (Strategy pattern). A behaviour poses the rig every frame,
+ * may declare props it needs and whether the character is seated.
+ * Add a new one here without touching Npc.
  */
+const sitPose = (height) => (r) => {
+  r.body.position.y = -height;
+  r.legL.rotation.x = r.legR.rotation.x = -Math.PI / 2;
+  r.body.rotation.x = 0;
+};
+
+const sitting = (height, extra = () => {}) => ({
+  pose(r, t) { sitPose(height)(r); r.armL.rotation.x = -0.35; r.armR.rotation.x = -0.35 + Math.sin(t * 1.3) * 0.08; extra(r, t); },
+  talk(r) { sitPose(height)(r); r.armL.rotation.x = r.armR.rotation.x = -0.2; },
+});
+
 export const Behaviors = {
   stand: { pose(r) { r.armL.rotation.x = r.armR.rotation.x = 0; r.body.rotation.x = 0; } },
   garden: {
@@ -18,4 +30,14 @@ export const Behaviors = {
     talk(r) { r.armL.rotation.x = r.armR.rotation.x = 0; },
     turnToPlayerWithin: 2.4,
   },
+  laundry: {
+    pose(r, t) { const s = (Math.sin(t * 1.6) + 1) / 2; r.armL.rotation.x = r.armR.rotation.x = -2.4 + s * 0.4; r.body.rotation.x = 0; },
+    talk(r) { r.armL.rotation.x = r.armR.rotation.x = 0; },
+    turnToPlayerWithin: 2.4,
+  },
+  /** On a floor cushion at the sofra: lower, and talks with the people around. */
+  sitFloor: { ...sitting(0.62), turnToPlayerWithin: 0, seated: true },
+  /** On a bench or sedir. */
+  sitBench: { ...sitting(0.38), seated: true },
+  watchTv: { ...sitting(0.38, (r) => { r.armL.rotation.x = r.armR.rotation.x = -0.1; }), seated: true },
 };

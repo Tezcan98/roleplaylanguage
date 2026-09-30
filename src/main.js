@@ -38,8 +38,15 @@ import { QuestMarker } from './systems/QuestMarker.js';
 
 import { ActivityRegistry } from './activities/Activity.js';
 import { ChoiceActivity } from './activities/ChoiceActivity.js';
+import { ListenActivity } from './activities/ListenActivity.js';
+import { OrderActivity } from './activities/OrderActivity.js';
+import { SpeakActivity } from './activities/SpeakActivity.js';
 import { DialogueController } from './dialogue/DialogueController.js';
-import { WebSpeechTTS } from './services/TextToSpeech.js';
+import { WebSpeechTTS } from './services/speech/TextToSpeech.js';
+import { WebSpeechRecognizer, RemoteSpeechRecognizer, ScriptedRecognizer } from './services/speech/SpeechRecognizer.js';
+import { LanguageDetector } from './services/speech/LanguageDetector.js';
+import { AnswerMatcher } from './services/speech/AnswerMatcher.js';
+import { SpeechEvaluator } from './services/speech/SpeechEvaluator.js';
 
 import { Hud } from './ui/Hud.js';
 import { QuestPanel } from './ui/QuestPanel.js';
@@ -64,6 +71,7 @@ async function loadManifest() {
 }
 
 const manifest = await loadManifest();
+const params = new URLSearchParams(location.search);
 const host = document.getElementById('ui');
 
 // --- core ---
@@ -105,36 +113,45 @@ ctx.scene.add(player.group);
 const npcs = new Map(Object.entries(NPCS).map(([id, def]) => [id, new Npc(id, def, { mf, models })]));
 const cast = new CastDirector({ npcs, world, player });
 const travel = new TravelService({ world, player, cast, camera, fader, state });
-const story = new StoryDirector({ story: STORY, state, bus, time, cast, travel, cards, toasts });
+const story = new StoryDirector({ story: STORY, state, bus, time, cast, travel, cards, toasts, fader });
 const items = new ItemSystem({ defs: ITEMS, world, kit, state, inventory, vocab, bus, story });
-const gameCtx = new GameContext({ state, inventory, story, world });
+const gameCtx = new GameContext({ state, inventory, story, world, time, vocab });
 story.setContext(gameCtx);
 const controller = new PlayerController({ player, input, world, modes, cast });
 
 // --- dialogue ---
 const tts = new WebSpeechTTS();
-const activities = new ActivityRegistry({ tts }).register('choice', ChoiceActivity);
+// ?fakemic → scripted answers (tests); manifest.sttEndpoint → Whisper server; else browser STT
+const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
+  : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
+const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
+const activities = new ActivityRegistry({ tts, speech })
+  .register('choice', ChoiceActivity)
+  .register('listen', ListenActivity)
+  .register('order', OrderActivity)
+  .register('speak', SpeakActivity);
 const effects = new EffectRunner();
 const dialogueView = new DialogueView(host, {
   onClose: () => dialogue.close(),
   onSpeak: () => dialogue.speak(),
   onToggleEn: () => dialogueView.setEnPressed(!document.body.classList.toggle('hide-en')),
 });
-const dialogue = new DialogueController({ dialogues: DIALOGUES, cast, view: dialogueView, activities, effects, vocab, speech: tts, modes, bus, input });
+const dialogue = new DialogueController({ dialogues: DIALOGUES, cast, view: dialogueView, activities, effects, vocab, tts, modes, bus, input });
 dialogue.setContext(gameCtx);
 
-let pendingFinish = false;
 effects
   .register('quest', (id) => story.complete(id))
+  .register('chapter', () => story.nextChapter())
   .register('take', (kind) => inventory.remove(kind))
-  .register('wear', (what) => player.wear(what))
-  .register('finish', () => { pendingFinish = true; });
+  .register('wear', (what, off) => player.wear(what, off !== 'off'))
+  .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); });
+story.setEffects(effects);
 
 // --- interaction ---
 const interactions = new InteractionSystem([
   new NpcInteractions({ cast, dialogue }),
   new ItemInteractions({ items }),
-  new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts }),
+  new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts, effects, bus, ctx: gameCtx }),
 ], modes);
 const actionButton = new ActionButton(host, () => interactions.trigger());
 input.onKey((e) => { if (modes.is('play') && ['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); interactions.trigger(); } });
@@ -157,14 +174,9 @@ bus.on(EV.QUEST, refreshQuest);
 bus.on(EV.ITEM_PICKED, ({ item, isNew }) => {
   effects.run(item.onPick);
   const note = `${isNew ? 'Yeni kelime: ' : ''}${item.tr} = ${item.en}`;
-  if (item.goal) toasts.show(`${item.tr[0].toLocaleUpperCase('tr')}${item.tr.slice(1)}: ${inventory.count(item.kind)}/${item.goal}`, isNew ? note : '');
+  const name = item.bagTr ?? item.tr;
+  if (item.goal) toasts.show(`${name[0].toLocaleUpperCase('tr')}${name.slice(1)}: ${inventory.count(item.kind)}/${item.goal}`, isNew ? note : '');
   else toasts.show(`${item.verb.replace(/ al$/, '')} aldın!`, note);
-});
-bus.on(EV.DIALOGUE_CLOSE, () => {
-  if (!pendingFinish) return;
-  pendingFinish = false;
-  const outro = story.chapter.outro;
-  setTimeout(() => cards.show({ ...outro, text: outro.text(vocab.size) }), 500);
 });
 
 // --- menu scene, then start ---
@@ -183,4 +195,4 @@ const game = new Game({ modes, time, lighting, controller, cast, items, world, i
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug
-if (new URLSearchParams(location.search).has('debug')) window.__game = { game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

@@ -13,17 +13,22 @@ export class ItemSystem {
       world.get(d.location).group.add(mesh);
       return { ...d, mesh, baseY: d.pos[1] };
     });
+    bus.on(EV.CHAPTER, () => this.refresh());
     this.refresh();
   }
 
   isTaken(item) { return this.state.taken.includes(item.id); }
-  isActive(item) { return !this.isTaken(item) && item.activeIn.includes(this.story.quest?.id); }
+  exists(item) { return !this.isTaken(item) && (!item.chapters || item.chapters.includes(this.story.chapter?.id)); }
+  isActive(item) { return this.exists(item) && item.activeIn.includes(this.story.quest?.id); }
   get(id) { return this.items.find((i) => i.id === id); }
   ofKind(kind) { return this.items.filter((i) => i.kind === kind); }
   /** Display info for a kind (first matching def). */
-  info(kind) { const i = this.items.find((d) => d.kind === kind); return i ? { tr: i.tr, en: i.en } : { tr: kind, en: '' }; }
+  info(kind) {
+    const i = this.items.find((d) => d.kind === kind);
+    return i ? { tr: i.bagTr ?? i.tr, en: i.bagEn ?? i.en } : { tr: kind, en: '' };
+  }
 
-  refresh() { this.items.forEach((i) => { i.mesh.visible = !this.isTaken(i); }); }
+  refresh() { this.items.forEach((i) => { i.mesh.visible = this.exists(i); }); }
 
   pickable(pos, range = 1.7) {
     const here = this.world.current.id;

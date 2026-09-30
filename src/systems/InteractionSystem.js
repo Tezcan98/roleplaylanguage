@@ -1,3 +1,5 @@
+import { EV } from '../core/events.js';
+
 const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
 /** "Talk to X" for NPCs standing near the player. */
@@ -19,19 +21,32 @@ export class ItemInteractions {
   }
 }
 
-/** Doors and other fixed spots; behaviour comes from content rules. */
+/**
+ * Doors, beds, the TV… Behaviour comes from content rules:
+ * `{ label, travel?: [loc, anchor], use?: effects[], available?(ctx), locked?(ctx) → [msg, en] | null }`.
+ */
 export class HotspotInteractions {
-  constructor({ world, rules, story, travel, toasts }) { Object.assign(this, { world, rules, story, travel, toasts }); }
+  constructor({ world, rules, story, travel, toasts, effects, bus, ctx }) {
+    Object.assign(this, { world, rules, story, travel, toasts, effects, bus, ctx });
+  }
+
   find(pos) {
     for (const h of this.world.current.hotspots.values()) {
       const rule = this.rules[h.id];
-      if (!rule || dist(h.pos, pos) > h.radius) continue;
-      const locked = rule.lockedUntil && !this.story.reached(rule.lockedUntil);
       const d = dist(h.pos, pos);
-      if (locked) return { label: rule.lockedLabel ?? rule.label, dist: d, run: () => this.toasts.show(...rule.lockedMsg) };
-      return { label: rule.label, dist: d, run: () => this.travel.go(...rule.travel, () => this.story.flushIntro()) };
+      if (!rule || d > h.radius || rule.available?.(this.ctx) === false) continue;
+      const label = typeof rule.label === 'function' ? rule.label(this.ctx) : rule.label;
+      const locked = rule.locked?.(this.ctx);
+      if (locked) return { label: rule.lockedLabel ?? label, dist: d, run: () => this.toasts.show(...locked) };
+      return { label, dist: d, run: () => this.use(h.id, rule) };
     }
     return null;
+  }
+
+  use(id, rule) {
+    this.bus.emit(EV.HOTSPOT, { id });
+    if (rule.travel) this.travel.go(...rule.travel, () => this.story.flushIntro());
+    if (rule.use) this.effects.run(rule.use);
   }
 }
 
