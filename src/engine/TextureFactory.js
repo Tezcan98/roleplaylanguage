@@ -237,35 +237,63 @@ export class TextureFactory {
   #base = new Map();
   #clones = new Map();
   #files = new Map();
+  #normals = new Map();
+  #scale = new Map();
+  #tint = new Map();
 
   constructor(renderer) { this.maxAniso = renderer?.capabilities.getMaxAnisotropy?.() ?? 1; }
 
   register(name, painter) { this.#generators[name] = painter; }
   has(name) { return this.#files.has(name) || name in this.#generators; }
 
-  /** Load file overrides before the world is built. Missing files fall back silently. */
+  /**
+   * Load file overrides before the world is built. An entry is a URL or
+   * `{ map, normal?, scale?, tint? }` (scale multiplies the tiling to match real-world size,
+   * tint is multiplied into the material colour).
+   * Missing files fall back to the procedural texture silently.
+   */
   async loadOverrides(map = {}) {
     const loader = new THREE.TextureLoader();
-    await Promise.all(Object.entries(map).map(async ([name, url]) => {
-      if (!url) return;
+    const load = async (url, srgb) => {
+      const t = await loader.loadAsync(url);
+      t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
+      t.anisotropy = Math.min(8, this.maxAniso);
+      return t;
+    };
+    await Promise.all(Object.entries(map).map(async ([name, entry]) => {
+      const e = typeof entry === 'string' ? { map: entry } : entry;
+      if (!e?.map) return;
       try {
-        const t = await loader.loadAsync(url);
-        t.colorSpace = THREE.SRGBColorSpace;
-        this.#files.set(name, t);
-      } catch { console.warn(`[textures] ${name}: ${url} yüklenemedi, prosedürel doku kullanılıyor`); }
+        this.#files.set(name, await load(e.map, true));
+        if (e.normal) this.#normals.set(name, await load(e.normal, false));
+        if (e.scale) this.#scale.set(name, e.scale);
+        if (e.tint) this.#tint.set(name, new THREE.Color(e.tint).getHex());
+      } catch { console.warn(`[textures] ${name}: ${e.map} yüklenemedi, prosedürel doku kullanılıyor`); }
     }));
   }
 
-  get(name, repeat = [1, 1]) {
-    const key = `${name}|${repeat[0]}|${repeat[1]}`;
+  /** Colour multiplier that belongs to a file texture (undefined for procedural ones). */
+  tint(name) { return this.#tint.get(name); }
+
+  /** Normal map for a file texture (null for procedural ones). */
+  normal(name, repeat = [1, 1]) {
+    const base = this.#normals.get(name);
+    return base ? this.#tiled(`n|${name}`, base, repeat, name) : null;
+  }
+
+  #tiled(prefix, base, repeat, name) {
+    const k = this.#scale.get(name) ?? 1;
+    const key = `${prefix}|${repeat[0]}|${repeat[1]}`;
     if (this.#clones.has(key)) return this.#clones.get(key);
-    const t = this.#baseTexture(name).clone();
+    const t = base.clone();
     t.needsUpdate = true;
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.repeat.set(repeat[0], repeat[1]);
+    t.repeat.set(repeat[0] * k, repeat[1] * k);
     this.#clones.set(key, t);
     return t;
   }
+
+  get(name, repeat = [1, 1]) { return this.#tiled(`c|${name}`, this.#baseTexture(name), repeat, name); }
 
   #baseTexture(name) {
     if (this.#files.has(name)) return this.#files.get(name);

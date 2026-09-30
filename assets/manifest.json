@@ -1,4 +1,62 @@
 {
   "models": {},
-  "textures": {}
+  "textures": {
+    "grass": {
+      "map": "assets/textures/grass.webp",
+      "scale": 2,
+      "tint": "#B8E27C",
+      "normal": "assets/textures/grass_n.webp"
+    },
+    "dirt": {
+      "map": "assets/textures/dirt.webp",
+      "scale": 2,
+      "normal": "assets/textures/dirt_n.webp"
+    },
+    "floorWood": {
+      "map": "assets/textures/floorWood.webp",
+      "scale": 2,
+      "normal": "assets/textures/floorWood_n.webp"
+    },
+    "darkWood": {
+      "map": "assets/textures/darkWood.webp",
+      "scale": 1
+    },
+    "lightWood": {
+      "map": "assets/textures/lightWood.webp",
+      "scale": 1
+    },
+    "plaster": {
+      "map": "assets/textures/plaster.webp",
+      "scale": 1.5,
+      "normal": "assets/textures/plaster_n.webp"
+    },
+    "whiteWall": {
+      "map": "assets/textures/whiteWall.webp",
+      "scale": 1.5,
+      "normal": "assets/textures/whiteWall_n.webp"
+    },
+    "roof": {
+      "map": "assets/textures/roof.webp",
+      "scale": 1,
+      "normal": "assets/textures/roof_n.webp"
+    },
+    "stone": {
+      "map": "assets/textures/stone.webp",
+      "scale": 1.5,
+      "normal": "assets/textures/stone_n.webp"
+    },
+    "brick": {
+      "map": "assets/textures/brick.webp",
+      "scale": 1.5,
+      "normal": "assets/textures/brick_n.webp"
+    },
+    "bark": {
+      "map": "assets/textures/bark.webp",
+      "scale": 1
+    },
+    "metal": {
+      "map": "assets/textures/metal.webp",
+      "scale": 1
+    }
+  }
 }

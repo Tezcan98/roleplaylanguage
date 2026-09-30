@@ -11,6 +11,7 @@ export class MeshFactory {
   /** @param {{ standard?: boolean }} opts — standard: PBR materials (high quality), else Lambert */
   constructor(textures, { standard = true } = {}) {
     this.textures = textures;
+    this.standard = standard;
     this.Material = standard ? THREE.MeshStandardMaterial : THREE.MeshLambertMaterial;
     this.base = standard ? { roughness: 0.88, metalness: 0 } : {};
   }
@@ -22,8 +23,9 @@ export class MeshFactory {
     if (typeof spec === 'number') {
       m = new this.Material({ color: spec, ...this.base, ...extra });
     } else {
-      const { tex, repeat = [1, 1], color = 0xffffff } = spec;
-      m = new this.Material({ color, map: this.textures.get(tex, repeat), ...this.base, ...extra });
+      const { tex, repeat = [1, 1], color = this.textures.tint(tex) ?? 0xffffff } = spec;
+      const normalMap = this.standard ? this.textures.normal(tex, repeat) : null;
+      m = new this.Material({ color, map: this.textures.get(tex, repeat), ...(normalMap ? { normalMap } : {}), ...this.base, ...extra });
     }
     this.#materials.set(key, m);
     return m;
