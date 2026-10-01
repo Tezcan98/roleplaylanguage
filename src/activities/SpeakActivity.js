@@ -11,8 +11,7 @@ const FEEDBACK = {
 
 /**
  * Say it out loud. Uses the SpeechEvaluator service (speech-to-text + Turkish detection +
- * answer matching). After two misses a "skip" appears so nobody gets stuck; without a
- * microphone API the player reads aloud and confirms.
+ * answer matching). The speech exam is gated by the shared credit/rewarded-ad system.
  *
  * spec: { expect: string[], keywords?: string[], show?: string, hint?, prompt?, next?, do? }
  */
@@ -20,13 +19,16 @@ export class SpeakActivity extends Activity {
   mount(container, spec) {
     const { speech, tts } = this.services;
     const target = spec.show ?? spec.expect?.[0] ?? '';
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
+      const devSkip = new URLSearchParams(location.search).has('dev') || new URLSearchParams(location.search).has('debug');
+      if (this.services.gate && !devSkip) {
+        const allowed = await this.services.gate.request({ title: 'Sesli sınav', titleEn: 'Speech exam', cost: 1 });
+        if (!allowed) { resolve({ option: {} , ok: false }); return; }
+      }
       let lastHeard = '';
       const done = (ok) => resolve({ option: { next: spec.next, do: spec.do }, ok, transcript: lastHeard || target });
       const heard = el('div', { class: 'transcript' });
       const fb = el('div', { class: 'fb' });
-      const skip = el('button', { class: 'chipbtn', text: 'Geç', attrs: { type: 'button' }, style: { display: 'none' }, on: { click: () => done(false) } });
-      let misses = 0;
 
       this.mic = el('button', {
         class: 'mic', html: MIC, attrs: { type: 'button', 'aria-label': 'Konuş' },
@@ -47,7 +49,6 @@ export class SpeakActivity extends Activity {
               fb.className = 'fb bad';
               fb.textContent = /not-allowed|denied/i.test(e.message) ? 'Mikrofon izni gerekli.' : 'Mikrofon çalışmadı, tekrar dene.';
             } finally { this.mic?.classList.remove('rec'); }
-            if (++misses >= 2) skip.style.display = '';
           },
         },
       });
@@ -60,9 +61,9 @@ export class SpeakActivity extends Activity {
         spec.showEn && el('p', { class: 'en en-t', text: spec.showEn }),
         el('div', { class: 'speak-row' }, [
           this.mic,
+          devSkip && el('button', { class: 'chipbtn', text: 'Geç (DEV)', attrs: { type: 'button' }, on: { click: () => done(true) } }),
           noMic ? el('span', { class: 'fb', text: 'Tarayıcın ses tanımayı desteklemiyor. Okuyunca mikrofona bas.' }) : null,
           !spec.hide && el('button', { class: 'chipbtn', html: `${ICONS.speaker} Örnek`, attrs: { type: 'button' }, on: { click: () => tts.speak(target, { speaker: 'ahmet' }) } }),
-          skip,
         ]),
         heard, fb,
       ]);

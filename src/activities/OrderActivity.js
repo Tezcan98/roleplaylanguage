@@ -21,12 +21,28 @@ export class OrderActivity extends Activity {
         on: { click: (e) => add(e.currentTarget) },
       }));
       const clear = () => { picked.length = 0; line.replaceChildren(); line.className = 'answer-line'; this.tiles.forEach((t) => { t.disabled = false; }); };
+      const removeSelected = (selected) => {
+        const index = Number(selected.dataset.index);
+        const at = picked.findIndex((p) => p.index === index);
+        if (at < 0) return;
+        picked.splice(at, 1);
+        this.tiles[index].disabled = false;
+        selected.remove();
+        line.className = 'answer-line';
+      };
       const add = (tile) => {
         tile.disabled = true;
-        picked.push(tile.textContent);
-        line.append(el('span', { class: 'tile', text: tile.textContent }));
+        const index = this.tiles.indexOf(tile);
+        picked.push({ text: tile.textContent, index });
+        const selected = el('button', {
+          class: 'tile selected-word', text: tile.textContent,
+          attrs: { type: 'button', title: 'Kelimeyi geri al' },
+          on: { click: () => removeSelected(selected) },
+        });
+        selected.dataset.index = String(index);
+        line.append(selected);
         if (picked.length < words.length) return;
-        if (picked.join(' ') === spec.answer) {
+        if (picked.map((p) => p.text).join(' ') === spec.answer) {
           line.classList.add('ok');
           setTimeout(() => resolve({ option: { next: spec.next, do: spec.do } }), 600);
         } else {

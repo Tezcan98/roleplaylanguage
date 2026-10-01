@@ -7,8 +7,8 @@ import { el } from '../../ui/dom.js';
 export class ClassAccessGate {
   constructor({ host, modes, wallet, ads }) { Object.assign(this, { host, modes, wallet, ads }); }
 
-  request(lesson) {
-    const cost = lesson.cost ?? 1;
+  request(resource) {
+    const cost = resource.cost ?? 1;
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const balance = el('p', { class: 'ctext' });
@@ -16,13 +16,13 @@ export class ClassAccessGate {
       const ad = el('button', { class: 'btn alt', text: '▶ Reklam izle (+1 kredi)', attrs: { type: 'button' } });
       const cancel = el('button', { class: 'btn alt', text: 'Vazgeç', attrs: { type: 'button' } });
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card' }, [
-        el('p', { class: 'chap', text: 'Ders' }),
-        el('h2', { class: 'ctitle', text: lesson.title }),
-        el('p', { class: 'cen en-t', text: `Lesson: ${lesson.titleEn}` }),
+        el('p', { class: 'chap', text: resource.titleEn ? 'Ders' : 'Sesli sınav' }),
+        el('h2', { class: 'ctitle', text: resource.title }),
+        el('p', { class: 'cen en-t', text: resource.titleEn ? `Lesson: ${resource.titleEn}` : 'Speech exam' }),
         balance, pay, ad, cancel,
       ])]);
       const refresh = () => {
-        balance.textContent = `Bu ders ${cost} kredi. Kredin: ${this.wallet.balance}`;
+        balance.textContent = `${resource.titleEn ? 'Bu ders' : 'Bu sınav'} ${cost} kredi. Kredin: ${this.wallet.balance}`;
         pay.textContent = `Krediyle gir (−${cost})`;
         pay.disabled = this.wallet.balance < cost;
       };

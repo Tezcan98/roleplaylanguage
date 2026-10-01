@@ -12,6 +12,8 @@ export class HouseInterior extends Location {
 
   play(anim) { if (anim === 'tv') this.tvTime = 5; }
 
+  setBreadOnTable(on) { if (this.bread) this.bread.visible = on; }
+
   build(kit) {
     const { mf } = kit, C = this.collision, add = (m) => this.add(m);
     const noCast = (m) => { m.castShadow = false; return add(m); };
@@ -44,9 +46,13 @@ export class HouseInterior extends Location {
         g.add(mf.at(mf.cyl(0.05, 0.04, 0.15, 0xC8451F, 8), x, 0.4, z));
         g.add(mf.at(mf.cyl(0.08, 0.08, 0.012, 0xffffff, 12), x, 0.33, z));
       });
-      const simit = mf.torus(0.1, 0.04, 0xC98A3E); simit.rotation.x = Math.PI / 2; g.add(mf.at(simit, -0.2, 0.35, -0.3));
-      g.add(mf.at(mf.cyl(0.14, 0.12, 0.04, 0xffffff, 14), 0.35, 0.34, 0.2));
-      g.add(mf.at(mf.box(0.14, 0.05, 0.1, 0xFFF6D5), 0.35, 0.38, 0.2)); // peynir
+      // Breakfast/dinner food is managed explicitly below; don't leave tea/simit on every meal.
+      const bowl = mf.at(mf.cyl(0.18, 0.16, 0.05, 0xFFF6E0, 16), -0.2, 0.35, -0.3);
+      g.add(bowl);
+      const soup = mf.at(mf.cyl(0.13, 0.11, 0.015, 0xB96B35, 16), -0.2, 0.39, -0.3);
+      g.add(soup);
+      const cheese = mf.at(mf.box(0.14, 0.05, 0.1, 0xFFF6D5), 0.35, 0.38, 0.2);
+      g.add(cheese);
       return g;
     });
     C.addCircle(-0.8, -0.4, 0.85);
@@ -56,6 +62,27 @@ export class HouseInterior extends Location {
     this.anchor('sofraW', -2.0, -0.4, Math.PI / 2);
     this.anchor('sofraE', 0.4, -0.4, -Math.PI / 2);
     this.anchor('sofraS', -0.8, 0.75, Math.PI);
+    this.hotspot('house.sofra', -0.8, 0.78, 1.0);
+    this.hotspot('house.breadTable', -0.45, -0.55, 1.0);
+
+    // Small bedroom partition: the bed now reads as a separate room, with a doorway.
+    // Partition wall with a real doorway into the bedroom.
+    noCast(mf.at(mf.box(0.16, 2.7, 0.34, WALL), 2.85, 1.35, 1.97));
+    noCast(mf.at(mf.box(0.16, 2.7, 0.30, WALL), 2.85, 1.35, 4.15));
+    noCast(mf.at(mf.box(2.9, 2.7, 0.16, WALL), 4.35, 1.35, 1.78));
+    C.addBox(2.7, 3.0, 1.78, 2.12);
+    C.addBox(2.7, 3.0, 4.0, 4.35);
+    C.addBox(2.9, 5.8, 1.62, 1.94);
+    // Door opening remains clear between z≈2.12 and z≈4.0.
+
+    this.bread = mf.group(
+      mf.at(mf.sphere(0.2, 0xD9A05B, 12), 0, 0.02, 0),
+      mf.at(mf.box(0.02, 0.02, 0.2, 0xB7793A), 0, 0.14, 0),
+    );
+    this.bread.children[0].scale.set(1.5, 0.7, 0.9);
+    this.bread.position.set(-0.45, 0.36, -0.55);
+    this.bread.visible = false;
+    add(this.bread);
 
     // sedir (divan) along the back wall
     this.prop(kit, 'prop.sedir', -1, 0, -4, 0, () => {
@@ -154,6 +181,8 @@ export class HouseInterior extends Location {
     });
 
     this.anchor('start', 0.8, -2.6, 0);
+    this.anchor('sofraGuest', -0.8, 1.7, Math.PI);
+    this.anchor('breadTable', -0.8, -0.4, 0);
     this.anchor('sofraGuest', -0.8, 1.7, Math.PI);
     this.anchor('bedside', 2.8, 2.6, -Math.PI / 2);
     this.anchor('door', -4.9, 2.1, Math.PI / 2);

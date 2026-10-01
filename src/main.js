@@ -180,7 +180,9 @@ const tts = new CharacterVoices({
 const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
   : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
-const activities = new ActivityRegistry({ tts, speech })
+const wallet = new CreditWallet(state, bus);
+const gate = new ClassAccessGate({ host, modes, wallet, ads: new MockAdProvider(host, modes) });
+const activities = new ActivityRegistry({ tts, speech, gate })
   .register('choice', ChoiceActivity)
   .register('listen', ListenActivity)
   .register('order', OrderActivity)
@@ -204,7 +206,17 @@ effects
     toasts.show(`+${n ?? 1} ${tr}`, en);
   })
   .register('wear', (what, off) => { player.wear(what, off !== 'off'); state.flags[`wear-${what}`] = off !== 'off'; })
-  .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); });
+  .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); })
+  .register('sit', (anchor) => {
+    const a = world.get('house').anchors.get(anchor);
+    if (a) { player.place(a); player.sit(true); }
+  })
+  .register('place-bread', () => {
+    inventory.remove('ekmek', 1);
+    state.flags['bread-on-table'] = true;
+    world.get('house').setBreadOnTable?.(true);
+    bus.emit(EV.INVENTORY);
+  });
 story.setEffects(effects);
 
 // --- free roam ---
@@ -219,8 +231,6 @@ toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', range: 1.2, onUse
 toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
 
 // --- school: credits, ads, multiplayer lesson ---
-const wallet = new CreditWallet(state, bus);
-const gate = new ClassAccessGate({ host, modes, wallet, ads: new MockAdProvider(host, modes) });
 const lessons = new LessonController({
   lessons: LESSONS, bots: CLASSMATE_BOTS, gate, activities, cast, world, travel, player, camera, tts, labels, modes, effects, state,
   // manifest.classroomServer → real multiplayer; otherwise local bots
@@ -276,6 +286,10 @@ bus.on(EV.WORD, ({ size }) => hud.setWords(size));
 bus.on(EV.INVENTORY, () => { hud.setBag(inventory.size); hud.setTextbook(inventory.has('kitap')); refreshQuest(); });
 bus.on(EV.CREDITS, ({ balance }) => hud.setCredits(balance));
 bus.on(EV.QUEST, refreshQuest);
+bus.on(EV.CHAPTER, ({ chapter }) => {
+  player.sit(false);
+  world.get('house').setBreadOnTable?.(state.flags['bread-on-table'] === true && chapter.id === 'd1-breakfast');
+});
 bus.on(EV.ITEM_PICKED, ({ item, isNew }) => {
   effects.run(item.onPick);
   const note = `${isNew ? 'Yeni kelime: ' : ''}${item.tr} = ${item.en}`;
@@ -303,7 +317,11 @@ new MainMenu(host, {
   hasSave: !!saved,
   onStart: () => fader.run(() => {
     saves.clear();
-    story.startChapter(0, () => {
+    const requestedDay = Number(params.get('day'));
+    const dayIndex = Number.isInteger(requestedDay) && requestedDay > 0
+      ? STORY.chapters.findIndex((ch) => ch.day === requestedDay)
+      : 0;
+    story.startChapter(dayIndex >= 0 ? dayIndex : 0, () => {
       enterPlay();
       const think = story.chapter.think;
       if (think) labels.think(think, 5, game.t);

@@ -29,7 +29,7 @@ export const FREE_ACTIONS = {
     words: [['el', 'hand'], ['yıkamak', 'to wash'], ['temiz', 'clean']],
   },
   water_garden: {
-    label: 'Bahçeyi sula', think: 'Domatesler su içiyor!', say: 'Bahçeyi suladım.', minutes: 15, anim: 'water',
+    label: 'Bahçeyi sula', think: 'Domateslerin suya ihtiyacı var!', say: 'Bahçeyi suladım.', minutes: 15, anim: 'water',
     words: [['sulamak', 'to water'], ['bahçe', 'garden'], ['bitki', 'plant']],
   },
   ball: {

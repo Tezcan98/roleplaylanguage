@@ -37,7 +37,10 @@ export class LessonController {
     session.on('question', (q) => this.#ask(session, q));
     session.on('answer', (a) => {
       this.view.answer(a, me.id);
-      if (a.studentId !== me.id) this.labels.bubble(this.cast.get(a.studentId), a.text, a.correct ? 'ok' : 'bad');
+      if (a.studentId !== me.id) {
+        this.labels.bubble(this.cast.get(a.studentId), a.text, a.correct ? 'ok' : 'bad');
+        this.tts.speak(a.text, { speaker: a.studentId });
+      }
     });
     session.on('scores', ({ scores }) => this.view.scoresUpdate(scores, me.id));
     session.on('end', ({ scores }) => {
@@ -54,11 +57,22 @@ export class LessonController {
     this.tts.speak(q.q, { speaker: 'ogretmen' });
     this.labels.bubble(this.cast.get('ogretmen'), q.q, null, 4);
     this.#activity?.destroy();
+
+    if (q.turnStudentId !== 'ahmet') {
+      const student = this.cast.get(q.turnStudentId);
+      const name = student?.name ?? q.turnStudentId;
+      this.view.status_(`${name} konuşuyor…`, 'ok');
+      return;
+    }
+
     const act = this.#activity = this.activities.create('speak');
-    const res = await act.mount(this.view.slot, { expect: q.expect, keywords: q.keywords, hide: true, hint: `İpucu: ${q.hint}`, prompt: 'Cevabını söyle:' });
+    const res = await act.mount(this.view.slot, {
+      expect: q.expect, keywords: q.keywords, hide: true,
+      hint: `İpucu: ${q.hint}`, prompt: 'Sıra sende — söyle:'
+    });
     if (this.active !== session || this.current !== q) return;
     session.submit(q.index, { text: res.transcript, correct: res.ok });
-    this.view.status_(res.ok ? 'Doğru! Sıradaki soru geliyor…' : 'Sıradaki soru geliyor…', res.ok ? 'ok' : 'bad');
+    this.view.status_(res.ok ? 'Doğru! Sıradaki öğrenci geliyor…' : 'Tekrar deneyebilirsin; sıra ilerliyor…', res.ok ? 'ok' : 'bad');
     setTimeout(() => { if (this.active === session) session.next(); }, 2500);
   }
 
