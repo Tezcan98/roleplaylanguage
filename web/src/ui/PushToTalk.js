@@ -32,5 +32,5 @@ export class PushToTalk {
   }
 
   show(visible) { if (!visible) this.set(false); this.root.hidden = !visible; }
-  setOnline(n, name) { this.status.textContent = `🌐 ${name} · meydanda ${n} kişi`; }
+  setOnline(n, name, room = '') { this.status.textContent = `🌐 ${name} · ${room ? `${room} · ` : ''}meydanda ${n} kişi`; }
 }

@@ -22,12 +22,13 @@ const checks = [];
 const check = (name, ok, detail = '') => { checks.push([name, ok]); log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`); };
 
 /** A joins from the main menu (username + "Meydana gir"), B walks there from the story. */
-async function player(tag, name, { viaMenu = false } = {}) {
+async function player(tag, name, { viaMenu = false, room = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1000, height: 620 }, permissions: ['microphone'] });
   const page = await ctx.newPage();
   errors.push(...watchErrors(page, `${tag} `));
   await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  if (room) await page.evaluate((r) => window.__game.settings.set('serverRegion', r), room);
   if (viaMenu) {
     await page.click('.main-menu.open button:has-text("Meydana gir")');
     await waitFor(() => page.$('.overlay.open input'), 15000);
@@ -110,6 +111,18 @@ try {
   await A.keyboard.press('e'); await waitFor(() => B.$('text=Engelle')); await B.click('text=Engelle'); await sleep(800);
   await A.keyboard.press('e'); await sleep(1500);
   check('a blocked player cannot ask again', !(await B.$('text=Kabul et')) && !(await inCall(A)) && !(await inCall(B)));
+
+  // a phone locking its screen drops the socket: the game reconnects by itself
+  await B.evaluate(() => window.__game.village.net.dropForTest());
+  check('after a dropped connection the player comes back by itself', !!(await waitFor(async () => (await B.evaluate(() => window.__game.village.net.connected)) && (await A.evaluate(() => window.__game.village.remotes.count)) === 1, 15000)));
+
+  // someone alone in an empty room is offered the room where the others are
+  const C = await player('C', 'Yalnız', { room: 'izmir' });
+  const offer = await waitFor(() => C.$('.overlay.open button:has-text("Ankara meydanına geç")'), 8000);
+  check('alone in an empty square: offered the busier one', !!offer);
+  if (offer) await offer.click();
+  check('…and switching joins the others', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 10000)));
+  await C.close();
 
   // online from the menu: the square's exit leads back to the main menu, not home
   const exitLabel = await A.evaluate(() => { const g = window.__game; g.player.position.set(-15.6, 0, 0); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });

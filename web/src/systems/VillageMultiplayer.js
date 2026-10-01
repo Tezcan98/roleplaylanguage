@@ -20,10 +20,15 @@ export class VillageMultiplayer {
   #since = 0;
   #last = '';
   #warnedStt = false;
+  #retryTimer = null;
+  #retryDelay = 0;
   #ballRolling = false; // we kicked it last: report where it stops, for players who join later
 
-  constructor({ bus, net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, ball = null, locationId = 'village' }) {
-    Object.assign(this, { net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, ball, locationId });
+  constructor({ bus, net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, ball = null, rooms = [], healthUrl = '', choice = null, locationId = 'village' }) {
+    Object.assign(this, { net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, ball, rooms, healthUrl, choice, locationId });
+    // phones drop the connection when the screen locks or the app goes to the background:
+    // come back → reconnect, and keep retrying (with back-off) while still in the square
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && this.#inSquare() && !this.net.connected) this.join(); });
     bus.on(EV.LOCATION, ({ id }) => (id === locationId ? this.join() : this.leave()));
     net.on('join', ({ peer }) => { this.remotes.add(this.#loc(), peer); this.toasts.show(`${peer.name} meydana geldi`, 'joined the square'); this.#count(); });
     net.on('leave', ({ id }) => {
@@ -48,10 +53,43 @@ export class VillageMultiplayer {
     });
     net.on('call-start', ({ with: id, initiator }) => this.#startCall(id, initiator));
     net.on('call-end', ({ reason }) => this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup));
-    net.on('disconnected', () => { this.toasts.show('Bağlantı koptu', 'Disconnected from the square'); this.#reset(); });
+    net.on('disconnected', () => {
+      this.#reset();
+      if (!this.#inSquare()) return;
+      this.toasts.show('Bağlantı koptu, yeniden bağlanılıyor…', 'Disconnected — reconnecting…');
+      this.#retryLater();
+    });
   }
 
   #loc() { return this.world.get(this.locationId); }
+  #inSquare() { return this.world.current?.id === this.locationId; }
+  #roomLabel(id = this.settings.get('serverRegion', 'ankara')) { return this.rooms.find(([r]) => r === id)?.[1] ?? id; }
+
+  #retryLater() {
+    clearTimeout(this.#retryTimer);
+    this.#retryDelay = Math.min(15000, (this.#retryDelay || 1000) * 2);
+    this.#retryTimer = setTimeout(() => { if (this.#inSquare() && !this.net.connected && !document.hidden) this.join(); }, this.#retryDelay);
+  }
+
+  /** Alone in this room while another room has players: offer to go there. */
+  async #suggestBusierRoom() {
+    if (!this.healthUrl || !this.choice || this.remotes.count > 0) return;
+    let rooms;
+    try { rooms = (await (await fetch(this.healthUrl, { cache: 'no-store' })).json()).rooms ?? {}; } catch { return; }
+    const mine = this.settings.get('serverRegion', 'ankara');
+    const [best, n] = Object.entries(rooms).filter(([r]) => r !== mine && this.rooms.some(([id]) => id === r)).sort((a, b) => b[1] - a[1])[0] ?? [];
+    if (!best || !n || this.remotes.count > 0 || !this.net.connected) return;
+    const go = await this.choice.ask({
+      title: `${this.#roomLabel(mine)} meydanı şimdilik boş`,
+      text: `${this.#roomLabel(best)} meydanında ${n} kişi var. Oraya geçelim mi?`,
+      en: 'This square is empty right now. Another square has players — switch there?',
+      yes: `${this.#roomLabel(best)} meydanına geç`, no: 'Burada kal',
+    });
+    if (!go || !this.#inSquare()) return;
+    this.settings.set('serverRegion', best);
+    this.leave();
+    this.join();
+  }
 
   #blockedList() {
     const list = this.settings.get('blockedPlayers', []);
@@ -81,7 +119,7 @@ export class VillageMultiplayer {
   endVoiceCall(reason = 'hangup') {
     if (this.voice.inCall) this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup);
   }
-  #count() { this.ptt.setOnline(this.remotes.count + 1, this.net.name); }
+  #count() { this.ptt.setOnline(this.remotes.count + 1, this.net.name, this.#roomLabel()); }
 
   async join() {
     if (this.net.connected || this.joining) return;
@@ -100,10 +138,13 @@ export class VillageMultiplayer {
       if (welcome.ball) this.ball?.setState(welcome.ball);
       this.ptt.show(true);
       this.#count();
-      this.toasts.show(`Meydana hoş geldin, ${welcome.name}!`, 'Bas-konuş: söylediğin yazı olarak görünür · Push-to-talk shows your words as text');
+      this.toasts.show(`${this.#roomLabel()} meydanına hoş geldin, ${welcome.name}!`, 'Bas-konuş: söylediğin yazı olarak görünür · Push-to-talk shows your words as text');
       if (!this.settings.get('villageIntroSeen', false)) { this.settings.set('villageIntroSeen', true); this.onFirstVisit?.(); }
+      this.#retryDelay = 0;
+      this.#suggestBusierRoom();
     } catch (e) {
       this.toasts.show('Çok oyunculu sunucuya bağlanılamadı', `Playing offline (${e.message})`);
+      if ((e.message === 'unreachable' || e.message === 'timeout') && this.#inSquare()) this.#retryLater(); // network trouble, not a refusal
     } finally { this.joining = false; }
   }
 
@@ -111,6 +152,8 @@ export class VillageMultiplayer {
   ballKicked(ball) { if (this.net.connected) { this.net.send({ type: 'ball', ...ball.state() }); this.#ballRolling = true; } }
 
   leave() {
+    clearTimeout(this.#retryTimer);
+    this.#retryDelay = 0;
     if (this.voice.inCall) this.net.send({ type: 'call-end' });
     if (this.net.connected) this.net.close();
     this.#reset();

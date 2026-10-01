@@ -48,6 +48,9 @@ export class VillageNetwork {
 
   send(msg) { if (this.#ws?.readyState === WebSocket.OPEN) this.#ws.send(JSON.stringify(msg)); }
 
+  /** Test hook: drop the socket as a phone going to sleep would (the 'disconnected' event fires). */
+  dropForTest() { this.#ws?.close(); }
+
   close() {
     if (!this.#ws) return;
     const ws = this.#ws;

@@ -94,6 +94,8 @@ import { Fader } from './ui/Fader.js';
 import { CardOverlay } from './ui/CardOverlay.js';
 import { MainMenu } from './ui/MainMenu.js';
 import { WordDrill } from './systems/WordDrill.js';
+import { SERVERS, healthUrl } from './ui/ServerPicker.js';
+import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
 import { ListModal } from './ui/ListModal.js';
 import { DialogueView } from './ui/DialogueView.js';
@@ -299,6 +301,7 @@ const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }] }),
   remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, girlLook: PLAYER_LOOK_GIRL }), ball: villageBall,
+  rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
   calls: new CallUI(host, modes),
