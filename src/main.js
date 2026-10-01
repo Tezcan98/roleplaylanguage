@@ -340,4 +340,4 @@ const game = new Game({ village, toys, foliage: Foliage, modes, time, lighting, 
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

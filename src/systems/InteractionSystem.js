@@ -45,11 +45,12 @@ export class HotspotInteractions {
     for (const h of this.world.current.hotspots.values()) {
       const rule = this.rules[h.id];
       const d = dist(h.pos, pos);
-      if (!rule || d > h.radius || rule.available?.(this.ctx) === false || (best && best.dist < d)) continue;
-      const label = typeof rule.label === 'function' ? rule.label(this.ctx) : rule.label;
-      const locked = rule.locked?.(this.ctx);
+      if (!rule || d > h.radius || rule.available?.(this.ctx) === false) continue;
       // the current quest's target wins; free-roam fun yields to story actions
       const priority = this.story.target()?.hotspot === h.id ? 2 : rule.use?.every((e) => e.startsWith('free:')) ? 0 : 1;
+      if (best && (best.priority > priority || (best.priority === priority && best.dist < d))) continue;
+      const label = typeof rule.label === 'function' ? rule.label(this.ctx) : rule.label;
+      const locked = rule.locked?.(this.ctx);
       best = locked
         ? { label: rule.lockedLabel ?? label, dist: d, priority, run: () => this.toasts.show(...locked) }
         : { label, dist: d, priority, run: () => this.use(h.id, rule) };
