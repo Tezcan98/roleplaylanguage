@@ -92,7 +92,8 @@ export class VillageMultiplayer {
         this.settings.set('username', name);
       }
       if (this.world.current.id !== this.locationId) return;
-      const welcome = await this.net.connect(name);
+      const room = this.settings.get('serverRegion', 'istanbul');
+      const welcome = await this.net.connect(name, room);
       welcome.peers.forEach((p) => this.remotes.add(this.#loc(), p));
       this.ptt.show(true);
       this.#count();
