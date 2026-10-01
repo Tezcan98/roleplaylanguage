@@ -218,6 +218,11 @@ export const STORY = {
       quests: [
         { id: 'homework', title: 'Ünite 1', obj: 'Masaya otur, kitabındaki Ünite 1\'i bitir', en: 'Sit at the desk and finish Unit 1 in your book', target: { hotspot: 'house.desk' }, complete: { flag: 'homework-u1' }, minutes: 45 },
         { id: 'show-mom', title: 'Aferin', obj: 'Annene ödevini anlat', en: 'Tell mom about your homework', target: { npc: 'anne' } },
+        { id: 'make-tea', title: 'Çay saati', obj: 'Mutfakta çay hazırla', en: 'Prepare tea in the kitchen', target: { hotspot: 'house.tea' }, complete: { use: 'house.tea' }, minutes: 5 },
+        { id: 'set-table', title: 'Sofra', obj: 'Sofrayı hazırla', en: 'Set the table', target: { hotspot: 'house.table' }, complete: { use: 'house.table' }, minutes: 8 },
+        { id: 'wash-dishes', title: 'Bulaşıklar', obj: 'Bulaşıkları yıka', en: 'Wash the dishes', target: { hotspot: 'house.dishes' }, complete: { use: 'house.dishes' }, minutes: 10 },
+        { id: 'sweep-house', title: 'Temizlik', obj: 'Odayı süpür', en: 'Sweep the room', target: { hotspot: 'house.sweep' }, complete: { use: 'house.sweep' }, minutes: 10 },
+        { id: 'water-plant', title: 'Çiçek', obj: 'Salondaki çiçeği sula', en: 'Water the plant in the living room', target: { hotspot: 'house.plant' }, complete: { use: 'house.plant' }, minutes: 3 },
         {
           id: 'buy', title: 'Bakkal',
           obj: (c) => (c.has('sut') ? 'Ekmekle sütü annene götür' : 'Köy meydanındaki bakkaldan ekmek ve süt al'),
