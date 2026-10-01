@@ -176,3 +176,12 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{
 .mncard .w{font:700 20px Fredoka,sans-serif;display:flex;align-items:center;gap:8px}
 .mncard .s{font-weight:800;color:#8A5A12;font-size:14px}
 .mncard .p{font-weight:700;font-size:14px}
+
+/* ---------- multiplayer village ---------- */
+.ptt-wrap{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 128px);display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
+.ptt-wrap[hidden]{display:none}
+.ptt{pointer-events:auto;display:flex;align-items:center;gap:8px;min-height:60px;padding:0 18px 0 12px;border-radius:999px;border:3px solid var(--wood);background:#fff;color:var(--ink);font:700 16px Fredoka,sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2);touch-action:none;-webkit-user-select:none;user-select:none}
+.ptt.rec{background:#E4574A;color:#fff;animation:pulse 1s infinite}
+.pill.online{cursor:default;font-size:13px;pointer-events:none}
+.free{display:flex;gap:8px}
+.free input{flex-grow:1;min-height:50px;border-radius:10px;border:2px solid var(--wood);padding:0 12px;font:700 18px Nunito,sans-serif;background:#fff;color:var(--ink);min-width:0;-webkit-user-select:text;user-select:text}

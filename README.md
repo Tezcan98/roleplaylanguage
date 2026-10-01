@@ -9,9 +9,14 @@ Köyde yaşayan bir ailenin hikayesi içinde Türkçe öğreten 3D rol yapma oyu
 ES modülleri `file://` üzerinden yüklenmez, bu yüzden yerel sunucu gerekir:
 
 ```bash
+npm install      # bir kez: çok oyunculu sunucu için `ws`
 npm run voices   # bir kez: Piper Türkçe sesleri assets/voices/ içine indirir (~120 MB)
-npm start        # http://localhost:8080
+npm start        # http://localhost:8080 (+ köy meydanı sunucusu: ws://localhost:8080/ws/village)
 ```
+
+Aynı ağdaki başka bir cihazdan (telefon) `http://<bilgisayarın-ip>:8080` ile bağlanılır. Not: tarayıcılar mikrofonu sadece `https` ya da `localhost` üzerinde verir; telefonda sesli konuşma için oyunu https ile sun.
+
+**Oyun statik bir yerde (GitHub Pages) olursa:** sunucuyu ayrıca çalıştır (`npm run server` → port 8090, ör. Render/Fly/VPS üzerinde) ve `assets/manifest.json` içine `"villageServer": "wss://sunucu-adresin/ws/village"` ekle. Sunucu yoksa meydan tek kişilik çalışır.
 
 `npm start`, COOP/COEP başlıklarıyla sunan bir sunucudur (`tools/serve.mjs`). Bu başlıklar sayesinde ses motoru çok çekirdekli çalışır ve cümle başına süre ~1 sn'ye iner.
 
@@ -32,7 +37,7 @@ URL parametreleri:
 - **İki günlük hikaye (9 bölüm):** Pazar sabahı → kahvaltı → çamaşır → masal → akşam yemeği → gece/uyku → Pazartesi okul → ödev. Saat görevlerle ilerler, gece ve gündüz değişir.
 - **Alıştırma tipleri:** seçmeli, dinleme (cümle gizli, sesle duyulur), kelime sıralama, sesli konuşma (konuşma tanıma + Türkçe tespiti + benzerlik puanı).
 - **Dede'nin masalları:** her ziyarette yeni bir etkileşimli Nasreddin Hoca masalı (5 masal).
-- **Köy meydanı:** avlunun doğusundan gidilir; bakkal ve muhtarla konuşulur.
+- **Köy meydanı (çok oyunculu):** avlunun doğusundan gidilir; bakkal ve muhtarla konuşulur. İlk girişte kullanıcı adı sorulur; meydandaki diğer oyuncular görünür, **bas-konuş** (düğme ya da `T`) ile sesli konuşulur (WebRTC, uzaklaştıkça ses kısılır). Tarayıcı destekliyorsa söylenen cümle oyuncunun üstünde yazı balonu olarak da çıkar.
 - **Serbest dolaşma:** TV, su içme, kitap okuma, pencereden bakma, el yıkama, bahçe sulama, top, kedi. **Ev kuralları:** ödev ya da iş varken, sofrada veya yatma saatinde TV açılınca anne uyarır ve özür dilettirir.
 - **Okul:** kredi ya da reklamla girilen ders, öğretmenin sesli soruları, bot sınıf arkadaşlarıyla canlı puan tablosu (multiplayer arayüzü hazır).
 - **Ders kitabı:** okuma, "fil hafızası" kartları (kelime ↔ sesi benzeyen İngilizce kelime ↔ komik resim), alıştırmalar. Ünite 1 günlük ödevdir.
@@ -55,11 +60,12 @@ src/
   systems/            Time, DayNightLighting, Inventory, Vocabulary, Input, PlayerController,
                       CastDirector, ItemSystem, EffectRunner, StoryDirector, TravelService,
                       InteractionSystem, QuestMarker, FreeActionSystem, ToySystem,
-                      LessonController, TextbookController, AutoSave
+                      LessonController, TextbookController, AutoSave, RemotePlayers, VillageMultiplayer
   dialogue/           DialogueController (mantık)
   activities/         Activity arayüzü + Choice, Listen, Order, Speak
   services/           speech/ (Piper TTS, STT, dil tespiti), monetization/ (kredi, reklam, ders kapısı),
-                      multiplayer/ (ClassroomSession: yerel botlar, WebSocket), storage/, Settings
+                      multiplayer/ (ClassroomSession, VillageNetwork, VoiceChat/WebRTC), storage/, Settings
+server/               VillageServer (WebSocket: odalar, konumlar, bas-konuş, WebRTC sinyali), index.mjs
   ui/                 DOM bileşenleri (Hud, QuestPanel, DialogueView, CardOverlay, ...)
   content/            veriler: story, dialogues, tales, characters, items, hotspots,
                       freeActions (+ ev kuralları), lessons, textbook

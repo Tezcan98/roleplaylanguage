@@ -12,7 +12,7 @@ export class Game {
   tick() {
     const dt = Math.min(this.#clock.getDelta(), 0.05);
     const t = (this.t += dt);
-    const { toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
+    const { village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
     const playing = modes.base === 'play';
 
     time.update(dt);
@@ -22,6 +22,7 @@ export class Game {
     cast.update(dt, t);
     items.update(dt, t);
     toys.update(dt, t);
+    village.update(dt, t);
     world.current.update(dt, t);
 
     actionButton.show(interactions.update(player.position));
@@ -30,7 +31,7 @@ export class Game {
 
     const partner = dialogue.talking ? cast.get(dialogue.talking) : null;
     camera.update(t, { menu: !playing, player, partner, location: world.current });
-    labels.update({ npcs: cast.present(), target: story.target()?.npc ?? null, show: modes.is('play'), player, now: t });
+    labels.update({ npcs: [...cast.present(), ...(world.current.id === village.locationId ? village.remotes.list() : [])], target: story.target()?.npc ?? null, show: modes.is('play'), player, now: t });
     ctx.render();
   }
 }

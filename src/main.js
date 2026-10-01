@@ -53,6 +53,12 @@ import { MockAdProvider } from './services/monetization/AdProvider.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { LocalClassroomSession, WebSocketClassroomSession } from './services/multiplayer/ClassroomSession.js';
 import { ClassroomView } from './ui/ClassroomView.js';
+import { VillageNetwork } from './services/multiplayer/VillageNetwork.js';
+import { VoiceChat } from './services/multiplayer/VoiceChat.js';
+import { RemotePlayers } from './systems/RemotePlayers.js';
+import { VillageMultiplayer } from './systems/VillageMultiplayer.js';
+import { UsernameDialog } from './ui/UsernameDialog.js';
+import { PushToTalk } from './ui/PushToTalk.js';
 import { TextbookView } from './ui/TextbookView.js';
 
 import { ActivityRegistry } from './activities/Activity.js';
@@ -227,6 +233,17 @@ effects
   .register('textbook', (unit) => textbook.open(unit))
   .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, 'Credits earned'); });
 
+// --- multiplayer village square (server: tools/serve.mjs or server/index.mjs) ---
+const villageNet = new VillageNetwork(VillageNetwork.defaultUrl(manifest.villageServer));
+const village = new VillageMultiplayer({
+  bus, net: villageNet, voice: new VoiceChat({ net: villageNet }),
+  remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK }),
+  world, player, settings, labels, toasts,
+  ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
+  usernames: new UsernameDialog(host, modes),
+  recognizer: params.has('fakemic') ? null : new WebSpeechRecognizer('tr-TR'),
+});
+
 // --- interaction ---
 const interactions = new InteractionSystem([
   toys,
@@ -296,8 +313,8 @@ new MainMenu(host, {
   }),
 });
 
-const game = new Game({ toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

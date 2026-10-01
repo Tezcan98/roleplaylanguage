@@ -40,6 +40,9 @@ export class WebSpeechRecognizer extends SpeechRecognizer {
     });
   }
 
+  /** Stop listening but still deliver what was heard (push-to-talk release). */
+  stop() { this.#active?.stop(); }
+
   cancel() { this.#active?.abort(); }
 }
 

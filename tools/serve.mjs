@@ -1,12 +1,14 @@
 /**
  * Local dev server. Sends COOP/COEP headers so the page is cross-origin isolated,
- * which lets the Piper TTS worker run ONNX with several threads (much faster speech).
+ * which lets the Piper TTS worker run ONNX with several threads (much faster speech),
+ * and hosts the multiplayer village square WebSocket at /ws/village.
  * Usage: node tools/serve.mjs [port]
  */
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { VillageServer } from '../server/VillageServer.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const port = Number(process.argv[2] ?? 8080);
@@ -16,7 +18,7 @@ const TYPES = {
   '.webp': 'image/webp', '.glb': 'model/gltf-binary', '.onnx': 'application/octet-stream', '.svg': 'image/svg+xml', '.wav': 'audio/wav',
 };
 
-createServer(async (req, res) => {
+const http = createServer(async (req, res) => {
   const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^(\.\.[/\\])+/, '');
   let file = join(root, path);
   try {
@@ -33,4 +35,6 @@ createServer(async (req, res) => {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not found');
   }
-}).listen(port, () => console.log(`Yılmaz Ailesi → http://localhost:${port}`));
+});
+new VillageServer({ server: http }); // multiplayer village square on ws://…/ws/village
+http.listen(port, () => console.log(`Yılmaz Ailesi → http://localhost:${port}`));

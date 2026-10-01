@@ -6,6 +6,7 @@ export class PlayerController {
     const { player } = this;
     let { x, z } = this.modes.is('play') && !player.seated ? this.input.axis() : { x: 0, z: 0 };
     const mag = Math.min(1, Math.hypot(x, z));
+    player.moving = mag > 0.08;
     if (mag > 0.08) {
       const loc = this.world.current, n = Math.hypot(x, z);
       const speed = (loc.indoor ? 3.6 : 5.2) * mag * dt;

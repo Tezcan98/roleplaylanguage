@@ -14,6 +14,8 @@ export class LabelLayer {
     host.append(this.root);
     this.thinkUntil = 0;
     this.bubbles = new Map();
+    this.mic = el('div', { class: 'label q', text: '🎙️ konuşuyorsun', style: { display: 'none' } });
+    this.root.append(this.mic);
   }
 
   think(text, seconds, now) { this.thought.textContent = text; this.thinkUntil = now + seconds; }
@@ -43,11 +45,13 @@ export class LabelLayer {
       if (!node) { node = el('div', { class: 'label' }); this.root.append(node); this.#names.set(n.id, node); }
       const isT = target === n.id;
       node.className = `label${isT ? ' q' : ''}`;
-      node.textContent = `${isT ? '! ' : ''}${n.name}`;
+      node.textContent = `${isT ? '! ' : ''}${n.voice ? '🎙️ ' : ''}${n.name}`;
       this.#pin(node, n.position, 2.55 * n.group.scale.y);
       shown.add(n.id);
     }
     this.#names.forEach((node, id) => { if (!shown.has(id)) node.style.display = 'none'; });
+    if (show && player.voice) this.#pin(this.mic, player.position, 2.15);
+    else this.mic.style.display = 'none';
     if (show && now < this.thinkUntil) this.#pin(this.thought, player.position, 2.1);
     else this.thought.style.display = 'none';
     const wall = performance.now() / 1000;

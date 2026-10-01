@@ -1,11 +1,15 @@
 {
   "name": "yilmaz-ailesi",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Hikayeli, 3D rol yapma oyunuyla Türkçe öğrenme",
   "type": "module",
   "scripts": {
     "start": "node tools/serve.mjs 8080",
+    "server": "node server/index.mjs 8090",
     "voices": "node tools/fetch-voices.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
   }
 }
