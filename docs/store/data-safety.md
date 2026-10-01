@@ -1,32 +1,26 @@
-# Google Play Data Safety — önerilen cevaplar
+# Google Play Data safety — taslak
 
-> Bu dosya Play Console'daki gerçek formun yerine geçmez. Yayından önce kullanılan AdMob sürümünün ve gerçek sunucu yapılandırmasının veri pratiğiyle karşılaştırılmalıdır.
+Bu dosya Play Console'daki Data safety formunu doldurmak için başlangıç taslağıdır. Google, SDK'lar dahil uygulamanın gerçek veri akışlarının beyan edilmesini ister; yayınlamadan önce son Android yapılandırması ve AdMob ayarlarıyla karşılaştırılmalıdır.
 
-## Uygulama veri topluyor mu?
+## Veri toplama / paylaşma
 
-**Evet.** Çok oyunculu özelliklerde kullanıcı adı ve çevrimiçi iletişim verileri işlenir. AdMob SDK'sının kendi veri işleme bildirimleri de Play Console formuna dahil edilmelidir.
+**Uygulama veri topluyor veya paylaşıyor mu?** Evet. Çok oyunculu meydan, konuşma tanıma ve AdMob nedeniyle cihaz dışına veri çıkabilir.
 
-## Veri türleri
-
-| Veri | Önerilen beyan | Amaç | Paylaşım / işleme |
-|---|---|---|---|
-| Kullanıcı adı | Evet | Uygulama işlevselliği, çok oyunculu | Diğer oyunculara gösterilir |
-| Ses / konuşma | Uygulamanın gerçek yapılandırmasına göre | Konuşma tanıma ve birebir sesli sohbet | Sesli sohbet karşı oyuncuya iletilir; kalıcı kayıt tutulmaz |
-| Uygulama etkinliği / ilerleme | Cihazda tutulur | Oyun işlevselliği | Uygulamanın sunucusuna ilerleme kaydı gönderilmez |
-| Reklamla ilgili veriler | AdMob'a göre | Reklam | Google/AdMob SDK'sı |
-| Cihaz / tanılama verileri | AdMob ve Play Console SDK beyanlarına göre | Reklam, güvenilirlik ve tanılama | İlgili hizmet sağlayıcı |
+| Veri türü | Toplanıyor/paylaşılıyor | Amaç | İsteğe bağlı mı? | Not |
+|---|---|---|---|---|
+| Kullanıcı adı / ad | Evet | Uygulama işlevselliği | Kullanıcı meydanı kullanmadan oyunun tek oyunculu kısmını oynayabilir | Meydanda diğer oyunculara gösterilir ve sunucuya gönderilir. |
+| Ses kayıtları / ses verisi | Özelliğe bağlı | Uygulama işlevselliği | Evet | Konuşma tanıma veya birebir sesli sohbet başlatılırsa kullanılır. Kalıcı ses kaydı oyunun özelliği değildir; uzak STT etkinse hizmete geçici aktarım olabilir. |
+| Cihaz/reklam verileri | AdMob yapılandırmasına bağlı | Reklamcılık | AdMob'un kendi SDK akışına bağlı | AdMob'un güncel Data safety/SDK beyanları ayrıca kontrol edilmelidir. |
 
 ## Güvenlik
 
-- Kullanıcı adı ve genel konuşma metni çok oyunculu sunucu üzerinden iletilir.
-- Sesli sohbet WebRTC ile iki oyuncu arasında kurulur.
-- Oyun kendi tarafında ses kaydı arşivi oluşturmaz.
-- Oyun ilerlemesi localStorage'da tutulur.
+- Çok oyunculu ve WebRTC sinyalleşmesi üretimde HTTPS/WSS üzerinden sunulmalıdır.
+- Oyun ilerlemesi ve ayarlar cihazda localStorage'da tutulur.
+- Sunucuda kalıcı hesap/profil sistemi yoktur.
+- Kullanıcı adları ve genel konuşma metinleri çok oyunculu sunucudan diğer oyunculara aktarılır.
 
-## Saklama
+## Önemli kontrol
 
-Oyun içindeki ilerleme ve ayarlar cihazda tutulur. Çok oyunculu sunucuda kalıcı oyuncu profili veya oyun ilerlemesi tutulmaması hedeflenmektedir. Sunucu logları ve altyapı sağlayıcısının teknik logları varsa gerçek saklama süresi ayrıca belgelenmelidir.
+Uzak STT sunucusu veya AdMob'un gerçek yapılandırması değişirse bu dosya ve Play Console beyanı da güncellenmelidir.
 
-## Çocuklar
-
-Hedef kitle çocuk olarak seçilecekse bu cevaplar yeniden değerlendirilmelidir. Özellikle kullanıcı etkileşimi, sesli sohbet ve reklamlar için Google Play Families kuralları kontrol edilmelidir.
+Google'ın güncel Data safety açıklaması: Play Console yardım merkezindeki **Data safety** dokümantasyonunu esas alın.
