@@ -1,0 +1,8 @@
+# Caddy alan adı için Let's Encrypt sertifikasını kendisi alır ve yeniler.
+# docker compose ile: upstream "village:8090"; Caddy doğrudan sunucuda kuruluysa "127.0.0.1:8090" yaz.
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy /ws/* {$UPSTREAM:village:8090}
+	reverse_proxy /health {$UPSTREAM:village:8090}
+	respond "Yılmaz Ailesi köy meydanı sunucusu" 200
+}

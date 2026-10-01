@@ -14,18 +14,19 @@ export class CallUI {
     host.append(this.bar);
   }
 
-  /** @returns {Promise<boolean>} whether the player accepted (auto-declines after `seconds`). */
+  /** @returns {Promise<boolean|'block'>} accepted, declined, or 'block' (auto-declines after `seconds`). */
   ask(fromName, seconds = 15) {
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const count = el('p', { class: 'note' });
       const yes = el('button', { class: 'btn', text: 'Kabul et', attrs: { type: 'button' } });
       const no = el('button', { class: 'btn alt', text: 'Reddet', attrs: { type: 'button' } });
+      const block = el('button', { class: 'linkbtn', text: '🚫 Engelle', attrs: { type: 'button' } });
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card' }, [
         el('p', { class: 'chap', text: 'Sesli sohbet isteği' }),
         el('h2', { class: 'ctitle', text: `${fromName} seninle konuşmak istiyor` }),
         el('p', { class: 'cen en-t', text: gloss('{name} wants to voice chat with you', { name: fromName }) }),
-        count, yes, no,
+        count, yes, no, block,
       ])]);
       let left = seconds;
       const tick = () => { count.textContent = `${left} sn içinde cevap vermezsen istek reddedilir.`; if (left-- <= 0) done(false); };
@@ -33,6 +34,7 @@ export class CallUI {
       const done = (v) => { clearInterval(timer); root.remove(); pop(); resolve(v); };
       yes.onclick = () => done(true);
       no.onclick = () => done(false);
+      block.onclick = () => done('block');
       tick();
       this.host.append(root);
     });

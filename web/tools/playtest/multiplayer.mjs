@@ -2,12 +2,20 @@
  * Two players in the village square (two browser contexts, fake microphones):
  * unique usernames, no voice links in public, speech shown as a text bubble, voice-chat
  * request → accept → WebRTC connected with audio flowing, hang up, decline, walk-away drop.
- * Exit 1 on the first failed check.  Usage: npm run playtest:multiplayer
+ * Exit 1 on the first failed check.
+ *
+ *   npm run playtest:multiplayer                 village built into the dev server
+ *   npm run playtest:multiplayer -- --standalone  production server (server/) on another port,
+ *                                                  like GitHub Pages + your own server
+ *   … -- --village=wss://meydan.ornek.com/ws/village   a deployed server
  */
-import { args, log, sleep, waitFor, startServer, openBrowser, watchErrors, screenshot } from './lib.mjs';
+import { args, log, sleep, waitFor, startServer, startVillageServer, openBrowser, watchErrors, screenshot } from './lib.mjs';
 
 const opt = args();
 const server = opt.server ? { url: opt.server, stop() {} } : await startServer();
+const standalone = opt.standalone ? await startVillageServer() : null;
+const villageUrl = opt.village ?? standalone?.url ?? null;
+if (villageUrl) log(`village server: ${villageUrl}`);
 const browser = await openBrowser(['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream']);
 const errors = [];
 const checks = [];
@@ -17,7 +25,7 @@ async function player(tag, name) {
   const ctx = await browser.newContext({ viewport: { width: 1000, height: 620 }, permissions: ['microphone'] });
   const page = await ctx.newPage();
   errors.push(...watchErrors(page, `${tag} `));
-  await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low`);
+  await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
   await page.click('text=Hikayeye başla'); await sleep(1200);
   await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);
@@ -69,6 +77,11 @@ try {
   await at(A, -10, 10);
   check('walking away ends the call', !!(await waitFor(async () => !(await inCall(A)) && !(await inCall(B)))));
 
+  await at(A, 2, 4); await at(B, 3.5, 4); await sleep(500);
+  await A.keyboard.press('e'); await waitFor(() => B.$('text=Engelle')); await B.click('text=Engelle'); await sleep(800);
+  await A.keyboard.press('e'); await sleep(1500);
+  check('a blocked player cannot ask again', !(await B.$('text=Kabul et')) && !(await inCall(A)) && !(await inCall(B)));
+
   await B.evaluate(() => window.__game.travel.go('yard', 'squareRoad'));
   check('leaving the square removes the player', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 0)));
   if (checks.some(([, ok]) => !ok)) await screenshot(A, 'multiplayer-A');
@@ -79,6 +92,7 @@ try {
 
 await browser.close();
 server.stop();
+standalone?.stop();
 if (errors.length) log('errors:\n  ' + errors.join('\n  '));
 const ok = !failed && !errors.length && checks.every(([, x]) => x);
 log(ok ? `PASS — ${checks.length} checks` : 'FAIL');

@@ -1,4 +1,5 @@
 import { WebSocketServer } from 'ws';
+import { ChatFilter } from './ChatFilter.js';
 
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 const SHIRTS = [0xE4574A, 0x2F6FDB, 0x3E8E4A, 0xE0B04A, 0x7A3552, 0x16A085, 0xD35400, 0x8E44AD];
@@ -6,19 +7,11 @@ const MAX_PER_ROOM = 24;
 const CALL_RANGE = 4;   // metres: how close you must be to ask someone for a voice chat
 const CALL_DROP = 12;   // metres: a call ends when the two walk this far apart
 const REQUEST_TTL = 20000;
+const ROOM = /^[a-z0-9-]{1,24}$/;
+const RATE = { burst: 60, perSecond: 30 }; // messages per client (10/s states + WebRTC ICE bursts)
+const SAY_GAP = 1200;                       // ms between two public speech bubbles
+const HEARTBEAT = 30000;                    // ms; silent connections are dropped
 
-const BLOCKED_WORDS = [
-  'amk', 'aq', 'orospu', 'sik', 'siktir', 'yarrak', 'piç', 'ibne', 'göt', 'salak',
-  'fuck', 'shit', 'bitch', 'asshole', 'cunt', 'dick', 'pussy', 'bastard',
-  'كس', 'قحبة', 'شرموط', 'عاهرة', 'خنزير', 'كلب'
-];
-const WORD_RE = /[\\p{L}\\p{N}]+/gu;
-const normalizeWord = (value) => value.normalize('NFKC').toLocaleLowerCase('tr').replace(/[ıİ]/g, 'i');
-const containsBlockedWord = (value) => {
-  const words = String(value).match(WORD_RE) ?? [];
-  return words.some((word) => BLOCKED_WORDS.includes(normalizeWord(word)));
-};
-const censorText = (value) => String(value).replace(WORD_RE, (word) => BLOCKED_WORDS.includes(normalizeWord(word)) ? '***' : word);
 
 /**
  * Multiplayer village square.
@@ -48,22 +41,68 @@ export class VillageServer {
   #rooms = new Map(); // room → Map(id → client)
   #seq = 0;
 
-  constructor({ server, path = '/ws/village', log = console.log } = {}) {
+  #perIp = new Map();
+
+  /**
+   * @param {object} o
+   * @param {import('node:http').Server} o.server  HTTP server to attach to
+   * @param {(origin: string|undefined) => boolean} [o.allowOrigin]  browser origins allowed to connect (default: all)
+   * @param {number} [o.maxPerIp]  simultaneous connections per IP (default: unlimited)
+   * @param {(req: import('node:http').IncomingMessage) => string} [o.clientIp]
+   */
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress } = {}) {
     this.log = log;
-    this.wss = new WebSocketServer({ server, path, maxPayload: 64 * 1024 });
-    this.wss.on('connection', (ws) => this.#connect(ws));
+    this.wss = new WebSocketServer({
+      server, path, maxPayload: 32 * 1024,
+      verifyClient: ({ origin, req }, done) => {
+        if (!allowOrigin(origin)) { this.log(`[village] refused origin ${origin}`); return done(false, 403, 'Origin not allowed'); }
+        if ((this.#perIp.get(clientIp(req)) ?? 0) >= maxPerIp) return done(false, 429, 'Too many connections');
+        done(true);
+      },
+    });
+    this.wss.on('connection', (ws, req) => this.#connect(ws, clientIp(req)));
     this.timer = setInterval(() => { this.#broadcastStates(); this.#dropFarCalls(); }, 100);
+    this.heartbeat = setInterval(() => this.wss.clients.forEach((ws) => {
+      if (!ws.alive) return ws.terminate();
+      ws.alive = false;
+      ws.ping();
+    }), HEARTBEAT);
   }
 
-  #connect(ws) {
-    const client = { ws, id: null, name: null, room: null, x: -14.8, z: 0, rot: Math.PI / 2, moving: false, talking: false, dirty: false, partner: null, requests: new Map() };
+  /** Numbers for the /health endpoint. */
+  stats() {
+    const rooms = Object.fromEntries([...this.#rooms].filter(([, m]) => m.size).map(([r, m]) => [r, m.size]));
+    return { connections: this.wss.clients.size, players: Object.values(rooms).reduce((a, b) => a + b, 0), rooms };
+  }
+
+  #connect(ws, ip) {
+    const client = { ws, ip, id: null, name: null, room: null, x: -14.8, z: 0, rot: Math.PI / 2, moving: false, talking: false, dirty: false, partner: null, requests: new Map(), tokens: RATE.burst, refilled: Date.now(), lastSay: 0 };
+    this.#perIp.set(ip, (this.#perIp.get(ip) ?? 0) + 1);
+    ws.alive = true;
+    ws.on('pong', () => { ws.alive = true; });
     ws.on('message', (raw) => {
+      if (!this.#allow(client)) return;
       let msg;
       try { msg = JSON.parse(raw); } catch { return; }
-      this.#handle(client, msg);
+      if (msg && typeof msg === 'object') this.#handle(client, msg);
+    });
+    ws.once('close', () => {
+      const n = (this.#perIp.get(ip) ?? 1) - 1;
+      if (n > 0) this.#perIp.set(ip, n); else this.#perIp.delete(ip);
     });
     ws.on('close', () => this.#leave(client));
     ws.on('error', () => this.#leave(client));
+  }
+
+  /** Token bucket: a flooding client loses messages, a client flooding far beyond that is cut off. */
+  #allow(c) {
+    const now = Date.now();
+    c.tokens = Math.min(RATE.burst, c.tokens + ((now - c.refilled) / 1000) * RATE.perSecond);
+    c.refilled = now;
+    if (c.tokens >= 1) { c.tokens -= 1; return true; }
+    if (c.tokens < -RATE.burst) { this.log(`[village] flood from ${c.name ?? c.ip}, closing`); c.ws.close(1008, 'Too many messages'); }
+    c.tokens -= 1;
+    return false;
   }
 
   #handle(c, msg) {
@@ -79,7 +118,9 @@ export class VillageServer {
         this.#toRoom(c, { type: 'talk', id: c.id, on: c.talking });
         break;
       case 'say':
-        if (typeof msg.text === 'string' && msg.text.trim()) this.#toRoom(c, { type: 'say', id: c.id, text: censorText(msg.text.trim().slice(0, 140)) });
+        if (typeof msg.text !== 'string' || !msg.text.trim() || Date.now() - c.lastSay < SAY_GAP) return;
+        c.lastSay = Date.now();
+        this.#toRoom(c, { type: 'say', id: c.id, text: ChatFilter.clean(msg.text.trim().slice(0, 140)) });
         break;
       case 'call-request': {
         const to = members.get(msg.to);
@@ -118,9 +159,10 @@ export class VillageServer {
 
   #hello(c, { name, room = 'village' }) {
     if (c.id) return;
+    if (typeof room !== 'string' || !ROOM.test(room)) return this.#send(c, { type: 'error', message: 'Geçersiz oda.' });
     const clean = String(name ?? '').trim();
     if (!NAME.test(clean)) return this.#send(c, { type: 'error', message: 'Kullanıcı adı 2-16 harf/rakam olmalı.' });
-    if (containsBlockedWord(clean)) return this.#send(c, { type: 'error', message: 'Bu kullanıcı adı kullanılamaz.' });
+    if (ChatFilter.blocks(clean)) return this.#send(c, { type: 'error', message: 'Bu kullanıcı adı kullanılamaz.' });
     const members = this.#room(room);
     if (members.size >= MAX_PER_ROOM) return this.#send(c, { type: 'error', message: 'Meydan dolu, biraz sonra tekrar dene.' });
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
@@ -178,5 +220,10 @@ export class VillageServer {
     this.#room(from.room).forEach((m) => { if (m !== from && m.ws.readyState === 1) m.ws.send(data); });
   }
 
-  close() { clearInterval(this.timer); this.wss.close(); }
+  close() {
+    clearInterval(this.timer);
+    clearInterval(this.heartbeat);
+    this.wss.clients.forEach((ws) => ws.close(1001, 'Server shutting down'));
+    this.wss.close();
+  }
 }

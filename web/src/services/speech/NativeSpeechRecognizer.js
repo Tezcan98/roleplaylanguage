@@ -29,7 +29,7 @@ export class NativeSpeechRecognizer extends SpeechRecognizer {
         done = true;
         this.#cleanup();
         const matches = result.matches?.length ? result.matches : this.#alternatives;
-        const transcript = matches[0] ?? this.#last ?? expected[0] ?? '';
+        const transcript = matches[0] ?? this.#last ?? ''; // never fall back to the expected answer
         resolve({ transcript, alternatives: matches, confidence: transcript ? 1 : 0 });
       };
       this.#listener = await SpeechRecognition.addListener('partialResults', ({ matches = [] }) => {

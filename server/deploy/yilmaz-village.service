@@ -1,0 +1,21 @@
+# Docker olmadan: /opt/yilmaz/server altına kopyala, `npm install --omit=dev`, sonra
+#   sudo cp deploy/yilmaz-village.service /etc/systemd/system/
+#   sudo systemctl enable --now yilmaz-village
+[Unit]
+Description=Yilmaz Ailesi village multiplayer server
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/yilmaz/server
+ExecStart=/usr/bin/env node src/index.mjs
+Environment=PORT=8090 HOST=127.0.0.1 TRUST_PROXY=1 MAX_PER_IP=8
+Restart=always
+RestartSec=3
+User=www-data
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

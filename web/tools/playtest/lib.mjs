@@ -44,6 +44,18 @@ export async function startServer(dir) {
   return { url: `http://localhost:${port}`, stop: () => proc.kill() };
 }
 
+/** Start the production village server (server/src/index.mjs) on its own port, as on a real host. */
+export async function startVillageServer() {
+  const port = await freePort();
+  const proc = spawn(process.execPath, ['../server/src/index.mjs', String(port)], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, HOST: '127.0.0.1' } });
+  await new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('village server did not start')), 10000);
+    proc.stdout.on('data', (d) => { if (String(d).includes('village server')) { clearTimeout(t); resolve(); } });
+    proc.on('exit', (c) => reject(new Error(`village server exited (${c})`)));
+  });
+  return { url: `ws://127.0.0.1:${port}/ws/village`, stop: () => proc.kill() };
+}
+
 /**
  * Browser for the tests. Default: Playwright's bundled Chromium (CI). PLAYTEST_CHANNEL=chrome
  * uses the local Chrome with the GPU (faster locally).

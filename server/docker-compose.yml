@@ -1,0 +1,24 @@
+# Köy meydanı sunucusu + Caddy (otomatik HTTPS sertifikası).
+#   DOMAIN=meydan.ornek.com docker compose up -d --build
+# Alan adın yoksa: DOMAIN=<ip-tireli>.sslip.io  (ör. 203-0-113-7.sslip.io)
+services:
+  village:
+    build: .
+    restart: unless-stopped
+    environment:
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://tezcan98.github.io,https://localhost,capacitor://localhost,http://localhost:*}
+      MAX_PER_IP: ${MAX_PER_IP:-8}
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN gerekli, ör. meydan.ornek.com}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [village]
+volumes:
+  caddy_data:
+  caddy_config:

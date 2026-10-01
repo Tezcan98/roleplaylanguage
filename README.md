@@ -4,19 +4,30 @@ Köyde yaşayan bir ailenin hikayesi içinde Türkçe öğreten 3D rol yapma oyu
 
 **Oyna:** https://tezcan98.github.io/roleplaylanguage/
 
+## Projeler
+
+| Klasör | Ne | Nerede çalışır |
+|---|---|---|
+| [`web/`](web/) | Oyunun kendisi (three.js) | Tarayıcı: GitHub Pages; aynı kod mobil uygulamanın içinde |
+| [`server/`](server/) | Köy meydanı çok oyunculu sunucusu (WebSocket) | Kendi sunucun (Docker + Caddy/HTTPS) — bkz. [server/README.md](server/README.md) |
+| [`mobile/`](mobile/) | Android uygulaması (Capacitor) — **şimdilik rafta** | Google Play |
+
+Hikaye, dersler, ses ve kayıt tamamen cihazda çalışır; sunucu yalnızca köy meydanı içindir.
+Sunucu yoksa meydan tek kişilik açılır.
+
 ## Çalıştırma
 
-ES modülleri `file://` üzerinden yüklenmez, bu yüzden yerel sunucu gerekir:
-
 ```bash
-npm install      # bir kez: çok oyunculu sunucu için `ws`
-npm run voices   # bir kez: Piper Türkçe sesleri assets/voices/ içine indirir (~120 MB)
-npm start        # http://localhost:8080 (+ köy meydanı sunucusu: ws://localhost:8080/ws/village)
+npm install          # kökte, bir kez (web + server)
+npm run voices -w web  # isteğe bağlı: Piper Türkçe sesleri (~120 MB)
+npm start            # http://localhost:8080 — oyun + yerleşik köy meydanı (ws://localhost:8080/ws/village)
+npm run server       # yalnızca üretim sunucusu (port 8090)
+npm test             # sunucu testleri + içerik kontrolü + otomatik oynanış testleri
 ```
 
-Aynı ağdaki başka bir cihazdan (telefon) `http://<bilgisayarın-ip>:8080` ile bağlanılır. Not: tarayıcılar mikrofonu sadece `https` ya da `localhost` üzerinde verir; telefonda sesli konuşma için oyunu https ile sun.
+Aynı ağdaki başka bir cihazdan (telefon) `http://<bilgisayarın-ip>:8080` ile bağlanılır. Not: tarayıcılar mikrofonu sadece `https` ya da `localhost` üzerinde verir.
 
-**Oyun statik bir yerde (GitHub Pages) olursa:** sunucuyu ayrıca çalıştır (`npm run server` → port 8090, ör. Render/Fly/VPS üzerinde) ve `assets/manifest.json` içine `"villageServer": "wss://sunucu-adresin/ws/village"` ekle. Sunucu yoksa meydan tek kişilik çalışır.
+**Hangi meydan sunucusu?** `localhost`'ta yerleşik sunucu; GitHub Pages'te ve uygulamada `web/assets/manifest.json` → `"villageServer": "wss://…/ws/village"`. Adres çubuğunda `?mp=wss://…` ile geçersiz kılınır.
 
 `npm start`, COOP/COEP başlıklarıyla sunan bir sunucudur (`tools/serve.mjs`). Bu başlıklar sayesinde ses motoru çok çekirdekli çalışır ve cümle başına süre ~1 sn'ye iner.
 
@@ -24,6 +35,7 @@ URL parametreleri:
 - `?debug`: `window.__game` üzerinden sistemlere erişim (otomatik test için).
 - `?fakemic`: mikrofon yerine beklenen cevabı "duyan" sahte tanıyıcıyı kullanır (test için).
 - `?nointro`: ilk açılış tanıtımını atlar (testler için). `?gloss=en|ar`: açıklama dilini geçersiz kılar.
+- `?mp=wss://…/ws/village`: başka bir meydan sunucusuna bağlanır (`?mp=local`: sayfanın kendi sunucusu).
 - `?fresh`: kayıtlı oyunu yok sayar. `?quality=high|medium|low`: kalite ayarını geçersiz kılar. `?fastclass`: sınıf botlarını hızlandırır.
 
 `assets/manifest.json` içindeki isteğe bağlı ayarlar: `sttEndpoint` (Whisper sunucusu), `classroomServer` (multiplayer WebSocket sunucusu, `src/services/multiplayer/ClassroomSession.js` içindeki protokol).
@@ -90,22 +102,29 @@ Sistemler birbirini doğrudan çağırmak yerine `EventBus` üzerinden haberleş
 
 ## İçerik ekleme
 
-- **Görev / bölüm:** `src/content/story.js`. Bir bölüm saati, kimin nerede durduğunu (`cast`) ve görev zincirini belirler. Karakterler sadece bölüm geçişlerinde yer değiştirir, böylece kimse oyuncunun gözü önünde ışınlanmaz.
-- **Diyalog:** `src/content/dialogues.js`. Düğümler `say/en/words/hint/options` alanlarından oluşur. Seçenekler `next`, `do` (efektler) ve `wrong` alanlarını alır.
-- **Eşya:** `src/content/items.js`. **Kapı ve geçiş:** `src/content/hotspots.js`.
+- **Görev / bölüm:** `web/src/content/story.js`. Bir bölüm saati, kimin nerede durduğunu (`cast`) ve görev zincirini belirler. Karakterler sadece bölüm geçişlerinde yer değiştirir, böylece kimse oyuncunun gözü önünde ışınlanmaz.
+- **Diyalog:** `web/src/content/dialogues.js`. Düğümler `say/en/words/hint/options` alanlarından oluşur. Seçenekler `next`, `do` (efektler) ve `wrong` alanlarını alır.
+- **Eşya:** `web/src/content/items.js`. **Kapı ve geçiş:** `web/src/content/hotspots.js`.
 
 ## Test
+
+`web/` klasöründe (ya da kökten `-w web` ile):
 
 ```bash
 npm run check                 # içerik doğrulama: diyalog düğümleri, görev hedefleri, kilitli kapılar, gün adları
 npm run playtest:smoke        # Pazar sabahından öğleden sonraya otomatik oynanış (~2 dk)
 npm run playtest              # bütün haftayı baştan sona oynar (~10 dk); takılırsa teşhisle ve exit 1 ile durur
 npm run playtest:multiplayer  # iki oyuncu: kullanıcı adı, yazı balonu, onaylı sesli sohbet, ses akışı, kopma
+npm run playtest:standalone   # aynısı, ama meydan ayrı bir sunucuda (GitHub Pages + kendi sunucun düzeni)
 npm run playtest:offline      # üretim derlemesi internetsiz açılıyor mu
 npm test                      # hepsi (tam hafta hariç)
 ```
 
-Testler sunucuyu kendileri başlatır. Varsayılan olarak Playwright'ın Chromium'unu kullanırlar (CI). Yerelde `PLAYTEST_CHANNEL=chrome` daha hızlıdır, `PLAYTEST_HEADED=1` pencereyi gösterir. Hikaye testi `--from=<bölüm no>` ve `--to=<bölüm id>` alır. Başarısızlıkta ekran görüntüleri `playtest-results/` klasörüne düşer. GitHub Actions (`.github/workflows/test.yml`) her push'ta check + smoke + multiplayer + offline çalıştırır.
+Sunucu: `npm test -w server` (gerçek WebSocket istemcileriyle protokol, filtre, köken, hız sınırı; ~1 sn).
+Kurulu bir sunucuyu dışarıdan denemek: `node server/deploy/check.mjs wss://alan-adi/ws/village`, oyunla birlikte:
+`npm run playtest:multiplayer -w web -- --village=wss://alan-adi/ws/village`.
+
+Testler sunucuyu kendileri başlatır. Varsayılan olarak Playwright'ın Chromium'unu kullanırlar (CI). Yerelde `PLAYTEST_CHANNEL=chrome` daha hızlıdır, `PLAYTEST_HEADED=1` pencereyi gösterir. Hikaye testi `--from=<bölüm no>` ve `--to=<bölüm id>` alır. Başarısızlıkta ekran görüntüleri `web/playtest-results/` klasörüne düşer. GitHub Actions (`.github/workflows/test.yml`) her push'ta sunucu testleri + check + smoke + multiplayer + standalone + offline çalıştırır.
 
 ## Çeviri
 

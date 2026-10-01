@@ -8,9 +8,9 @@ import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { VillageServer } from '../server/VillageServer.js';
+import { VillageServer } from '../../server/src/VillageServer.js';
 
-// usage: node tools/serve.mjs [port] [dir]  (dir defaults to the repo root; `dist` serves the build)
+// usage: node tools/serve.mjs [port] [dir]  (dir defaults to web/; `dist` serves the build)
 const repo = fileURLToPath(new URL('..', import.meta.url));
 const port = Number(process.argv[2] ?? 8080);
 const root = process.argv[3] ? join(repo, process.argv[3]) : repo;

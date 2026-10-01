@@ -8,7 +8,7 @@ const DECLINE_TEXT = {
   busy: ['şu an başka biriyle konuşuyor', 'is busy'],
   far: ['çok uzakta', 'is too far away'],
 };
-const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Engellenen oyuncudan gelen istek reddedildi.' };
+const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Oyuncu engellendi, sohbet bitti.' };
 
 /**
  * The multiplayer village square:
@@ -36,9 +36,9 @@ export class VillageMultiplayer {
     net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
     net.on('call-request', async ({ from, name }) => {
       if (this.isBlocked(from, name)) { this.net.send({ type: 'call-answer', to: from, accept: false }); return; }
-      const accept = await this.calls.ask(name);
-      if (!this.isBlocked(from, name)) this.net.send({ type: 'call-answer', to: from, accept });
-      else this.net.send({ type: 'call-answer', to: from, accept: false });
+      const answer = await this.calls.ask(name);
+      if (answer === 'block') this.blockPlayer(from, name);
+      this.net.send({ type: 'call-answer', to: from, accept: answer === true && !this.isBlocked(from, name) });
     });
     net.on('call-declined', ({ id, reason }) => {
       const [tr, en] = DECLINE_TEXT[reason] ?? DECLINE_TEXT.declined;
@@ -67,7 +67,7 @@ export class VillageMultiplayer {
     this.settings.set('blockedPlayers', list.slice(-100));
     const c = this.remotes.get(id);
     if (c) this.labels.bubble?.(c, '', null, 0);
-    if (this.voice.partner === id) this.#endCall('blocked');
+    if (this.voice.partner === id) { this.net.send({ type: 'call-end' }); this.#endCall(END_TEXT.blocked); }
     this.toasts.show(`${name ?? 'Oyuncu'} engellendi`, 'Player blocked');
   }
 

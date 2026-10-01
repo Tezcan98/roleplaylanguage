@@ -1,0 +1,22 @@
+{
+  "name": "@yilmaz/mobile",
+  "version": "0.5.0",
+  "private": true,
+  "description": "Android uygulaması: web/dist'i Capacitor ile paketler.",
+  "scripts": {
+    "sync": "npm --prefix ../web run build && cap sync android",
+    "open": "cap open android",
+    "apk": "npm run sync && cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^8.1.0",
+    "@capacitor-community/speech-recognition": "^7.0.1",
+    "@capacitor-community/text-to-speech": "^8.0.2",
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "^8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2"
+  }
+}

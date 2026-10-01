@@ -1,5 +1,5 @@
 {
   "appId": "com.yilmazailesi.app",
   "appName": "Yılmaz Ailesi",
-  "webDir": "dist"
+  "webDir": "../web/dist"
 }

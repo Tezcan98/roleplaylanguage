@@ -15,17 +15,21 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Village server unit tests (server/)
+        run: npm test -w server
       - name: Content check (dialogue nodes, quest targets, locks, day names)
-        run: npm run check
+        run: npm run check -w web
       - name: Story smoke test (Sunday morning → afternoon)
-        run: npm run playtest:smoke
+        run: npm run playtest:smoke -w web
       - name: Village multiplayer (two players, voice chat)
-        run: npm run playtest:multiplayer
+        run: npm run playtest:multiplayer -w web
+      - name: Standalone server (game and village on different hosts, like GitHub Pages)
+        run: npm run playtest:standalone -w web
       - name: Offline build
-        run: npm run playtest:offline
+        run: npm run playtest:offline -w web
       - name: Screenshots of failures
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playtest-results
-          path: playtest-results/
+          path: web/playtest-results/
