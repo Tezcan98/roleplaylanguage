@@ -9,6 +9,11 @@ import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VillageServer } from '../../server/src/VillageServer.js';
+import { NpcChat } from '../../server/src/NpcChat.js';
+import { npcChatRoute } from '../../server/src/npcChatRoute.js';
+
+// NPC chat: real Gemini with GEMINI_API_KEY, otherwise canned answers so the UI can be tried and tested
+const chat = new NpcChat({ apiKey: process.env.GEMINI_API_KEY, fake: !process.env.GEMINI_API_KEY, perMinute: 60 });
 
 // usage: node tools/serve.mjs [port] [dir]  (dir defaults to web/; `dist` serves the build)
 const repo = fileURLToPath(new URL('..', import.meta.url));
@@ -21,6 +26,7 @@ const TYPES = {
 };
 
 const http = createServer(async (req, res) => {
+  if (npcChatRoute(req, res, { chat })) return;
   if (req.url === '/health') { // same as the production server: players per room for the menu
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({ ok: true, ...village.stats() }));

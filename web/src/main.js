@@ -93,11 +93,14 @@ import { ActionButton } from './ui/ActionButton.js';
 import { Fader } from './ui/Fader.js';
 import { CardOverlay } from './ui/CardOverlay.js';
 import { MainMenu } from './ui/MainMenu.js';
+import { WordDrill } from './systems/WordDrill.js';
+import { setupLandscape } from './ui/Landscape.js';
 import { ListModal } from './ui/ListModal.js';
 import { DialogueView } from './ui/DialogueView.js';
 
-import { gloss, wordNote, setGlossLang } from './i18n/Gloss.js';
-import { setPlayerGender, playerGender, personalizeContent } from './i18n/Persona.js';
+import { gloss, wordNote, loadGlossLang, glossLang } from './i18n/Gloss.js';
+import { setPlayerGender, playerGender, playerName, personalizeContent } from './i18n/Persona.js';
+import { NpcChatClient } from './services/ai/NpcChatClient.js';
 import { CharacterSetup } from './ui/CharacterSetup.js';
 import {
   STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
@@ -118,7 +121,8 @@ const settings = new Settings();
 const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
-setGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default
+await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
+setupLandscape(host); // phones: played sideways
 // boy (Ahmet) or girl (Meryem): the content is rewritten once, before any system reads it
 setPlayerGender(params.get('gender') ?? settings.get('gender', 'boy'));
 personalizeContent(STORY, DIALOGUES, FREE_ACTIONS, HOUSE_RULES, LESSONS, CLASSMATE_BOTS, TEXTBOOK, ITEMS);
@@ -204,8 +208,17 @@ const dialogueView = new DialogueView(host, {
   onClose: () => dialogue.close(),
   onSpeak: () => dialogue.speak(),
   onToggleEn: () => dialogueView.setEnPressed(!document.body.classList.toggle('hide-en')),
+  onChat: () => dialogue.startChat(),
 });
-const dialogue = new DialogueController({ dialogues: DIALOGUES, cast, view: dialogueView, activities, effects, vocab, tts, modes, bus, input });
+// free conversation with village characters (Gemini behind the village server; off without a key)
+const villageServer = VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native });
+const npcChat = new NpcChatClient({ url: manifest.npcChat || NpcChatClient.urlFor(villageServer), lang: glossLang, player: playerName });
+const chatRecognizer = params.has('fakemic') ? new ScriptedRecognizer() : (native ? new nativeKit.NativeSpeechRecognizer('tr-TR') : new WebSpeechRecognizer('tr-TR'));
+const dialogue = new DialogueController({
+  dialogues: DIALOGUES, cast, view: dialogueView, activities, effects, vocab, tts, modes, bus, input,
+  chat: npcChat, recognizer: chatRecognizer,
+  chatAllowed: (npc) => story.target()?.npc !== npc, // quest conversations come first
+});
 dialogue.setContext(gameCtx);
 
 effects
@@ -282,7 +295,7 @@ effects
   .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, gloss('Credits earned')); });
 
 // --- multiplayer village square (server: tools/serve.mjs or server/index.mjs) ---
-const villageNet = new VillageNetwork(VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native }));
+const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }] }),
   remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, girlLook: PLAYER_LOOK_GIRL }), ball: villageBall,
@@ -292,12 +305,12 @@ const village = new VillageMultiplayer({
   usernames: new UsernameDialog(host, modes),
   // first time in the square: how talking works here (Arabic, with Turkish)
   onFirstVisit: () => cards.show({
-    num: 'Köy meydanı · ساحة القرية', title: 'Burada gerçek oyuncular var',
+    num: 'Köy meydanı', title: 'Burada gerçek oyuncular var',
     text: 'Söylediğin cümle başının üstünde yazı olarak görünür. Sesli sohbet sadece iki kişi arasında ve karşı taraf kabul ederse açılır.',
-    en: 'هنا لاعبون حقيقيون. ما تقوله يظهر نصاً فوق رأسك («Bas, konuş» أو T). المحادثة الصوتية بين شخصين فقط وبعد موافقة الطرف الآخر. كن لطيفاً!',
-    button: 'Tamam · حسناً',
+    en: 'There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. Be kind!',
+    button: 'Tamam',
   }),
-  recognizer: params.has('fakemic') ? new ScriptedRecognizer() : (native ? new nativeKit.NativeSpeechRecognizer('tr-TR') : new WebSpeechRecognizer('tr-TR')),
+  recognizer: chatRecognizer,
 });
 
 // --- interaction ---
@@ -312,9 +325,13 @@ const actionButton = new ActionButton(host, () => interactions.trigger());
 input.onKey((e) => { if (modes.is('play') && ['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); interactions.trigger(); } });
 const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, player });
 
+// word notebook with "practice" (a quick quiz over the learned words)
+const drill = new WordDrill(host, { modes, vocab, activities, tts, state, effects, toasts });
+const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!',
+  drill.available ? { label: '🧠 Kelime pratiği yap', run: () => drill.open() } : null);
 const hud = new Hud(host, {
   onBookOpen: () => textbook.open(),
-  onBook: () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!'),
+  onBook: () => openWords(),
   onBag: () => list.open('Çanta', inventory.entries().map(([kind, n]) => {
     const i = items.info(kind);
     return n > 1 ? [`${n} ${i.tr}`, `${n} ${gloss(i.en)}`] : [i.tr, gloss(i.en)];
@@ -363,7 +380,7 @@ const help = new HelpPanel(host, {
     words: vocab.size,
   }),
   onIntro: () => intro.show(),
-  onWords: () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!'),
+  onWords: () => openWords(),
 });
 // the first time, the introduction comes before the story (skip with ?nointro)
 const introFirst = async () => {
@@ -371,7 +388,6 @@ const introFirst = async () => {
   await intro.show();
   settings.set('introSeen', true);
 };
-const villageServer = VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native });
 const setup = new CharacterSetup(host, { modes, settings, villageServer });
 const menu = new MainMenu(host, {
   settings,
@@ -427,6 +443,7 @@ function startNew(then) {
     const dayIndex = Number.isInteger(requestedDay) && requestedDay > 0
       ? STORY.chapters.findIndex((ch) => ch.day === requestedDay)
       : 0;
+    hud.setCredits(wallet.balance); hud.setWords(vocab.size); hud.setBag(inventory.size);
     story.startChapter(dayIndex >= 0 ? dayIndex : 0, () => {
       enterPlay();
       const think = story.chapter.think;
@@ -452,4 +469,4 @@ game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

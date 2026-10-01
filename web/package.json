@@ -14,8 +14,10 @@
     "playtest:smoke": "node tools/playtest/story.mjs --to=d1-afternoon",
     "playtest:multiplayer": "node tools/playtest/multiplayer.mjs",
     "playtest:offline": "npm run build && node tools/playtest/offline.mjs",
-    "test": "npm run check && npm run playtest:smoke && npm run playtest:multiplayer && npm run playtest:standalone && npm run playtest:offline",
-    "playtest:standalone": "node tools/playtest/multiplayer.mjs --standalone"
+    "test": "npm run check && npm run playtest:smoke && npm run playtest:features && npm run playtest:multiplayer && npm run playtest:standalone && npm run playtest:offline",
+    "playtest:standalone": "node tools/playtest/multiplayer.mjs --standalone",
+    "playtest:features": "node tools/playtest/features.mjs",
+    "i18n": "node tools/extract-glosses.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",

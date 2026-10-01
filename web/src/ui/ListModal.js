@@ -6,17 +6,22 @@ export class ListModal {
     this.modes = modes;
     this.title = el('span');
     this.list = el('div', { class: 'blist' });
+    this.action = el('button', { class: 'btn sm list-action', attrs: { type: 'button' } });
     this.root = el('div', { class: 'overlay dim', on: { click: (e) => { if (e.target === this.root) this.close(); } } }, [
       el('div', { class: 'bookin' }, [
         el('h2', {}, [this.title, el('button', { class: 'iconbtn', html: ICONS.close, attrs: { type: 'button', 'aria-label': 'Kapat' }, on: { click: () => this.close() } })]),
+        this.action,
         this.list,
       ]),
     ]);
     host.append(this.root);
   }
 
-  open(title, rows, emptyText) {
+  /** `action`: optional { label, run } button above the list (e.g. word practice). */
+  open(title, rows, emptyText, action = null) {
     this.title.textContent = title;
+    this.action.hidden = !action;
+    if (action) { this.action.textContent = action.label; this.action.onclick = () => { this.close(); action.run(); }; }
     this.list.replaceChildren(...(rows.length
       ? rows.flatMap(([a, b]) => [el('div', { class: 'tr', text: a }), el('div', { class: 'en2', text: b })])
       : [el('div', { class: 'empty', text: emptyText })]));

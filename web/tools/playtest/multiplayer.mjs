@@ -78,8 +78,8 @@ try {
   {
     const C = await browser.newPage();
     await C.goto(`${server.url}/?nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
-    const opt = await waitFor(() => C.evaluate(() => [...document.querySelectorAll('.server-select option')].map((o) => o.textContent).find((t) => t.includes('2 kişi'))), 15000);
-    check('menu shows live player counts per room', !!opt && opt.startsWith('Ankara'), opt);
+    const opt = await waitFor(() => C.evaluate(() => document.querySelector('.server-card[data-server="ankara"]')?.textContent.includes('👥 2') && document.querySelector('.server-card[data-server="ankara"]').textContent), 15000);
+    check('menu shows live player counts per room', !!opt, opt);
     await C.close();
   }
 

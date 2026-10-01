@@ -1,7 +1,7 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, glossInfo } from '../i18n/Gloss.js';
 import { ServerPicker, SERVERS } from './ServerPicker.js';
-import { GLOSS_LANGS, PLAYER_NAMES } from './CharacterSetup.js';
+import { PLAYER_NAMES } from './CharacterSetup.js';
 
 /**
  * Title screen: the character (with "change"), the story (continue / new game), the online
@@ -11,8 +11,7 @@ import { GLOSS_LANGS, PLAYER_NAMES } from './CharacterSetup.js';
 export class MainMenu {
   constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile }) {
     Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile });
-    this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara') });
-    this.servers.select.addEventListener('change', () => settings.set('serverRegion', this.servers.value));
+    this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => settings.set('serverRegion', id) });
     this.root = el('div', { class: 'overlay main-menu' });
     host.append(this.root);
     this.show();
@@ -22,7 +21,7 @@ export class MainMenu {
     const s = this.settings;
     const save = this.hasSave();
     const gender = s.get('gender', 'boy');
-    const lang = GLOSS_LANGS.find(([id]) => id === s.get('glossLang', 'ar'))?.[1] ?? 'English';
+    const lang = glossInfo().name;
     this.servers.value = s.get('serverRegion', 'ankara');
 
     const help = el('ul', { class: 'help', style: { display: 'none' } }, [
@@ -49,18 +48,22 @@ export class MainMenu {
         el('span', { text: `${gender === 'girl' ? '👧' : '👦'} ${PLAYER_NAMES[gender]} · ${lang}${s.get('username') ? ` · @${s.get('username')}` : ''}` }),
         btn('Değiştir', 'chipbtn', () => this.onProfile()),
       ]),
-      save && btn('Devam et', 'btn', go(this.onContinue)),
-      btn(save ? 'Yeni oyun' : 'Hikayeye başla', save ? 'btn alt' : 'btn', go(this.onStart)),
-      el('div', { class: 'menu-square' }, [
-        el('p', { class: 'chap', text: 'Köy meydanı · çok oyunculu' }),
-        el('p', { class: 'cen en-t', text: gloss('Village square · play online with others') }),
-        this.servers.root,
-        btn('Meydana gir', 'btn', go(() => this.onSquare(this.servers.value))),
+      el('div', { class: 'menu-cols' }, [
+        el('div', { class: 'menu-col' }, [
+          save && btn('Devam et', 'btn', go(this.onContinue)),
+          btn(save ? 'Yeni oyun' : 'Hikayeye başla', save ? 'btn alt' : 'btn', go(this.onStart)),
+          btn('Nasıl oynanır?', 'btn alt', () => { if (this.onHelp) this.onHelp(); else help.style.display = help.style.display === 'block' ? 'none' : 'block'; }),
+          help,
+          el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler (Piper)' })]),
+          el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
+        ]),
+        el('div', { class: 'menu-square' }, [
+          el('p', { class: 'chap', text: 'Köy meydanı · çok oyunculu' }),
+          el('p', { class: 'cen en-t', text: gloss('Village square · play online with others') }),
+          btn('Meydana gir', 'btn', go(() => this.onSquare(this.servers.value))),
+          this.servers.root,
+        ]),
       ]),
-      btn('Nasıl oynanır?', 'btn alt', () => { if (this.onHelp) this.onHelp(); else help.style.display = help.style.display === 'block' ? 'none' : 'block'; }),
-      help,
-      el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler (Piper)' })]),
-      el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
     ]));
     this.root.classList.add('open');
     this.servers.start();

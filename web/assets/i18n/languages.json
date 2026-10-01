@@ -1,0 +1,11 @@
+{
+  "_comment": "Languages the meanings (glosses) can be shown in. To add one: copy en keys with `npm run i18n -- --missing <code>`, translate them into assets/i18n/<code>.json and add a line here. The game itself always speaks Turkish.",
+  "source": "en",
+  "languages": [
+    { "code": "ar", "name": "العربية", "short": "ع", "dir": "rtl" },
+    { "code": "en", "name": "English", "short": "EN", "dir": "ltr" },
+    { "code": "ur", "name": "اردو", "short": "ار", "dir": "rtl" },
+    { "code": "es", "name": "Español", "short": "ES", "dir": "ltr" },
+    { "code": "fr", "name": "Français", "short": "FR", "dir": "ltr" }
+  ]
+}

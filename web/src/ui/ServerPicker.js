@@ -28,28 +28,43 @@ export function healthUrl(wsUrl) {
   }
 }
 
-/** Server <select> with live player counts (polled from /health while `start()`ed). */
+const MAX_PLAYERS = 24; // per square (server/src/VillageServer.js)
+
+/** City cards with live player counts and a crowd meter (polled from /health while `start()`ed). */
 export class ServerPicker {
   #timer = null;
   #counts = Object.fromEntries(SERVERS.map(([id]) => [id, 0]));
+  #value;
 
-  constructor({ villageServer, value = DEFAULT_SERVER }) {
+  constructor({ villageServer, value = DEFAULT_SERVER, onChange }) {
     this.url = villageServer ? healthUrl(villageServer) : '';
-    this.select = el('select', { class: 'server-select', attrs: { 'aria-label': 'Sunucu seç' } });
+    this.onChange = onChange;
+    this.#value = SERVERS.some(([id]) => id === value) ? value : DEFAULT_SERVER;
+    this.cards = el('div', { class: 'server-cards', attrs: { role: 'radiogroup', 'aria-label': 'Sunucu' } });
     this.status = el('p', { class: 'note' });
-    this.root = el('div', { class: 'server-picker' }, [this.select, this.status]);
-    this.#render(SERVERS.some(([id]) => id === value) ? value : DEFAULT_SERVER);
+    this.root = el('div', { class: 'server-picker' }, [this.cards, this.status]);
+    this.#render();
   }
 
-  get value() { return this.select.value; }
-  set value(v) { this.select.value = v; }
+  get value() { return this.#value; }
+  set value(v) { if (SERVERS.some(([id]) => id === v)) { this.#value = v; this.#render(); } }
 
-  #render(keep = this.value) {
-    this.select.replaceChildren(...SERVERS.map(([id, label]) => {
+  #render() {
+    this.cards.replaceChildren(...SERVERS.map(([id, label]) => {
       const n = this.#counts[id] ?? 0;
-      return el('option', { text: `${label} — ${n === 0 ? 'boş' : `${n} kişi`}`, attrs: { value: id } });
+      const level = n === 0 ? 'empty' : n < 6 ? 'calm' : n < 15 ? 'lively' : 'busy';
+      const word = { empty: ['Boş', gloss('Empty')], calm: ['Sakin', gloss('Quiet')], lively: ['Hareketli', gloss('Lively')], busy: ['Kalabalık', gloss('Crowded')] }[level];
+      const on = id === this.#value;
+      return el('button', {
+        class: `server-card lvl-${level}${on ? ' on' : ''}`, attrs: { type: 'button', role: 'radio', 'aria-checked': String(on), 'data-server': id },
+        on: { click: () => { this.#value = id; this.#render(); this.onChange?.(id); } },
+      }, [
+        el('span', { class: 'sc-city', text: label }),
+        el('span', { class: 'sc-count', text: `👥 ${n}` }),
+        el('span', { class: 'sc-meter' }, [el('i', { style: { width: `${Math.min(100, (n / MAX_PLAYERS) * 100)}%` } })]),
+        el('span', { class: 'sc-level' }, [word[0], el('small', { class: 'en-t', text: ` · ${word[1]}` })]),
+      ]);
     }));
-    this.select.value = keep;
     const total = Object.values(this.#counts).reduce((a, b) => a + b, 0);
     this.status.textContent = `Çevrimiçi: ${total} · ${gloss('Pick an emptier square if you want it quiet.')}`;
   }
@@ -63,7 +78,7 @@ export class ServerPicker {
       this.#counts = Object.fromEntries(SERVERS.map(([id]) => [id, Number(data.rooms?.[id] ?? 0)]));
       this.#render();
     } catch {
-      this.status.textContent = 'Sunucu durumu alınamadı.';
+      this.status.textContent = `Sunucu durumu alınamadı · ${gloss('Could not reach the server.')}`;
     }
   }
 

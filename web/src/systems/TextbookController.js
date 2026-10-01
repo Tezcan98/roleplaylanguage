@@ -73,6 +73,6 @@ export class TextbookController {
   #checkUnit(u) {
     if (this.status(u) === 'done' || !u.pages.every((_, i) => this.#pageDone(u, i))) return;
     this.toasts.show('Ödev bitti! 🎉', `${u.titleEn} complete`);
-    this.effects.run([`flag:homework-${u.id}`]);
+    this.effects.run([`flag:homework-${u.id}`, ...(u.reward ? [`credits:${u.reward}`] : [])]); // extra units earn credits once
   }
 }
