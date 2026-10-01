@@ -48,6 +48,24 @@ export class VillageSquare extends Location {
     C.addBox(-13.3, -6.7, -10.3, -4.7);
     this.anchor('muhtar', -10, -3.7, Math.PI);
 
+    // greengrocer's stall (manav) behind the fountain
+    this.prop(kit, 'prop.manavStall', 0, 0, -9.2, 0, () => {
+      const g = mf.group(
+        mf.at(mf.box(4.2, 0.08, 1.4, LIGHT_WOOD), 0, 0.85, 0),
+        ...[[-1.95, -0.6], [1.95, -0.6], [-1.95, 0.6], [1.95, 0.6]].map(([x, z]) => mf.at(mf.box(0.1, 2.4, 0.1, WOOD), x, 1.2, z)),
+        mf.at(mf.box(4.5, 0.06, 1.8, 0x3E8E4A), 0, 2.42, 0), // awning
+      );
+      const fruit = [[0xE4574A, 'elma'], [0xF39C12, 'portakal'], [0xC8A15B, 'patates'], [0xE0392B, 'domates'], [0xD4C64A, 'armut']];
+      fruit.forEach(([color], i) => {
+        const x = -1.6 + i * 0.8;
+        g.add(mf.at(mf.box(0.65, 0.22, 0.55, LIGHT_WOOD), x, 1.0, 0.25));
+        for (let k = 0; k < 6; k++) g.add(mf.at(mf.sphere(0.09, color, 8), x - 0.18 + (k % 3) * 0.18, 1.17, 0.13 + Math.floor(k / 3) * 0.22));
+      });
+      return g;
+    });
+    C.addBox(-2.2, 2.2, -10.0, -8.4);
+    this.anchor('manav', 0, -7.8, 0);
+
     // benches
     [-5.8, 5.8].forEach((x) => {
       add(mf.at(mf.box(3.8, 0.25, 0.8, LIGHT_WOOD), x, 0.85, 5));

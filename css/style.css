@@ -188,3 +188,8 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{
 .callbar{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:var(--wood);color:var(--parch);border:2px solid var(--gold);border-radius:999px;padding:6px 8px 6px 12px;font:800 14px Nunito,sans-serif;pointer-events:auto;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .callbar[hidden]{display:none}
 .chipbtn.danger{background:#E4574A;color:#fff;border-color:#8A1F17}
+.caption{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);width:min(560px,calc(100vw - 24px));background:rgba(42,30,21,.92);color:var(--parch);border:2px solid var(--gold);border-radius:14px;padding:12px 16px;text-align:center;pointer-events:none}
+.caption[hidden]{display:none}
+.cap-title{font:700 24px Fredoka,sans-serif;color:var(--gold)}
+.cap-text{font:800 17px Nunito,sans-serif}
+.cap-en{font:700 14px Nunito,sans-serif;color:#D9C7A3;font-style:italic}

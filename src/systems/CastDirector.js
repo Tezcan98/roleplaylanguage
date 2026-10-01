@@ -28,6 +28,12 @@ export class CastDirector {
     this.refreshVisibility();
   }
 
+  /** Send someone off stage (e.g. grandpa goes to bed). */
+  dismiss(id) {
+    this.npcs.get(id).location = null;
+    this.refreshVisibility();
+  }
+
   get(id) { return this.npcs.get(id); }
   present(locId = this.world.current?.id) { return [...this.npcs.values()].filter((n) => n.location === locId); }
   where(id) { return this.npcs.get(id)?.location ?? null; }

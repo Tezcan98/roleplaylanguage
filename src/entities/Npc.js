@@ -34,7 +34,10 @@ export class Npc extends Character {
   setBehavior(name) {
     const r = this.rig;
     r.body.position.y = 0;
+    r.body.position.z = 0;
     r.body.rotation.x = 0;
+    r.head.rotation.y = 0;
+    r.armL.rotation.z = r.armR.rotation.z = 0;
     r.legL.rotation.x = r.legR.rotation.x = 0;
     Object.keys(r.props).forEach((p) => this.showProp(p, false));
     this.behavior = Behaviors[name] ?? Behaviors.stand;
@@ -52,6 +55,7 @@ export class Npc extends Character {
       b.pose(this.rig, t);
     }
     this.rig.head.position.y = 1.84 + (this.talking ? Math.abs(Math.sin(t * 8)) * 0.02 : 0);
+    if (b.ownsHead) return;
     if (b.seated && this.talking) this.rig.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.#headTowards(player)));
     else this.rig.head.rotation.y *= 0.9;
   }

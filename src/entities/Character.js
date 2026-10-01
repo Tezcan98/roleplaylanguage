@@ -35,8 +35,21 @@ export class Character {
     if (on) { sitPose(0.38)(r); r.armL.rotation.x = r.armR.rotation.x = -0.5; } else { r.body.position.y = 0; r.legL.rotation.x = r.legR.rotation.x = 0; }
   }
 
+  /** Hand the body over to a scripted pose (e.g. prayer); walking animation pauses meanwhile. */
+  setPosed(on) {
+    this.posed = on;
+    if (!on) {
+      const r = this.rig;
+      r.body.position.set(0, 0, 0);
+      r.body.rotation.x = 0;
+      r.head.rotation.y = 0;
+      r.legL.rotation.x = r.legR.rotation.x = 0;
+      r.armL.rotation.z = r.armR.rotation.z = 0;
+    }
+  }
+
   walk(t, amount) {
-    if (this.seated) return;
+    if (this.seated || this.posed) return;
     const r = this.rig, s = Math.sin(t * 10) * 0.6 * amount;
     r.legL.rotation.x = s; r.legR.rotation.x = -s; r.armL.rotation.x = -s * 0.8; r.armR.rotation.x = s * 0.8;
     this.#playClip(amount > 0.05 ? 'walk' : 'idle');
