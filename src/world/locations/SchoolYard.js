@@ -71,5 +71,6 @@ export class SchoolYard extends Location {
     this.anchor('door', 0, -8.4, 0);
     this.anchor('elif', -3, -5, 0.6);
     this.anchor('can', 3.5, -3.5, -0.7);
+    this.anchor('zehra', 1.2, -5.5, 0.3);
   }
 }

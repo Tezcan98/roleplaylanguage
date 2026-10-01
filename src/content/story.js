@@ -359,7 +359,7 @@ export const STORY = {
         ogretmen: ['classroom', 'teacher', 'teach'],
         elif: ['schoolyard', 'elif', 'stand'],
         can: ['schoolyard', 'can', 'stand'],
-        zehra: ['classroom', 'seat2', 'sitBench'],
+        zehra: ['schoolyard', 'zehra', 'stand'], // meet-zehra happens before class; she takes her seat when the lesson starts
         ...VILLAGE_NPCS,
       },
       intro: {
