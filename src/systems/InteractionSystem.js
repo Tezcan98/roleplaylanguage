@@ -16,7 +16,9 @@ export class NpcInteractions {
     }
     if (!best) return null;
     const { n, d, isTarget } = best;
-    return { label: `${n.def.short} ile konuş`, dist: d, priority: isTarget ? 1.5 : 1, run: () => this.dialogue.open(n.id) };
+    // people right next to you outrank free-roam spots; from further away the closest thing wins
+    const priority = isTarget ? 1.5 : d < 0.9 ? 1 : 0;
+    return { label: `${n.def.short} ile konuş`, dist: d, priority, run: () => this.dialogue.open(n.id) };
   }
 }
 

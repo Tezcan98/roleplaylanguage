@@ -1,5 +1,25 @@
 # Game TODO
 
+## Near-term — home / language-learning vertical slice
+
+- [x] Expand the after-school home loop with tea, table setting, dish washing, sweeping, and plant care.
+- [ ] Add persistent home-state feedback (dirty/clean dishes, watered plant, swept room) so family dialogue can react to completed chores.
+- [ ] Add a small home inventory/storage system for food, cleaning supplies, and household objects.
+- [ ] Add a morning routine variation (make the bed, wash face, breakfast, pack school bag) before leaving home.
+
+### Meshy asset backlog — home
+
+These are optional replacement assets for the procedural placeholders. Generate them one at a time and export as **GLB**; the game already uses a fallback-first `ModelLibrary`, so a missing GLB will not break the scene.
+
+- [ ] `prop.fridge` — small Turkish village-house refrigerator, kitchen corner.
+- [ ] `prop.stove` — compact freestanding cooker/oven, simple enamel body.
+- [ ] `prop.broom` — wooden-handled traditional household broom, upright/leaning pose.
+- [ ] `prop.dishpan` — enamel wash basin with a few plates, kitchen counter.
+- [ ] `prop.caydanlik` — Turkish double teapot (çaydanlık), red enamel / metal details.
+- [ ] `prop.teaTray` — round Turkish tea tray with two small tulip-shaped tea glasses.
+- [ ] `prop.sini` — low Turkish sini table with simple breakfast dishes, visually readable from a third-person camera.
+- [ ] `prop.prayerRug` — optional folded/rolled traditional Turkish prayer rug for bedroom/living room decoration. *(no hook in the scene yet)*
+
 ## Near-term — village / language-learning vertical slice
 
 - [x] Add a real bakkal shopping flow: choose an item, understand the price, and receive it in inventory. *(Monday evening: order, add up the prices, pay, change.)*

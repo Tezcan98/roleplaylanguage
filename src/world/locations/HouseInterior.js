@@ -102,20 +102,38 @@ export class HouseInterior extends Location {
     C.addBox(5.2, 6, -1.5, 0.5);
     this.hotspot('house.tv', 4.5, -0.5, 1.6);
 
-    // kitchen corner
-    this.prop(kit, 'prop.kitchen', 4.3, 0, -4.2, 0, () => {
-      const g = mf.group(mf.at(mf.box(3.2, 0.9, 0.8, { tex: 'whiteWall' }), 0, 0.45, 0), mf.at(mf.box(3.3, 0.06, 0.85, { tex: 'metal' }), 0, 0.93, 0));
-      [-1, 0, 1].forEach((x) => g.add(mf.at(mf.box(0.05, 0.6, 0.02, 0x9AA3AE), x * 0.9, 0.45, 0.41)));
+    // kitchen corner, left to right: fridge, stove, counter with the çaydanlık and the dish basin
+    this.prop(kit, 'prop.fridge', 2.65, 0, -4.15, 0, () => mf.box(0.72, 1.9, 0.72, { tex: 'whiteWall' }));
+    this.prop(kit, 'prop.stove', 3.5, 0, -4.15, 0, () => mf.group(
+      mf.at(mf.box(0.8, 0.9, 0.72, { tex: 'metal' }), 0, 0.45, 0),
+      mf.at(mf.cyl(0.12, 0.12, 0.02, 0x2A1E15, 16), -0.2, 0.91, -0.16),
+      mf.at(mf.cyl(0.12, 0.12, 0.02, 0x2A1E15, 16), 0.2, 0.91, 0.16)
+    ));
+    this.prop(kit, 'prop.kitchen', 4.97, 0, -4.2, 0, () => {
+      const g = mf.group(mf.at(mf.box(1.85, 0.9, 0.8, { tex: 'whiteWall' }), 0, 0.45, 0), mf.at(mf.box(1.9, 0.06, 0.85, { tex: 'metal' }), 0, 0.93, 0));
+      [-0.46, 0.46].forEach((x) => g.add(mf.at(mf.box(0.05, 0.6, 0.02, 0x9AA3AE), x, 0.45, 0.41)));
       return g;
     });
-    this.prop(kit, 'prop.caydanlik', 4.9, 0.96, -4.2, 0, () => mf.group(
+    this.prop(kit, 'prop.caydanlik', 4.65, 0.96, -4.2, 0, () => mf.group(
       mf.at(mf.cyl(0.22, 0.22, 0.3, 0xB5482E, 14), 0, 0.15, 0),
       mf.at(mf.cyl(0.15, 0.17, 0.25, 0xB5482E, 14), 0, 0.43, 0),
       mf.at(mf.sphere(0.05, 0x2A1E15, 8), 0, 0.6, 0)));
-    add(mf.at(mf.cyl(0.2, 0.2, 0.04, 0x2A1E15, 14), 3.8, 0.98, -4.2));
-    C.addBox(2.6, 6, -4.6, -3.7);
+    this.prop(kit, 'prop.dishpan', 5.45, 0.98, -4.18, 0, () => mf.cyl(0.28, 0.34, 0.09, 0x8EC5FF, 16));
+    // small tea tray at the edge of the sini (the bread goes in the middle)
+    this.prop(kit, 'prop.teaTray', -1.2, 0, -0.1, 0, () => mf.group(
+      mf.at(mf.cyl(0.24, 0.24, 0.03, 0xB5482E, 20), 0, 0.34, 0),
+      mf.at(mf.cyl(0.05, 0.04, 0.12, 0xE8D6A8, 10), -0.09, 0.41, 0),
+      mf.at(mf.cyl(0.05, 0.04, 0.12, 0xE8D6A8, 10), 0.09, 0.41, 0)
+    ));
+    C.addBox(2.25, 6, -4.6, -3.7);
     this.anchor('kitchen', 3.6, -3.3, Math.PI);
-    this.hotspot('house.kitchen', 5.0, -3.2, 1.2);
+    this.hotspot('house.kitchen', 2.65, -3.35, 1.0); // water from the fridge
+    this.hotspot('house.tea', 4.65, -3.35, 1.0);
+    this.hotspot('house.dishes', 5.45, -3.35, 1.0);
+    this.prop(kit, 'prop.broom', 5.35, 0, -2.95, Math.PI / 2, () => mf.group(
+      mf.at(mf.cyl(0.025, 0.025, 1.35, DARK, 8), 0, 0.68, 0),
+      mf.at(mf.box(0.32, 0.12, 0.08, { tex: 'lightWood' }), 0, 0.08, 0)
+    ));
     this.hotspot('house.window', 2, -3.9, 1.3);
 
     // bookshelf
@@ -168,6 +186,9 @@ export class HouseInterior extends Location {
     add(mf.at(mf.cyl(0.2, 0.16, 0.4, 0xB5482E, 10), 5.5, 0.2, 1.1));
     add(mf.at(mf.ico(0.4, { tex: 'leaves' }), 5.5, 0.75, 1.1));
     C.addCircle(5.5, 1.1, 0.4);
+    this.hotspot('house.plant', 4.95, 1.1, 1.1);
+    this.hotspot('house.table', 0.55, 0.55, 1.0); // other side of the sini from 'Sofraya otur'
+    this.hotspot('house.sweep', 1.6, 1.5, 1.3);
 
     // TV flicker while watching
     this.tvTime = 0;
