@@ -26,7 +26,7 @@ export const LESSONS = {
   },
 };
 
-/** Bot classmates: which NPC plays them and how often they answer correctly. */
+/** Exactly three classmates + the player = four students per classroom. */
 export const CLASSMATE_BOTS = [
   { id: 'elif', name: 'Elif', skill: 0.8, seat: 'seat3' },
   { id: 'can', name: 'Can', skill: 0.55, seat: 'seat5' },
