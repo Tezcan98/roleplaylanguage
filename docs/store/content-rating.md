@@ -1,21 +1,23 @@
-# Google Play Content Rating / IARC — önerilen cevaplar
+# Google Play / IARC içerik derecelendirmesi — taslak
 
-Bu dosya formu otomatik doldurmaz; Play Console'daki IARC anketine cevap verirken kullanılacak içerik envanteridir.
+Bu dosya IARC anketine doğrudan yapıştırılacak resmi cevap değildir. Play Console'daki güncel sorular görülerek gerçek içerikle eşleştirilmelidir.
 
 ## İçerik özeti
 
-- Oyun: hikâyeli, eğitim amaçlı, 3D köy yaşamı.
-- Şiddet: gerçekçi şiddet veya silah kullanımı yok.
-- Cinsel içerik: yok.
+- Tür: eğitim amaçlı, hikâyeli 3D yaşam/rol yapma oyunu.
+- Şiddet: gerçekçi şiddet, kan veya silah odaklı oynanış yok.
+- Cinsel içerik: cinsel içerik yok.
 - Kumar: gerçek para veya kumar mekaniği yok.
-- Uyuşturucu: yok.
-- Korku: yoğun korku/horror içeriği yok.
-- Kaba dil: oyunun kendi hikâyesinde ağır küfür hedeflenmiyor; çok oyunculu kullanıcı metinleri filtreleniyor.
-- Kullanıcı etkileşimi: **Evet.** Çok oyunculu köy meydanında oyuncular birbirleriyle yazı üzerinden etkileşebilir.
-- Sesli iletişim: **Evet.** İki oyuncu karşılıklı kabul ederse birebir sesli sohbet kurulabilir.
-- Kullanıcı tarafından oluşturulan içerik: **Evet.** Oyuncunun kullanıcı adı ve konuşma metni diğer oyunculara gösterilebilir.
-- Reklam: **Evet.** Android sürümünde ödüllü AdMob reklamları bulunabilir.
+- Korku: korku/horror odaklı içerik yok.
+- Uyuşturucu/alkol: bunları teşvik eden oynanış yok.
+- Küfür: çok oyunculu kullanıcı adı ve yazılı konuşmada kısa bir Türkçe/Arapça/İngilizce filtre bulunur; kullanıcıların serbest yazdığı metinler tamamen kontrol edilemeyebilir.
+- Kullanıcı etkileşimi: köy meydanında diğer oyuncularla yazılı iletişim ve iki tarafın onayladığı birebir sesli sohbet vardır.
+- Reklam: ödüllü reklam vardır; reklam içeriği AdMob tarafından sağlanır.
 
-## Form doldururken
+## Play Console'da ayrıca kontrol edilecekler
 
-IARC'nin güncel sorularındaki seçenekler birebir aynı olmayabilir. Her soruyu oyunun gerçek yayın sürümündeki davranışa göre cevaplayın. Özellikle yaş hedefi, kullanıcı etkileşimi ve reklam seçenekleri yayın öncesi son kez kontrol edilmelidir.
+1. Uygulama kategorisi olarak oyun/eğitim bağlamına uygun seçimi yapın.
+2. Kullanıcı etkileşimi ve çevrimiçi iletişim sorularını doğru işaretleyin.
+3. Reklam bulunmasıyla ilgili soruları mevcut AdMob yapılandırmasıyla eşleştirin.
+4. Uygulama hedef kitlesi çocuklar/aileler olarak seçilecekse ilgili Families şartlarını ayrıca değerlendirin; sesli sohbet bu değerlendirmeyi özellikle etkileyebilir.
+5. Uygulama içeriği veya çevrimiçi özellikleri değiştiğinde IARC anketini yeniden gözden geçirin.
