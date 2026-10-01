@@ -67,6 +67,7 @@ import { IntroSlides } from './ui/IntroSlides.js';
 import { PrayerScene } from './systems/PrayerScene.js';
 import { MealService } from './systems/MealService.js';
 import { TextbookView } from './ui/TextbookView.js';
+import { App } from '@capacitor/app';
 
 import { ActivityRegistry } from './activities/Activity.js';
 import { ChoiceActivity } from './activities/ChoiceActivity.js';
@@ -114,6 +115,10 @@ async function loadManifest() {
 const manifest = await loadManifest();
 await document.fonts?.load('700 40px Fredoka').catch(() => {}); // canvas textures (signs, chalkboard) use it
 const params = new URLSearchParams(location.search);
+const isNative = window.Capacitor?.isNativePlatform?.() === true;
+const NativeSpeechRecognizer = isNative ? (await import('./services/speech/NativeSpeechRecognizer.js')).NativeSpeechRecognizer : null;
+const NativeTTS = isNative ? (await import('./services/speech/NativeTTS.js')).NativeTTS : null;
+const AdMobAdProvider = isNative ? (await import('./services/monetization/AdMobAdProvider.js')).AdMobAdProvider : null;
 const host = document.getElementById('ui');
 
 // --- core ---
@@ -188,6 +193,7 @@ const tts = new CharacterVoices({
 });
 // ?fakemic → scripted answers (tests); manifest.sttEndpoint → Whisper server; else browser STT
 const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
+  : isNative ? new NativeSpeechRecognizer('tr-TR')
   : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
 const wallet = new CreditWallet(state, bus);
@@ -411,6 +417,32 @@ if (native) {
   });
 }
 game.start();
+
+if (isNative) {
+  App.addListener('backButton', () => {
+    if (dialogueView.isOpen) {
+      dialogue.close();
+      return;
+    }
+    const overlays = [...document.querySelectorAll('.overlay.open')];
+    const overlay = overlays.at(-1);
+    if (overlay) {
+      const button = [...overlay.querySelectorAll('button')].find((b) => /vazgeç|kapat|iptal|close|✕/i.test(b.textContent ?? '') && !b.disabled);
+      if (button) { button.click(); return; }
+      if (overlay.parentElement) {
+        overlay.classList.remove('open');
+        return;
+      }
+    }
+    App.minimizeApp();
+  });
+
+  App.addListener('appStateChange', ({ isActive }) => {
+    if (isActive) return;
+    tts.cancel();
+    if (world.current?.id === 'village' && village.voice.inCall) village.endVoiceCall();
+  });
+}
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) window.__game = { help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
