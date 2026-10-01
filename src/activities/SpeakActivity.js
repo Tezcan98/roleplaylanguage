@@ -23,7 +23,7 @@ export class SpeakActivity extends Activity {
     const { speech, tts } = this.services;
     const target = spec.show ?? spec.expect?.[0] ?? '';
     return new Promise(async (resolve) => {
-      const devSkip = new URLSearchParams(location.search).has('dev') || new URLSearchParams(location.search).has('debug');
+      const devSkip = new URLSearchParams(location.search).has('dev'); // ?debug is for tests and recordings, ?dev shows the skip
       if (spec.exam && this.services.gate && !devSkip) {
         const allowed = await this.services.gate.request({ title: 'Sesli sınav', titleEn: 'Speech exam', cost: 1 });
         if (!allowed) { resolve({ option: {} , ok: false }); return; }

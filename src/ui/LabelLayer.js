@@ -45,7 +45,7 @@ export class LabelLayer {
       if (!node) { node = el('div', { class: 'label' }); this.root.append(node); this.#names.set(n.id, node); }
       const isT = target === n.id;
       node.className = `label${isT ? ' q' : ''}`;
-      node.textContent = `${isT ? '! ' : ''}${n.voice ? '🎙️ ' : ''}${n.name}`;
+      node.textContent = `${isT ? '! ' : ''}${n.call ? '📞 ' : ''}${n.voice ? '🎙️ ' : ''}${n.name}`;
       this.#pin(node, n.position, 2.55 * n.group.scale.y);
       shown.add(n.id);
     }

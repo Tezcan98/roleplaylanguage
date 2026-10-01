@@ -59,6 +59,7 @@ import { RemotePlayers } from './systems/RemotePlayers.js';
 import { VillageMultiplayer } from './systems/VillageMultiplayer.js';
 import { UsernameDialog } from './ui/UsernameDialog.js';
 import { PushToTalk } from './ui/PushToTalk.js';
+import { CallUI } from './ui/CallUI.js';
 import { TextbookView } from './ui/TextbookView.js';
 
 import { ActivityRegistry } from './activities/Activity.js';
@@ -244,7 +245,7 @@ const textbook = new TextbookController({
   view: new TextbookView(host, { onClose: () => textbook.close(), onPrev: () => textbook.prev(), onNext: () => textbook.next() }),
 });
 effects
-  .register('lesson', (id) => lessons.enter(id))
+  .register('lesson', (id) => lessons.enter(id || story.chapter?.lessonId || 'l1'))
   .register('textbook', (unit) => textbook.open(unit))
   .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, 'Credits earned'); });
 
@@ -255,12 +256,14 @@ const village = new VillageMultiplayer({
   remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK }),
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
+  calls: new CallUI(host, modes),
   usernames: new UsernameDialog(host, modes),
-  recognizer: params.has('fakemic') ? null : new WebSpeechRecognizer('tr-TR'),
+  recognizer: params.has('fakemic') ? new ScriptedRecognizer() : new WebSpeechRecognizer('tr-TR'),
 });
 
 // --- interaction ---
 const interactions = new InteractionSystem([
+  village, // "voice chat with X" next to another player in the square
   toys,
   new NpcInteractions({ cast, dialogue, story }),
   new ItemInteractions({ items }),
@@ -340,4 +343,4 @@ const game = new Game({ village, toys, foliage: Foliage, modes, time, lighting, 
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
