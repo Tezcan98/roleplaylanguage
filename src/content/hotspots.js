@@ -62,7 +62,7 @@ export const HOTSPOTS = {
   },
   'house.bed': {
     label: 'Yat, uyu', use: ['chapter'],
-    available: (c) => c.q === 'sleep',
+    available: (c) => ['sleep', 'free-evening'].includes(c.q),
   },
 };
 
