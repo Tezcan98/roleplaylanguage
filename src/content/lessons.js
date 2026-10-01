@@ -77,7 +77,7 @@ export const LESSONS = {
         botAnswers: ['Evet, eğleneceğim.', 'Tabii!'], botWrong: ['Hayır.', 'Okula gideceğim.'] },
     ],
   },
-;
+};
 
 /** Exactly three classmates + the player = four students per classroom. */
 export const CLASSMATE_BOTS = [
