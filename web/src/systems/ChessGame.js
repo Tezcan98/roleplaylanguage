@@ -144,7 +144,9 @@ export class ChessGame {
       b: () => [base(), mf.at(mf.cyl(0.13, 0.27, 0.8, c, 12), 0, 0.58, 0), mf.at(mf.sphere(0.21, c, 12), 0, 1.08, 0), mf.at(mf.sphere(0.07, c, 8), 0, 1.33, 0)],
       q: () => [base(0.22), mf.at(mf.cyl(0.16, 0.3, 1.0, c, 12), 0, 0.72, 0), mf.at(mf.cyl(0.3, 0.18, 0.2, c, 12), 0, 1.3, 0), mf.at(mf.sphere(0.12, c, 10), 0, 1.48, 0)],
       k: () => [base(0.22), mf.at(mf.cyl(0.17, 0.31, 1.1, c, 12), 0, 0.77, 0), mf.at(mf.cyl(0.3, 0.2, 0.2, c, 12), 0, 1.4, 0),
-        mf.at(mf.box(0.08, 0.36, 0.08, 0xE0B04A), 0, 1.68, 0), mf.at(mf.box(0.26, 0.08, 0.08, 0xE0B04A), 0, 1.72, 0)],
+        // a crown with points and a ball on top (no cross)
+        ...[0, 1, 2, 3, 4, 5].map((i) => mf.at(mf.box(0.07, 0.18, 0.07, 0xE0B04A), Math.cos(i * Math.PI / 3) * 0.2, 1.6, Math.sin(i * Math.PI / 3) * 0.2)),
+        mf.at(mf.sphere(0.1, 0xE0B04A, 10), 0, 1.66, 0)],
     };
     return mf.group(...parts[type]());
   }

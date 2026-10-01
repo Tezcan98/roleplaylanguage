@@ -2,13 +2,13 @@ import { el } from './dom.js';
 import { gloss, loadGlossLang, glossLanguages } from '../i18n/Gloss.js';
 import { ServerPicker } from './ServerPicker.js';
 
-export const PLAYER_NAMES = { boy: 'Ahmet', girl: 'Sare' };
+export const PLAYER_NAMES = { boy: 'Ahmet', girl: 'Sare' }; // defaults; each character has its own name below
 /** The four characters to pick from: [gender, look, icon, name] — the picture tells them apart. */
 export const CHARACTERS = [
   ['boy', 'modest', '👦', 'Ahmet'],
-  ['boy', 'strong', '💪', 'Ahmet'],
+  ['boy', 'strong', '👦🏽', 'Hakan'],
   ['girl', 'covered', '🧕', 'Sare'],
-  ['girl', 'open', '👧', 'Sare'],
+  ['girl', 'open', '👧', 'Seher'],
 ];
 export const characterOf = (gender, look) => CHARACTERS.find(([g, l]) => g === gender && l === look) ?? CHARACTERS.find(([g]) => g === gender) ?? CHARACTERS[0];
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;

@@ -105,11 +105,11 @@ import { ListModal } from './ui/ListModal.js';
 import { DialogueView } from './ui/DialogueView.js';
 
 import { gloss, wordNote, loadGlossLang, glossLang } from './i18n/Gloss.js';
-import { setPlayerGender, playerGender, playerName, personalizeContent } from './i18n/Persona.js';
+import { setPlayerGender, setPlayerLook, playerGender, playerName, personalizeContent, setTeacher, teacherInfo } from './i18n/Persona.js';
 import { NpcChatClient } from './services/ai/NpcChatClient.js';
 import { CharacterSetup } from './ui/CharacterSetup.js';
 import {
-  STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
+  STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, TEACHER_MAN, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
   LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS,
 } from './content/index.js';
 
@@ -131,6 +131,15 @@ await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // 
 setupLandscape(host); // phones: played sideways
 // boy (Ahmet) or girl (Sare): the content is rewritten once, before any system reads it
 setPlayerGender(params.get('gender') ?? settings.get('gender', 'boy'));
+const playerLook = lookKey(playerGender(), params.get('look') ?? settings.get('look', ''));
+setPlayerLook(playerLook); // Ahmet, Hakan, Sare or Seher
+// the class teacher: picked at random once (a woman or a man, with a name), then kept
+settings.set('teacher', setTeacher(params.get('teacher') ?? settings.get('teacher', '')));
+{
+  const t = teacherInfo();
+  NPCS.ogretmen.name = `${t.name} Öğretmen`;
+  if (t.gender === 'm') { Object.assign(NPCS.ogretmen, TEACHER_MAN); VOICES.ogretmen = { id: 'tr_TR-fahrettin-medium', pitch: 1.0 }; }
+}
 personalizeContent(STORY, DIALOGUES, FREE_ACTIONS, HOUSE_RULES, LESSONS, CLASSMATE_BOTS, TEXTBOOK, ITEMS);
 if (playerGender() === 'girl') VOICES.ahmet = { id: 'tr_TR-dfki-medium', pitch: 1.15 }; // the player's own voice
 // the village server (localhost: the dev server's own) — multiplayer, free chat and Turkish speech
@@ -173,7 +182,6 @@ const fader = new Fader(host);
 const inventory = new Inventory(state, bus);
 const vocab = new Vocabulary(state, bus);
 const input = new InputSystem(joystick);
-const playerLook = lookKey(playerGender(), params.get('look') ?? settings.get('look', ''));
 const player = new Player('ahmet', PLAYER_LOOKS[playerLook], { mf, models });
 ctx.scene.add(player.group);
 lighting.follow = player.position;

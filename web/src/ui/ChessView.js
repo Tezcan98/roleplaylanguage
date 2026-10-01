@@ -1,7 +1,9 @@
 import { el } from './dom.js';
 import { gloss } from '../i18n/Gloss.js';
 
-const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
+// the king is drawn as a crown (the usual ♚ glyph carries a cross)
+const CROWN = '<svg viewBox="0 0 24 24" width="80%" height="80%"><path d="M3 18 L4.5 7 L9 12 L12 5 L15 12 L19.5 7 L21 18 Z" fill="currentColor" stroke="#000" stroke-width="0.8"/><rect x="3" y="18.5" width="18" height="2.8" rx="1" fill="currentColor" stroke="#000" stroke-width="0.8"/></svg>';
+const GLYPH = { k: '', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
 const FILES = 'abcdefgh';
 
 /**
@@ -63,7 +65,7 @@ export class ChessView {
       const sq = `${FILES[file]}${rank + 1}`;
       const p = game.get(sq);
       const cls = ['sq', (file + rank) % 2 ? 'l' : 'd', sq === this.#sel ? 'sel' : '', legal.includes(sq) ? 'to' : '', last && (sq === last.from || sq === last.to) ? 'last' : ''].join(' ');
-      cells.push(el('button', { class: cls, text: p ? GLYPH[p.type] : '', attrs: { type: 'button', 'data-sq': sq, ...(p ? { 'data-c': p.color } : {}) }, on: { click: () => this.#tap(sq, game, myColor) } }));
+      cells.push(el('button', { class: cls, ...(p?.type === 'k' ? { html: CROWN } : { text: p ? GLYPH[p.type] : '' }), attrs: { type: 'button', 'data-sq': sq, ...(p ? { 'data-c': p.color } : {}) }, on: { click: () => this.#tap(sq, game, myColor) } }));
     }
     this.board.replaceChildren(...cells);
     this.words.textContent = `şah = ${gloss('king')} · vezir = ${gloss('queen')} · kale = ${gloss('rook')} · fil = ${gloss('bishop')} · at = ${gloss('knight')} · piyon = ${gloss('pawn')}`;
