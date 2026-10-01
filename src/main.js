@@ -24,6 +24,7 @@ import { HouseInterior } from './world/locations/HouseInterior.js';
 import { Yard } from './world/locations/Yard.js';
 import { SchoolYard } from './world/locations/SchoolYard.js';
 import { Classroom } from './world/locations/Classroom.js';
+import { VillageSquare } from './world/locations/VillageSquare.js';
 
 import { Player } from './entities/Player.js';
 import { Npc } from './entities/Npc.js';
@@ -125,7 +126,8 @@ const lighting = new DayNightLighting(ctx, time, {
   fireflies: new Fireflies(ctx.scene, { area: { x: [-14, 14], z: [-8, 18] }, count: quality === 'low' ? 40 : 90 }),
 });
 const world = new LocationManager({ scene: ctx.scene, bus, lighting, kit });
-world.register(new HouseInterior()).register(new Yard()).register(new SchoolYard()).register(new Classroom());
+world.register(new HouseInterior()).register(new Yard()).register(new VillageSquare())
+  .register(new SchoolYard()).register(new Classroom());
 world.setLinks(LINKS);
 
 // --- ui ---

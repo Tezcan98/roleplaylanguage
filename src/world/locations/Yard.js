@@ -36,6 +36,8 @@ export class Yard extends Location {
     C.addBox(-5.1, 5.1, -17.1, -10.9);
     this.hotspot('yard.door', 0, -10.2);
     this.anchor('houseDoor', 0, -9.4, 0);
+    this.anchor('squareRoad', 18, 0, -Math.PI / 2);
+    this.hotspot('yard.square', 21, 0, 2.0);
 
     // fountain (çeşme)
     this.prop(kit, 'prop.cesme', 6.3, 0, -11.3, 0, () => {

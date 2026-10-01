@@ -10,6 +10,9 @@
  * Chapter `enter`: effects run when the chapter starts. A dialogue/hotspot effect
  * `chapter` moves the story on.
  */
+/** The muhtar and the grocer are always at the village square. */
+const VILLAGE_NPCS = { muhtar: ['village', 'muhtar', 'stand'], bakkal: ['village', 'bakkal', 'stand'] };
+
 const FAMILY_AT_SOFRA = {
   dede: ['house', 'sofraN', 'sitFloor'],
   baba: ['house', 'sofraW', 'sitFloor'],
@@ -26,6 +29,7 @@ export const STORY = {
         anne: ['house', 'kitchen', 'cook'],
         dede: ['yard', 'garden', 'garden'],
         baba: ['yard', 'car', 'repair'],
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazar · Bölüm 1', title: 'Canım sıkılıyor',
@@ -72,7 +76,7 @@ export const STORY = {
 
     {
       id: 'd1-breakfast', day: 1, time: '09:30', location: 'house', spawn: 'sofraGuest',
-      cast: FAMILY_AT_SOFRA,
+      cast: { ...FAMILY_AT_SOFRA, ...VILLAGE_NPCS },
       intro: {
         num: 'Pazar · Bölüm 3', title: 'Kahvaltı',
         text: 'Bütün aile sofrada. Sıcak çay, peynir, zeytin, domates… Ama ekmek nerede?',
@@ -98,6 +102,7 @@ export const STORY = {
         anne: ['yard', 'laundry', 'laundry'],
         dede: ['yard', 'pergolaSeat', 'sitBench'],
         baba: ['yard', 'car', 'repair'],
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazar · Bölüm 4', title: 'Öğleden sonra',
@@ -119,7 +124,7 @@ export const STORY = {
 
     {
       id: 'd1-dinner', day: 1, time: '19:30', location: 'house', spawn: 'sofraGuest',
-      cast: FAMILY_AT_SOFRA,
+      cast: { ...FAMILY_AT_SOFRA, ...VILLAGE_NPCS },
       enter: ['wear:jacket:off'],
       intro: {
         num: 'Pazar · Bölüm 5', title: 'Akşam yemeği',
@@ -138,6 +143,7 @@ export const STORY = {
         anne: ['house', 'kitchen', 'cook'],
         baba: ['house', 'sedirL', 'watchTv'],
         dede: null, // already asleep
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazar · Bölüm 6', title: 'Gece',
@@ -158,6 +164,7 @@ export const STORY = {
         anne: ['house', 'kitchen', 'cook'],
         dede: ['yard', 'garden', 'garden'],
         baba: null, // gone to work
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazartesi · Bölüm 7', title: 'Okul sabahı',
@@ -179,6 +186,7 @@ export const STORY = {
         elif: ['schoolyard', 'elif', 'stand'],
         can: ['schoolyard', 'can', 'stand'],
         zehra: ['classroom', 'seat2', 'sitBench'],
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazartesi · Bölüm 8', title: 'Okulda',
@@ -200,6 +208,7 @@ export const STORY = {
         baba: ['house', 'sedirL', 'sitBench'],
         dede: ['house', 'sedirR', 'sitBench'],
         ogretmen: null, elif: null, can: null, zehra: null,
+        ...VILLAGE_NPCS,
       },
       intro: {
         num: 'Pazartesi · Bölüm 9', title: 'Ödev zamanı',

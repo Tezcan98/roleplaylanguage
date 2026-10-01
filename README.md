@@ -32,6 +32,7 @@ URL parametreleri:
 - **İki günlük hikaye (9 bölüm):** Pazar sabahı → kahvaltı → çamaşır → masal → akşam yemeği → gece/uyku → Pazartesi okul → ödev. Saat görevlerle ilerler, gece ve gündüz değişir.
 - **Alıştırma tipleri:** seçmeli, dinleme (cümle gizli, sesle duyulur), kelime sıralama, sesli konuşma (konuşma tanıma + Türkçe tespiti + benzerlik puanı).
 - **Dede'nin masalları:** her ziyarette yeni bir etkileşimli Nasreddin Hoca masalı (5 masal).
+- **Köy meydanı:** avlunun doğusundan gidilir; bakkal ve muhtarla konuşulur.
 - **Serbest dolaşma:** TV, su içme, kitap okuma, pencereden bakma, el yıkama, bahçe sulama, top, kedi. **Ev kuralları:** ödev ya da iş varken, sofrada veya yatma saatinde TV açılınca anne uyarır ve özür dilettirir.
 - **Okul:** kredi ya da reklamla girilen ders, öğretmenin sesli soruları, bot sınıf arkadaşlarıyla canlı puan tablosu (multiplayer arayüzü hazır).
 - **Ders kitabı:** okuma, "fil hafızası" kartları (kelime ↔ sesi benzeyen İngilizce kelime ↔ komik resim), alıştırmalar. Ünite 1 günlük ödevdir.
@@ -49,7 +50,7 @@ src/
   engine/             RenderContext, TextureFactory, MeshFactory, ModelLibrary/PropFactory,
                       CollisionWorld, CameraController
   world/              Location (temel sınıf), LocationManager,
-                      locations/HouseInterior, Yard, SchoolYard, Classroom
+                      locations/HouseInterior, Yard, VillageSquare, SchoolYard, Classroom
   entities/           Character, CharacterRig, Npc, Player, Behaviors
   systems/            Time, DayNightLighting, Inventory, Vocabulary, Input, PlayerController,
                       CastDirector, ItemSystem, EffectRunner, StoryDirector, TravelService,
