@@ -35,7 +35,7 @@ export const HOTSPOTS = {
     label: 'Okula git', lockedLabel: 'Bahçe kapısı', use: ['chapter'],
     locked: (c) => (c.q === 'go-school' ? null : ['Okul yolu. Bugün okula gitmiyorsun.', "The road to school. You're not going today."]),
   },
-  'house.sofra': { label: 'Sofraya otur', use: ['sit:sofraGuest'] },
+  'house.sofra': { label: 'Sofraya otur', use: ['sit:sofraS'] },
   'house.breadTable': {
     label: 'Ekmeği sofraya koy',
     available: (c) => c.has('ekmek') && !c.flag('bread-on-table'),
