@@ -58,5 +58,11 @@
       "map": "assets/textures/metal.webp",
       "scale": 1
     }
-  }
+  },
+  "iceServers": [],
+  "villageServer": "",
+  "admob": {
+    "rewardedId": ""
+  },
+  "sttEndpoint": ""
 }

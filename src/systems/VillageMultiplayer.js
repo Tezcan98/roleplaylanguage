@@ -8,7 +8,7 @@ const DECLINE_TEXT = {
   busy: ['şu an başka biriyle konuşuyor', 'is busy'],
   far: ['çok uzakta', 'is too far away'],
 };
-const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.' };
+const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Engellenen oyuncudan gelen istek reddedildi.' };
 
 /**
  * The multiplayer village square:
@@ -33,10 +33,12 @@ export class VillageMultiplayer {
     });
     net.on('states', ({ players }) => this.remotes.setStates(players));
     net.on('talk', ({ id, on }) => this.remotes.setTalking(id, on));
-    net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c) this.labels.bubble(c, text, null, 6); });
+    net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
     net.on('call-request', async ({ from, name }) => {
+      if (this.isBlocked(from, name)) { this.net.send({ type: 'call-answer', to: from, accept: false }); return; }
       const accept = await this.calls.ask(name);
-      this.net.send({ type: 'call-answer', to: from, accept });
+      if (!this.isBlocked(from, name)) this.net.send({ type: 'call-answer', to: from, accept });
+      else this.net.send({ type: 'call-answer', to: from, accept: false });
     });
     net.on('call-declined', ({ id, reason }) => {
       const [tr, en] = DECLINE_TEXT[reason] ?? DECLINE_TEXT.declined;
@@ -48,6 +50,35 @@ export class VillageMultiplayer {
   }
 
   #loc() { return this.world.get(this.locationId); }
+
+  #blockedList() {
+    const list = this.settings.get('blockedPlayers', []);
+    return Array.isArray(list) ? list : [];
+  }
+
+  isBlocked(id, name) {
+    return this.#blockedList().some((p) => (p?.id && p.id === id) || (p?.name && p.name === name));
+  }
+
+  blockPlayer(id, name) {
+    if (!id && !name) return;
+    const list = this.#blockedList().filter((p) => p?.id !== id && p?.name !== name);
+    list.push({ id, name });
+    this.settings.set('blockedPlayers', list.slice(-100));
+    const c = this.remotes.get(id);
+    if (c) this.labels.bubble?.(c, '', null, 0);
+    if (this.voice.partner === id) this.#endCall('blocked');
+    this.toasts.show(`${name ?? 'Oyuncu'} engellendi`, 'Player blocked');
+  }
+
+  unblockPlayer(id, name) {
+    const list = this.#blockedList().filter((p) => p?.id !== id && p?.name !== name);
+    this.settings.set('blockedPlayers', list);
+  }
+
+  endVoiceCall(reason = 'hangup') {
+    if (this.voice.inCall) this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup);
+  }
   #count() { this.ptt.setOnline(this.remotes.count + 1, this.net.name); }
 
   async join() {
@@ -114,11 +145,16 @@ export class VillageMultiplayer {
       const d = Math.hypot(c.position.x - pos.x, c.position.z - pos.z);
       if (d < ASK_RANGE && (!best || d < best.dist)) best = { id, name: c.name, dist: d };
     }
-    return best && {
-      label: `${best.name} ile sesli sohbet et`, dist: best.dist, priority: 1,
+    if (!best) return null;
+    const blocked = this.isBlocked(best.id, best.name);
+    return {
+      label: blocked ? `${best.name} engelini kaldır` : `${best.name} ile sesli sohbet et`,
+      dist: best.dist,
+      priority: blocked ? 0.9 : 1,
       run: () => {
-        this.net.send({ type: 'call-request', to: best.id });
-        this.toasts.show(`${best.name} kişisine istek gönderildi`, 'Waiting for them to accept…');
+        if (blocked) this.unblockPlayer(best.id, best.name);
+        else this.net.send({ type: 'call-request', to: best.id });
+        if (!blocked) this.toasts.show(`${best.name} kişisine istek gönderildi`, 'Waiting for them to accept…');
       },
     };
   }

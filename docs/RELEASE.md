@@ -21,8 +21,8 @@
 
 ### 1. Paketleme
 - 🔧 Üretim derlemesi `npm run build` → `dist/` (three.js ve yazı tipleri pakete gömülü, internetsiz açılır).
-- 🔧 Capacitor Android projesi (`android/`), uygulama kimliği `com.yilmazailesi.app`.
-- 🔧 Yatay ekran, Android geri tuşu, arka plana geçince sesin durması.
+- 🔧 Capacitor Android yapılandırması ve native adapterları; `android/` projesi/Gradle APK üretimi çalışma ortamında henüz doğrulanmadı.
+- 🔧 Yatay ekran manifest ayarı, Android geri tuşu ve arka plana geçince sesin durması (native lifecycle kodu eklendi; cihaz testi bekliyor).
 - 📝 Uygulama ikonu 512×512 ve tanıtım görseli 1024×500 (ChatGPT).
 - 🔑 İmzalı AAB (keystore, madde 6).
 
@@ -37,13 +37,13 @@
 ### 4. Çok oyunculu meydan
 - ✅ Toplu alanda yazı, birebir sesli sohbet onayla.
 - 🔑 Sunucu ve TURN (madde 4–5).
-- 🔧 Kullanıcı adı küfür filtresi, oyuncu engelleme/şikayet.
+- 🔧 Kullanıcı adı küfür filtresi, yazı sansürleme ve cihaz bazlı oyuncu engelleme altyapısı.
 - ⚠️ Hedef kitle çocuk içeriyorsa (Families politikası) çocuk modunda sesli sohbet kapalı olmalı.
 
 ### 5. Mağaza / yasal (📝 ChatGPT taslak hazırlayabilir)
-- Gizlilik politikası (web adresinde yayınlanmalı): mikrofon, kullanıcı adı, cihazda kayıt, AdMob, ses modelleri.
-- Veri güvenliği formu, içerik derecelendirmesi (IARC), hedef kitle.
-- Kısa/uzun açıklama (AR/TR/EN), en az 2 telefon ekran görüntüsü.
+- 🔧 `docs/store/privacy-policy.md` taslağı hazır; yayınlanmadan önce gerçek şirket/iletişim ve veri işleyenler eklenmeli.
+- 🔧 `docs/store/data-safety.md` ve `docs/store/content-rating.md` taslakları hazır; Play Console'da gerçek SDK/veri akışıyla doğrulanmalı.
+- 🔧 `docs/store/listing.md` içinde AR/TR/EN mağaza metinleri hazır; ekran görüntüleri ve grafikler ayrıca hazırlanmalı.
 
 ### 6. Dil
 - ✅ Arapça açıklamalar, sağdan sola, Arapça yardım düğmesi ve tanıtım.

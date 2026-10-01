@@ -7,6 +7,19 @@ const CALL_RANGE = 4;   // metres: how close you must be to ask someone for a vo
 const CALL_DROP = 12;   // metres: a call ends when the two walk this far apart
 const REQUEST_TTL = 20000;
 
+const BLOCKED_WORDS = [
+  'amk', 'aq', 'orospu', 'sik', 'siktir', 'yarrak', 'piç', 'ibne', 'göt', 'salak',
+  'fuck', 'shit', 'bitch', 'asshole', 'cunt', 'dick', 'pussy', 'bastard',
+  'كس', 'قحبة', 'شرموط', 'عاهرة', 'خنزير', 'كلب'
+];
+const WORD_RE = /[\\p{L}\\p{N}]+/gu;
+const normalizeWord = (value) => value.normalize('NFKC').toLocaleLowerCase('tr').replace(/[ıİ]/g, 'i');
+const containsBlockedWord = (value) => {
+  const words = String(value).match(WORD_RE) ?? [];
+  return words.some((word) => BLOCKED_WORDS.includes(normalizeWord(word)));
+};
+const censorText = (value) => String(value).replace(WORD_RE, (word) => BLOCKED_WORDS.includes(normalizeWord(word)) ? '***' : word);
+
 /**
  * Multiplayer village square.
  * - In public, speech is shown as text only: the client turns push-to-talk into text
@@ -66,7 +79,7 @@ export class VillageServer {
         this.#toRoom(c, { type: 'talk', id: c.id, on: c.talking });
         break;
       case 'say':
-        if (typeof msg.text === 'string' && msg.text.trim()) this.#toRoom(c, { type: 'say', id: c.id, text: msg.text.trim().slice(0, 140) });
+        if (typeof msg.text === 'string' && msg.text.trim()) this.#toRoom(c, { type: 'say', id: c.id, text: censorText(msg.text.trim().slice(0, 140)) });
         break;
       case 'call-request': {
         const to = members.get(msg.to);
@@ -107,6 +120,7 @@ export class VillageServer {
     if (c.id) return;
     const clean = String(name ?? '').trim();
     if (!NAME.test(clean)) return this.#send(c, { type: 'error', message: 'Kullanıcı adı 2-16 harf/rakam olmalı.' });
+    if (containsBlockedWord(clean)) return this.#send(c, { type: 'error', message: 'Bu kullanıcı adı kullanılamaz.' });
     const members = this.#room(room);
     if (members.size >= MAX_PER_ROOM) return this.#send(c, { type: 'error', message: 'Meydan dolu, biraz sonra tekrar dene.' });
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));

@@ -1,7 +1,15 @@
 node_modules/
-.DS_Store
-*.log
-assets/voices/
-.claude/
 dist/
+.claude/
 playtest-results/
+web/assets/voices/
+
+# Android build outputs and signing secrets (never commit)
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/build/
+mobile/android/app/src/main/assets/public/
+mobile/android/keystore.properties
+*.keystore
+*.jks
+google-services.json

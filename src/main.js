@@ -50,6 +50,7 @@ import { LessonController } from './systems/LessonController.js';
 import { TextbookController } from './systems/TextbookController.js';
 import { CreditWallet } from './services/monetization/CreditWallet.js';
 import { MockAdProvider } from './services/monetization/AdProvider.js';
+import { AdMobAdProvider } from './services/monetization/AdMobAdProvider.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { LocalClassroomSession, WebSocketClassroomSession } from './services/multiplayer/ClassroomSession.js';
 import { ClassroomView } from './ui/ClassroomView.js';
@@ -66,7 +67,6 @@ import { IntroSlides } from './ui/IntroSlides.js';
 import { PrayerScene } from './systems/PrayerScene.js';
 import { MealService } from './systems/MealService.js';
 import { TextbookView } from './ui/TextbookView.js';
-
 import { ActivityRegistry } from './activities/Activity.js';
 import { ChoiceActivity } from './activities/ChoiceActivity.js';
 import { ListenActivity } from './activities/ListenActivity.js';
@@ -74,12 +74,15 @@ import { OrderActivity } from './activities/OrderActivity.js';
 import { SpeakActivity } from './activities/SpeakActivity.js';
 import { DialogueController } from './dialogue/DialogueController.js';
 import { WebSpeechTTS } from './services/speech/TextToSpeech.js';
+import { NativeTTS } from './services/speech/NativeTTS.js';
 import { PiperTTS } from './services/speech/PiperTTS.js';
 import { CharacterVoices } from './services/speech/CharacterVoices.js';
 import { Settings } from './services/Settings.js';
 import { LocalSaveRepository } from './services/storage/SaveRepository.js';
 import { AutoSave } from './systems/AutoSave.js';
 import { WebSpeechRecognizer, RemoteSpeechRecognizer, ScriptedRecognizer } from './services/speech/SpeechRecognizer.js';
+import { NativeSpeechRecognizer } from './services/speech/NativeSpeechRecognizer.js';
+import { App } from '@capacitor/app';
 import { LanguageDetector } from './services/speech/LanguageDetector.js';
 import { AnswerMatcher } from './services/speech/AnswerMatcher.js';
 import { SpeechEvaluator } from './services/speech/SpeechEvaluator.js';
@@ -113,7 +116,8 @@ const host = document.getElementById('ui');
 
 // --- core ---
 const settings = new Settings();
-const quality = params.get('quality') ?? settings.get('quality', 'medium');
+const native = window.Capacitor?.isNativePlatform?.() === true;
+const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
 setGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default
 const bus = new EventBus();
 const state = new GameState();
@@ -176,16 +180,17 @@ const tts = new CharacterVoices({
       toasts.show(`Doğal ses indiriliyor… %${Math.round(f * 100)}`, 'Downloading natural voice (first time only)');
     },
   }),
-  fallback: new WebSpeechTTS('tr-TR'),
+  fallback: native ? new NativeTTS('tr-TR') : new WebSpeechTTS('tr-TR'),
   voices: VOICES,
-  enabled: () => settings.get('neuralVoices', true),
+  enabled: () => settings.get('neuralVoices', native ? false : true),
 });
 // ?fakemic → scripted answers (tests); manifest.sttEndpoint → Whisper server; else browser STT
 const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
+  : isNative ? new NativeSpeechRecognizer('tr-TR')
   : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
 const wallet = new CreditWallet(state, bus);
-const gate = new ClassAccessGate({ host, modes, wallet, ads: new MockAdProvider(host, modes) });
+const gate = new ClassAccessGate({ host, modes, wallet, ads: native ? new AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId }) : new MockAdProvider(host, modes) });
 const activities = new ActivityRegistry({ tts, speech, gate })
   .register('choice', ChoiceActivity)
   .register('listen', ListenActivity)
@@ -265,7 +270,7 @@ effects
 // --- multiplayer village square (server: tools/serve.mjs or server/index.mjs) ---
 const villageNet = new VillageNetwork(VillageNetwork.defaultUrl(manifest.villageServer));
 const village = new VillageMultiplayer({
-  bus, net: villageNet, voice: new VoiceChat({ net: villageNet }),
+  bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }] }),
   remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK }),
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
@@ -278,7 +283,7 @@ const village = new VillageMultiplayer({
     en: 'هنا لاعبون حقيقيون. ما تقوله يظهر نصاً فوق رأسك («Bas, konuş» أو T). المحادثة الصوتية بين شخصين فقط وبعد موافقة الطرف الآخر. كن لطيفاً!',
     button: 'Tamam · حسناً',
   }),
-  recognizer: params.has('fakemic') ? new ScriptedRecognizer() : new WebSpeechRecognizer('tr-TR'),
+  recognizer: params.has('fakemic') ? new ScriptedRecognizer() : (native ? new NativeSpeechRecognizer() : new WebSpeechRecognizer('tr-TR')),
 });
 
 // --- interaction ---
@@ -385,7 +390,32 @@ function continueGame() {
 
 
 const game = new Game({ help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
-game.start();
+
+if (isNative) {
+  App.addListener('backButton', () => {
+    if (dialogueView.isOpen) {
+      dialogue.close();
+      return;
+    }
+    const overlays = [...document.querySelectorAll('.overlay.open')];
+    const overlay = overlays.at(-1);
+    if (overlay) {
+      const button = [...overlay.querySelectorAll('button')].find((b) => /vazgeç|kapat|iptal|close|✕/i.test(b.textContent ?? '') && !b.disabled);
+      if (button) { button.click(); return; }
+      if (overlay.parentElement) {
+        overlay.classList.remove('open');
+        return;
+      }
+    }
+    App.minimizeApp();
+  });
+
+  App.addListener('appStateChange', ({ isActive }) => {
+    if (isActive) return;
+    tts.cancel();
+    if (world.current?.id === 'village' && village.voice.inCall) village.voice.end();
+  });
+}
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) window.__game = { help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
