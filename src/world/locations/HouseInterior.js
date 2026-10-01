@@ -12,6 +12,8 @@ export class HouseInterior extends Location {
 
   play(anim) { if (anim === 'tv') this.tvTime = 5; }
 
+  setBreadOnTable(on) { if (this.bread) this.bread.visible = on; }
+
   build(kit) {
     const { mf } = kit, C = this.collision, add = (m) => this.add(m);
     const noCast = (m) => { m.castShadow = false; return add(m); };
@@ -65,6 +67,15 @@ export class HouseInterior extends Location {
     noCast(mf.at(mf.box(0.16, 2.7, 2.5, WALL), 2.85, 1.35, 3.05));
     noCast(mf.at(mf.box(2.9, 2.7, 0.16, WALL), 4.35, 1.35, 1.78));
     // Door opening is left between the living room and bedroom.
+
+    this.bread = mf.group(
+      mf.at(mf.sphere(0.2, 0xD9A05B, 12), 0, 0.02, 0),
+      mf.at(mf.box(0.02, 0.02, 0.2, 0xB7793A), 0, 0.14, 0),
+    );
+    this.bread.children[0].scale.set(1.5, 0.7, 0.9);
+    this.bread.position.set(-0.45, 0.36, -0.55);
+    this.bread.visible = false;
+    add(this.bread);
 
     // sedir (divan) along the back wall
     this.prop(kit, 'prop.sedir', -1, 0, -4, 0, () => {
