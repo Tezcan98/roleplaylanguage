@@ -3,6 +3,14 @@ import { gloss, loadGlossLang, glossLanguages } from '../i18n/Gloss.js';
 import { ServerPicker } from './ServerPicker.js';
 
 export const PLAYER_NAMES = { boy: 'Ahmet', girl: 'Meryem' };
+/** The four characters: [gender, look, icon, Turkish label, English]. */
+export const CHARACTERS = [
+  ['boy', 'modest', '👦', 'Ahmet · mütevazı', 'Ahmet · modest build'],
+  ['boy', 'strong', '💪', 'Ahmet · kaslı', 'Ahmet · strong build'],
+  ['girl', 'covered', '🧕', 'Meryem · başörtülü', 'Meryem · headscarf outside, hair open at home'],
+  ['girl', 'open', '👧', 'Meryem · başı açık', 'Meryem · without a headscarf'],
+];
+export const characterOf = (gender, look) => CHARACTERS.find(([g, l]) => g === gender && l === look) ?? CHARACTERS.find(([g]) => g === gender) ?? CHARACTERS[0];
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 
 /**
@@ -21,6 +29,7 @@ export class CharacterSetup {
     return {
       lang: s.get('glossLang', 'ar'),
       gender: s.get('gender', 'boy'),
+      look: characterOf(s.get('gender', 'boy'), s.get('look', ''))[1],
       username: s.get('username', '') ?? '',
       server: s.get('serverRegion', 'ankara'),
     };
@@ -39,10 +48,10 @@ export class CharacterSetup {
         class: 'chipbtn', text: name, attrs: { type: 'button', 'data-lang': code, 'aria-pressed': String(code === p.lang) },
         on: { click: async () => { p.lang = code; mark(langs, 'lang', code); await loadGlossLang(code); texts.forEach(([n, en]) => { n.textContent = gloss(en); }); } },
       })));
-      const genders = el('div', { class: 'choice-row' }, [['boy', '👦 Erkek'], ['girl', '👧 Kız']].map(([id, label]) => el('button', {
-        class: 'chipbtn big-chip', text: `${label} · ${PLAYER_NAMES[id]}`, attrs: { type: 'button', 'data-gender': id, 'aria-pressed': String(id === p.gender) },
-        on: { click: () => { p.gender = id; mark(genders, 'gender', id); } },
-      })));
+      const genders = el('div', { class: 'choice-row chars' }, CHARACTERS.map(([gender, look, icon, label, en]) => el('button', {
+        class: 'chipbtn char-card', attrs: { type: 'button', 'data-char': `${gender}-${look}`, 'aria-pressed': String(gender === p.gender && look === p.look) },
+        on: { click: () => { p.gender = gender; p.look = look; mark(genders, 'char', `${gender}-${look}`); } },
+      }, [el('span', { class: 'ci', text: icon }), el('span', { text: label }), g(en, 'en-t cc-en')])));
       const name = el('input', { class: 'name-in', attrs: { type: 'text', maxlength: '16', placeholder: 'Kullanıcı adın', autocomplete: 'nickname' } });
       name.value = p.username;
       const err = el('p', { class: 'note' });
@@ -55,7 +64,7 @@ export class CharacterSetup {
         el('h2', { class: 'ctitle', text: 'Karakterini oluştur' }), g('Create your character'),
         el('div', { class: 'setup-grid' }, [
           el('section', {}, [el('p', { class: 'chap', text: 'Açıklamalar hangi dilde olsun?' }), g('Which language should meanings be shown in?'), langs]),
-          el('section', {}, [el('p', { class: 'chap', text: 'Cinsiyet' }), g('Boy or girl?'), genders]),
+          el('section', {}, [el('p', { class: 'chap', text: 'Karakterin' }), g('Your character'), genders]),
           el('section', {}, [el('p', { class: 'chap', text: 'Kullanıcı adı (köy meydanında görünür)' }), g('Username (shown in the village square)'), name]),
           el('section', {}, [el('p', { class: 'chap', text: 'Köy meydanı sunucusu' }), g('Village square server — you can change it later.'), servers.root]),
         ]),
@@ -67,7 +76,7 @@ export class CharacterSetup {
         if (username && !NAME.test(username)) { err.textContent = `Kullanıcı adı 2-16 harf/rakam olmalı · ${gloss('2-16 letters or digits')}`; name.focus(); return; }
         const out = { ...p, username, server: servers.value };
         const s = this.settings;
-        s.set('glossLang', out.lang); s.set('gender', out.gender); s.set('serverRegion', out.server);
+        s.set('glossLang', out.lang); s.set('gender', out.gender); s.set('look', out.look); s.set('serverRegion', out.server);
         if (username) s.set('username', username);
         s.set('profileDone', true);
         done(out);

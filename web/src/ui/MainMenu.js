@@ -1,7 +1,7 @@
 import { el } from './dom.js';
 import { gloss, glossInfo } from '../i18n/Gloss.js';
 import { ServerPicker, SERVERS } from './ServerPicker.js';
-import { PLAYER_NAMES } from './CharacterSetup.js';
+import { PLAYER_NAMES, characterOf } from './CharacterSetup.js';
 
 /**
  * Title screen: the character (with "change"), the story (continue / new game), the online
@@ -45,7 +45,7 @@ export class MainMenu {
       el('h1', { class: 'big', text: 'Yılmaz Ailesi' }),
       el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
       el('div', { class: 'profile-line' }, [
-        el('span', { text: `${gender === 'girl' ? '👧' : '👦'} ${PLAYER_NAMES[gender]} · ${lang}${s.get('username') ? ` · @${s.get('username')}` : ''}` }),
+        el('span', { text: `${characterOf(gender, s.get('look', ''))[2]} ${PLAYER_NAMES[gender]} · ${lang}${s.get('username') ? ` · @${s.get('username')}` : ''}` }),
         btn('Değiştir', 'chipbtn', () => this.onProfile()),
       ]),
       el('div', { class: 'menu-cols' }, [

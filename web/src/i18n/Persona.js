@@ -11,16 +11,17 @@ export const playerName = () => (gender === 'girl' ? 'Meryem' : 'Ahmet');
 const SOURCE = [ // Turkish text and English glosses
   [/\bAhmet/g, 'Meryem'], [/oğlum/g, 'kızım'], [/Oğlum/g, 'Kızım'], [/oğluma/g, 'kızıma'],
   [/\bson\b/g, 'dear'], [/\bSon\b/g, 'Dear'],
+  [/\bAbi\b/g, 'Abla'], [/\babi\b/g, 'abla'], [/\bbig brother\b/g, 'big sister'], [/\bBig brother\b/g, 'Big sister'],
 ];
 const TRANSLATED = { // what the source swaps become in each gloss language
-  ar: [[/أحمد/g, 'مريم'], [/يا بنيّ?/g, 'يا بنتي'], [/ابني/g, 'ابنتي']],
-  ur: [[/احمد/g, 'مریم'], [/بیٹا/g, 'بیٹی'], [/بیٹے/g, 'بیٹی']],
-  es: [[/\bAhmet/g, 'Meryem'], [/\bhijo\b/g, 'hija'], [/\bHijo\b/g, 'Hija']],
-  fr: [[/\bAhmet/g, 'Meryem'], [/mon fils/g, 'ma fille'], [/Mon fils/g, 'Ma fille'], [/\bfils\b/g, 'fille']],
+  ar: [[/أحمد/g, 'مريم'], [/يا بنيّ?/g, 'يا بنتي'], [/ابني/g, 'ابنتي'], [/أخي الكبير/g, 'أختي الكبيرة'], [/يا أخي/g, 'يا أختي']],
+  ur: [[/احمد/g, 'مریم'], [/بیٹا/g, 'بیٹی'], [/بیٹے/g, 'بیٹی'], [/بھائی جان/g, 'آپی'], [/بڑے بھائی/g, 'بڑی بہن']],
+  es: [[/\bAhmet/g, 'Meryem'], [/\bhijo\b/g, 'hija'], [/\bHijo\b/g, 'Hija'], [/hermano mayor/g, 'hermana mayor'], [/Hermano mayor/g, 'Hermana mayor']],
+  fr: [[/\bAhmet/g, 'Meryem'], [/mon fils/g, 'ma fille'], [/Mon fils/g, 'Ma fille'], [/\bfils\b/g, 'fille'], [/grand frère/g, 'grande sœur'], [/Grand frère/g, 'Grande sœur']],
   en: [],
 };
 // glosses were translated from the boy's English: map a personalised key back to look it up
-const UNDO = [[/\bMeryem/g, 'Ahmet'], [/\bdear\b/g, 'son'], [/\bDear\b/g, 'Son']];
+const UNDO = [[/\bMeryem/g, 'Ahmet'], [/\bdear\b/g, 'son'], [/\bDear\b/g, 'Son'], [/\bbig sister\b/g, 'big brother'], [/\bBig sister\b/g, 'Big brother']];
 
 const swap = (s, rules) => rules.reduce((t, [re, to]) => t.replace(re, to), s);
 

@@ -58,7 +58,8 @@ export class LocalClassroomSession extends ClassroomSession {
       const delay = (1400 + Math.random() * 2200) / this.speed;
       this.#timers.push(setTimeout(() => {
         const correct = Math.random() < speaker.skill;
-        const text = correct ? q.botAnswers[(Math.random() * q.botAnswers.length) | 0] : q.botWrong[(Math.random() * q.botWrong.length) | 0];
+        const pool = correct ? q.botAnswers : q.botWrong;
+        const text = pool[(Math.random() * pool.length) | 0].replace('{name}', speaker.name); // "Benim adım {name}."
         this.#score(speaker.id, correct);
         this.emit('answer', { studentId: speaker.id, text, correct });
       }, delay));

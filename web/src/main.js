@@ -105,7 +105,7 @@ import { setPlayerGender, playerGender, playerName, personalizeContent } from '.
 import { NpcChatClient } from './services/ai/NpcChatClient.js';
 import { CharacterSetup } from './ui/CharacterSetup.js';
 import {
-  STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
+  STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
   LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS,
 } from './content/index.js';
 
@@ -166,7 +166,8 @@ const fader = new Fader(host);
 const inventory = new Inventory(state, bus);
 const vocab = new Vocabulary(state, bus);
 const input = new InputSystem(joystick);
-const player = new Player('ahmet', playerGender() === 'girl' ? PLAYER_LOOK_GIRL : PLAYER_LOOK, { mf, models });
+const playerLook = lookKey(playerGender(), params.get('look') ?? settings.get('look', ''));
+const player = new Player('ahmet', PLAYER_LOOKS[playerLook], { mf, models });
 ctx.scene.add(player.group);
 lighting.follow = player.position;
 const npcs = new Map(Object.entries(NPCS).map(([id, def]) => [id, new Npc(id, def, { mf, models })]));
@@ -272,7 +273,7 @@ toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range
 
 // --- school: credits, ads, multiplayer lesson ---
 const lessons = new LessonController({
-  lessons: LESSONS, bots: CLASSMATE_BOTS, gate, activities, cast, world, travel, player, camera, tts, labels, modes, effects, state,
+  lessons: LESSONS, bots: CLASSMATE_BOTS, gate, activities, cast, world, travel, player, camera, tts, labels, modes, effects, state, vocab,
   // manifest.classroomServer → real multiplayer; otherwise local bots
   sessionFactory: (lesson, bots) => (manifest.classroomServer
     ? new WebSocketClassroomSession({ url: manifest.classroomServer, lesson })
@@ -293,7 +294,7 @@ effects
 const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st) => village.voiceState(st), relayOnly: params.has('relayonly') }),
-  remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, girlLook: PLAYER_LOOK_GIRL }), ball: villageBall,
+  remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS }), ball: villageBall,
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
@@ -397,9 +398,9 @@ const menu = new MainMenu(host, {
 });
 /** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
 async function editProfile({ cancellable = true } = {}) {
-  const before = { lang: settings.get('glossLang', 'ar'), gender: playerGender() };
+  const before = { lang: settings.get('glossLang', 'ar'), gender: playerGender(), look: settings.get('look', '') };
   const p = await setup.open({ cancellable });
-  if (p && (p.lang !== before.lang || p.gender !== before.gender)) { location.reload(); return; }
+  if (p && (p.lang !== before.lang || p.gender !== before.gender || p.look !== before.look)) { location.reload(); return; }
   menu.show();
 }
 // first launch: create the character before anything else (tests skip it with ?nointro)
@@ -491,6 +492,33 @@ const game = new Game({ help, prayer, village, toys, foliage: Foliage, modes, ti
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
+
+// headscarves: off at home, on outside and for the prayer (mom, and Meryem if she wears one)
+const coverable = [player, ...[...npcs.values()].filter((n) => n.def.look?.homeUncovered)];
+setInterval(() => coverable.forEach((c) => {
+  if (!(c === player ? PLAYER_LOOKS[playerLook] : c.def.look)?.homeUncovered) return;
+  const at = c === player ? world.current?.id : c.location;
+  c.setCovered(at !== 'house' || !!prayer.active);
+}), 300);
+
+// the little brother: mom tells him off for jumping on the bed; now and then he calls you over to ask what something is
+let kidScoldAt = -99, kidAskAt = 40;
+setInterval(() => {
+  const kid = cast.get('kardes');
+  if (!kid || kid.location !== 'house' || world.current.id !== 'house' || dialogue.talking || modes.top !== 'play') return;
+  const t = game.t, anne = cast.get('anne');
+  if (kid.roam.jumping && anne?.location === 'house' && t - kidScoldAt > 45) {
+    kidScoldAt = t;
+    labels.bubble(anne, 'Ali, yatakta zıplama!', null, 3);
+    tts.speak('Ali, yatakta zıplama!', { speaker: 'anne' });
+    setTimeout(() => { labels.bubble(kid, 'Tamam anne!', null, 2.5); tts.speak('Tamam anne!', { speaker: 'kardes' }); }, 1800);
+  } else if (t > kidAskAt && kid.position.distanceTo(player.position) < 4.5) {
+    kidAskAt = t + 90;
+    const call = `${playerGender() === 'girl' ? 'Abla' : 'Abi'}, bu ne? Gel bak!`;
+    labels.bubble(kid, call, null, 4);
+    tts.speak(call, { speaker: 'kardes' });
+  }
+}, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) window.__game = { drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

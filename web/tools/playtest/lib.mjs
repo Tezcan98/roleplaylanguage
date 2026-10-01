@@ -122,8 +122,18 @@ export async function drainUi(page, { pace = 1 } = {}) {
       await wait(800); continue;
     }
     if (await page.$('.classroom.open')) {
-      await ev(() => { const f = [...document.querySelectorAll('.classroom .btn')].find((b) => b.textContent === 'Dersi bitir'); if (f) f.click(); else document.querySelector('.classroom .mic:not(.rec)')?.click(); });
-      await wait(1500); continue;
+      // lesson: presentation (Next / say it), practice (choice, listen, order), then speaking turns
+      await ev(() => {
+        const q = (sel) => document.querySelector(`.classroom ${sel}`);
+        const f = [...document.querySelectorAll('.classroom .btn')].find((b) => b.textContent === 'Dersi bitir');
+        if (f) return f.click();
+        if (q('.cls-next')) return q('.cls-next').click();
+        const step = window.__game.lessons.step;
+        if (step?.activity === 'order') { for (const w of step.answer.split(' ')) [...document.querySelectorAll('.classroom .tile:not([disabled])')].find((t) => t.textContent === w)?.click(); return; }
+        if (step && (step.activity === 'choice' || step.activity === 'listen')) { const k = Math.max(0, step.options.findIndex((o) => !o.wrong)); document.querySelectorAll('.classroom .choice')[k]?.click(); return; }
+        q('.mic:not(.rec)')?.click();
+      });
+      await wait(1200); continue;
     }
     if (await page.$('.overlay.open .textbook')) {
       await ev(() => {

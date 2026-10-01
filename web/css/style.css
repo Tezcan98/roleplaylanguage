@@ -302,3 +302,13 @@ html[data-gloss=ur] .en-t,html[data-gloss=ur] .gl,html[data-gloss=ur] .help-body
 html[data-gloss-scale] .en-t,html[data-gloss-scale] .help-body p,html[data-gloss-scale] .intro .ctext{font-size:calc(var(--gloss-scale) * 1em)}
 html[data-gloss-scale] p.en-t{font-size:calc(var(--gloss-scale) * 15px)}
 html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
+.cls-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:2px 0 4px}
+.cls-head[hidden]{display:none}
+.cls-head .lvl{background:var(--gold);color:var(--ink);border-radius:8px;padding:1px 8px;font:800 13px Nunito,sans-serif}
+.cls-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.cls-nav:empty{display:none}
+.chars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.char-card{flex-direction:column;align-items:flex-start;min-height:64px;padding:8px 10px;gap:2px;text-align:left}
+.char-card .ci{font-size:24px;line-height:1}
+.char-card .cc-en{margin:0;font-size:12px;font-weight:700}
+.chars .chipbtn[aria-pressed="true"]{background:var(--gold);border-color:var(--ink)}

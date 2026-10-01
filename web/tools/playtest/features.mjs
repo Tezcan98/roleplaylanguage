@@ -29,7 +29,7 @@ try {
   check('first launch shows character setup', !!(await page.$('.overlay.open.setup')));
   await page.click('.setup button[data-lang="es"]');
   check('choosing a language re-translates the setup at once', (await page.textContent('.setup .cen')) !== 'Create your character', await page.textContent('.setup .cen'));
-  await page.click('.setup button[data-gender="girl"]');
+  await page.click('.setup button[data-char="girl-covered"]');
   await page.fill('.setup .name-in', 'Deneme_1');
   await Promise.all([page.waitForNavigation({ timeout: 30000 }), page.click('.setup button:has-text("Kaydet")')]);
   await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
@@ -50,13 +50,32 @@ try {
   await ev(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(500);
   check('a new game starts with 50 credits', (await ev(() => window.__game.wallet.balance)) === 50);
 
-  // --- grandma (nine) ------------------------------------------------------------------
   const talkTo = async (id) => {
     await ev((npc) => { const g = window.__game; const n = g.cast.get(npc); g.player.position.set(n.position.x, 0, n.position.z + 0.8); }, id);
     await sleep(300);
     await ev((npc) => window.__game.dialogue.open(npc), id); await sleep(400);
   };
   const nodeSay = () => ev(() => window.__game.dialogue.node?.say ?? '');
+  // --- headscarf: open at home, on outside --------------------------------------------
+  const covered = () => ev(() => window.__game.player.covered);
+  await sleep(500);
+  check('covered girl: hair open at home', (await covered()) === false);
+  await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(700);
+  check('…headscarf on outside', (await covered()) === true);
+  await ev(() => window.__game.travel.place('house', 'start', { force: true })); await sleep(700);
+  check('mom: hair open at home', (await ev(() => window.__game.cast.get('anne').covered)) === false);
+
+  // --- little brother -------------------------------------------------------------------
+  const p0 = await ev(() => { const k = window.__game.cast.get('kardes').position; return [k.x, k.z]; });
+  await sleep(2500);
+  const moved = await ev((a) => { const k = window.__game.cast.get('kardes').position; return Math.hypot(k.x - a[0], k.z - a[1]); }, p0);
+  check('the little brother runs around the house', moved > 0.5, `${moved.toFixed(2)} m`);
+  await talkTo('kardes');
+  check('he introduces himself (Abla for a girl)', (await nodeSay()).startsWith('Abla!'), await nodeSay());
+  await drainUi(page);
+  check('…and asks what things are (picture quiz)', await ev(() => !!window.__game.dialogue.ctx.state.flags['kardes-yatak']));
+
+  // --- grandma (nine) ------------------------------------------------------------------
   await talkTo('nine');
   check('grandma greets the first time', (await nodeSay()).includes('ninenim'));
   await drainUi(page);

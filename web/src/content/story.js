@@ -364,8 +364,8 @@ export const STORY = {
       },
       intro: {
         num: 'Çarşamba · Bölüm 15', title: 'Günlük hayat',
-        text: 'Bugün ders günlük hayattan konuşuyor. Arkadaşların da derse katılıyor.',
-        en: 'Today’s lesson is about everyday life. Your friends are joining in too.',
+        text: 'Bugün derste sınıftaki eşyaları öğreneceksin: “Bu ne? Nerede?” Arkadaşların da derse katılıyor.',
+        en: 'Today in class you will learn the things in the classroom: “What is this? Where is it?” Your friends are joining in too.',
       },
       quests: [
         { id: 'meet-zehra', title: 'Zehra ile konuş', obj: 'Zehra ile konuş', en: 'Talk to Zehra', target: { npc: 'zehra' } },

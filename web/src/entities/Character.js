@@ -48,6 +48,9 @@ export class Character {
     }
   }
 
+  /** Headscarf on or off (only characters that wear one at home and outside differently). */
+  setCovered(on) { if (this.covered === on) return; this.covered = on; this.rig.setCovered?.(on); }
+
   walk(t, amount) {
     if (this.seated || this.posed) return;
     const r = this.rig, s = Math.sin(t * 10) * 0.6 * amount;

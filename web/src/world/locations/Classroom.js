@@ -6,6 +6,25 @@ const WALL = { tex: 'plaster', repeat: [3, 1] };
 
 /** Classroom: chalkboard, teacher's desk and two rows of desks. */
 export class Classroom extends Location {
+  /** Chalk writing on the board: a title and up to five lines. */
+  writeBoard(title, lines = []) {
+    const c = this.boardCanvas;
+    if (!c) return;
+    const g = c.getContext('2d');
+    g.fillStyle = '#24473A'; g.fillRect(0, 0, c.width, c.height);
+    g.fillStyle = 'rgba(255,255,255,.05)';
+    for (let i = 0; i < 18; i++) { g.beginPath(); g.ellipse((i * 167) % c.width, (i * 97) % c.height, 90, 18, i, 0, 7); g.fill(); }
+    g.fillStyle = 'rgba(255,255,255,.92)';
+    g.textBaseline = 'top';
+    g.font = 'bold 52px Fredoka, sans-serif';
+    g.fillText(title, 40, 26, c.width - 80);
+    g.fillRect(40, 92, Math.min(c.width - 80, g.measureText(title).width), 3);
+    const size = lines.length > 4 ? 40 : 46;
+    g.font = `${size}px Fredoka, sans-serif`;
+    lines.slice(0, 5).forEach((l, i) => g.fillText(l, 50, 116 + i * (size + 10), c.width - 100));
+    this.boardTex.needsUpdate = true;
+  }
+
   constructor() {
     super({ id: 'classroom', name: 'Sınıf', indoor: true, bounds: { x: [-5.6, 5.6], z: [-4.1, 4.4] }, cameraRig: 'indoor' });
     this.seats = [];
@@ -24,6 +43,15 @@ export class Classroom extends Location {
     this.hotspot('classroom.door', 5.3, 1.9, 1.5);
 
     add(mf.at(mf.box(5, 2, 0.08, { tex: 'chalkboard' }), 0, 1.8, -4.55));
+    // the teacher writes the lesson on this board (writeBoard)
+    this.boardCanvas = document.createElement('canvas');
+    this.boardCanvas.width = 1024; this.boardCanvas.height = 410;
+    this.boardTex = new THREE.CanvasTexture(this.boardCanvas);
+    this.boardTex.colorSpace = THREE.SRGBColorSpace;
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 1.92), new THREE.MeshBasicMaterial({ map: this.boardTex }));
+    board.position.set(0, 1.8, -4.505);
+    add(board);
+    this.writeBoard('Merhaba!', ['Türkçe dersine hoş geldiniz.']);
     add(mf.at(mf.box(5.2, 0.1, 0.2, DARK), 0, 0.78, -4.5));
     add(mf.at(mf.box(2.4, 1.2, 0.04, { tex: 'alphabet' }), -4.3, 2, -4.57));
     add(mf.at(mf.box(1.2, 0.8, 0.04, { tex: 'flag' }), 4, 2.3, -4.57));

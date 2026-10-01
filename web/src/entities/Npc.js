@@ -10,6 +10,7 @@ export class Npc extends Character {
     this.home = { x: 0, z: 0, rot: 0 };
     this.behavior = Behaviors.stand;
     this.talking = false;
+    this.roam = { leg: 0, wait: 1, jumping: false };
   }
 
   get name() { return this.def.name; }
@@ -44,8 +45,32 @@ export class Npc extends Character {
     (this.behavior.props || []).forEach((p) => this.showProp(p, true));
   }
 
+  /** Walk the route: go to each stop, wait there (or jump on the bed), then on to the next. */
+  #roam(dt, t) {
+    const route = this.def.route, st = this.roam;
+    if (!route?.length) return;
+    const stop = route[st.leg % route.length];
+    const dx = stop.x - this.position.x, dz = stop.z - this.position.z, d = Math.hypot(dx, dz);
+    if (d > 0.05) {
+      const step = Math.min(d, 1.3 * dt);
+      this.position.x += (dx / d) * step; this.position.z += (dz / d) * step;
+      this.turnTo(Math.atan2(dx, dz), 0.2);
+      this.walk(t, 1);
+      this.position.y = 0;
+      st.jumping = false;
+      return;
+    }
+    st.wait -= dt;
+    st.jumping = !!stop.jump;
+    if (stop.jump) { this.position.y = 0.42 + Math.abs(Math.sin(t * 6)) * 0.45; this.behavior.jump(this.rig, t); } // on the bed
+    else { this.position.y = 0; this.walk(t, 0); }
+    if (st.wait <= 0) { st.leg++; st.wait = route[st.leg % route.length].wait ?? 1 + Math.random() * 2; }
+  }
+
   update(dt, t, player) {
     super.update(dt);
+    if (this.behavior.roam && !this.talking) { this.#roam(dt, t); return; }
+    if (this.behavior.roam) { this.position.y = 0; this.roam.jumping = false; }
     const b = this.behavior, near = b.turnToPlayerWithin && Math.hypot(player.position.x - this.position.x, player.position.z - this.position.z) < b.turnToPlayerWithin;
     if (this.talking || near) {
       if (!b.seated) this.faceTowards(player.position, 0.15);

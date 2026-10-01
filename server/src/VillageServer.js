@@ -9,6 +9,10 @@ const CALL_RANGE = 4;   // metres: how close you must be to ask someone for a vo
 const CALL_DROP = 12;   // metres: a call ends when the two walk this far apart
 const REQUEST_TTL = 20000;
 const ROOM = /^[a-z0-9-]{1,24}$/;
+/** Only known looks get through: boy modest / strong, girl covered / open. */
+const lookOf = (gender, style) => (gender === 'girl'
+  ? { gender: 'girl', style: style === 'open' ? 'open' : 'covered' }
+  : { gender: 'boy', style: style === 'strong' ? 'strong' : 'modest' });
 const RATE = { burst: 60, perSecond: 30 }; // messages per client (10/s states + WebRTC ICE bursts)
 const SAY_GAP = 1200;                       // ms between two public speech bubbles
 const HEARTBEAT = 30000;                    // ms; silent connections are dropped
@@ -22,7 +26,7 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *   then the server relays WebRTC signalling between exactly those two.
  *
  * client → server
- *   { type: 'hello', name, room?, gender? } join with a username (gender: 'boy' | 'girl', for the look)
+ *   { type: 'hello', name, room?, gender?, style? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open')
  *   { type: 'state', x, z, rot, moving }  own position (~10/s)
  *   { type: 'talk', on }                  push-to-talk pressed / released (🎙️ marker)
  *   { type: 'say', text }                 recognised speech (public text bubble)
@@ -193,7 +197,7 @@ export class VillageServer {
     }
   }
 
-  #hello(c, { name, room = 'village', gender }) {
+  #hello(c, { name, room = 'village', gender, style }) {
     if (c.id) return;
     if (typeof room !== 'string' || !ROOM.test(room)) return this.#send(c, { type: 'error', message: 'Geçersiz oda.' });
     const clean = String(name ?? '').trim();
@@ -204,7 +208,7 @@ export class VillageServer {
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
     let unique = clean, n = 2;
     while (taken.has(unique.toLocaleLowerCase('tr'))) unique = `${clean}${n++}`;
-    Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], gender: gender === 'girl' ? 'girl' : 'boy' } });
+    Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], ...lookOf(gender, style) } });
     this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ball: this.#balls.has(room) ? { ...this.#balls.get(room), vx: 0, vz: 0 } : undefined, ice: this.iceFor(c.id) });
     this.#toRoom(c, { type: 'join', peer: this.#public(c) });
     members.set(c.id, c);

@@ -203,7 +203,9 @@ test('gender travels in the look (anything else counts as boy)', async () => {
   b.send({ type: 'hello', name: 'Ali', room: 'look', gender: '<script>' });
   const w = await b.next('welcome');
   assert.equal(w.look.gender, 'boy');
+  assert.equal(w.look.style, 'modest');
   assert.equal(w.peers[0].look.gender, 'girl');
+  assert.equal(w.peers[0].look.style, 'covered');
   await a.close(); await b.close();
 });
 

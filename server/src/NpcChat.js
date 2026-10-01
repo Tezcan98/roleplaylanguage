@@ -74,8 +74,14 @@ export class NpcChat {
    * @param {typeof fetch} [o.fetchImpl]  injectable for tests
    * @param {boolean} [o.fake]    canned answers without calling Gemini (local play-tests)
    */
-  constructor({ apiKey, model = 'gemini-flash-latest', perMinute = 8, perDay = 150, globalPerDay = 1200, fetchImpl = fetch, fake = false, log = console.log } = {}) {
-    Object.assign(this, { apiKey, model, fetchImpl, fake, log });
+  /**
+   * `model` may be a comma separated list: when one is busy (Gemini answers 429 / 503
+   * "high demand"), the next one is tried.
+   */
+  constructor({ apiKey, model = 'gemini-flash-latest,gemini-3.8-flash,gemini-flash-lite-latest', perMinute = 8, perDay = 150, globalPerDay = 1200, fetchImpl = fetch, fake = false, log = console.log } = {}) {
+    Object.assign(this, { apiKey, fetchImpl, fake, log });
+    this.models = String(model).split(',').map((m) => m.trim()).filter(Boolean);
+    this.model = this.models[0];
     this.minute = new Quota(perMinute, 60_000);
     this.day = new Quota(perDay, 86_400_000);
     this.global = new Quota(globalPerDay, 86_400_000);
@@ -111,21 +117,23 @@ export class NpcChat {
   }
 
   async #ask({ persona, lang, history, message, player }) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(this.model)}:generateContent`;
-    const res = await this.fetchImpl(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.apiKey },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: this.systemPrompt(persona, lang, player) }] },
-        contents: [...history, { role: 'user', text: message }].map((h) => ({ role: h.role, parts: [{ text: h.text }] })),
-        generationConfig: { responseMimeType: 'application/json', responseSchema: SCHEMA, temperature: 0.8, maxOutputTokens: 1024 },
-      }),
-      signal: AbortSignal.timeout(15000),
+    const body = JSON.stringify({
+      systemInstruction: { parts: [{ text: this.systemPrompt(persona, lang, player) }] },
+      contents: [...history, { role: 'user', text: message }].map((h) => ({ role: h.role, parts: [{ text: h.text }] })),
+      generationConfig: { responseMimeType: 'application/json', responseSchema: SCHEMA, temperature: 0.8, maxOutputTokens: 1024 },
     });
-    if (!res.ok) throw new Error(`Gemini ${res.status}`);
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
-    return JSON.parse(text);
+    let last;
+    for (const model of this.models) {
+      const res = await this.fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.apiKey }, body, signal: AbortSignal.timeout(15000),
+      });
+      if (res.status === 429 || res.status === 503) { last = new Error(`Gemini ${model} busy (${res.status})`); continue; } // try the next model
+      if (!res.ok) throw new Error(`Gemini ${res.status}`);
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+      return JSON.parse(text);
+    }
+    throw last ?? new Error('no model');
   }
 
   #fakeReply(npc, message) {

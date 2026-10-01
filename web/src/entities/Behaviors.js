@@ -70,6 +70,16 @@ export const Behaviors = {
     pose(r) { PRAYER_POSES[prayerState.pose](r); },
     talk(r) { PRAYER_POSES[prayerState.pose](r); },
   },
+  /**
+   * A small child playing: walks the route in `def.route` (Npc moves the body), stops now and
+   * then, and jumps on the bed at stops marked `jump`.
+   */
+  roam: {
+    roam: true,
+    pose(r) { r.body.rotation.x = 0; },
+    jump(r, t) { const s = Math.abs(Math.sin(t * 6)); r.armL.rotation.x = r.armR.rotation.x = -2.6 + s * 0.5; r.legL.rotation.x = r.legR.rotation.x = s * 0.25; },
+    talk(r) { r.armL.rotation.x = r.armR.rotation.x = 0; r.legL.rotation.x = r.legR.rotation.x = 0; },
+  },
   /** On a floor cushion at the sofra: lower, and talks with the people around. */
   sitFloor: { ...sitting(0.62), turnToPlayerWithin: 0, seated: true },
   /** On a bench or sedir. */
