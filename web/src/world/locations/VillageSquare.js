@@ -6,7 +6,7 @@ const LIGHT_WOOD = { tex: 'lightWood' };
 /** Village square east of the yard: fountain, grocer (bakkal), muhtar's office, well and benches. */
 export class VillageSquare extends Location {
   constructor() {
-    super({ id: 'village', name: 'Köy Meydanı', spawn: 'yardRoad', bounds: { x: [-18, 18], z: [-18, 18] } });
+    super({ id: 'village', name: 'Köy Meydanı', spawn: 'yardRoad', bounds: { x: [-16.6, 16.6], z: [-16.6, 16.6] } }); // inside the fence (posts at ±17)
   }
 
   build(kit) {
@@ -106,5 +106,6 @@ export class VillageSquare extends Location {
 
     this.anchor('yardRoad', -14.8, 0, Math.PI / 2);
     this.hotspot('village.yard', -16.2, 0, 2.2);
+    this.hotspot('village.menu', -16.2, 0, 2.2); // same exit when playing online from the menu
   }
 }

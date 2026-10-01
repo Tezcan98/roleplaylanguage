@@ -21,18 +21,19 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *   then the server relays WebRTC signalling between exactly those two.
  *
  * client → server
- *   { type: 'hello', name, room? }        join with a username
+ *   { type: 'hello', name, room?, gender? } join with a username (gender: 'boy' | 'girl', for the look)
  *   { type: 'state', x, z, rot, moving }  own position (~10/s)
  *   { type: 'talk', on }                  push-to-talk pressed / released (🎙️ marker)
  *   { type: 'say', text }                 recognised speech (public text bubble)
  *   { type: 'call-request', to }          ask a nearby player for a voice chat
  *   { type: 'call-answer', to, accept }   answer a request
  *   { type: 'call-end' }                  hang up
+ *   { type: 'ball', x, z, vx, vz }        kicked the shared ball (relayed, last state kept for newcomers)
  *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to your call partner
  * server → client
- *   { type: 'welcome', id, name, look, peers } | { type: 'error', message }
+ *   { type: 'welcome', id, name, look, peers, ball? } | { type: 'error', message }
  *   { type: 'join', peer } | { type: 'leave', id } | { type: 'states', players }
- *   { type: 'talk', id, on } | { type: 'say', id, text }
+ *   { type: 'talk', id, on } | { type: 'say', id, text } | { type: 'ball', id, x, z, vx, vz }
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
  *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
  *   { type: 'rtc', from, data }
@@ -42,6 +43,7 @@ export class VillageServer {
   #seq = 0;
 
   #perIp = new Map();
+  #balls = new Map(); // room → last ball state reported (the kicker also reports where it stops)
 
   /**
    * @param {object} o
@@ -122,6 +124,14 @@ export class VillageServer {
         c.lastSay = Date.now();
         this.#toRoom(c, { type: 'say', id: c.id, text: ChatFilter.clean(msg.text.trim().slice(0, 140)) });
         break;
+      case 'ball': {
+        const n = [msg.x, msg.z, msg.vx, msg.vz];
+        if (!n.every(Number.isFinite) || Math.abs(msg.x) > 40 || Math.abs(msg.z) > 40 || Math.hypot(msg.vx, msg.vz) > 15) return;
+        const ball = { x: msg.x, z: msg.z, vx: msg.vx, vz: msg.vz };
+        this.#balls.set(c.room, ball);
+        this.#toRoom(c, { type: 'ball', id: c.id, ...ball });
+        break;
+      }
       case 'call-request': {
         const to = members.get(msg.to);
         if (!to || to === c) return;
@@ -157,7 +167,7 @@ export class VillageServer {
     }
   }
 
-  #hello(c, { name, room = 'village' }) {
+  #hello(c, { name, room = 'village', gender }) {
     if (c.id) return;
     if (typeof room !== 'string' || !ROOM.test(room)) return this.#send(c, { type: 'error', message: 'Geçersiz oda.' });
     const clean = String(name ?? '').trim();
@@ -168,8 +178,8 @@ export class VillageServer {
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
     let unique = clean, n = 2;
     while (taken.has(unique.toLocaleLowerCase('tr'))) unique = `${clean}${n++}`;
-    Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length] } });
-    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)) });
+    Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], gender: gender === 'girl' ? 'girl' : 'boy' } });
+    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ball: this.#balls.has(room) ? { ...this.#balls.get(room), vx: 0, vz: 0 } : undefined });
     this.#toRoom(c, { type: 'join', peer: this.#public(c) });
     members.set(c.id, c);
     this.log(`[village] ${c.name} joined ${room} (${members.size})`);

@@ -25,7 +25,9 @@ export const HOTSPOTS = {
   },
   'yard.door': { label: 'Eve gir', travel: ['house', 'door'] },
   'yard.square': { label: 'Köy meydanına git', travel: ['village', 'yardRoad'] },
-  'village.yard': { label: 'Avluya dön', travel: ['yard', 'squareRoad'] },
+  'village.yard': { label: 'Avluya dön', travel: ['yard', 'squareRoad'], available: (c) => !c.online },
+  // online play from the main menu: leaving the square goes back to the menu, not home
+  'village.menu': { label: 'Ana menüye dön', use: ['main-menu'], available: (c) => c.online },
   'village.fountain': free('village_fountain'),
   'village.well': free('village_well'),
   'village.benchWest': free('village_bench'),
@@ -33,7 +35,13 @@ export const HOTSPOTS = {
   'village.bakkalCounter': free('village_shop'),
   'yard.gate': {
     label: 'Okula git', lockedLabel: 'Bahçe kapısı', use: ['chapter'],
-    locked: (c) => (c.targetHotspot === 'yard.gate' ? null : ['Okul yolu. Şimdi okula gitmiyorsun.', "The road to school. You're not going there now."]),
+    available: (c) => c.q === 'go-school' || c.targetHotspot === 'yard.gate',
+  },
+  // any other time: go to school to practise (1 credit); home life waits until you are back
+  'yard.practice': {
+    label: 'Okula git: pratik (1 kredi)', lockedLabel: 'Bahçe kapısı', use: ['school-practice'],
+    available: (c) => c.q !== 'go-school' && c.targetHotspot !== 'yard.gate' && !c.online,
+    locked: (c) => (c.isNight ? ['Gece okul kapalı.', 'The school is closed at night.'] : null),
   },
   'house.sofra': { label: 'Sofraya otur', use: ['sit:sofraS'], available: (c) => !c.seated },
   'house.breadTable': {
@@ -54,7 +62,8 @@ export const HOTSPOTS = {
   'yard.garden': free('water_garden'),
   'school.door': {
     label: 'Sınıfa gir', lockedLabel: 'Sınıf kapısı', use: ['lesson'], link: 'classroom',
-    locked: (c) => (String(c.q ?? '').startsWith('lesson') ? null : ['Önce arkadaşınla tanış!', 'Meet your friend first!']),
+    // open for the lesson, and afterwards whenever the quest leads back inside (talk to the teacher)
+    locked: (c) => (String(c.q ?? '').startsWith('lesson') || c.targetNpcLoc === 'classroom' ? null : ['Önce arkadaşınla tanış!', 'Meet your friend first!']),
   },
   'classroom.door': { label: 'Bahçeye çık', travel: ['schoolyard', 'door'] },
   'school.exit': {

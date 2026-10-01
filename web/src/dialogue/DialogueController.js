@@ -1,4 +1,10 @@
 import { EV } from '../core/events.js';
+import { NpcChatBox } from '../ui/NpcChatBox.js';
+
+const CHAT_BUSY = {
+  limit: { tr: 'Biraz dinlenelim, sonra yine konuşuruz.', en: 'Let’s rest a bit and talk again later.' },
+  down: { tr: 'Şu an sohbet edemiyorum.', en: 'I can’t chat right now.' },
+};
 
 /**
  * Walks a character's dialogue graph. Each node shows a line and runs one activity;
@@ -15,8 +21,13 @@ export class DialogueController {
   #activity = null;
   #popMode = null;
 
-  constructor({ dialogues, cast, view, activities, effects, vocab, tts, modes, bus, input }) {
-    Object.assign(this, { dialogues, cast, view, activities, effects, vocab, tts, modes, bus });
+  /**
+   * @param {object} o
+   * @param {import('../services/ai/NpcChatClient.js').NpcChatClient} [o.chat]  free conversation (optional)
+   * @param {(npc: string) => boolean} [o.chatAllowed]  e.g. not while the NPC is the quest target
+   */
+  constructor({ dialogues, cast, view, activities, effects, vocab, tts, modes, bus, input, chat = null, chatAllowed = () => true, recognizer = null }) {
+    Object.assign(this, { dialogues, cast, view, activities, effects, vocab, tts, modes, bus, chat, chatAllowed, recognizer });
     this.talking = null;
     this.node = null;
     input.onKey((e) => {
@@ -31,15 +42,70 @@ export class DialogueController {
 
   /** Open with the NPC's own `start`, or at a specific node (used by house rules). */
   open(npcId, nodeId) {
+    if (this.talking) return;
     const d = this.dialogues[npcId];
-    const start = nodeId ?? d?.start(this.ctx);
-    if (!start || this.talking) return;
+    const start = nodeId ?? d?.start?.(this.ctx);
+    const chat = !nodeId && this.chat?.hasPersona(npcId) && this.chatAllowed(npcId);
+    if (!start && !chat) return;
+    if (!start) { // nothing scripted to say: open straight into free conversation, if the server has it
+      this.chat.enabled().then((on) => { if (on && !this.talking) this.#begin(npcId, null, true); });
+      return;
+    }
+    this.#begin(npcId, start, chat);
+  }
+
+  #begin(npcId, start, chat) {
     this.talking = npcId;
     this.cast.get(npcId).talking = true;
     this.#popMode = this.modes.push('dialogue');
     this.view.open(this.cast.get(npcId).def);
     this.bus.emit(EV.DIALOGUE_OPEN, { npc: npcId });
-    this.show(start);
+    if (chat) this.chat.enabled().then((on) => { if (this.talking === npcId) this.view.setChatAvailable(on); });
+    if (start) this.show(start);
+    else this.startChat();
+  }
+
+  /** Free conversation (Gemini through the village server) with the current character. */
+  startChat() {
+    const npc = this.talking;
+    if (!npc || !this.chat) return;
+    const session = ++this.#session;
+    this.#activity?.destroy();
+    this.#activity = null;
+    this.node = null;
+    this.view.setChatAvailable(false);
+    this.view.setHint(null);
+    this.view.setWords([]);
+    this.view.setLine('…', '');
+    const live = () => session === this.#session && this.talking === npc;
+    const box = new NpcChatBox(this.view.slot, {
+      canListen: !!this.recognizer?.supported,
+      onSend: (text) => send(text),
+      onMic: async () => {
+        box.busy(true);
+        try { const { transcript } = await this.recognizer.listen({ expected: [] }); if (live() && transcript) send(transcript); else box.busy(false); }
+        catch { if (live()) box.busy(false); }
+      },
+    });
+    const send = async (text) => {
+      box.busy(true);
+      this.view.setHint(null);
+      try {
+        const r = await this.chat.reply(npc, text);
+        if (!live()) return;
+        box.clear();
+        this.lastLine = r.reply;
+        this.view.setLine(r.reply, r.meaning);
+        this.view.setWords(r.words);
+        r.words.forEach(([tr, m]) => this.vocab.learn(tr, m));
+        if (r.correction) this.view.setHint(`Doğrusu: ${r.correction}`);
+        this.tts.speak(r.reply, { speaker: npc });
+      } catch (e) {
+        if (live()) { const m = e.code === 'limit' ? CHAT_BUSY.limit : CHAT_BUSY.down; this.view.setLine(m.tr, m.en); }
+      }
+      if (live()) box.busy(false);
+    };
+    send('Merhaba!'); // the character greets first
   }
 
   async show(id) {

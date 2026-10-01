@@ -17,10 +17,12 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Village server unit tests (server/)
         run: npm test -w server
-      - name: Content check (dialogue nodes, quest targets, locks, day names)
+      - name: Content check + translation coverage
         run: npm run check -w web
       - name: Story smoke test (Sunday morning → afternoon)
         run: npm run playtest:smoke -w web
+      - name: Player features (setup, girl, grandma, chat, ball, practice, textbook, drill)
+        run: npm run playtest:features -w web
       - name: Village multiplayer (two players, voice chat)
         run: npm run playtest:multiplayer -w web
       - name: Standalone server (game and village on different hosts, like GitHub Pages)

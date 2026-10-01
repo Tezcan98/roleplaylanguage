@@ -93,12 +93,17 @@ import { ActionButton } from './ui/ActionButton.js';
 import { Fader } from './ui/Fader.js';
 import { CardOverlay } from './ui/CardOverlay.js';
 import { MainMenu } from './ui/MainMenu.js';
+import { WordDrill } from './systems/WordDrill.js';
+import { setupLandscape } from './ui/Landscape.js';
 import { ListModal } from './ui/ListModal.js';
 import { DialogueView } from './ui/DialogueView.js';
 
-import { gloss, wordNote, setGlossLang } from './i18n/Gloss.js';
+import { gloss, wordNote, loadGlossLang, glossLang } from './i18n/Gloss.js';
+import { setPlayerGender, playerGender, playerName, personalizeContent } from './i18n/Persona.js';
+import { NpcChatClient } from './services/ai/NpcChatClient.js';
+import { CharacterSetup } from './ui/CharacterSetup.js';
 import {
-  STORY, NPCS, PLAYER_LOOK, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
+  STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
   LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS,
 } from './content/index.js';
 
@@ -116,7 +121,11 @@ const settings = new Settings();
 const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
-setGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default
+await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
+setupLandscape(host); // phones: played sideways
+// boy (Ahmet) or girl (Meryem): the content is rewritten once, before any system reads it
+setPlayerGender(params.get('gender') ?? settings.get('gender', 'boy'));
+personalizeContent(STORY, DIALOGUES, FREE_ACTIONS, HOUSE_RULES, LESSONS, CLASSMATE_BOTS, TEXTBOOK, ITEMS);
 const bus = new EventBus();
 const state = new GameState();
 const modes = new ModeStack();
@@ -155,7 +164,7 @@ const fader = new Fader(host);
 const inventory = new Inventory(state, bus);
 const vocab = new Vocabulary(state, bus);
 const input = new InputSystem(joystick);
-const player = new Player('ahmet', PLAYER_LOOK, { mf, models });
+const player = new Player('ahmet', playerGender() === 'girl' ? PLAYER_LOOK_GIRL : PLAYER_LOOK, { mf, models });
 ctx.scene.add(player.group);
 lighting.follow = player.position;
 const npcs = new Map(Object.entries(NPCS).map(([id, def]) => [id, new Npc(id, def, { mf, models })]));
@@ -163,7 +172,7 @@ const cast = new CastDirector({ npcs, world, player });
 const travel = new TravelService({ world, player, cast, camera, fader, state });
 const story = new StoryDirector({ story: STORY, state, bus, time, cast, travel, cards, toasts, fader });
 const items = new ItemSystem({ defs: ITEMS, names: KIND_NAMES, world, kit, state, inventory, vocab, bus, story });
-const gameCtx = new GameContext({ state, inventory, story, world, time, vocab, player });
+const gameCtx = new GameContext({ state, inventory, story, world, time, vocab, player, cast });
 story.setContext(gameCtx);
 const controller = new PlayerController({ player, input, world, modes, cast });
 
@@ -199,8 +208,17 @@ const dialogueView = new DialogueView(host, {
   onClose: () => dialogue.close(),
   onSpeak: () => dialogue.speak(),
   onToggleEn: () => dialogueView.setEnPressed(!document.body.classList.toggle('hide-en')),
+  onChat: () => dialogue.startChat(),
 });
-const dialogue = new DialogueController({ dialogues: DIALOGUES, cast, view: dialogueView, activities, effects, vocab, tts, modes, bus, input });
+// free conversation with village characters (Gemini behind the village server; off without a key)
+const villageServer = VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native });
+const npcChat = new NpcChatClient({ url: manifest.npcChat || NpcChatClient.urlFor(villageServer), lang: glossLang, player: playerName });
+const chatRecognizer = params.has('fakemic') ? new ScriptedRecognizer() : (native ? new nativeKit.NativeSpeechRecognizer('tr-TR') : new WebSpeechRecognizer('tr-TR'));
+const dialogue = new DialogueController({
+  dialogues: DIALOGUES, cast, view: dialogueView, activities, effects, vocab, tts, modes, bus, input,
+  chat: npcChat, recognizer: chatRecognizer,
+  chatAllowed: (npc) => story.target()?.npc !== npc, // quest conversations come first
+});
 dialogue.setContext(gameCtx);
 
 effects
@@ -244,7 +262,10 @@ const free = new FreeActionSystem({
 effects.register('free', (id) => free.perform(id));
 const toys = new ToySystem({ world, player, free, tts });
 const yard = world.get('yard');
-toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', range: 1.2, onUse: (b) => b.kick(player.position) });
+// balls are kicked by running into them; the square's ball is shared by everyone online
+toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true });
+toys.add(new Ball(mf, world.get('schoolyard'), { x: -3, z: 2 }), { action: 'ball', touch: true });
+const villageBall = toys.add(new Ball(mf, world.get('village'), { x: 4, z: 3 }), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) });
 toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
 
 // --- school: credits, ads, multiplayer lesson ---
@@ -263,25 +284,33 @@ const textbook = new TextbookController({
 effects
   .register('lesson', (id) => lessons.enter(id || story.chapter?.lessonId || 'l1'))
   .register('textbook', (unit) => textbook.open(unit))
+  // garden gate outside school hours: practise at school for 1 credit, home life waits
+  .register('school-practice', async () => {
+    story.pause();
+    const paid = await lessons.practice({
+      onDone: () => travel.go('yard', 'gate', () => { cast.apply(story.chapter.cast); story.resumeStory(); toasts.show('Eve döndün', gloss('Back home — your day continues where you left it')); }),
+    });
+    if (!paid) story.resumeStory();
+  })
   .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, gloss('Credits earned')); });
 
 // --- multiplayer village square (server: tools/serve.mjs or server/index.mjs) ---
-const villageNet = new VillageNetwork(VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native }));
+const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }] }),
-  remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK }),
+  remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, girlLook: PLAYER_LOOK_GIRL }), ball: villageBall,
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
   calls: new CallUI(host, modes),
   usernames: new UsernameDialog(host, modes),
   // first time in the square: how talking works here (Arabic, with Turkish)
   onFirstVisit: () => cards.show({
-    num: 'Köy meydanı · ساحة القرية', title: 'Burada gerçek oyuncular var',
+    num: 'Köy meydanı', title: 'Burada gerçek oyuncular var',
     text: 'Söylediğin cümle başının üstünde yazı olarak görünür. Sesli sohbet sadece iki kişi arasında ve karşı taraf kabul ederse açılır.',
-    en: 'هنا لاعبون حقيقيون. ما تقوله يظهر نصاً فوق رأسك («Bas, konuş» أو T). المحادثة الصوتية بين شخصين فقط وبعد موافقة الطرف الآخر. كن لطيفاً!',
-    button: 'Tamam · حسناً',
+    en: 'There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. Be kind!',
+    button: 'Tamam',
   }),
-  recognizer: params.has('fakemic') ? new ScriptedRecognizer() : (native ? new nativeKit.NativeSpeechRecognizer('tr-TR') : new WebSpeechRecognizer('tr-TR')),
+  recognizer: chatRecognizer,
 });
 
 // --- interaction ---
@@ -296,9 +325,13 @@ const actionButton = new ActionButton(host, () => interactions.trigger());
 input.onKey((e) => { if (modes.is('play') && ['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); interactions.trigger(); } });
 const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, player });
 
+// word notebook with "practice" (a quick quiz over the learned words)
+const drill = new WordDrill(host, { modes, vocab, activities, tts, state, effects, toasts });
+const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!',
+  drill.available ? { label: '🧠 Kelime pratiği yap', run: () => drill.open() } : null);
 const hud = new Hud(host, {
   onBookOpen: () => textbook.open(),
-  onBook: () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!'),
+  onBook: () => openWords(),
   onBag: () => list.open('Çanta', inventory.entries().map(([kind, n]) => {
     const i = items.info(kind);
     return n > 1 ? [`${n} ${i.tr}`, `${n} ${gloss(i.en)}`] : [i.tr, gloss(i.en)];
@@ -329,7 +362,7 @@ cast.apply(STORY.chapters[0].cast);
 travel.place('yard', 'houseDoor', { silent: true });
 // --- save / continue ---
 const saves = new LocalSaveRepository();
-const saved = params.has('fresh') ? null : saves.load();
+let saved = params.has('fresh') ? null : saves.load();
 let autosaveOn = false;
 new AutoSave({ bus, state, repo: saves, enabled: () => autosaveOn });
 const enterPlay = () => {
@@ -347,7 +380,7 @@ const help = new HelpPanel(host, {
     words: vocab.size,
   }),
   onIntro: () => intro.show(),
-  onWords: () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!'),
+  onWords: () => openWords(),
 });
 // the first time, the introduction comes before the story (skip with ?nointro)
 const introFirst = async () => {
@@ -355,21 +388,54 @@ const introFirst = async () => {
   await intro.show();
   settings.set('introSeen', true);
 };
-new MainMenu(host, {
+const setup = new CharacterSetup(host, { modes, settings, villageServer });
+const menu = new MainMenu(host, {
   settings,
-  villageServer: VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native }),
-  hasSave: !!saved,
+  villageServer,
+  hasSave: () => !!saved,
   onHelp: () => intro.show(),
   onStart: async () => { await introFirst(); startNew(); },
   onContinue: () => continueGame(),
-  // straight into the multiplayer square (keeps an existing save, otherwise a new story)
-  onSquare: async (name, serverRegion) => {
-    settings.set('username', name);
-    settings.set('serverRegion', serverRegion);
-    await introFirst();
-    (saved ? continueGame : startNew)(() => travel.go('village', 'yardRoad'));
-  },
+  onSquare: (server) => playOnline(server),
+  onProfile: () => { menu.hide(); editProfile(); },
 });
+/** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
+async function editProfile({ cancellable = true } = {}) {
+  const before = { lang: settings.get('glossLang', 'ar'), gender: playerGender() };
+  const p = await setup.open({ cancellable });
+  if (p && (p.lang !== before.lang || p.gender !== before.gender)) { location.reload(); return; }
+  menu.show();
+}
+// first launch: create the character before anything else (tests skip it with ?nointro)
+if (!setup.done && !params.has('nointro')) { menu.hide(); editProfile({ cancellable: false }); }
+
+/** Online square straight from the menu: no story (paused), no autosave; leaving returns here. */
+function playOnline(server) {
+  settings.set('serverRegion', server);
+  gameCtx.online = true;
+  story.pause();
+  autosaveOn = false;
+  fader.run(() => {
+    travel.place('village', 'yardRoad', { force: true });
+    tts.preload();
+    modes.setBase('play');
+    document.body.classList.remove('menu');
+  });
+}
+function backToMenu() {
+  fader.run(() => {
+    gameCtx.online = false;
+    travel.place('yard', 'houseDoor', { force: true }); // leaving the square disconnects
+    story.resumeStory();
+    autosaveOn = false;
+    modes.setBase('menu');
+    document.body.classList.add('menu');
+    saved = params.has('fresh') ? null : saves.load();
+    menu.show();
+  });
+}
+effects.register('main-menu', () => backToMenu());
+
 function startNew(then) {
   fader.run(() => {
     saves.clear();
@@ -377,6 +443,7 @@ function startNew(then) {
     const dayIndex = Number.isInteger(requestedDay) && requestedDay > 0
       ? STORY.chapters.findIndex((ch) => ch.day === requestedDay)
       : 0;
+    hud.setCredits(wallet.balance); hud.setWords(vocab.size); hud.setBag(inventory.size);
     story.startChapter(dayIndex >= 0 ? dayIndex : 0, () => {
       enterPlay();
       const think = story.chapter.think;
@@ -402,4 +469,4 @@ game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

@@ -148,6 +148,7 @@ export class Yard extends Location {
       mf.at(mf.box(1.6, 0.45, 0.06, { tex: 'lightWood' }), 0, 2.65, 0)));
     add(mf.ground(2.4, 17, { tex: 'dirt', repeat: [1, 6] }, 0.021)).position.z = 15.5;
     this.hotspot('yard.gate', 0, 22.8, 1.9);
+    this.hotspot('yard.practice', 0, 22.8, 1.9); // same gate, outside the school-day quest
     this.anchor('gate', 0, 22, Math.PI);
   }
 }

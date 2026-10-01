@@ -47,15 +47,16 @@ export class TextbookView {
   }
 
   memory(page, onSpeak) {
-    // keyword method in the player's language: Arabic speakers get Arabic sound-alikes
+    // keyword method in the player's language when the card has sound-alikes for it, else English ones
     const lang = glossLang();
-    const intro = lang === 'en' ? 'Kelimeyi, sesi benzeyen İngilizce bir kelimeyle ve komik bir resimle hatırla.' : 'تذكّر الكلمة بكلمة تشبهها في الصوت وصورة مضحكة.';
+    const own = lang !== 'en' && page.cards.every((c) => c[lang]);
+    const intro = own ? gloss('Remember the word with a word that sounds similar in your language and a funny picture.') : 'Kelimeyi, sesi benzeyen İngilizce bir kelimeyle ve komik bir resimle hatırla.';
     this.body.append(el('h3', { text: page.title }), el('p', { class: 'en en-t', text: intro, style: { lineHeight: '22px' } }));
     page.cards.forEach((c) => {
-      const m = c[lang] ?? c;
+      const m = own ? c[lang] : c;
       this.body.append(el('div', { class: 'mncard' }, [
         el('span', { class: 'w' }, [`${c.tr} `, el('button', { class: 'chipbtn', html: ICONS.speaker, attrs: { type: 'button', 'aria-label': 'Dinle' }, style: { minHeight: '30px', padding: '0 6px' }, on: { click: () => onSpeak(c.tr) } })]),
-        el('span', { class: 's en-t', text: lang === 'en' ? `= ${c.en} · kulağa ${c.sounds} gibi gelir` : `= ${gloss(c.en)} · تُسمع مثل ${m.sounds}` }),
+        el('span', { class: 's en-t', text: own ? `= ${gloss(c.en)} · ${gloss('sounds like')} ${m.sounds}` : `= ${gloss(c.en)} · kulağa ${c.sounds} gibi gelir` }),
         el('span', { class: 'p en-t', text: `🎨 ${m.picture}` }),
       ]));
     });

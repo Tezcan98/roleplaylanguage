@@ -3,7 +3,7 @@
  * files) so every system sees the same, composed tables.
  */
 import { STORY } from './story.js';
-import { NPCS, PLAYER_LOOK, VOICES } from './characters.js';
+import { NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, VOICES } from './characters.js';
 import { DIALOGUES } from './dialogues.js';
 import { ITEMS, KIND_NAMES } from './items.js';
 import { HOTSPOTS, LINKS } from './hotspots.js';
@@ -17,6 +17,6 @@ import { composeContent } from '../core/ContentComposer.js';
 composeContent({ story: STORY, dialogues: DIALOGUES, hotspots: HOTSPOTS, kindNames: KIND_NAMES, npcs: NPCS, voices: VOICES }, ADDONS);
 
 export {
-  STORY, NPCS, PLAYER_LOOK, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
+  STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
   LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS,
 };

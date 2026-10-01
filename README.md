@@ -114,6 +114,7 @@ Sistemler birbirini doğrudan çağırmak yerine `EventBus` üzerinden haberleş
 npm run check                 # içerik doğrulama: diyalog düğümleri, görev hedefleri, kilitli kapılar, gün adları
 npm run playtest:smoke        # Pazar sabahından öğleden sonraya otomatik oynanış (~2 dk)
 npm run playtest              # bütün haftayı baştan sona oynar (~10 dk); takılırsa teşhisle ve exit 1 ile durur
+npm run playtest:features     # giriş ekranı, kız karakter, nine, sohbet, top, çit, okul pratiği, ders kitabı, kelime pratiği
 npm run playtest:multiplayer  # iki oyuncu: kullanıcı adı, yazı balonu, onaylı sesli sohbet, ses akışı, kopma
 npm run playtest:standalone   # aynısı, ama meydan ayrı bir sunucuda (GitHub Pages + kendi sunucun düzeni)
 npm run playtest:offline      # üretim derlemesi internetsiz açılıyor mu
@@ -126,9 +127,20 @@ Kurulu bir sunucuyu dışarıdan denemek: `node server/deploy/check.mjs wss://al
 
 Testler sunucuyu kendileri başlatır. Varsayılan olarak Playwright'ın Chromium'unu kullanırlar (CI). Yerelde `PLAYTEST_CHANNEL=chrome` daha hızlıdır, `PLAYTEST_HEADED=1` pencereyi gösterir. Hikaye testi `--from=<bölüm no>` ve `--to=<bölüm id>` alır. Başarısızlıkta ekran görüntüleri `web/playtest-results/` klasörüne düşer. GitHub Actions (`.github/workflows/test.yml`) her push'ta sunucu testleri + check + smoke + multiplayer + standalone + offline çalıştırır.
 
-## Çeviri
+## Çeviri (dinamik)
 
-Açıklamalar İngilizce yazılır, `src/i18n/ar.js` İngilizce → Arapça sözlüktür. Yeni içerik ekledikten sonra eksikleri gör: `node tools/extract-glosses.mjs --missing ar`. Elle yazılan arayüz metinleri `src/i18n/ar-ui.js` içinde.
+Oyun Türkçe konuşur; altındaki anlamlar, ipuçları, yardım ve tanıtım oyuncunun dilindedir.
+Hepsi veri: `web/assets/i18n/languages.json` dilleri listeler, her dil `web/assets/i18n/<kod>.json`
+dosyasıdır (anahtar = İngilizce kaynak metin). Kodda dil adı geçmez.
+
+Yeni dil eklemek:
+1. `npm run i18n -w web -- --stub de` → `de.json` boş değerlerle oluşur, doldur.
+2. `languages.json`'a bir satır ekle (`code`, `name`, `short`, `dir`).
+
+`npm run check` her dilin kapsamını denetler: yeni bir metin eklenip çevrilmezse CI başarısız olur.
+Kız karakter seçildiğinde ad ve hitaplar (Ahmet→Meryem, oğlum→kızım) metinlerde ve çevirilerde
+otomatik değişir (`web/src/i18n/Persona.js`). Ders kitabındaki hafıza kartlarının her dil için kendi
+ses benzerlikleri vardır (`web/src/content/textbook.js`).
 
 ## 3D model ve doku ekleme
 

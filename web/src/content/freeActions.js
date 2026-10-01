@@ -33,7 +33,7 @@ export const FREE_ACTIONS = {
     words: [['sulamak', 'to water'], ['bahçe', 'garden'], ['bitki', 'plant']],
   },
   ball: {
-    label: 'Topa vur', think: 'Gol!', say: 'Top oynadım.', minutes: 5,
+    label: 'Topa vur', think: 'Gol!', say: 'Topa vurdum!', // kicked by running into the ball; no time passes
     words: [['top', 'ball'], ['vurmak', 'to kick / hit'], ['gol', 'goal']],
   },
   cat: {

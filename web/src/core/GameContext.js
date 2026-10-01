@@ -3,12 +3,15 @@
  * Content never touches systems directly — only this facade.
  */
 export class GameContext {
-  constructor({ state, inventory, story, world, time, vocab, player }) {
-    Object.assign(this, { state, inventory, story, world, time, vocab, player });
+  constructor({ state, inventory, story, world, time, vocab, player, cast }) {
+    Object.assign(this, { state, inventory, story, world, time, vocab, player, cast });
+    this.online = false; // playing the online square from the main menu (no story)
   }
   get seated() { return !!this.player?.seated; }
   /** Hotspot id the current quest points at (doors use it to open exactly when needed). */
   get targetHotspot() { return this.story.target()?.hotspot ?? null; }
+  /** Location id of the character the current quest points at (e.g. the teacher in the classroom). */
+  get targetNpcLoc() { const npc = this.story.target()?.npc; const loc = npc && this.cast?.get(npc)?.location; return (typeof loc === 'string' ? loc : loc?.id) ?? null; }
   get q() { return this.story.quest?.id ?? null; }
   get chapter() { return this.story.chapter?.id ?? null; }
   get loc() { return this.world.current?.id ?? null; }

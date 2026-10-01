@@ -176,3 +176,31 @@ test('per-IP connection limit', async () => {
   await again.open();
   await again.close();
 });
+
+test('shared ball: kicks are relayed, newcomers get where it stopped; nonsense is ignored', async () => {
+  const a = await join('Topçu', 'ball');
+  const b = await join('Kaleci', 'ball');
+  a.send({ type: 'ball', x: 1, z: 2, vx: 5, vz: 0 });
+  assert.deepEqual(await b.next('ball'), { type: 'ball', id: a.welcome.id, x: 1, z: 2, vx: 5, vz: 0 });
+  a.send({ type: 'ball', x: 4, z: 2, vx: 0, vz: 0 }); // came to rest
+  await b.next('ball');
+  a.send({ type: 'ball', x: 1e9, z: 0, vx: 0, vz: 0 });
+  a.send({ type: 'ball', x: 0, z: 0, vx: 99, vz: 0 });
+  await silence();
+  assert.equal(b.inbox.some((m) => m.type === 'ball'), false);
+  const c = await join('Yeni', 'ball');
+  assert.deepEqual(c.welcome.ball, { x: 4, z: 2, vx: 0, vz: 0 });
+  await Promise.all([a, b, c].map((p) => p.close()));
+});
+
+test('gender travels in the look (anything else counts as boy)', async () => {
+  const a = client(); await a.open();
+  a.send({ type: 'hello', name: 'Meryem', room: 'look', gender: 'girl' });
+  assert.equal((await a.next('welcome')).look.gender, 'girl');
+  const b = client(); await b.open();
+  b.send({ type: 'hello', name: 'Ali', room: 'look', gender: '<script>' });
+  const w = await b.next('welcome');
+  assert.equal(w.look.gender, 'boy');
+  assert.equal(w.peers[0].look.gender, 'girl');
+  await a.close(); await b.close();
+});
