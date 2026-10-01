@@ -19,8 +19,18 @@ export class CameraController {
     this.camera.lookAt(this.#look);
   }
 
+  /** Pin the camera to a fixed shot (e.g. the lesson) until `clearFixed()`. */
+  setFixed(pos, look) { this.fixed = { pos: pos.clone(), look: look.clone() }; }
+  clearFixed() { this.fixed = null; }
+
   update(t, { menu, player, partner, location }) {
     const cam = this.camera;
+    if (this.fixed) {
+      cam.position.lerp(this.fixed.pos, 0.08);
+      this.#look.lerp(this.fixed.look, 0.08);
+      cam.lookAt(this.#look);
+      return;
+    }
     if (menu) {
       const a = t * 0.12;
       cam.position.set(Math.sin(a) * 20, 9, Math.cos(a) * 20 - 2);

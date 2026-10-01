@@ -3,7 +3,7 @@
  * may declare props it needs and whether the character is seated.
  * Add a new one here without touching Npc.
  */
-const sitPose = (height) => (r) => {
+export const sitPose = (height) => (r) => {
   r.body.position.y = -height;
   r.legL.rotation.x = r.legR.rotation.x = -Math.PI / 2;
   r.body.rotation.x = 0;
@@ -34,6 +34,10 @@ export const Behaviors = {
     pose(r, t) { const s = (Math.sin(t * 1.6) + 1) / 2; r.armL.rotation.x = r.armR.rotation.x = -2.4 + s * 0.4; r.body.rotation.x = 0; },
     talk(r) { r.armL.rotation.x = r.armR.rotation.x = 0; },
     turnToPlayerWithin: 2.4,
+  },
+  teach: {
+    pose(r, t) { const s = Math.max(0, Math.sin(t * 0.8)); r.armR.rotation.x = -1.4 * s; r.armL.rotation.x = -0.2; r.body.rotation.x = 0; },
+    talk(r) { r.armR.rotation.x = -0.6; r.armL.rotation.x = -0.2; },
   },
   /** On a floor cushion at the sofra: lower, and talks with the people around. */
   sitFloor: { ...sitting(0.62), turnToPlayerWithin: 0, seated: true },

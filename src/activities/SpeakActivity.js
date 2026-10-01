@@ -21,7 +21,8 @@ export class SpeakActivity extends Activity {
     const { speech, tts } = this.services;
     const target = spec.show ?? spec.expect?.[0] ?? '';
     return new Promise((resolve) => {
-      const done = (ok) => resolve({ option: { next: spec.next, do: spec.do }, ok });
+      let lastHeard = '';
+      const done = (ok) => resolve({ option: { next: spec.next, do: spec.do }, ok, transcript: lastHeard || target });
       const heard = el('div', { class: 'transcript' });
       const fb = el('div', { class: 'fb' });
       const skip = el('button', { class: 'chipbtn', text: 'Geç', attrs: { type: 'button' }, style: { display: 'none' }, on: { click: () => done(false) } });
@@ -39,6 +40,7 @@ export class SpeakActivity extends Activity {
               const r = await speech.evaluate(spec);
               if (!this.root) return;
               heard.textContent = r.transcript ? `“${r.transcript}”` : '';
+              lastHeard = r.transcript || lastHeard;
               if (r.pass) { fb.className = 'fb ok'; fb.textContent = 'Harika! ✓'; setTimeout(() => done(true), 700); return; }
               fb.className = 'fb bad'; fb.textContent = FEEDBACK[r.reason];
             } catch (e) {

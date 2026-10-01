@@ -15,11 +15,12 @@ export class GameState {
     this.inventory = {};
     this.taken = [];
     this.words = {};
+    this.credits = 0;
   }
 
   snapshot() {
-    const { day, minutes, chapter, quest, location, flags, inventory, taken, words } = this;
-    return structuredClone({ v: 1, day, minutes, chapter, quest, location, flags, inventory, taken, words });
+    const { day, minutes, chapter, quest, location, flags, inventory, taken, words, credits } = this;
+    return structuredClone({ v: 1, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits });
   }
 
   restore(data) {

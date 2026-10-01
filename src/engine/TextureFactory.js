@@ -221,6 +221,21 @@ const GENERATORS = {
   curtain(g, s) {
     for (let x = 0; x < s; x += 16) { g.fillStyle = (x / 16) % 2 ? '#F4E6C8' : '#E7D3A8'; g.fillRect(x, 0, 16, s); }
   },
+  schoolSign(g, s) {
+    g.fillStyle = '#1F4E8C'; g.fillRect(0, 0, s, s);
+    g.strokeStyle = '#F4E6C8'; g.lineWidth = s * 0.03; g.strokeRect(s * 0.04, s * 0.2, s * 0.92, s * 0.6);
+    g.fillStyle = '#FFFFFF'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `bold ${s * 0.13}px Fredoka, sans-serif`;
+    g.fillText('KÖY', s / 2, s * 0.38);
+    g.fillText('İLKOKULU', s / 2, s * 0.6);
+  },
+  alphabet(g, s) {
+    g.fillStyle = '#FFF9EC'; g.fillRect(0, 0, s, s);
+    const letters = 'A B C Ç D E F G Ğ H I İ J K L M N O Ö P R S Ş T U Ü V Y Z'.split(' ');
+    const cols = ['#E4574A', '#2F6FDB', '#3E8E4A', '#E0B04A', '#7A3552'];
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = `bold ${s * 0.1}px Fredoka, sans-serif`;
+    letters.forEach((l, i) => { g.fillStyle = cols[i % cols.length]; g.fillText(l, (i % 6 + 0.5) * s / 6, (Math.floor(i / 6) + 0.5) * s / 5); });
+  },
   ball(g, s) {
     g.fillStyle = '#F7F7F2'; g.fillRect(0, 0, s, s);
     g.fillStyle = '#1B1B1B';

@@ -22,6 +22,12 @@ export class CastDirector {
     this.refreshVisibility();
   }
 
+  /** Move one character (only while the player can't see it happen, e.g. behind a fade). */
+  move(id, locId, anchor, behavior) {
+    this.npcs.get(id).station(this.world.get(locId), anchor, behavior);
+    this.refreshVisibility();
+  }
+
   get(id) { return this.npcs.get(id); }
   present(locId = this.world.current?.id) { return [...this.npcs.values()].filter((n) => n.location === locId); }
   where(id) { return this.npcs.get(id)?.location ?? null; }

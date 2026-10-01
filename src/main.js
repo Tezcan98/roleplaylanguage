@@ -22,6 +22,8 @@ import { Foliage } from './engine/Foliage.js';
 import { LocationManager } from './world/LocationManager.js';
 import { HouseInterior } from './world/locations/HouseInterior.js';
 import { Yard } from './world/locations/Yard.js';
+import { SchoolYard } from './world/locations/SchoolYard.js';
+import { Classroom } from './world/locations/Classroom.js';
 
 import { Player } from './entities/Player.js';
 import { Npc } from './entities/Npc.js';
@@ -43,6 +45,14 @@ import { FreeActionSystem } from './systems/FreeActionSystem.js';
 import { ToySystem } from './systems/ToySystem.js';
 import { Ball } from './entities/Ball.js';
 import { Cat } from './entities/Cat.js';
+import { LessonController } from './systems/LessonController.js';
+import { TextbookController } from './systems/TextbookController.js';
+import { CreditWallet } from './services/monetization/CreditWallet.js';
+import { MockAdProvider } from './services/monetization/AdProvider.js';
+import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
+import { LocalClassroomSession, WebSocketClassroomSession } from './services/multiplayer/ClassroomSession.js';
+import { ClassroomView } from './ui/ClassroomView.js';
+import { TextbookView } from './ui/TextbookView.js';
 
 import { ActivityRegistry } from './activities/Activity.js';
 import { ChoiceActivity } from './activities/ChoiceActivity.js';
@@ -77,12 +87,15 @@ import { DIALOGUES } from './content/dialogues.js';
 import { ITEMS } from './content/items.js';
 import { HOTSPOTS, LINKS } from './content/hotspots.js';
 import { FREE_ACTIONS, HOUSE_RULES } from './content/freeActions.js';
+import { LESSONS, CLASSMATE_BOTS } from './content/lessons.js';
+import { TEXTBOOK } from './content/textbook.js';
 
 async function loadManifest() {
   try { const r = await fetch('assets/manifest.json', { cache: 'no-cache' }); return r.ok ? await r.json() : {}; } catch { return {}; }
 }
 
 const manifest = await loadManifest();
+await document.fonts?.load('700 40px Fredoka').catch(() => {}); // canvas textures (signs, chalkboard) use it
 const params = new URLSearchParams(location.search);
 const host = document.getElementById('ui');
 
@@ -110,7 +123,7 @@ const lighting = new DayNightLighting(ctx, time, {
   fireflies: new Fireflies(ctx.scene, { area: { x: [-14, 14], z: [-8, 18] }, count: quality === 'low' ? 40 : 90 }),
 });
 const world = new LocationManager({ scene: ctx.scene, bus, lighting, kit });
-world.register(new HouseInterior()).register(new Yard());
+world.register(new HouseInterior()).register(new Yard()).register(new SchoolYard()).register(new Classroom());
 world.setLinks(LINKS);
 
 // --- ui ---
@@ -190,6 +203,26 @@ const yard = world.get('yard');
 toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', range: 1.2, onUse: (b) => b.kick(player.position) });
 toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
 
+// --- school: credits, ads, multiplayer lesson ---
+const wallet = new CreditWallet(state, bus);
+const gate = new ClassAccessGate({ host, modes, wallet, ads: new MockAdProvider(host, modes) });
+const lessons = new LessonController({
+  lessons: LESSONS, bots: CLASSMATE_BOTS, gate, activities, cast, world, travel, player, camera, tts, labels, modes, effects, state,
+  // manifest.classroomServer → real multiplayer; otherwise local bots
+  sessionFactory: (lesson, bots) => (manifest.classroomServer
+    ? new WebSocketClassroomSession({ url: manifest.classroomServer, lesson })
+    : new LocalClassroomSession({ lesson, bots, speed: params.has('fastclass') ? 6 : 1 })),
+  view: new ClassroomView(host, { onReplay: () => lessons.replay() }),
+});
+const textbook = new TextbookController({
+  book: TEXTBOOK, activities, tts, vocab, state, effects, modes, toasts,
+  view: new TextbookView(host, { onClose: () => textbook.close(), onPrev: () => textbook.prev(), onNext: () => textbook.next() }),
+});
+effects
+  .register('lesson', (id) => lessons.enter(id))
+  .register('textbook', (unit) => textbook.open(unit))
+  .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, 'Credits earned'); });
+
 // --- interaction ---
 const interactions = new InteractionSystem([
   toys,
@@ -202,6 +235,7 @@ input.onKey((e) => { if (modes.is('play') && ['e', 'E', 'Enter'].includes(e.key)
 const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, player });
 
 const hud = new Hud(host, {
+  onBookOpen: () => textbook.open(),
   onBook: () => list.open('Kelime defteri', vocab.entries(), 'Henüz kelime yok. Biriyle konuş!'),
   onBag: () => list.open('Çanta', inventory.entries().map(([kind, n]) => {
     const i = items.info(kind);
@@ -213,7 +247,8 @@ const hud = new Hud(host, {
 const refreshQuest = () => questPanel.show(story.objective());
 bus.on(EV.TIME, () => hud.setTime(time.dayName, time.label, time.isNight));
 bus.on(EV.WORD, ({ size }) => hud.setWords(size));
-bus.on(EV.INVENTORY, () => { hud.setBag(inventory.size); refreshQuest(); });
+bus.on(EV.INVENTORY, () => { hud.setBag(inventory.size); hud.setTextbook(inventory.has('kitap')); refreshQuest(); });
+bus.on(EV.CREDITS, ({ balance }) => hud.setCredits(balance));
 bus.on(EV.QUEST, refreshQuest);
 bus.on(EV.ITEM_PICKED, ({ item, isNew }) => {
   effects.run(item.onPick);
@@ -241,4 +276,4 @@ const game = new Game({ toys, foliage: Foliage, modes, time, lighting, controlle
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

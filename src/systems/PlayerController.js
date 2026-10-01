@@ -4,7 +4,7 @@ export class PlayerController {
 
   update(dt, t) {
     const { player } = this;
-    let { x, z } = this.modes.is('play') ? this.input.axis() : { x: 0, z: 0 };
+    let { x, z } = this.modes.is('play') && !player.seated ? this.input.axis() : { x: 0, z: 0 };
     const mag = Math.min(1, Math.hypot(x, z));
     if (mag > 0.08) {
       const loc = this.world.current, n = Math.hypot(x, z);

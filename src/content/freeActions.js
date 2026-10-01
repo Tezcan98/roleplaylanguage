@@ -49,6 +49,11 @@ export const FREE_ACTIONS = {
  */
 export const HOUSE_RULES = [
   {
+    id: 'tv-homework', on: 'tv', by: 'anne', node: 'warnTvHomework',
+    when: (c) => c.q === 'homework',
+    shout: ['Ahmet! Önce ödevini yap!', 'Ahmet! Do your homework first!'],
+  },
+  {
     id: 'tv-at-table', on: 'tv', by: 'anne', node: 'warnTvMeal',
     when: (c) => ['d1-breakfast', 'd1-dinner'].includes(c.chapter),
     shout: ['Ahmet! Sofrada televizyon yok!', 'Ahmet! No TV at the table!'],

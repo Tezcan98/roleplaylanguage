@@ -167,14 +167,56 @@ export const STORY = {
       quests: [
         { id: 'wake', title: 'Günaydın', obj: 'Annene günaydın de', en: 'Say good morning to mom', target: { npc: 'anne' }, minutes: 20 },
         { id: 'jacket2', title: 'Mont', obj: 'Montunu al', en: 'Take your jacket', target: { item: 'mont2' }, complete: { pick: 'mont' }, minutes: 2 },
-        { id: 'go-school', title: 'Okul yolu', obj: 'Bahçe kapısından okula git', en: 'Go to school through the garden gate', target: { hotspot: 'yard.gate' }, final: true },
+        { id: 'go-school', title: 'Okul yolu', obj: 'Bahçe kapısından okula git', en: 'Go to school through the garden gate', target: { hotspot: 'yard.gate' } },
+      ],
+    },
+
+    {
+      id: 'd2-school', day: 2, time: '08:40', location: 'schoolyard', spawn: 'gate',
+      cast: {
+        anne: null, baba: null, dede: null,
+        ogretmen: ['classroom', 'teacher', 'teach'],
+        elif: ['schoolyard', 'elif', 'stand'],
+        can: ['schoolyard', 'can', 'stand'],
+        zehra: ['classroom', 'seat2', 'sitBench'],
+      },
+      intro: {
+        num: 'Pazartesi · Bölüm 8', title: 'Okulda',
+        text: 'Köy İlkokulu. Bahçede çocuklar oynuyor. Bayrak dalgalanıyor. Ders birazdan başlayacak!',
+        en: 'The village primary school. Children are playing in the yard. The flag is waving. The lesson starts soon!',
+      },
+      quests: [
+        { id: 'meet-elif', title: 'Yeni arkadaş', obj: 'Elif ile tanış', en: 'Meet Elif', target: { npc: 'elif' } },
+        { id: 'lesson', title: 'İlk ders', obj: 'Sınıfa gir, derse katıl', en: 'Enter the classroom and join the lesson', target: { hotspot: 'school.door' }, complete: { flag: 'lesson-l1' }, minutes: 45 },
+        { id: 'homework-assign', title: 'Ödev', obj: 'Öğretmenle konuş', en: 'Talk to the teacher', target: { npc: 'ogretmen' }, minutes: 10 },
+        { id: 'go-home', title: 'Eve dönüş', obj: 'Okul bahçesinden eve dön', en: 'Go home from the schoolyard', target: { hotspot: 'school.exit' } },
+      ],
+    },
+
+    {
+      id: 'd2-homework', day: 2, time: '17:00', location: 'house', spawn: 'door',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['house', 'sedirR', 'sitBench'],
+        ogretmen: null, elif: null, can: null, zehra: null,
+      },
+      intro: {
+        num: 'Pazartesi · Bölüm 9', title: 'Ödev zamanı',
+        text: 'Ahmet eve döndü. Baba işten geldi, dede sedirde dinleniyor. Ama önce ödev!',
+        en: 'Ahmet is home. Dad is back from work, grandpa is resting on the sedir. But homework first!',
+      },
+      quests: [
+        { id: 'homework', title: 'Ünite 1', obj: 'Masaya otur, kitabındaki Ünite 1\'i bitir', en: 'Sit at the desk and finish Unit 1 in your book', target: { hotspot: 'house.desk' }, complete: { flag: 'homework-u1' }, minutes: 45 },
+        { id: 'show-mom', title: 'Aferin', obj: 'Annene ödevini anlat', en: 'Tell mom about your homework', target: { npc: 'anne' } },
+        { id: 'free-evening', title: 'Serbest zaman', obj: 'Dolaş, oyna, herkesle konuş', en: 'Explore, play and chat with everyone', target: null, final: true },
       ],
     },
   ],
 
   outro: {
     num: 'Şimdilik bu kadar', title: 'Devam edecek…', button: 'Dolaşmaya devam',
-    text: (c) => `Harika bir gün! ${c.words} kelime öğrendin. Okul bölümü yakında.`,
-    en: 'What a day! The school chapter is coming soon.',
+    text: (c) => `Harika iki gün! ${c.words} kelime öğrendin. Yeni bölümler yakında.`,
+    en: 'Two great days! New chapters are coming soon.',
   },
 };

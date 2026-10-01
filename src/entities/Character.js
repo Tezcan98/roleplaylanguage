@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { buildRig, RIG_PROPS } from './CharacterRig.js';
 import { fitToBox } from '../engine/ModelLibrary.js';
+import { sitPose } from './Behaviors.js';
 
 const wrapAngle = (d) => { while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
@@ -27,7 +28,15 @@ export class Character {
   turnTo(angle, k) { this.group.rotation.y += wrapAngle(angle - this.group.rotation.y) * k; }
   faceTowards(p, k = 0.15) { this.turnTo(Math.atan2(p.x - this.position.x, p.z - this.position.z), k); }
 
+  /** Sit down on a chair at the current spot (or stand up). */
+  sit(on) {
+    this.seated = on;
+    const r = this.rig;
+    if (on) { sitPose(0.38)(r); r.armL.rotation.x = r.armR.rotation.x = -0.5; } else { r.body.position.y = 0; r.legL.rotation.x = r.legR.rotation.x = 0; }
+  }
+
   walk(t, amount) {
+    if (this.seated) return;
     const r = this.rig, s = Math.sin(t * 10) * 0.6 * amount;
     r.legL.rotation.x = s; r.legR.rotation.x = -s; r.armL.rotation.x = -s * 0.8; r.armR.rotation.x = s * 0.8;
     this.#playClip(amount > 0.05 ? 'walk' : 'idle');

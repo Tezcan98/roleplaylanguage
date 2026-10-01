@@ -28,6 +28,8 @@ export const DIALOGUES = {
         case 'goodnight': return 'gn1';
         case 'sleep': return 'gn3';
         case 'wake': return 'm1';
+        case 'homework': return 'hwGo';
+        case 'show-mom': return 'hw1';
         default: break;
       }
       switch (ctx.chapter) {
@@ -122,6 +124,16 @@ export const DIALOGUES = {
       gn2: { say: 'İyi geceler oğlum. Tatlı rüyalar!', en: 'Good night son. Sweet dreams!', words: [['iyi geceler', 'good night'], ['rüya', 'dream'], ['tatlı', 'sweet']],
         options: [{ tr: 'Sana da anne!', en: 'You too, mom!', do: ['quest'] }] },
       gn3: { say: 'Hadi yatağına! Uyku vakti.', en: 'Off to bed! Sleep time.', words: [['yatak', 'bed'], ['uyku', 'sleep']], options: [{ tr: 'Tamam.', en: 'Okay.' }] },
+
+      // --- homework evening ---
+      hwGo: { say: 'Hoş geldin oğlum! Okul nasıldı? Hadi, önce ödevini yap. Masanda çalış.', en: 'Welcome home son! How was school? Come on, do your homework first. Work at your desk.', words: [['ödev', 'homework'], ['masa', 'desk / table']],
+        options: [{ tr: 'Tamam anne, hemen yapıyorum.', en: "Okay mom, I'm doing it right away." }] },
+      hw1: { ask: 'speak', say: 'Ödevini yaptın mı?', en: 'Did you do your homework?', words: [['yapmak', 'to do']],
+        expect: ['Evet, ödevimi yaptım', 'Ödevimi yaptım', 'Evet yaptım'], show: 'Evet, ödevimi yaptım!', showEn: 'Yes, I did my homework!', next: 'hw2' },
+      hw2: { say: 'Aferin sana! Çok çalışkansın. Şimdi oynayabilirsin.', en: "Well done! You're so hard-working. Now you can play.", words: [['oynamak', 'to play']],
+        options: [{ tr: 'Yaşasın! Teşekkürler anne!', en: 'Hooray! Thanks mom!', do: ['quest', 'credits:2'] }] },
+      warnTvHomework: { say: 'Ahmet! Ödevin varken televizyon izlenmez. Önce ödev, sonra oyun!', en: 'Ahmet! No TV while you have homework. Homework first, then play!', words: [['ödev', 'homework'], ['önce', 'first']],
+        options: [{ tr: 'Tamam anne, ödevimi yapıyorum.', en: "Okay mom, I'm doing my homework.", next: 'sorry' }, { tr: 'Ama sadece beş dakika!', en: 'But only five minutes!', next: 'noBut' }] },
 
       // --- house rules (opened by FreeActionSystem) ---
       warnTvMeal: { say: 'Ahmet! Sofrada televizyon izlenmez. Kapat onu!', en: "Ahmet! We don't watch TV at the table. Switch it off!", words: [['kapatmak', 'to switch off']],
@@ -255,6 +267,60 @@ export const DIALOGUES = {
         options: [{ tr: 'Teşekkürler baba!', en: 'Thanks dad!', do: ['quest'] }] },
       tv: { say: 'Haberleri izliyorum. Sen de yat, geç oldu.', en: "I'm watching the news. You go to bed too, it's late.", words: [['haber', 'news'], ['izlemek', 'to watch'], ['geç', 'late']],
         options: [{ tr: 'İyi geceler baba!', en: 'Good night dad!' }] },
+    },
+  },
+
+  elif: {
+    start: (ctx) => (ctx.q === 'meet-elif' ? 'e1' : ctx.loc === 'classroom' ? 'eClass' : 'eIdle'),
+    nodes: {
+      e1: { ask: 'speak', say: 'Merhaba! Sen yeni misin? Adın ne?', en: "Hi! Are you new? What's your name?", words: [['yeni', 'new'], ['ad', 'name']],
+        expect: ['Benim adım Ahmet', 'Adım Ahmet', 'Ben Ahmet'], show: 'Benim adım Ahmet.', showEn: 'My name is Ahmet.', next: 'e2' },
+      e2: { say: 'Memnun oldum Ahmet! Ben Elif. Bu da Can, o çok komik.', en: "Nice to meet you Ahmet! I'm Elif. This is Can, he's very funny.", words: [['memnun oldum', 'nice to meet you']],
+        options: [{ tr: 'Ben de memnun oldum!', en: 'Nice to meet you too!', next: 'e3' }] },
+      e3: { say: 'Hadi, ders başlıyor! Sınıf kapısı orada.', en: "Come on, the lesson is starting! The classroom door is there.", words: [['ders', 'lesson'], ['sınıf', 'classroom']],
+        options: [{ tr: 'Hadi gidelim!', en: "Let's go!", do: ['quest'] }] },
+      eClass: { say: 'Öğretmenimiz çok iyi, değil mi?', en: "Our teacher is very nice, isn't she?", words: [['öğretmen', 'teacher']],
+        options: [{ tr: 'Evet, çok iyi!', en: 'Yes, very nice!' }] },
+      eIdle: { say: 'Teneffüste top oynayalım mı?', en: 'Shall we play ball at break time?', words: [['teneffüs', 'break (school)']],
+        options: [{ tr: 'Olur!', en: 'Sure!' }] },
+    },
+  },
+
+  can: {
+    start: () => 'c1',
+    nodes: {
+      c1: { ask: 'listen', say: 'Bugün matematik dersi var mı?', en: 'Is there a maths lesson today?', prompt: 'Can ne soruyor?', words: [['matematik', 'maths'], ['bugün', 'today']],
+        options: [
+          { tr: 'Bugün matematik dersi var mı?', en: 'Is there a maths lesson today?', next: 'c2' },
+          { tr: 'Bugün hava güzel mi?', en: 'Is the weather nice today?', wrong: true },
+          { tr: 'Matematik kitabın var mı?', en: 'Do you have a maths book?', wrong: true },
+        ] },
+      c2: { say: 'Ben matematiği çok seviyorum. Sen hangi dersi seviyorsun?', en: 'I love maths. Which lesson do you like?', words: [['sevmek', 'to love / like']],
+        options: [{ tr: 'Ben Türkçeyi seviyorum.', en: 'I like Turkish.' }, { tr: 'Ben de matematiği seviyorum.', en: 'I like maths too.' }] },
+    },
+  },
+
+  zehra: {
+    start: () => 'z1',
+    nodes: {
+      z1: { say: 'Merhaba! Kalemin var mı? Benimki kayboldu.', en: 'Hi! Do you have a pencil? Mine got lost.', words: [['kalem', 'pencil'], ['kaybolmak', 'to get lost']],
+        options: [{ tr: 'Al, benim kalemimi kullan.', en: 'Here, use my pencil.', next: 'z2' }, { tr: 'Maalesef yok.', en: "Sorry, I don't.", next: 'z3' }] },
+      z2: { say: 'Çok teşekkür ederim! Çok naziksin.', en: "Thank you so much! You're very kind.", words: [['nazik', 'kind']], options: [{ tr: 'Rica ederim.', en: "You're welcome." }] },
+      z3: { say: 'Olsun, öğretmenden isterim.', en: "Never mind, I'll ask the teacher.", options: [{ tr: 'Tamam.', en: 'Okay.' }] },
+    },
+  },
+
+  ogretmen: {
+    start: (ctx) => (ctx.q === 'homework-assign' ? 't1' : ctx.q === 'lesson' ? 'tWait' : 'tIdle'),
+    nodes: {
+      tWait: { say: 'Hoş geldin! Yerine otur, ders başlıyor.', en: 'Welcome! Take your seat, the lesson is starting.', options: [{ tr: 'Tamam öğretmenim.', en: 'Okay, teacher.' }] },
+      t1: { say: 'Ahmet, bugün çok güzel çalıştın! Ödevin: kitabındaki Ünite 1.', en: 'Ahmet, you worked really well today! Your homework: Unit 1 in your book.', words: [['ödev', 'homework'], ['ünite', 'unit'], ['çalışmak', 'to work / study']],
+        options: [{ tr: 'Tamam öğretmenim! Evde yaparım.', en: "Okay teacher! I'll do it at home.", next: 't2' }] },
+      t2: { ask: 'speak', say: 'Okuldan çıkarken ne diyoruz?', en: 'What do we say when we leave school?', expect: ['Hoşça kalın öğretmenim', 'Hoşça kalın', 'Görüşürüz öğretmenim'], show: 'Hoşça kalın öğretmenim!', showEn: 'Goodbye, teacher!',
+        words: [['hoşça kalın', 'goodbye (said by the one leaving)']], next: 't3' },
+      t3: { say: 'Güle güle Ahmet! Yarın görüşürüz.', en: 'Bye Ahmet! See you tomorrow.', words: [['güle güle', 'goodbye (said to the one leaving)']],
+        options: [{ tr: 'Yarın görüşürüz!', en: 'See you tomorrow!', do: ['quest'] }] },
+      tIdle: { say: 'Yarın görüşürüz, ödevini unutma!', en: "See you tomorrow, don't forget your homework!", options: [{ tr: 'Unutmam!', en: "I won't!" }] },
     },
   },
 };

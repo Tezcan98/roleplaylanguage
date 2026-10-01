@@ -4,7 +4,7 @@ const free = (id) => ({ label: FREE_ACTIONS[id].label, use: [`free:${id}`] });
 
 /**
  * What fixed spots in the world do. Keys match hotspot ids declared by locations.
- * `travel: [location, anchor]`, `use: effects[]`, `available(ctx)` hides the action,
+ * `travel: [location, anchor]`, `use: effects[]`, `link` (location a `use` leads to, for the quest arrow), `available(ctx)` hides the action,
  * `locked(ctx)` returns a [message, english] toast instead of acting.
  */
 const DOOR_LOCKS = {
@@ -34,6 +34,19 @@ export const HOTSPOTS = {
   'house.window': free('window'),
   'yard.tap': free('wash'),
   'yard.garden': free('water_garden'),
+  'school.door': {
+    label: 'Sınıfa gir', lockedLabel: 'Sınıf kapısı', use: ['lesson:l1'], link: 'classroom',
+    locked: (c) => (c.reached('lesson') ? null : ['Önce yeni arkadaşınla tanış!', 'Meet your new friend first!']),
+  },
+  'classroom.door': { label: 'Bahçeye çık', travel: ['schoolyard', 'door'] },
+  'school.exit': {
+    label: 'Eve dön', lockedLabel: 'Okul kapısı', use: ['chapter'],
+    locked: (c) => (c.reached('go-home') ? null : ['Daha ders bitmedi!', "The lesson isn't over yet!"]),
+  },
+  'house.desk': {
+    label: 'Ödev yap', use: ['textbook'],
+    available: (c) => c.has('kitap'),
+  },
   'house.bed': {
     label: 'Yat, uyu', use: ['chapter'],
     available: (c) => c.q === 'sleep',
@@ -42,5 +55,5 @@ export const HOTSPOTS = {
 
 /** Location graph derived from the travel rules, used to point the quest arrow at the right door. */
 export const LINKS = Object.entries(HOTSPOTS)
-  .filter(([, r]) => r.travel)
-  .map(([hotspot, r]) => ({ hotspot, from: hotspot.split('.')[0], to: r.travel[0] }));
+  .filter(([, r]) => r.travel || r.link)
+  .map(([hotspot, r]) => ({ hotspot, from: hotspot.split('.')[0], to: r.travel?.[0] ?? r.link }));

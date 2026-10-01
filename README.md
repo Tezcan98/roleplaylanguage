@@ -2,6 +2,8 @@
 
 Köyde yaşayan bir ailenin hikayesi içinde Türkçe öğreten 3D rol yapma oyunu (Three.js, build adımı yok).
 
+**Oyna:** https://tezcan98.github.io/roleplaylanguage/
+
 ## Çalıştırma
 
 ES modülleri `file://` üzerinden yüklenmez, bu yüzden yerel sunucu gerekir:

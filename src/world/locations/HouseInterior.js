@@ -115,6 +115,7 @@ export class HouseInterior extends Location {
       mf.at(mf.box(0.5, 0.05, 0.5, DARK), 0, 0.45, 0), mf.at(mf.box(0.5, 0.5, 0.05, DARK), 0, 0.7, -0.25),
       ...[[-0.22, -0.22], [0.22, -0.22], [-0.22, 0.22], [0.22, 0.22]].map(([x, z]) => mf.at(mf.box(0.05, 0.45, 0.05, DARK), x, 0.22, z))));
     C.addBox(-6, -5.1, -1.35, 0.15);
+    this.hotspot('house.desk', -4.4, -0.6, 1.4);
 
     // bed
     this.prop(kit, 'prop.bed', 4.9, 0, 3.05, 0, () => mf.group(

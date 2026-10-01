@@ -10,7 +10,13 @@ export const VOICES = {
   anne: { id: 'tr_TR-fettah-medium', pitch: 1.2 },
   baba: { id: 'tr_TR-fahrettin-medium', pitch: 1.0 },
   dede: { id: 'tr_TR-fahrettin-medium', pitch: 0.86 },
+  ogretmen: { id: 'tr_TR-fettah-medium', pitch: 1.15 },
+  elif: { id: 'tr_TR-fettah-medium', pitch: 1.4 },
+  can: { id: 'tr_TR-fahrettin-medium', pitch: 1.35 },
+  zehra: { id: 'tr_TR-fettah-medium', pitch: 1.45 },
 };
+
+const kidFace = (bg, skin, hair, extra = '') => `<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${bg}"/>${extra}<circle cx="32" cy="36" r="14" fill="${skin}"/><path d="M18 33c1-9 7-13 14-13s13 4 14 13c-4-4-9-5-14-5s-10 1-14 5z" fill="${hair}"/><circle cx="27" cy="37" r="2" fill="#1B2440"/><circle cx="37" cy="37" r="2" fill="#1B2440"/><path d="M28 43q4 3 8 0" stroke="#B83A5A" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
 export const PLAYER_LOOK = { shirt: 0xFFC845, pants: 0x2F6FDB, skin: 0xF2C49B, hair: 0x5B3A29, scale: 0.78, props: ['jacket'] };
 
 export const NPCS = {
@@ -28,5 +34,25 @@ export const NPCS = {
     name: 'Mehmet Baba', short: 'Baba', role: 'baba · dad',
     look: { shirt: 0x2F6FDB, pants: 0x2A2F3A, skin: 0xE9B98F, hair: 0x1F1A17, mustache: 0x1F1A17 },
     face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#8EC5FF"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M17 32c0-10 7-14 15-14s15 4 15 14c-3-3-9-5-15-5s-12 2-15 5z" fill="#1F1A17"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M24 43q8-5 16 0q-8 3-16 0z" fill="#1F1A17"/></svg>',
+  },
+  ogretmen: {
+    name: 'Zeynep Öğretmen', short: 'Öğretmen', role: 'öğretmen · teacher',
+    look: { shirt: 0x4E7D5B, skirt: 0x2A2F3A, pants: 0x2A2F3A, skin: 0xF2C49B, hair: 0x2B1D14, bun: true, glasses: true },
+    face: kidFace('#B9E3C6', '#F2C49B', '#2B1D14', '<path d="M14 46c0-16 8-25 18-25s18 9 18 25v6H14z" fill="#2B1D14"/>').replace('r="2" fill="#1B2440"/><circle cx="37"', 'r="2" fill="#1B2440"/><circle cx="27" cy="37" r="4.5" fill="none" stroke="#1B2440" stroke-width="1.6"/><circle cx="37" cy="37" r="4.5" fill="none" stroke="#1B2440" stroke-width="1.6"/><circle cx="37"'),
+  },
+  elif: {
+    name: 'Elif', short: 'Elif', role: 'sınıf arkadaşı · classmate',
+    look: { shirt: 0xFFFFFF, skirt: 0xC0392B, pants: 0xC0392B, skin: 0xF2C49B, hair: 0x3B2418, bun: true, scale: 0.76 },
+    face: kidFace('#F7A8B8', '#F2C49B', '#3B2418', '<path d="M17 46c0-15 7-24 15-24s15 9 15 24v4H17z" fill="#3B2418"/>'),
+  },
+  can: {
+    name: 'Can', short: 'Can', role: 'sınıf arkadaşı · classmate',
+    look: { shirt: 0x1F3A6B, pants: 0x555B66, skin: 0xE9B98F, hair: 0x111111, scale: 0.8 },
+    face: kidFace('#8EC5FF', '#E9B98F', '#111111'),
+  },
+  zehra: {
+    name: 'Zehra', short: 'Zehra', role: 'sınıf arkadaşı · classmate',
+    look: { shirt: 0xF4D03F, skirt: 0x2F6FDB, pants: 0x2F6FDB, skin: 0xF2C49B, hair: 0x7A4A2E, bun: true, scale: 0.75 },
+    face: kidFace('#F4E6C8', '#F2C49B', '#7A4A2E'),
   },
 };
