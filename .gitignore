@@ -4,3 +4,12 @@ node_modules/
 assets/voices/
 .claude/
 dist/
+
+# Android generated/build and signing secrets
+android/.gradle/
+android/app/build/
+android/build/
+android/keystore.properties
+android/**/*.keystore
+android/**/*.jks
+android/app/google-services.json
