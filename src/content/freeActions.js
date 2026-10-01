@@ -40,6 +40,22 @@ export const FREE_ACTIONS = {
     label: 'Kediyi sev', think: 'Miyav! Kedi mutlu.', say: 'Kediyi sevdim.', minutes: 3,
     words: [['kedi', 'cat'], ['sevmek', 'to love / to pet'], ['mutlu', 'happy']],
   },
+  village_fountain: {
+    label: 'Çeşmeden su iç', think: 'Çeşmenin suyu serin!', say: 'Çeşmeden su içtim.', minutes: 2,
+    words: [['çeşme', 'fountain / tap'], ['serin', 'cool'], ['su içmek', 'to drink water']],
+  },
+  village_well: {
+    label: 'Kuyuyu incele', think: 'Kuyunun içi çok derin.', say: 'Kuyuyu inceledim.', minutes: 2,
+    words: [['kuyu', 'well'], ['derin', 'deep'], ['incelemek', 'to examine']],
+  },
+  village_bench: {
+    label: 'Bankta otur', think: 'Meydanda biraz dinleniyorum.', say: 'Bankta oturdum.', minutes: 5,
+    words: [['bank', 'bench'], ['dinlenmek', 'to rest'], ['meydan', 'square']],
+  },
+  village_shop: {
+    label: 'Bakkalın tezgahına bak', think: 'Bakkalda birçok şey var.', say: 'Bakkalın tezgahına baktım.', minutes: 2,
+    words: [['tezgah', 'counter'], ['alışveriş', 'shopping'], ['bakkal', 'grocer']],
+  },
 };
 
 /**

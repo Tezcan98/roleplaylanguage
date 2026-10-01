@@ -26,6 +26,11 @@ export const HOTSPOTS = {
   'yard.door': { label: 'Eve gir', travel: ['house', 'door'] },
   'yard.square': { label: 'Köy meydanına git', travel: ['village', 'yardRoad'] },
   'village.yard': { label: 'Avluya dön', travel: ['yard', 'squareRoad'] },
+  'village.fountain': free('village_fountain'),
+  'village.well': free('village_well'),
+  'village.benchWest': free('village_bench'),
+  'village.benchEast': free('village_bench'),
+  'village.bakkalCounter': free('village_shop'),
   'yard.gate': {
     label: 'Okula git', lockedLabel: 'Bahçe kapısı', use: ['chapter'],
     locked: (c) => (c.q === 'go-school' ? null : ['Okul yolu. Bugün okula gitmiyorsun.', "The road to school. You're not going today."]),
