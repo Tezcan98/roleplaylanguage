@@ -411,7 +411,7 @@ export const STORY = {
     },
 
     {
-      id: 'd5-school', day: 5, time: '08:40', location: 'schoolyard', spawn: 'gate', lessonId: 'l3',
+      id: 'd5-school', day: 5, time: '08:40', location: 'schoolyard', spawn: 'gate', lessonId: 'l4',
       cast: {
         anne: null, baba: null, dede: null,
         ogretmen: ['classroom', 'teacher', 'teach'],
@@ -427,7 +427,7 @@ export const STORY = {
       },
       quests: [
         { id: 'chat-weekend', title: 'Hafta sonu planı', obj: 'Elif ile hafta sonu planını konuş', en: 'Talk to Elif about the weekend plan', target: { npc: 'elif' } },
-        { id: 'lesson-4', title: 'Ders', obj: 'Sınıfa gir ve derse katıl', en: 'Enter the classroom and join the lesson', target: { hotspot: 'school.door' }, complete: { flag: 'lesson-l3b' }, minutes: 45 },
+        { id: 'lesson-4', title: 'Ders', obj: 'Sınıfa gir ve derse katıl', en: 'Enter the classroom and join the lesson', target: { hotspot: 'school.door' }, complete: { flag: 'lesson-l4' }, minutes: 45 },
         { id: 'go-home-4', title: 'Eve dön', obj: 'Okuldan eve dön', en: 'Go home from school', target: { hotspot: 'school.exit' } },
       ],
     },
