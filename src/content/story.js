@@ -242,7 +242,7 @@ export const STORY = {
           target: (c) => (c.flag('letter-delivered') || !c.has('mektup') ? { npc: 'dede' } : { npc: 'muhtar' }),
           minutes: 25,
         },
-        { id: 'free-evening', title: 'Serbest zaman', obj: 'Dolaş, oyna, herkesle konuş', en: 'Explore, play and chat with everyone', target: null, final: true },
+        { id: 'free-evening', title: 'Serbest zaman', obj: 'Biraz dinlen ve sonra yatağına git', en: 'Relax a little, then go to bed', target: { hotspot: 'house.bed' }, complete: { use: 'house.bed' }, after: ['chapter'], minutes: 20 },
       ],
     },
 
