@@ -65,8 +65,8 @@ export class HouseInterior extends Location {
 
     // Small bedroom partition: the bed now reads as a separate room, with a doorway.
     // Partition wall with a real doorway into the bedroom.
-    noCast(mf.at(mf.box(0.16, 0.35, 2.5, WALL), 2.85, 0.18, 3.05));
-    noCast(mf.at(mf.box(0.16, 1.25, 2.5, WALL), 2.85, 2.48, 3.05));
+    noCast(mf.at(mf.box(0.16, 2.7, 0.34, WALL), 2.85, 1.35, 1.97));
+    noCast(mf.at(mf.box(0.16, 2.7, 0.30, WALL), 2.85, 1.35, 4.15));
     noCast(mf.at(mf.box(2.9, 2.7, 0.16, WALL), 4.35, 1.35, 1.78));
     C.addBox(2.7, 3.0, 1.78, 2.12);
     C.addBox(2.7, 3.0, 4.0, 4.35);
