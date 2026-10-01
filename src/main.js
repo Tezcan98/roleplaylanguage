@@ -82,7 +82,6 @@ import { LocalSaveRepository } from './services/storage/SaveRepository.js';
 import { AutoSave } from './systems/AutoSave.js';
 import { WebSpeechRecognizer, RemoteSpeechRecognizer, ScriptedRecognizer } from './services/speech/SpeechRecognizer.js';
 import { NativeSpeechRecognizer } from './services/speech/NativeSpeechRecognizer.js';
-import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { LanguageDetector } from './services/speech/LanguageDetector.js';
 import { AnswerMatcher } from './services/speech/AnswerMatcher.js';
@@ -117,7 +116,7 @@ const host = document.getElementById('ui');
 
 // --- core ---
 const settings = new Settings();
-const native = Capacitor.isNativePlatform();
+const native = window.Capacitor?.isNativePlatform?.() === true;
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
 setGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default
 const bus = new EventBus();
