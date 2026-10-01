@@ -2,7 +2,7 @@
  * Local dev server. Sends COOP/COEP headers so the page is cross-origin isolated,
  * which lets the Piper TTS worker run ONNX with several threads (much faster speech),
  * and hosts the multiplayer village square WebSocket at /ws/village.
- * Usage: node tools/serve.mjs [port]
+ * Usage: node tools/serve.mjs [port] [dir]
  */
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
@@ -10,8 +10,10 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VillageServer } from '../server/VillageServer.js';
 
-const root = fileURLToPath(new URL('..', import.meta.url));
+// usage: node tools/serve.mjs [port] [dir]  (dir defaults to the repo root; `dist` serves the build)
+const repo = fileURLToPath(new URL('..', import.meta.url));
 const port = Number(process.argv[2] ?? 8080);
+const root = process.argv[3] ? join(repo, process.argv[3]) : repo;
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg',

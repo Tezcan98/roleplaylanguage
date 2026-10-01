@@ -4,3 +4,4 @@ node_modules/
 assets/voices/
 .claude/
 dist/
+playtest-results/

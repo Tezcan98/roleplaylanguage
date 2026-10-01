@@ -94,6 +94,19 @@ Sistemler birbirini doğrudan çağırmak yerine `EventBus` üzerinden haberleş
 - **Diyalog:** `src/content/dialogues.js`. Düğümler `say/en/words/hint/options` alanlarından oluşur. Seçenekler `next`, `do` (efektler) ve `wrong` alanlarını alır.
 - **Eşya:** `src/content/items.js`. **Kapı ve geçiş:** `src/content/hotspots.js`.
 
+## Test
+
+```bash
+npm run check                 # içerik doğrulama: diyalog düğümleri, görev hedefleri, kilitli kapılar, gün adları
+npm run playtest:smoke        # Pazar sabahından öğleden sonraya otomatik oynanış (~2 dk)
+npm run playtest              # bütün haftayı baştan sona oynar (~10 dk); takılırsa teşhisle ve exit 1 ile durur
+npm run playtest:multiplayer  # iki oyuncu: kullanıcı adı, yazı balonu, onaylı sesli sohbet, ses akışı, kopma
+npm run playtest:offline      # üretim derlemesi internetsiz açılıyor mu
+npm test                      # hepsi (tam hafta hariç)
+```
+
+Testler sunucuyu kendileri başlatır. Varsayılan olarak Playwright'ın Chromium'unu kullanırlar (CI). Yerelde `PLAYTEST_CHANNEL=chrome` daha hızlıdır, `PLAYTEST_HEADED=1` pencereyi gösterir. Hikaye testi `--from=<bölüm no>` ve `--to=<bölüm id>` alır. Başarısızlıkta ekran görüntüleri `playtest-results/` klasörüne düşer. GitHub Actions (`.github/workflows/test.yml`) her push'ta check + smoke + multiplayer + offline çalıştırır.
+
 ## Çeviri
 
 Açıklamalar İngilizce yazılır, `src/i18n/ar.js` İngilizce → Arapça sözlüktür. Yeni içerik ekledikten sonra eksikleri gör: `node tools/extract-glosses.mjs --missing ar`. Elle yazılan arayüz metinleri `src/i18n/ar-ui.js` içinde.
