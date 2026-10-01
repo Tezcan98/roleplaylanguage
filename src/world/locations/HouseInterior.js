@@ -62,6 +62,8 @@ export class HouseInterior extends Location {
     this.anchor('sofraW', -2.0, -0.4, Math.PI / 2);
     this.anchor('sofraE', 0.4, -0.4, -Math.PI / 2);
     this.anchor('sofraS', -0.8, 0.75, Math.PI);
+    this.hotspot('house.sofra', -0.8, 0.78, 1.0);
+    this.hotspot('house.breadTable', -0.45, -0.55, 1.0);
 
     // Small bedroom partition: the bed now reads as a separate room, with a doorway.
     // Partition wall with a real doorway into the bedroom.
