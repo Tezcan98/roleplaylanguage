@@ -75,6 +75,8 @@ export const DIALOGUES = {
         case 'sleep': return 'gn3';
         case 'wake': return 'm1';
         case 'homework': return 'hwGo';
+        case 'wake-2': case 'morning-3': case 'morning-4': return 'm4';
+        case 'talk-mom-weekend': return 'weekend';
         case 'show-mom': return 'hw1';
         case 'buy': return ctx.has('sut') ? 'shBack' : 'shRemind';
         default: break;
@@ -229,6 +231,7 @@ export const DIALOGUES = {
         case 'talk-mom': case 'take-jacket': case 'go-out': case 'talk-dede': return 'd1';
         case 'bucket': return ctx.has('kova') ? 'dq' : 'dw';
         case 'bread': return 'br1';
+        case 'talk-dede-night': case 'talk-dede-3': case 'sun-dede': return 'weekend';
         case 'bring-bread': return ctx.has('ekmek') ? 'br3' : 'brW';
         case 'laundry-listen': case 'laundry': return 'later';
         case 'masal': return 'kazan.start';
@@ -291,6 +294,7 @@ export const DIALOGUES = {
       switch (ctx.q) {
         case 'talk-mom': case 'take-jacket': case 'go-out': case 'talk-dede': case 'bucket': return 'wait';
         case 'talk-dad': return 'b1';
+        case 'talk-baba-tools': return 'tools';
         case 'wrench': return ctx.has('anahtar') ? 'bq' : 'bw';
         case 'tea': return 't1';
         case 'dinner-dad': return 'dn1';
@@ -343,8 +347,12 @@ export const DIALOGUES = {
   },
 
   elif: {
-    start: (ctx) => (ctx.q === 'meet-elif' ? 'e1' : ctx.loc === 'classroom' ? 'eClass' : 'eIdle'),
+    start: (ctx) => {
+      if (['friend-plan', 'chat-weekend', 'sat-elif', 'sun-friends'].includes(ctx.q)) return 'friendMeet';
+      return ctx.q === 'meet-elif' ? 'e1' : ctx.loc === 'classroom' ? 'eClass' : 'eIdle';
+    },
     nodes: {
+      friendMeet: { say: 'Hafta sonu yaklaşıyor! Cumartesi köy meydanında buluşalım mı?', en: 'The weekend is coming! Shall we meet at the village square on Saturday?', words: [['buluşmak', 'to meet'], ['hafta sonu', 'weekend']], options: [{ tr: 'Tabii, buluşalım!', en: 'Sure, let’s meet!', do: ['quest'] }] },
       e1: { ask: 'speak', say: 'Merhaba! Sen yeni misin? Adın ne?', en: "Hi! Are you new? What's your name?", words: [['yeni', 'new'], ['ad', 'name']],
         expect: ['Benim adım Ahmet', 'Adım Ahmet', 'Ben Ahmet'], show: 'Benim adım Ahmet.', showEn: 'My name is Ahmet.', next: 'e2' },
       e2: { say: 'Memnun oldum Ahmet! Ben Elif. Bu da Can, o çok komik.', en: "Nice to meet you Ahmet! I'm Elif. This is Can, he's very funny.", words: [['memnun oldum', 'nice to meet you']],
@@ -359,8 +367,9 @@ export const DIALOGUES = {
   },
 
   can: {
-    start: () => 'c1',
+    start: (ctx) => (ctx.q === 'sat-can' ? 'friendMeet' : 'c1'),
     nodes: {
+      friendMeet: { say: 'Bugün çok güzel! Biraz top oynayalım mı?', en: 'Today is great! Shall we play ball?', words: [['oynamak', 'to play']], options: [{ tr: 'Evet, oynayalım!', en: 'Yes, let’s play!', do: ['quest'] }] },
       c1: { ask: 'listen', say: 'Bugün matematik dersi var mı?', en: 'Is there a maths lesson today?', prompt: 'Can ne soruyor?', words: [['matematik', 'maths'], ['bugün', 'today']],
         options: [
           { tr: 'Bugün matematik dersi var mı?', en: 'Is there a maths lesson today?', next: 'c2' },
@@ -373,8 +382,9 @@ export const DIALOGUES = {
   },
 
   zehra: {
-    start: () => 'z1',
+    start: (ctx) => (ctx.q === 'sat-zehra' ? 'friendMeet' : 'z1'),
     nodes: {
+      friendMeet: { say: 'Ben de geldim! Yarın için bir planımız var mı?', en: 'I’m here too! Do we have a plan for tomorrow?', words: [['plan', 'plan'], ['yarın', 'tomorrow']], options: [{ tr: 'Yarın yine buluşalım.', en: 'Let’s meet again tomorrow.', do: ['quest'] }] },
       z1: { say: 'Merhaba! Kalemin var mı? Benimki kayboldu.', en: 'Hi! Do you have a pencil? Mine got lost.', words: [['kalem', 'pencil'], ['kaybolmak', 'to get lost']],
         options: [{ tr: 'Al, benim kalemimi kullan.', en: 'Here, use my pencil.', next: 'z2' }, { tr: 'Maalesef yok.', en: "Sorry, I don't.", next: 'z3' }] },
       z2: { say: 'Çok teşekkür ederim! Çok naziksin.', en: "Thank you so much! You're very kind.", words: [['nazik', 'kind']], options: [{ tr: 'Rica ederim.', en: "You're welcome." }] },
