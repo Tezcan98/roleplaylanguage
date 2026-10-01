@@ -7,7 +7,7 @@ const DARK = { tex: 'darkWood' };
 /** Village courtyard: house front, fountain, vine pergola, vegetable garden, old car. */
 export class Yard extends Location {
   constructor() {
-    super({ id: 'yard', name: 'Avlu', bounds: { x: [-23, 23], z: [-23, 23] } });
+    super({ id: 'yard', name: 'Avlu', spawn: 'houseDoor', bounds: { x: [-23, 23], z: [-23, 23] } });
   }
 
   build(kit) {

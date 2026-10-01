@@ -7,8 +7,10 @@ import { CollisionWorld } from '../engine/CollisionWorld.js';
  * What a hotspot *does* lives in content, not here.
  */
 export class Location {
-  constructor({ id, name, indoor = false, bounds, cameraRig = indoor ? 'indoor' : 'outdoor', cameraMaxZ }) {
+  constructor({ id, name, indoor = false, bounds, cameraRig = indoor ? 'indoor' : 'outdoor', cameraMaxZ, spawn = 'door' }) {
     Object.assign(this, { id, name, indoor, cameraRig, cameraMaxZ });
+    /** Anchor used when a saved game resumes here. */
+    this.spawn = spawn;
     this.group = new THREE.Group();
     this.group.name = id;
     this.group.visible = false;

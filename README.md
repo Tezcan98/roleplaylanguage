@@ -18,11 +18,25 @@ npm start        # http://localhost:8080
 URL parametreleri:
 - `?debug`: `window.__game` üzerinden sistemlere erişim (otomatik test için).
 - `?fakemic`: mikrofon yerine beklenen cevabı "duyan" sahte tanıyıcıyı kullanır (test için).
+- `?fresh`: kayıtlı oyunu yok sayar. `?quality=high|medium|low`: kalite ayarını geçersiz kılar. `?fastclass`: sınıf botlarını hızlandırır.
+
+`assets/manifest.json` içindeki isteğe bağlı ayarlar: `sttEndpoint` (Whisper sunucusu), `classroomServer` (multiplayer WebSocket sunucusu, `src/services/multiplayer/ClassroomSession.js` içindeki protokol).
 
 ## Ses
 
 - **Konuşma (TTS):** Piper nöral sesleri (`fahrettin`, `fettah`, CC0), `services/speech/piper.worker.js` içinde ONNX ile çalışır. Her karakterin sesi ve perdesi `content/characters.js` → `VOICES` içinde tanımlı. Model hazır olana kadar tarayıcının kendi sesi aynı perdeyle konuşur. Ekranda görünen satır arka planda önceden sentezlenir.
 - **Dinleme (STT):** varsayılan olarak tarayıcının Web Speech API'si kullanılır. `assets/manifest.json` içine `"sttEndpoint": "http://.../stt"` eklenirse ses kaydı bu sunucuya gönderilir (Whisper gibi bir sunucu, `{ text, language, language_probability }` döndürmeli). Whisper'ın dil tespiti, oyuncunun gerçekten Türkçe konuşup konuşmadığını doğrular. Sunucu yoksa `LanguageDetector` metin üzerinden tahmin yapar.
+
+## Oyunda neler var
+
+- **İki günlük hikaye (9 bölüm):** Pazar sabahı → kahvaltı → çamaşır → masal → akşam yemeği → gece/uyku → Pazartesi okul → ödev. Saat görevlerle ilerler, gece ve gündüz değişir.
+- **Alıştırma tipleri:** seçmeli, dinleme (cümle gizli, sesle duyulur), kelime sıralama, sesli konuşma (konuşma tanıma + Türkçe tespiti + benzerlik puanı).
+- **Dede'nin masalları:** her ziyarette yeni bir etkileşimli Nasreddin Hoca masalı (5 masal).
+- **Serbest dolaşma:** TV, su içme, kitap okuma, pencereden bakma, el yıkama, bahçe sulama, top, kedi. **Ev kuralları:** ödev ya da iş varken, sofrada veya yatma saatinde TV açılınca anne uyarır ve özür dilettirir.
+- **Okul:** kredi ya da reklamla girilen ders, öğretmenin sesli soruları, bot sınıf arkadaşlarıyla canlı puan tablosu (multiplayer arayüzü hazır).
+- **Ders kitabı:** okuma, "fil hafızası" kartları (kelime ↔ sesi benzeyen İngilizce kelime ↔ komik resim), alıştırmalar. Ünite 1 günlük ödevdir.
+- **Otomatik kayıt:** menüde "Devam et".
+- **Görüntü:** gerçek CC0 dokular (~0,6 MB), gökyüzü kubbesi, rüzgarda sallanan çimen, post-processing. Kalite ayarı: yüksek / orta / düşük.
 
 ## Mimari
 
@@ -34,16 +48,20 @@ src/
   core/               EventBus, GameState, ModeStack, GameContext, Game (döngü)
   engine/             RenderContext, TextureFactory, MeshFactory, ModelLibrary/PropFactory,
                       CollisionWorld, CameraController
-  world/              Location (temel sınıf), LocationManager, locations/HouseInterior, Yard
+  world/              Location (temel sınıf), LocationManager,
+                      locations/HouseInterior, Yard, SchoolYard, Classroom
   entities/           Character, CharacterRig, Npc, Player, Behaviors
   systems/            Time, DayNightLighting, Inventory, Vocabulary, Input, PlayerController,
                       CastDirector, ItemSystem, EffectRunner, StoryDirector, TravelService,
-                      InteractionSystem, QuestMarker
+                      InteractionSystem, QuestMarker, FreeActionSystem, ToySystem,
+                      LessonController, TextbookController, AutoSave
   dialogue/           DialogueController (mantık)
-  activities/         Activity arayüzü + ChoiceActivity (alıştırma tipleri)
-  services/           TextToSpeech
+  activities/         Activity arayüzü + Choice, Listen, Order, Speak
+  services/           speech/ (Piper TTS, STT, dil tespiti), monetization/ (kredi, reklam, ders kapısı),
+                      multiplayer/ (ClassroomSession: yerel botlar, WebSocket), storage/, Settings
   ui/                 DOM bileşenleri (Hud, QuestPanel, DialogueView, CardOverlay, ...)
-  content/            veriler: story, dialogues, characters, items, hotspots
+  content/            veriler: story, dialogues, tales, characters, items, hotspots,
+                      freeActions (+ ev kuralları), lessons, textbook
 ```
 
 SOLID karşılıkları:

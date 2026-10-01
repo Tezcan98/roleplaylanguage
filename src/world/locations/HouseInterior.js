@@ -7,7 +7,7 @@ const DARK = { tex: 'darkWood', repeat: [1, 1] };
 /** Yılmaz family living room: sofra, sedir, kitchen corner, bed and study desk. */
 export class HouseInterior extends Location {
   constructor() {
-    super({ id: 'house', name: 'Ev', indoor: true, bounds: { x: [-5.6, 5.6], z: [-4.1, 4.4] } });
+    super({ id: 'house', name: 'Ev', indoor: true, spawn: 'start', bounds: { x: [-5.6, 5.6], z: [-4.1, 4.4] } });
   }
 
   play(anim) { if (anim === 'tv') this.tvTime = 5; }

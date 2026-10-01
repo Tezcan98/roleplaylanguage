@@ -61,6 +61,18 @@ export class StoryDirector {
     this.cards.show(ch.intro, () => { this.#announce(); onPlay?.(); });
   }
 
+  /** Continue a saved game: same chapter and quest, player at the saved location. */
+  resume(spawn, onPlay) {
+    const ch = this.chapter;
+    this.#started = true;
+    this.time.set(this.state.day, this.state.minutes);
+    this.cast.apply(ch.cast);
+    this.travel.place(this.state.location, spawn, { silent: true, force: true });
+    this.bus.emit(EV.CHAPTER, { chapter: ch, resumed: true });
+    this.bus.emit(EV.QUEST, { quest: this.quest });
+    this.cards.show({ num: ch.intro.num, title: ch.intro.title, text: 'Kaldığın yerden devam ediyorsun.', en: 'Continuing where you left off.', button: 'Devam' }, () => { this.#announce(); onPlay?.(); });
+  }
+
   /** Move to the next chapter once any open conversation has ended. */
   nextChapter() {
     if (this.#talking) { this.#pendingNext = true; return; }

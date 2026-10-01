@@ -1,7 +1,7 @@
 import { el } from './dom.js';
 
 export class MainMenu {
-  constructor(host, { onStart, settings }) {
+  constructor(host, { onStart, onContinue, hasSave, settings }) {
     const help = el('ul', { class: 'help', style: { display: 'none' } }, [
       'Joystick veya WASD ile yürü.',
       'Parlayan oku takip et: görevin orada.',
@@ -23,7 +23,8 @@ export class MainMenu {
     this.root = el('div', { class: 'overlay open' }, [el('div', { class: 'card' }, [
       el('h1', { class: 'big', text: 'Yılmaz Ailesi' }),
       el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
-      el('button', { class: 'btn', text: 'Hikayeye başla', attrs: { type: 'button' }, on: { click: () => { this.hide(); onStart(); } } }),
+      hasSave && el('button', { class: 'btn', text: 'Devam et', attrs: { type: 'button' }, on: { click: () => { this.hide(); onContinue(); } } }),
+      el('button', { class: hasSave ? 'btn alt' : 'btn', text: hasSave ? 'Yeni oyun' : 'Hikayeye başla', attrs: { type: 'button' }, on: { click: () => { this.hide(); onStart(); } } }),
       el('button', { class: 'btn alt', text: 'Nasıl oynanır?', attrs: { type: 'button' }, on: { click: () => { help.style.display = help.style.display === 'block' ? 'none' : 'block'; } } }),
       help,
       el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler (Piper)' })]),

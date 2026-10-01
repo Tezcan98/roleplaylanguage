@@ -64,6 +64,8 @@ import { WebSpeechTTS } from './services/speech/TextToSpeech.js';
 import { PiperTTS } from './services/speech/PiperTTS.js';
 import { CharacterVoices } from './services/speech/CharacterVoices.js';
 import { Settings } from './services/Settings.js';
+import { LocalSaveRepository } from './services/storage/SaveRepository.js';
+import { AutoSave } from './systems/AutoSave.js';
 import { WebSpeechRecognizer, RemoteSpeechRecognizer, ScriptedRecognizer } from './services/speech/SpeechRecognizer.js';
 import { LanguageDetector } from './services/speech/LanguageDetector.js';
 import { AnswerMatcher } from './services/speech/AnswerMatcher.js';
@@ -188,7 +190,7 @@ effects
   .register('quest', (id) => story.complete(id))
   .register('chapter', () => story.nextChapter())
   .register('take', (kind) => inventory.remove(kind))
-  .register('wear', (what, off) => player.wear(what, off !== 'off'))
+  .register('wear', (what, off) => { player.wear(what, off !== 'off'); state.flags[`wear-${what}`] = off !== 'off'; })
   .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); });
 story.setEffects(effects);
 
@@ -261,15 +263,35 @@ bus.on(EV.ITEM_PICKED, ({ item, isNew }) => {
 // --- menu scene, then start ---
 cast.apply(STORY.chapters[0].cast);
 travel.place('yard', 'houseDoor', { silent: true });
+// --- save / continue ---
+const saves = new LocalSaveRepository();
+const saved = params.has('fresh') ? null : saves.load();
+let autosaveOn = false;
+new AutoSave({ bus, state, repo: saves, enabled: () => autosaveOn });
+const enterPlay = () => {
+  tts.preload();
+  modes.setBase('play');
+  document.body.classList.remove('menu');
+  autosaveOn = true;
+};
 new MainMenu(host, {
   settings,
-  onStart: () => fader.run(() => story.startChapter(0, () => {
-    tts.preload();
-    modes.setBase('play');
-    document.body.classList.remove('menu');
-    const think = story.chapter.think;
-    if (think) labels.think(think, 5, game.t);
-  })),
+  hasSave: !!saved,
+  onStart: () => fader.run(() => {
+    saves.clear();
+    story.startChapter(0, () => {
+      enterPlay();
+      const think = story.chapter.think;
+      if (think) labels.think(think, 5, game.t);
+    });
+  }),
+  onContinue: () => fader.run(() => {
+    state.restore(saved);
+    player.wear('jacket', !!state.flags['wear-jacket']);
+    items.refresh();
+    hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setCredits(wallet.balance); hud.setTextbook(inventory.has('kitap'));
+    story.resume(world.get(state.location).spawn, enterPlay);
+  }),
 });
 
 const game = new Game({ toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });

@@ -7,7 +7,7 @@ const DARK = { tex: 'darkWood' };
 /** The village primary school from outside: courtyard, flagpole, entrance. */
 export class SchoolYard extends Location {
   constructor() {
-    super({ id: 'schoolyard', name: 'Okul bahçesi', bounds: { x: [-16, 16], z: [-9.4, 12] } });
+    super({ id: 'schoolyard', name: 'Okul bahçesi', spawn: 'gate', bounds: { x: [-16, 16], z: [-9.4, 12] } });
   }
 
   build(kit) {
