@@ -3,11 +3,7 @@
  * for any quest exists, every `next` points to a real node, quest targets name real
  * NPCs / items / hotspots. Run: npm run check
  */
-import { STORY } from '../src/content/story.js';
-import { DIALOGUES } from '../src/content/dialogues.js';
-import { NPCS } from '../src/content/characters.js';
-import { ITEMS } from '../src/content/items.js';
-import { HOTSPOTS } from '../src/content/hotspots.js';
+import { STORY, DIALOGUES, NPCS, ITEMS, HOTSPOTS } from '../src/content/index.js'; // with add-ons applied
 
 const errors = [];
 const fail = (msg) => errors.push(msg);

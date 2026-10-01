@@ -36,6 +36,9 @@ URL parametreleri:
 
 - **İki günlük hikaye (9 bölüm):** Pazar sabahı → kahvaltı → çamaşır → masal → akşam yemeği → gece/uyku → Pazartesi okul → ödev. Saat görevlerle ilerler, gece ve gündüz değişir.
 - **Alıştırma tipleri:** seçmeli, dinleme (cümle gizli, sesle duyulur), kelime sıralama, sesli konuşma (konuşma tanıma + Türkçe tespiti + benzerlik puanı).
+- **Yatsı namazı:** Pazar gecesi dede ezanı duyunca aile birlikte namaz kılar: lavaboda abdest adımları (el, ağız, burun, yüz, kol, baş, kulak, ayak), sonra seccadelerde dedenin imamlığında kıyam, rükû, secde, oturuş ve selam, ekranda adlarıyla.
+- **Manav ve bakkal:** Pazar öğleden sonra manavdan elma ve patates (kilo, fiyat, toplam, para üstü), Pazartesi bakkaldan ekmek ve süt.
+- **Sofra:** yemek sadece yemek vakitlerinde (kahvaltı, akşam yemeği, sofra kurulunca) sofrada durur.
 - **Dede'nin masalları:** her ziyarette yeni bir etkileşimli Nasreddin Hoca masalı (5 masal).
 - **Köy meydanı (çok oyunculu):** avlunun doğusundan gidilir; bakkal ve muhtarla konuşulur. İlk girişte kullanıcı adı sorulur. Toplu alanda konuşmalar **yazıyla** görünür: bas-konuş (düğme ya da `T`) söyleneni konuşma tanımayla yazıya çevirip herkese balon olarak gösterir. **Sesli sohbet birebirdir ve onay ister:** bir oyuncunun yanına gidip "sesli sohbet et" dersin, karşı taraf kabul ederse ikiniz arasında WebRTC sesli görüşme açılır (sessize al / bitir; uzaklaşınca kendiliğinden biter). Sunucu ses sinyalini yalnızca onaylı ikili arasında aktarır.
 - **Serbest dolaşma:** TV, su içme, kitap okuma, pencereden bakma, el yıkama, bahçe sulama, top, kedi. **Ev kuralları:** ödev ya da iş varken, sofrada veya yatma saatinde TV açılınca anne uyarır ve özür dilettirir.
@@ -67,7 +70,8 @@ src/
                       multiplayer/ (ClassroomSession, VillageNetwork, VoiceChat/WebRTC), storage/, Settings
 server/               VillageServer (WebSocket: odalar, konumlar, yazı balonları, onaylı birebir görüşme ve WebRTC sinyali), index.mjs
   ui/                 DOM bileşenleri (Hud, QuestPanel, DialogueView, CardOverlay, ...)
-  content/            veriler: story, dialogues, tales, characters, items, hotspots,
+  content/            veriler: story, dialogues, tales, characters, items, hotspots, addons/ (yatsı, manav — core/ContentComposer
+                      ile açılışta eklenir), index.js (eklentiler uygulanmış içerik),
                       freeActions (+ ev kuralları), lessons, textbook
 ```
 

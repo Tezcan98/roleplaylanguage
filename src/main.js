@@ -60,6 +60,9 @@ import { VillageMultiplayer } from './systems/VillageMultiplayer.js';
 import { UsernameDialog } from './ui/UsernameDialog.js';
 import { PushToTalk } from './ui/PushToTalk.js';
 import { CallUI } from './ui/CallUI.js';
+import { CaptionView } from './ui/CaptionView.js';
+import { PrayerScene } from './systems/PrayerScene.js';
+import { MealService } from './systems/MealService.js';
 import { TextbookView } from './ui/TextbookView.js';
 
 import { ActivityRegistry } from './activities/Activity.js';
@@ -91,14 +94,10 @@ import { MainMenu } from './ui/MainMenu.js';
 import { ListModal } from './ui/ListModal.js';
 import { DialogueView } from './ui/DialogueView.js';
 
-import { STORY } from './content/story.js';
-import { NPCS, PLAYER_LOOK, VOICES } from './content/characters.js';
-import { DIALOGUES } from './content/dialogues.js';
-import { ITEMS, KIND_NAMES } from './content/items.js';
-import { HOTSPOTS, LINKS } from './content/hotspots.js';
-import { FREE_ACTIONS, HOUSE_RULES } from './content/freeActions.js';
-import { LESSONS, CLASSMATE_BOTS } from './content/lessons.js';
-import { TEXTBOOK } from './content/textbook.js';
+import {
+  STORY, NPCS, PLAYER_LOOK, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
+  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS,
+} from './content/index.js';
 
 async function loadManifest() {
   try { const r = await fetch('assets/manifest.json', { cache: 'no-cache' }); return r.ok ? await r.json() : {}; } catch { return {}; }
@@ -220,6 +219,16 @@ effects
   });
 story.setEffects(effects);
 
+// --- prayer scene, meal times ---
+const prayer = new PrayerScene({
+  bus, world, cast, player, camera, fader, modes, toasts, vocab, effects, story,
+  caption: new CaptionView(host), steps: PRAYER_STEPS, words: PRAYER_WORDS,
+});
+new MealService({ bus, world, meals: MEALS });
+effects
+  .register('talk', (npc, node) => dialogue.open(npc, node))
+  .register('prayer', () => prayer.start());
+
 // --- free roam ---
 const free = new FreeActionSystem({
   actions: FREE_ACTIONS, rules: HOUSE_RULES, ctx: gameCtx, cast, world, dialogue, vocab, time, labels, toasts, tts, bus,
@@ -339,8 +348,8 @@ new MainMenu(host, {
   }),
 });
 
-const game = new Game({ village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

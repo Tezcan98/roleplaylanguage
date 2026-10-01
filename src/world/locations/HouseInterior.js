@@ -14,6 +14,40 @@ export class HouseInterior extends Location {
 
   setBreadOnTable(on) { if (this.bread) this.bread.visible = on; }
 
+  /** Food is only on the sini at meal times: 'breakfast' | 'dinner' | null. */
+  setMeal(kind) {
+    this.meal = kind;
+    Object.entries(this.meals ?? {}).forEach(([k, g]) => { g.visible = k === kind; });
+    if (this.teaTray) this.teaTray.visible = kind === 'breakfast';
+  }
+
+  /** Prayer rugs are rolled out only for the family prayer. */
+  setPrayerRugs(on) { if (this.rugs) this.rugs.visible = on; }
+
+  #buildMeals(mf) {
+    const at = (m, x, z, y = 0.35) => mf.at(m, -0.8 + x, y, -0.4 + z);
+    const plate = (x, z) => at(mf.cyl(0.11, 0.09, 0.02, 0xFFFFFF, 14), x, z, 0.335);
+    const breakfast = mf.group(
+      ...[[-0.3, 0.1], [0.25, -0.2], [0.05, 0.35], [-0.1, -0.4]].map(([x, z]) => at(mf.cyl(0.04, 0.03, 0.12, 0xC8451F, 8), x, z, 0.39)), // tea glasses
+      plate(0.35, 0.2), at(mf.box(0.14, 0.05, 0.1, 0xFFF6D5), 0.35, 0.2, 0.37), // beyaz peynir
+      plate(-0.35, -0.15), ...[[-0.38, -0.12], [-0.32, -0.18], [-0.35, -0.1]].map(([x, z]) => at(mf.sphere(0.022, 0x2B2B1F, 6), x, z, 0.36)), // zeytin
+      plate(0.15, -0.45), ...[[0.12, -0.45], [0.19, -0.42]].map(([x, z]) => at(mf.sphere(0.04, 0xE0392B, 8), x, z, 0.37)), // domates
+    );
+    const simit = mf.torus(0.08, 0.03, 0xC98A3E); simit.rotation.x = Math.PI / 2;
+    breakfast.add(at(simit, 0.0, 0.0, 0.35));
+    const dinner = mf.group(
+      ...[[0, -0.55], [-0.55, 0], [0.55, 0], [0, 0.55]].flatMap(([x, z]) => [ // a bowl of lentil soup in front of everyone
+        at(mf.cyl(0.13, 0.1, 0.06, 0xFFF6E0, 14), x, z, 0.35),
+        at(mf.cyl(0.11, 0.11, 0.01, 0xC9772F, 14), x, z, 0.38),
+      ]),
+      at(mf.cyl(0.16, 0.12, 0.08, 0xB7793A, 12), 0.05, 0.05, 0.36), // bread basket
+      at(mf.sphere(0.07, 0xD9A05B, 8), 0.05, 0.05, 0.42),
+      at(mf.cyl(0.12, 0.1, 0.05, 0xFFFFFF, 12), -0.25, 0.3, 0.35), at(mf.sphere(0.06, 0x5E9E3A, 8), -0.25, 0.3, 0.39), // salad
+    );
+    this.meals = { breakfast, dinner };
+    Object.values(this.meals).forEach((g) => { g.visible = false; this.add(g); });
+  }
+
   build(kit) {
     const { mf } = kit, C = this.collision, add = (m) => this.add(m);
     const noCast = (m) => { m.castShadow = false; return add(m); };
@@ -40,21 +74,9 @@ export class HouseInterior extends Location {
 
     // kilim + sini (low round table) — the family eats here
     add(mf.at(mf.box(5, 0.02, 3.4, { tex: 'kilim' }), -0.8, 0.01, -0.4));
-    this.prop(kit, 'prop.sini', -0.8, 0, -0.4, 0, () => {
-      const g = mf.group(mf.at(mf.cyl(0.78, 0.78, 0.05, 0xC9A24A, 28), 0, 0.3, 0), mf.at(mf.cyl(0.5, 0.55, 0.28, DARK, 16), 0, 0.14, 0));
-      [[-0.3, 0.1], [0.25, -0.2], [0.05, 0.35]].forEach(([x, z]) => {
-        g.add(mf.at(mf.cyl(0.05, 0.04, 0.15, 0xC8451F, 8), x, 0.4, z));
-        g.add(mf.at(mf.cyl(0.08, 0.08, 0.012, 0xffffff, 12), x, 0.33, z));
-      });
-      // Breakfast/dinner food is managed explicitly below; don't leave tea/simit on every meal.
-      const bowl = mf.at(mf.cyl(0.18, 0.16, 0.05, 0xFFF6E0, 16), -0.2, 0.35, -0.3);
-      g.add(bowl);
-      const soup = mf.at(mf.cyl(0.13, 0.11, 0.015, 0xB96B35, 16), -0.2, 0.39, -0.3);
-      g.add(soup);
-      const cheese = mf.at(mf.box(0.14, 0.05, 0.1, 0xFFF6D5), 0.35, 0.38, 0.2);
-      g.add(cheese);
-      return g;
-    });
+    this.prop(kit, 'prop.sini', -0.8, 0, -0.4, 0, () => mf.group(
+      mf.at(mf.cyl(0.78, 0.78, 0.05, 0xC9A24A, 28), 0, 0.3, 0), mf.at(mf.cyl(0.5, 0.55, 0.28, DARK, 16), 0, 0.14, 0)));
+    this.#buildMeals(mf);
     C.addCircle(-0.8, -0.4, 0.85);
     [[-0.8, -1.55], [-0.8, 0.75], [-2.0, -0.4], [0.4, -0.4]].forEach(([x, z]) =>
       add(mf.at(mf.box(0.6, 0.12, 0.6, 0xC8456A), x, 0.06, z))); // minder cushions
@@ -120,7 +142,7 @@ export class HouseInterior extends Location {
       mf.at(mf.sphere(0.05, 0x2A1E15, 8), 0, 0.6, 0)));
     this.prop(kit, 'prop.dishpan', 5.45, 0.98, -4.18, 0, () => mf.cyl(0.28, 0.34, 0.09, 0x8EC5FF, 16));
     // small tea tray at the edge of the sini (the bread goes in the middle)
-    this.prop(kit, 'prop.teaTray', -1.2, 0, -0.1, 0, () => mf.group(
+    this.teaTray = this.prop(kit, 'prop.teaTray', -1.2, 0, -0.1, 0, () => mf.group(
       mf.at(mf.cyl(0.24, 0.24, 0.03, 0xB5482E, 20), 0, 0.34, 0),
       mf.at(mf.cyl(0.05, 0.04, 0.12, 0xE8D6A8, 10), -0.09, 0.41, 0),
       mf.at(mf.cyl(0.05, 0.04, 0.12, 0xE8D6A8, 10), 0.09, 0.41, 0)
@@ -198,6 +220,27 @@ export class HouseInterior extends Location {
       if (this.tvTime > 0) this.tvScreen.emissive.setHSL((t * 0.4) % 1, 0.6, 0.35 + Math.sin(t * 9) * 0.08);
       else this.tvScreen.emissive.setScalar(0);
     });
+
+    // washbasin (lavabo) for abdest, back wall left of the sedir
+    this.prop(kit, 'prop.lavabo', -4.4, 0, -4.35, 0, () => mf.group(
+      mf.at(mf.box(0.7, 0.18, 0.45, 0xFFFFFF), 0, 0.85, 0),
+      mf.at(mf.cyl(0.05, 0.08, 0.76, 0xFFFFFF, 10), 0, 0.38, -0.05),
+      mf.at(mf.cyl(0.02, 0.02, 0.2, { tex: 'metal' }, 6), 0, 1.02, -0.15),
+      mf.at(mf.box(0.55, 0.65, 0.03, 0xCFE8F7), 0, 1.5, -0.2))); // mirror
+    C.addBox(-4.8, -4.0, -4.6, -4.1);
+    this.hotspot('house.lavabo', -4.4, -3.6, 1.0);
+    this.hotspot('house.sinkwash', -4.4, -3.6, 1.0);
+
+    // prayer: grandpa leads in front, the family stands in rows behind him, facing the back wall
+    this.anchor('imam', -2.6, 1.55, Math.PI);
+    this.anchor('saf1', -3.15, 2.6, Math.PI);
+    this.anchor('saf1b', -2.05, 2.6, Math.PI);
+    this.anchor('saf2', -2.6, 3.65, Math.PI);
+    this.rugs = mf.group(...[[-2.6, 1.55], [-3.15, 2.6], [-2.05, 2.6], [-2.6, 3.65]].map(([x, z]) =>
+      mf.at(mf.box(0.65, 0.015, 1.05, { tex: 'kilim' }), x, 0.012, z - 0.25)));
+    this.rugs.visible = false;
+    add(this.rugs);
+    this.hotspot('house.seccade', -2.05, 2.6, 1.2);
 
     this.anchor('start', 0.8, -2.6, 0);
     this.anchor('sofraGuest', -0.8, 1.7, Math.PI);

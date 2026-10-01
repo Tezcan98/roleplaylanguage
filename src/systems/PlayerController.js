@@ -4,7 +4,7 @@ export class PlayerController {
 
   update(dt, t) {
     const { player } = this;
-    let { x, z } = this.modes.is('play') ? this.input.axis() : { x: 0, z: 0 };
+    let { x, z } = this.modes.is('play') && !player.posed ? this.input.axis() : { x: 0, z: 0 };
     let mag = Math.min(1, Math.hypot(x, z));
     if (player.seated) {
       if (mag > 0.3) player.sit(false); // pushing the stick stands Ahmet up (e.g. from the sofra)
