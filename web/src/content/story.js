@@ -300,7 +300,7 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Salı · Bölüm 12', title: 'Sınıf eşyaları',
+        num: 'Salı · Bölüm 12', title: 'Sayılar',
         text: 'Elif, Can ve Zehra seni bahçede bekliyor. Bugün sınıfta yeni kelimeler öğreneceksiniz.',
         en: 'Elif, Can and Zehra are waiting in the schoolyard. Today you will learn new words in class.',
       },
@@ -363,7 +363,7 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Çarşamba · Bölüm 15', title: 'Günlük hayat',
+        num: 'Çarşamba · Bölüm 15', title: 'Sınıf eşyaları',
         text: 'Bugün derste sınıftaki eşyaları öğreneceksin: “Bu ne? Nerede?” Arkadaşların da derse katılıyor.',
         en: 'Today in class you will learn the things in the classroom: “What is this? Where is it?” Your friends are joining in too.',
       },
@@ -404,7 +404,7 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Cuma · Bölüm 17', title: 'Hafta sonuna doğru',
+        num: 'Cuma · Bölüm 18', title: 'Hafta sonuna doğru',
         text: 'Cuma sabahı! Haftanın son okul günü; sonra hafta sonu.',
         en: 'Friday morning! The last school day of the week, then the weekend.',
       },
@@ -425,7 +425,7 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Cuma · Bölüm 18', title: 'Hafta sonu planı',
+        num: 'Cuma · Bölüm 19', title: 'Hafta sonu planı',
         text: 'Dersten sonra herkes hafta sonu ne yapacağını konuşuyor.',
         en: 'After class, everyone is talking about their weekend plans.',
       },
@@ -446,7 +446,7 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Cuma · Bölüm 19', title: 'Okul haftası bitti',
+        num: 'Cuma · Bölüm 20', title: 'Okul haftası bitti',
         text: 'Bu hafta okul bitti! Bu akşam biraz dinlenip hafta sonuna hazırlanabilirsin.',
         en: 'School is over for this week! Tonight you can rest and get ready for the weekend.',
       },
@@ -468,7 +468,7 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Cumartesi · Bölüm 20', title: 'Hafta sonu başladı',
+        num: 'Cumartesi · Bölüm 21', title: 'Hafta sonu başladı',
         text: 'Okul yok! Arkadaşların köy meydanında. Muhtar da bugün köyde büyük bir hazırlık olduğunu söylüyor.',
         en: 'No school! Your friends are at the village square. The muhtar says there is a big preparation in the village today.',
       },
@@ -492,7 +492,7 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Pazar · Bölüm 21', title: 'Pazar günü',
+        num: 'Pazar · Bölüm 22', title: 'Pazar günü',
         text: 'Hafta sonunun son günü. Ailenin yanında biraz yardım ediyor, sonra arkadaşlarınla yeniden buluşuyorsun.',
         en: 'The last day of the weekend. You help your family for a while, then meet your friends again.',
       },

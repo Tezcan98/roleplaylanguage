@@ -233,15 +233,14 @@ export class HouseInterior extends Location {
     this.hotspot('house.sinkwash', -4.4, -3.6, 1.0);
 
     // prayer: grandpa leads in front, the family stands in rows behind him, facing the back wall
-    this.anchor('imam', -2.6, 1.55, Math.PI);
-    this.anchor('saf1', -3.15, 2.6, Math.PI);
-    this.anchor('saf1b', -2.05, 2.6, Math.PI);
-    this.anchor('saf2', -2.6, 3.65, Math.PI);
-    this.rugs = mf.group(...[[-2.6, 1.55], [-3.15, 2.6], [-2.05, 2.6], [-2.6, 3.65]].map(([x, z]) =>
-      mf.at(mf.box(0.65, 0.015, 1.05, { tex: 'kilim' }), x, 0.012, z - 0.25)));
+    // men's row (saf1…) and women's row (saf2…), 0.8 m apart so nobody overlaps
+    const SPOTS = { imam: [-2.6, 1.35], saf1: [-3.0, 2.6], saf1b: [-2.2, 2.6], saf1c: [-3.8, 2.6], saf1d: [-1.4, 2.6], saf2: [-3.0, 3.95], saf2b: [-3.8, 3.95], saf2c: [-2.2, 3.95] };
+    Object.entries(SPOTS).forEach(([name, [x, z]]) => this.anchor(name, x, z, Math.PI));
+    this.rugs = mf.group(...Object.values(SPOTS).map(([x, z]) =>
+      mf.at(mf.box(0.62, 0.015, 1.0, { tex: 'kilim' }), x, 0.012, z - 0.25)));
     this.rugs.visible = false;
     add(this.rugs);
-    this.hotspot('house.seccade', -2.05, 2.6, 1.2);
+    this.hotspot('house.seccade', -2.2, 2.6, 1.2);
 
     this.anchor('start', 0.8, -2.6, 0);
     this.anchor('sofraGuest', -0.8, 1.7, Math.PI);

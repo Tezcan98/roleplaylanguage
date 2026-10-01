@@ -248,7 +248,7 @@ effects
 story.setEffects(effects);
 
 // --- prayer scene, meal times ---
-const prayer = new PrayerScene({
+const prayer = new PrayerScene({ playerRow: () => (playerGender() === 'girl' ? 'saf2c' : 'saf1b'),
   bus, world, cast, player, camera, fader, modes, toasts, vocab, effects, story,
   caption: new CaptionView(host), steps: PRAYER_STEPS, words: PRAYER_WORDS,
 });

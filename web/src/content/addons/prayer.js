@@ -1,22 +1,38 @@
 /**
- * Sunday night: the family prays the yatsı (night) prayer together, led by grandpa.
+ * Thursday evening (the eve of Friday): the household and a guest pray the yatsı (night)
+ * prayer in congregation, led by grandpa.
  * Teaches the wudu (abdest) steps — body parts and verbs — and the prayer postures.
  * Quests: hear the ezan → take abdest at the washbasin → stand on the prayer rugs.
  */
 export default {
   id: 'prayer',
 
-  quests: [{
-    chapter: 'd1-night', after: 'take-book',
-    quests: [
-      { id: 'yatsi-ezan', title: 'Yatsı vakti', obj: 'Dedenle konuş', en: 'Talk to grandpa', target: { npc: 'dede' }, minutes: 5 },
-      { id: 'abdest', title: 'Abdest', obj: 'Lavaboda abdest al', en: 'Do the ablution (abdest) at the washbasin', target: { hotspot: 'house.lavabo' }, complete: { flag: 'abdest-done' }, minutes: 10 },
-      { id: 'namaz', title: 'Ailecek namaz', obj: 'Seccadeye geç, namaza dur', en: 'Go to the prayer rugs and join the prayer', target: { hotspot: 'house.seccade' }, complete: { flag: 'prayed-yatsi' }, minutes: 15 },
-    ],
+  // Thursday evening (the eve of Friday): a guest comes and the household prays yatsı together
+  chapters: [{
+    after: 'd4-home',
+    chapter: {
+      id: 'd4-thursday', day: 5, time: '19:45', location: 'house', spawn: 'door',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['house', 'sedirR', 'sitBench'],
+        muhtar: ['house', 'sofraGuest', 'sitFloor'], // tonight's guest
+        bakkal: ['village', 'bakkal', 'stand'],
+        ogretmen: null, elif: null, can: null, zehra: null,
+      },
+      intro: {
+        num: 'Perşembe · Bölüm 17', title: 'Perşembe akşamı',
+        text: 'Okul güzel geçti. Bu akşam Cuma gecesi: muhtar amca misafirimiz. Yatsı namazını evde hep birlikte, cemaatle kılacağız.',
+        en: 'School went well. Tonight is the eve of Friday: the muhtar is our guest. We will pray the night prayer together at home, in congregation.',
+      },
+      quests: [
+        { id: 'yatsi-ezan', title: 'Yatsı vakti', obj: 'Dedenle konuş', en: 'Talk to grandpa', target: { npc: 'dede' }, minutes: 5 },
+        { id: 'abdest', title: 'Abdest', obj: 'Lavaboda abdest al', en: 'Do the ablution (abdest) at the washbasin', target: { hotspot: 'house.lavabo' }, complete: { flag: 'abdest-done' }, minutes: 10 },
+        { id: 'namaz', title: 'Cemaatle namaz', obj: 'Seccadeye geç, cemaate katıl', en: 'Go to the prayer rugs and join the congregation', target: { hotspot: 'house.seccade' }, complete: { flag: 'prayed-yatsi' }, minutes: 15 },
+        { id: 'sleep', title: 'Uyku', obj: 'Yatağına git', en: 'Go to bed', target: { hotspot: 'house.bed' }, complete: { use: 'house.bed' } },
+      ],
+    },
   }],
-
-  // grandpa stays up for the prayer (he goes to bed right after it)
-  cast: { 'd1-night': { dede: ['house', 'sedirR', 'sitBench'] } },
 
   hotspots: {
     'house.lavabo': { label: 'Abdest al', use: ['talk:dede:ab1'], available: (c) => c.q === 'abdest' },
@@ -28,11 +44,11 @@ export default {
     dede: {
       start: (ctx) => ({ 'yatsi-ezan': 'ez1', abdest: 'abWait', namaz: 'nmWait' })[ctx.q],
       nodes: {
-        ez1: { ask: 'listen', say: 'Yatsı ezanı okunuyor. Hadi, abdest alıp ailecek namaz kılalım.', en: "The call to the night prayer is sounding. Come, let's do our ablution and pray together as a family.",
+        ez1: { ask: 'listen', say: 'Yatsı ezanı okunuyor. Muhtar amca da burada. Hadi, abdest alıp cemaatle namaz kılalım.', en: "The call to the night prayer is sounding. The muhtar is here too. Come, let's do our ablution and pray together in congregation.",
           prompt: 'Deden ne diyor?', words: [['yatsı', 'night prayer'], ['ezan', 'call to prayer'], ['abdest', 'ablution'], ['namaz', 'prayer'], ['ailecek', 'as a family']],
           options: [
             { tr: 'Televizyon izleyelim.', en: "Let's watch TV.", wrong: true },
-            { tr: 'Ailecek namaz kılalım.', en: "Let's pray together as a family.", next: 'ez2' },
+            { tr: 'Cemaatle namaz kılalım.', en: "Let's pray together in congregation.", next: 'ez2' },
             { tr: 'Yatağa gidelim.', en: "Let's go to bed.", wrong: true },
           ] },
         ez2: { say: 'Önce abdest alalım. Lavabo, kitaplığın yanında.', en: "First let's do our ablution. The washbasin is next to the bookshelf.", words: [['lavabo', 'washbasin'], ['önce', 'first']],

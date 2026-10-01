@@ -5,6 +5,7 @@
  * Add-on shape (all optional):
  *   quests:    [{ chapter, after, quests: [...] }]   insert quests after a quest id
  *   cast:      { [chapterId]: { npc: [loc, anchor, behaviour] | null } }
+ *   chapters:  [{ after: chapterId, chapter }]       whole new chapters inserted into the story
  *   castAll:   { npc: [loc, anchor, behaviour] }     for every chapter that doesn't set it
  *   dialogues: { npc: { start?(ctx) → node | undefined, nodes } }  start runs before the base one
  *   hotspots, kindNames, npcs, voices: merged into the matching tables
@@ -16,6 +17,11 @@ export function composeContent(base, addons) {
     return ch;
   };
   for (const a of addons) {
+    for (const ins of a.chapters ?? []) {
+      const i = base.story.chapters.findIndex((c) => c.id === ins.after);
+      if (i < 0) throw new Error(`add-on ${a.id}: no chapter ${ins.after}`);
+      base.story.chapters.splice(i + 1, 0, ins.chapter);
+    }
     for (const ins of a.quests ?? []) {
       const ch = chapter(ins.chapter);
       const i = ch.quests.findIndex((q) => q.id === ins.after);
