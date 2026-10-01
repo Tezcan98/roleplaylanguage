@@ -8,19 +8,29 @@ export const PIECE_WORDS = { k: ['şah', 'king'], q: ['vezir', 'queen'], r: ['ka
 /**
  * The giant chess board on the village square. Online, the village server owns the game
  * (two seats, everyone in the square sees the pieces move); offline you play white against
- * a simple computer. Players move on a 2D board on screen; the 3D pieces on the square
- * follow, so people walking by can watch.
+ * a simple computer. Two ways to play:
+ *  - on the square itself: step next to a piece and press the action key — the first one to
+ *    touch a colour plays it; on your turn you take the piece, carry it to a lit square and
+ *    put it down there (only moves the piece is allowed). Walking off the board warns you,
+ *    then gives your seat up;
+ *  - on the 2D board on screen (the "Satranç oyna" spot).
+ * The 3D pieces follow every move, so people walking by can watch.
  */
 export class ChessGame {
   #meshes = [];
+  #bySquare = new Map();
   #anim = null;
+  #carry = null;  // { from, mesh, legal }
+  #warned = false;
+  #walking = false; // seated and has stepped on the board (playing on foot, not on the 2D screen)
+  #lights = [];
 
-  constructor({ mf, square, view, net, vocab, toasts }) {
-    Object.assign(this, { mf, square, view, net, vocab, toasts });
+  constructor({ mf, square, view, net, vocab, toasts, player, world }) {
+    Object.assign(this, { mf, square, view, net, vocab, toasts, player, world });
     this.online = false;
     this.state = null;
     this.local = new Chess();
-    square.animated.push((dt) => this.#animate(dt));
+    square.animated.push((dt) => { this.#animate(dt); this.#onBoard(); });
     this.#render3D(this.local.fen(), null);
   }
 
@@ -95,6 +105,92 @@ export class ChessGame {
     if (this.view.isOpen) this.#show();
   }
 
+  // --- playing on the square itself -------------------------------------------------------
+
+  /** Board square under a world position (null when off the board). */
+  squareAt(pos) {
+    const file = Math.round((pos.x - CHESS.cx) / CHESS.size + 3.5), rank = Math.round(3.5 - (pos.z - CHESS.cz) / CHESS.size);
+    return file >= 0 && file < 8 && rank >= 0 && rank < 8 ? `${'abcdefgh'[file]}${rank + 1}` : null;
+  }
+
+  /** Interaction provider: what the action key does on the board right now. */
+  find(pos) {
+    if (this.world?.current?.id !== 'village') return null;
+    const sq = this.squareAt(pos);
+    if (!sq) return null;
+    const g = this.game, piece = g.get(sq), mine = this.myColor;
+    const name = (p) => PIECE_WORDS[p.type][0];
+    const act = (label, run) => ({ label, run, dist: 0.1, priority: 3 });
+    if (this.online && !mine) {
+      if (piece && !this.state?.seats?.[piece.color]) return act(`${piece.color === 'w' ? 'Beyaz' : 'Siyah'} taşlarla oyna`, () => { this.net.send({ type: 'chess-sit', color: piece.color }); this.toasts.show(`${piece.color === 'w' ? 'Beyaz' : 'Siyah'} taşlar senin!`, 'You play this colour'); });
+      return null;
+    }
+    const c = this.#carry;
+    if (c) {
+      if (sq === c.from) return act('Taşı yerine bırak', () => this.#dropCarry());
+      if (c.legal.includes(sq)) return act(`${name(g.get(c.from))}: ${sq} karesine oyna`, () => this.#move(c.from, sq));
+      return act('Bu taş oraya gidemez', () => this.toasts.show('Bu taş oraya gidemez', 'This piece can’t go there'));
+    }
+    if (mine && g.turn() === mine && piece?.color === mine && !g.isGameOver()) {
+      const legal = g.moves({ square: sq, verbose: true }).map((m) => m.to);
+      if (legal.length) return act(`${name(piece)} taşını al`, () => this.#pick(sq, legal));
+    }
+    return null;
+  }
+
+  /** Take a piece: it follows the player, its squares light up. */
+  #pick(sq, legal) {
+    const mesh = this.#bySquare.get(sq);
+    if (!mesh) return;
+    this.#carry = { from: sq, mesh, legal };
+    const { x, z } = chessSquare(sq);
+    this.player.position.x = x; this.player.position.z = z;
+    this.#light(legal);
+    this.toasts.show(`${PIECE_WORDS[this.game.get(sq).type][0]} senin elinde: yeşil karelerden birine götür`, 'Carry it to a green square');
+  }
+
+  #dropCarry() {
+    const c = this.#carry;
+    if (!c) return;
+    const { x, z } = chessSquare(c.from);
+    c.mesh.position.set(x, 0.12, z);
+    this.#carry = null;
+    this.#light([]);
+  }
+
+  #light(squares) {
+    const group = this.square.chessPieces;
+    this.#lights.forEach((m) => group.remove(m));
+    this.#lights = squares.map((sq) => {
+      const { x, z } = chessSquare(sq);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(CHESS.size * 0.9, 0.02, CHESS.size * 0.9), new THREE.MeshBasicMaterial({ color: 0x3E8E4A, transparent: true, opacity: 0.55 }));
+      m.position.set(x, 0.13, z);
+      group.add(m);
+      return m;
+    });
+  }
+
+  /** Every frame on the square: carry the picked piece; leaving the board warns, then gives the seat up. */
+  #onBoard() {
+    if (this.world?.current?.id !== 'village' || !this.player) return;
+    const p = this.player.position;
+    if (this.#carry) { this.#carry.mesh.position.set(p.x + 0.5, 0.35, p.z); }
+    const half = CHESS.size * 4;
+    const out = Math.max(Math.abs(p.x - CHESS.cx) - half, Math.abs(p.z - CHESS.cz) - half);
+    if (!this.myColor || this.view.isOpen) this.#walking = false;
+    else if (out <= 0) this.#walking = true;
+    if (!this.#carry && !(this.online && this.#walking)) { this.#warned = false; return; }
+    if (out <= 0.4) { this.#warned = false; return; }
+    if (!this.#warned) { this.#warned = true; this.toasts.show('Oyundan çıkıyorsunuz! Tahtaya dönersen devam edersin.', 'You are leaving the game! Step back on the board to keep playing.'); return; }
+    if (out > 2.5) {
+      this.#dropCarry();
+      if (this.online && this.myColor) this.net.send({ type: 'chess-stand' });
+      this.#warned = false;
+      this.#walking = false;
+      this.toasts.show('Oyundan çıktın. Yerin boşaldı.', 'You left the game; your seat is free.');
+    }
+  }
+
   #newLocal() { this.local = new Chess(); this.localLast = null; this.#render3D(this.local.fen(), null); this.#show(); }
 
   /** Rebuild the giant pieces from a FEN; the piece that just moved slides into place. */
@@ -103,6 +199,8 @@ export class ChessGame {
     if (!group) return;
     this.#meshes.forEach((m) => group.remove(m));
     this.#meshes = [];
+    this.#bySquare.clear();
+    this.#dropCarry();
     const board = new Chess(fen).board();
     let moved = null;
     board.forEach((row) => row.forEach((p) => {
@@ -113,6 +211,7 @@ export class ChessGame {
       if (p.color === 'b') mesh.rotation.y = Math.PI;
       group.add(mesh);
       this.#meshes.push(mesh);
+      this.#bySquare.set(p.square, mesh);
       if (last && p.square === last.to) moved = mesh;
     }));
     if (moved) {

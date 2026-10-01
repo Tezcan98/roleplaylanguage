@@ -329,7 +329,7 @@ const village = new VillageMultiplayer({
 });
 
 // --- giant chess on the square: online the server's board, offline against the computer ---
-const chess = new ChessGame({ mf, square: world.get('village'), view: new ChessView(host, { modes }), net: villageNet, vocab, toasts });
+const chess = new ChessGame({ mf, square: world.get('village'), view: new ChessView(host, { modes }), net: villageNet, vocab, toasts, player, world });
 village.chess = chess;
 const football = new Football({ world, ball: schoolBall, village, toasts, tts });
 village.onGoal = (place, side) => { if (place === 'schoolyard') football.scored(side, false); };
@@ -338,6 +338,7 @@ effects.register('chess', () => chess.open());
 
 // --- interaction ---
 const interactions = new InteractionSystem([
+  chess, // on the giant board: take a piece, put it down
   village, // "voice chat with X" next to another player in the square
   toys,
   new NpcInteractions({ cast, dialogue, story }),

@@ -129,6 +129,30 @@ try {
     await page.keyboard.up(key);
   }
   check('the square fence stops the player', edge > 24.5 && edge <= 25.7, `furthest ${edge.toFixed(2)} m from the centre (fence at 26)`);
+
+  // --- walking chess on the giant board ------------------------------------------------
+  const stand = (sq) => ev((sq) => { const g = window.__game, f = sq.charCodeAt(0) - 97, r = Number(sq[1]) - 1; g.player.position.set(-15 + (f - 3.5) * 1.1, 0, 15 - (r - 3.5) * 1.1); }, sq);
+  const act = () => ev(() => document.getElementById('act').textContent);
+  await stand('e2'); await sleep(400);
+  const online = await ev(() => window.__game.chess.online);
+  if (online) {
+    check('chess (online): the first to touch a white piece gets the white seat', (await act()).includes('Beyaz taşlarla oyna'), await act());
+    await page.keyboard.press('e'); await sleep(800);
+  }
+  check('chess: standing on a pawn offers to take it', (await act()).includes('piyon taşını al'), await act());
+  await page.keyboard.press('e'); await sleep(300);
+  await stand('e5'); await sleep(300);
+  check('chess: a square the pawn can’t reach is refused', (await act()).includes('gidemez'), await act());
+  await stand('e4'); await sleep(300);
+  check('chess: a lit square offers the move', (await act()).includes('e4 karesine oyna'), await act());
+  await page.keyboard.press('e'); await sleep(1500);
+  const fen = await ev(() => window.__game.chess.game.fen());
+  check(online ? 'chess: the move is played (server board)' : 'chess: the move is played and the computer answers', fen.includes('4P3') && fen.split(' ')[1] === (online ? 'b' : 'w'), fen);
+  await stand('d2'); await sleep(300); await page.keyboard.press('e'); await sleep(300);
+  await ev(() => window.__game.player.position.set(-15 + 6, 0, 15)); await sleep(500);
+  check('chess: walking off the board warns “Oyundan çıkıyorsunuz”', await ev(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('Oyundan çıkıyorsunuz'))));
+  await ev(() => window.__game.player.position.set(-15 + 9, 0, 15)); await sleep(500);
+  check('chess: further away the piece goes back and the seat is free', (await ev(() => window.__game.chess.game.get('d2')?.type)) === 'p' && (await ev(() => window.__game.chess.myColor)) === (online ? null : 'w'));
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(600);
   await drainUi(page);
 
