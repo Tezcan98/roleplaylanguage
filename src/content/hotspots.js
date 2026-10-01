@@ -48,8 +48,8 @@ export const HOTSPOTS = {
   'yard.tap': free('wash'),
   'yard.garden': free('water_garden'),
   'school.door': {
-    label: 'Sınıfa gir', lockedLabel: 'Sınıf kapısı', use: ['lesson:l1'], link: 'classroom',
-    locked: (c) => (c.reached('lesson') ? null : ['Önce yeni arkadaşınla tanış!', 'Meet your new friend first!']),
+    label: 'Sınıfa gir', lockedLabel: 'Sınıf kapısı', use: ['lesson'], link: 'classroom',
+    locked: (c) => (String(c.q ?? '').startsWith('lesson') ? null : ['Önce arkadaşınla tanış!', 'Meet your friend first!']),
   },
   'classroom.door': { label: 'Bahçeye çık', travel: ['schoolyard', 'door'] },
   'school.exit': {
