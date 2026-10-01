@@ -40,6 +40,26 @@ export const FREE_ACTIONS = {
     label: 'Kediyi sev', think: 'Miyav! Kedi mutlu.', say: 'Kediyi sevdim.', minutes: 3,
     words: [['kedi', 'cat'], ['sevmek', 'to love / to pet'], ['mutlu', 'happy']],
   },
+  make_tea: {
+    label: 'Çay hazırla', think: 'Çayı demliyorum.', say: 'Çay hazırladım.', minutes: 5,
+    words: [['çay', 'tea'], ['demlemek', 'to brew'], ['hazırlamak', 'to prepare']],
+  },
+  set_table: {
+    label: 'Sofrayı hazırla', think: 'Herkes için sofrayı hazırlıyorum.', say: 'Sofrayı hazırladım.', minutes: 8,
+    words: [['sofra', 'table / meal spread'], ['tabak', 'plate'], ['hazırlamak', 'to prepare']],
+  },
+  wash_dishes: {
+    label: 'Bulaşıkları yıka', think: 'Tabakları yıkıyorum.', say: 'Bulaşıkları yıkadım.', minutes: 10,
+    words: [['bulaşık', 'dish / dirty dishes'], ['yıkamak', 'to wash'], ['tabak', 'plate']],
+  },
+  sweep_house: {
+    label: 'Odayı süpür', think: 'Ev biraz daha temiz oldu.', say: 'Odayı süpürdüm.', minutes: 10,
+    words: [['süpürmek', 'to sweep'], ['temiz', 'clean'], ['oda', 'room']],
+  },
+  water_plant: {
+    label: 'Çiçeği sula', think: 'Çiçeğin biraz suya ihtiyacı var.', say: 'Çiçeği suladım.', minutes: 3,
+    words: [['çiçek', 'flower'], ['ihtiyaç', 'need'], ['sulamak', 'to water']],
+  },
   village_fountain: {
     label: 'Çeşmeden su iç', think: 'Çeşmenin suyu serin!', say: 'Çeşmeden su içtim.', minutes: 2,
     words: [['çeşme', 'fountain / tap'], ['serin', 'cool'], ['su içmek', 'to drink water']],
