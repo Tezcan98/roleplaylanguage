@@ -21,6 +21,10 @@ const TYPES = {
 };
 
 const http = createServer(async (req, res) => {
+  if (req.url === '/health') { // same as the production server: players per room for the menu
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    return res.end(JSON.stringify({ ok: true, ...village.stats() }));
+  }
   const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^(\.\.[/\\])+/, '');
   let file = join(root, path);
   try {
@@ -38,5 +42,5 @@ const http = createServer(async (req, res) => {
     res.end('Not found');
   }
 });
-new VillageServer({ server: http }); // multiplayer village square on ws://…/ws/village
+const village = new VillageServer({ server: http }); // multiplayer village square on ws://…/ws/village
 http.listen(port, () => console.log(`Yılmaz Ailesi → http://localhost:${port}`));

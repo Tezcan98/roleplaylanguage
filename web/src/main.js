@@ -357,12 +357,18 @@ const introFirst = async () => {
 };
 new MainMenu(host, {
   settings,
+  villageServer: VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native }),
   hasSave: !!saved,
   onHelp: () => intro.show(),
   onStart: async () => { await introFirst(); startNew(); },
   onContinue: () => continueGame(),
   // straight into the multiplayer square (keeps an existing save, otherwise a new story)
-  onSquare: async () => { await introFirst(); (saved ? continueGame : startNew)(() => travel.go('village', 'yardRoad')); },
+  onSquare: async (name, serverRegion) => {
+    settings.set('username', name);
+    settings.set('serverRegion', serverRegion);
+    await introFirst();
+    (saved ? continueGame : startNew)(() => travel.go('village', 'yardRoad'));
+  },
 });
 function startNew(then) {
   fader.run(() => {
