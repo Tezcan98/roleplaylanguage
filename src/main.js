@@ -244,7 +244,7 @@ const textbook = new TextbookController({
   view: new TextbookView(host, { onClose: () => textbook.close(), onPrev: () => textbook.prev(), onNext: () => textbook.next() }),
 });
 effects
-  .register('lesson', (id) => lessons.enter(id))
+  .register('lesson', (id) => lessons.enter(id || story.chapter?.lessonId || 'l1'))
   .register('textbook', (unit) => textbook.open(unit))
   .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, 'Credits earned'); });
 
