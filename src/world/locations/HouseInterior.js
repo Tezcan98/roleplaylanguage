@@ -91,6 +91,12 @@ export class HouseInterior extends Location {
     C.addBox(2.6, 6, -4.6, -3.7);
     this.anchor('kitchen', 3.6, -3.3, Math.PI);
     this.hotspot('house.kitchen', 5.0, -3.2, 1.2);
+    this.hotspot('house.tea', 4.9, -3.35, 1.2);
+    this.hotspot('house.dishes', 3.5, -3.25, 1.2);
+    this.prop(kit, 'prop.broom', 5.35, 0, -2.95, Math.PI / 2, () => mf.group(
+      mf.at(mf.cyl(0.025, 0.025, 1.35, DARK, 8), 0, 0.68, 0),
+      mf.at(mf.box(0.32, 0.12, 0.08, { tex: 'lightWood' }), 0, 0.08, 0)
+    ));
     this.hotspot('house.window', 2, -3.9, 1.3);
 
     // bookshelf
@@ -143,6 +149,9 @@ export class HouseInterior extends Location {
     add(mf.at(mf.cyl(0.2, 0.16, 0.4, 0xB5482E, 10), 5.5, 0.2, 1.1));
     add(mf.at(mf.ico(0.4, { tex: 'leaves' }), 5.5, 0.75, 1.1));
     C.addCircle(5.5, 1.1, 0.4);
+    this.hotspot('house.plant', 4.95, 1.1, 1.1);
+    this.hotspot('house.table', -0.8, 0.85, 1.1);
+    this.hotspot('house.sweep', 1.6, 1.5, 1.3);
 
     // TV flicker while watching
     this.tvTime = 0;
