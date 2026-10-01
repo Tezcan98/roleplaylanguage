@@ -27,6 +27,7 @@ export class SpeakActivity extends Activity {
       let lastHeard = '';
       const done = (ok) => resolve({ option: { next: spec.next, do: spec.do }, ok, transcript: lastHeard || target });
       const heard = el('div', { class: 'transcript' });
+      const devSkip = new URLSearchParams(location.search).has('dev') || new URLSearchParams(location.search).has('debug');
       const fb = el('div', { class: 'fb' });
 
       this.mic = el('button', {
@@ -60,6 +61,7 @@ export class SpeakActivity extends Activity {
         spec.showEn && el('p', { class: 'en en-t', text: spec.showEn }),
         el('div', { class: 'speak-row' }, [
           this.mic,
+          devSkip && el('button', { class: 'chipbtn', text: 'Geç (DEV)', attrs: { type: 'button' }, on: { click: () => done(true) } }),
           noMic ? el('span', { class: 'fb', text: 'Tarayıcın ses tanımayı desteklemiyor. Okuyunca mikrofona bas.' }) : null,
           !spec.hide && el('button', { class: 'chipbtn', html: `${ICONS.speaker} Örnek`, attrs: { type: 'button' }, on: { click: () => tts.speak(target, { speaker: 'ahmet' }) } }),
         ]),
