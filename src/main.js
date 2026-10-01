@@ -67,8 +67,6 @@ import { IntroSlides } from './ui/IntroSlides.js';
 import { PrayerScene } from './systems/PrayerScene.js';
 import { MealService } from './systems/MealService.js';
 import { TextbookView } from './ui/TextbookView.js';
-import { App } from '@capacitor/app';
-
 import { ActivityRegistry } from './activities/Activity.js';
 import { ChoiceActivity } from './activities/ChoiceActivity.js';
 import { ListenActivity } from './activities/ListenActivity.js';
@@ -115,10 +113,6 @@ async function loadManifest() {
 const manifest = await loadManifest();
 await document.fonts?.load('700 40px Fredoka').catch(() => {}); // canvas textures (signs, chalkboard) use it
 const params = new URLSearchParams(location.search);
-const isNative = window.Capacitor?.isNativePlatform?.() === true;
-const NativeSpeechRecognizer = isNative ? (await import('./services/speech/NativeSpeechRecognizer.js')).NativeSpeechRecognizer : null;
-const NativeTTS = isNative ? (await import('./services/speech/NativeTTS.js')).NativeTTS : null;
-const AdMobAdProvider = isNative ? (await import('./services/monetization/AdMobAdProvider.js')).AdMobAdProvider : null;
 const host = document.getElementById('ui');
 
 // --- core ---
@@ -398,26 +392,6 @@ function continueGame() {
 
 const game = new Game({ help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
-// Android lifecycle: back closes the active conversation/overlay before minimizing.
-if (native) {
-  App.addListener('backButton', ({ canGoBack }) => {
-    if (dialogue.talking) { dialogue.close(); return; }
-    const overlay = document.querySelector('.overlay.open');
-    if (overlay) {
-      overlay.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      overlay.querySelector('button:not([disabled]):last-of-type')?.click();
-      return;
-    }
-    App.minimizeApp().catch(() => { if (canGoBack) window.history.back(); });
-  });
-  App.addListener('appStateChange', ({ isActive }) => {
-    if (isActive) return;
-    tts.cancel();
-    if (world.current?.id === 'village' && village.voice.inCall) village.voice.end();
-  });
-}
-game.start();
-
 if (isNative) {
   App.addListener('backButton', () => {
     if (dialogueView.isOpen) {
@@ -440,7 +414,7 @@ if (isNative) {
   App.addListener('appStateChange', ({ isActive }) => {
     if (isActive) return;
     tts.cancel();
-    if (world.current?.id === 'village' && village.voice.inCall) village.endVoiceCall();
+    if (world.current?.id === 'village' && village.voice.inCall) village.voice.end();
   });
 }
 
