@@ -23,6 +23,7 @@ export class VillageSquare extends Location {
       mf.at(mf.cyl(0.13, 0.16, 2.1, { tex: 'stone' }, 12), 0, 1.55, 0),
       mf.at(mf.sphere(0.35, 0x9ED8E8, 16), 0, 2.45, 0)));
     C.addCircle(0, 0, 2.5);
+    this.hotspot('village.fountain', 0, 3.1, 1.8);
 
     // grocer
     this.prop(kit, 'prop.bakkal', 9.8, 0, -7.5, 0, () => mf.group(
@@ -34,6 +35,7 @@ export class VillageSquare extends Location {
       mf.at(mf.box(0.8, 0.9, 0.8, LIGHT_WOOD), 2.3, 0.45, 2.85)));
     C.addBox(6.1, 13.5, -10.2, -4.9);
     this.anchor('bakkal', 9.8, -3.7, Math.PI);
+    this.hotspot('village.bakkalCounter', 9.8, -4.25, 1.8);
 
     // muhtar's office with a flag
     this.prop(kit, 'prop.muhtarOffice', -10, 0, -7.5, 0, () => mf.group(
@@ -53,6 +55,8 @@ export class VillageSquare extends Location {
     });
     this.anchor('benchWest', -5.8, 4.2, 0);
     this.anchor('benchEast', 5.8, 4.2, Math.PI);
+    this.hotspot('village.benchWest', -5.8, 6.15, 1.8);
+    this.hotspot('village.benchEast', 5.8, 6.15, 1.8);
 
     // well
     this.prop(kit, 'prop.well', -1, 0, 9, 0, () => mf.group(
@@ -60,6 +64,7 @@ export class VillageSquare extends Location {
       mf.at(mf.box(2.5, 0.12, 0.12, WOOD), 0, 2, 0),
       mf.at(mf.cyl(0.06, 0.06, 1.8, WOOD, 8), 0, 1.1, 0)));
     C.addCircle(-1, 9, 1.5);
+    this.hotspot('village.well', -1, 7.2, 1.8);
 
     // trees
     [[-5, 10], [6, 10], [13, 6], [-13, 7], [14, -12], [-4, -12]].forEach(([x, z]) => {
