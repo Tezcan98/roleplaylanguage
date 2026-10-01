@@ -7,8 +7,8 @@ import { el } from '../../ui/dom.js';
 export class ClassAccessGate {
   constructor({ host, modes, wallet, ads }) { Object.assign(this, { host, modes, wallet, ads }); }
 
-  request(lesson) {
-    const cost = lesson.cost ?? 1;
+  request(resource) {
+    const cost = resource.cost ?? 1;
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const balance = el('p', { class: 'ctext' });
@@ -17,8 +17,8 @@ export class ClassAccessGate {
       const cancel = el('button', { class: 'btn alt', text: 'Vazgeç', attrs: { type: 'button' } });
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card' }, [
         el('p', { class: 'chap', text: 'Ders' }),
-        el('h2', { class: 'ctitle', text: lesson.title }),
-        el('p', { class: 'cen en-t', text: `Lesson: ${lesson.titleEn}` }),
+        el('h2', { class: 'ctitle', text: resource.title }),
+        el('p', { class: 'cen en-t', text: resource.titleEn ? `Lesson: ${resource.titleEn}` : 'Speech exam' }),
         balance, pay, ad, cancel,
       ])]);
       const refresh = () => {
