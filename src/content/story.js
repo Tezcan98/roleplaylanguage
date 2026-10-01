@@ -502,7 +502,7 @@ export const STORY = {
 
   outro:
     num: 'Şimdilik bu kadar', title: 'Devam edecek…', button: 'Dolaşmaya devam',
-    text: (c) => `Harika iki gün! ${c.words} kelime öğrendin. Yeni bölümler yakında.`,
-    en: 'Two great days! New chapters are coming soon.',
+    text: (c) => `Harika bir hafta! ${c.words} kelime öğrendin. Yeni bölümler yakında.`,
+    en: 'What a great week! New chapters are coming soon.',
   },
 };
