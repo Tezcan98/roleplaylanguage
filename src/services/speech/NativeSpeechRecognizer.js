@@ -1,127 +1,76 @@
 import { SpeechRecognition } from '@capacitor-community/speech-recognition';
 import { SpeechRecognizer } from './SpeechRecognizer.js';
 
-const WAIT_AFTER_STOP_MS = 450;
-
-/**
- * Native Android speech-recognition adapter.
- * Keeps the SpeechRecognizer port intact while using partial results so stop()
- * can return the last words heard. Permission is requested lazily on first listen.
- */
+/** Native Android speech recognizer adapter. It keeps the browser port unchanged. */
 export class NativeSpeechRecognizer extends SpeechRecognizer {
-  #listening = false;
-  #partial = '';
+  #active = null;
+  #last = '';
   #alternatives = [];
-  #confidence = 0;
-  #pending = null;
   #listener = null;
   #stateListener = null;
-  #resolve = null;
-  #reject = null;
-  #stopTimer = null;
 
-  constructor(lang = 'tr-TR') {
-    super();
-    this.lang = lang;
-  }
-
-  get supported() {
-    return !!globalThis.Capacitor?.isNativePlatform?.() && !!SpeechRecognition;
-  }
-
-  async #ensurePermission() {
-    const status = await SpeechRecognition.checkPermissions();
-    if (status.speechRecognition !== 'granted') {
-      const next = await SpeechRecognition.requestPermissions();
-      if (next.speechRecognition !== 'granted') throw new Error('not-allowed');
-    }
-  }
+  get supported() { return !!window.Capacitor?.isNativePlatform?.(); }
 
   async listen({ expected = [] } = {}) {
-    await this.cancel();
-    await this.#ensurePermission();
+    if (!this.supported) throw new Error('Native speech recognition is only available on Android/iOS');
+    const permission = await SpeechRecognition.requestPermissions();
+    if (permission?.speechRecognition !== 'granted') throw new Error('Microphone permission denied');
+    const available = await SpeechRecognition.available();
+    if (!available.available) throw new Error('Native speech recognition unavailable');
 
-    this.#partial = '';
+    this.cancel();
+    this.#last = '';
     this.#alternatives = [];
-    this.#confidence = 0;
 
-    this.#pending = new Promise((resolve, reject) => {
-      this.#resolve = resolve;
-      this.#reject = reject;
-    });
-
-    this.#listener = await SpeechRecognition.addListener('partialResults', ({ matches = [] } = {}) => {
-      if (!matches.length) return;
-      this.#alternatives = matches.filter(Boolean);
-      this.#partial = this.#alternatives[0] ?? '';
-      this.#confidence = 0.9;
-    });
-
-    const stateListener = await SpeechRecognition.addListener('listeningState', ({ status }) => {
-      if (status === 'stopped') this.#finish();
-    });
-    this.#stateListener = stateListener;
-
-    try {
-      await SpeechRecognition.start({
-        language: this.lang,
-        maxResults: Math.max(1, Math.min(5, expected.length || 3)),
-        prompt: 'Türkçe söyle',
-        partialResults: true,
-        popup: false,
+    return new Promise(async (resolve, reject) => {
+      let done = false;
+      const finish = (result = {}) => {
+        if (done) return;
+        done = true;
+        this.#cleanup();
+        const matches = result.matches?.length ? result.matches : this.#alternatives;
+        const transcript = matches[0] ?? this.#last ?? expected[0] ?? '';
+        resolve({ transcript, alternatives: matches, confidence: transcript ? 1 : 0 });
+      };
+      this.#listener = await SpeechRecognition.addListener('partialResults', ({ matches = [] }) => {
+        if (matches[0]) this.#last = matches[0];
+        this.#alternatives = matches.length ? matches : this.#alternatives;
       });
-      this.#listening = true;
-    } catch (e) {
-      this.#reject?.(e);
-      await this.#cleanup();
-    }
-
-    return this.#pending;
+      this.#stateListener = await SpeechRecognition.addListener('listeningState', ({ status }) => {
+        if (status === 'stopped') finish();
+      });
+      this.#active = { finish, reject, expected };
+      try {
+        const result = await SpeechRecognition.start({
+          language: 'tr-TR', maxResults: 3, partialResults: true, popup: false,
+        });
+        if (result?.matches?.length) {
+          this.#last = result.matches[0];
+          this.#alternatives = result.matches;
+        }
+      } catch (e) {
+        this.#cleanup();
+        reject(e);
+      }
+    });
   }
 
   async stop() {
-    if (!this.#listening && !this.#pending) return this.#result();
-    try { await SpeechRecognition.stop(); } catch { /* native plugin may already have stopped */ }
-    clearTimeout(this.#stopTimer);
-    this.#stopTimer = setTimeout(() => this.#finish(), WAIT_AFTER_STOP_MS);
-    return this.#pending ?? this.#result();
+    if (!this.#active) return;
+    try { await SpeechRecognition.stop(); } catch { this.#active?.finish(); }
   }
 
-  async cancel() {
-    clearTimeout(this.#stopTimer);
-    if (this.#listening) {
-      try { await SpeechRecognition.stop(); } catch { /* already stopped */ }
-    }
-    this.#reject?.(new Error('cancelled'));
-    this.#resolve = null;
-    this.#reject = null;
-    await this.#cleanup();
+  cancel() {
+    const active = this.#active;
+    this.#cleanup();
+    if (active) SpeechRecognition.stop().catch(() => {});
   }
 
-  #result() {
-    return {
-      transcript: this.#partial.trim(),
-      alternatives: [...new Set(this.#alternatives.map((x) => x.trim()).filter(Boolean))],
-      confidence: this.#confidence,
-    };
-  }
-
-  async #finish() {
-    if (!this.#pending) return;
-    const resolve = this.#resolve;
-    const result = this.#result();
-    this.#resolve = null;
-    this.#reject = null;
-    this.#listening = false;
-    await this.#cleanup();
-    resolve?.(result);
-  }
-
-  async #cleanup() {
-    this.#listener?.remove?.();
-    this.#stateListener?.remove?.();
+  #cleanup() {
+    this.#listener?.remove?.().catch?.(() => {});
+    this.#stateListener?.remove?.().catch?.(() => {});
     this.#listener = null;
     this.#stateListener = null;
-    this.#pending = null;
+    this.#active = null;
   }
 }
