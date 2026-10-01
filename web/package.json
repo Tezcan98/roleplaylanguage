@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node tools/serve.mjs 8080",
     "voices": "node tools/fetch-voices.mjs",
-    "check": "node tools/validate-content.mjs",
+    "check": "node tools/validate-content.mjs && node tools/extract-glosses.mjs --coverage",
     "build": "vite build",
     "preview": "vite preview --port 8095",
     "playtest": "node tools/playtest/story.mjs",

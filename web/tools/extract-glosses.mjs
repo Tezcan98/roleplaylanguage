@@ -14,7 +14,8 @@ import { SLIDES } from '../src/ui/IntroSlides.js';
 
 const out = new Set();
 // identifiers (anchors, flags, chapter ids) are not texts
-const add = (s) => { if (typeof s === 'string' && /[a-z]/i.test(s) && s.trim() && !/:|^[a-z]+[A-Z]|^d\d-/.test(s.trim())) out.add(s.trim()); };
+const ID = /^[\w.-]+(:[\w.-]*)+$|^[a-z]+[A-Z]\w*$|^d\d-/; // effect strings ('talk:dede:ab1'), anchors, chapter ids
+const add = (s) => { if (typeof s === 'string' && /[a-z]/i.test(s) && s.trim() && !ID.test(s.trim())) out.add(s.trim()); };
 const EN_KEYS = new Set(['en', 'answerEn', 'showEn', 'titleEn', 'bagEn']);
 
 // walk content; call functions (quest texts) with a few fake contexts
@@ -47,7 +48,7 @@ for (const f of files(new URL('../src', import.meta.url).pathname)) {
   for (const m of src.matchAll(/(?:gloss|\bg)\(\s*(['"`])((?:\\.|(?!\1).)*)\1/g)) add(m[2].replace(/\\'/g, "'"));
   // toasts.show(…, 'english') / setLine(…, 'english') / en: 'english' in UI code
   for (const m of src.matchAll(/(?:toasts\.show|setLine)\([^;]*?,\s*'([^'$]+)'/g)) add(m[1]);
-  for (const m of src.matchAll(/\ben:\s*'([^']+)'/g)) add(m[1]);
+  for (const m of src.matchAll(/\b(?:en|titleEn):\s*'([^']+)'/g)) add(m[1]);
 }
 // [tr, en] message pairs inside rule functions (door locks, house rules, decline texts)
 for (const f of ['content/hotspots.js', 'content/freeActions.js', 'systems/VillageMultiplayer.js']) {

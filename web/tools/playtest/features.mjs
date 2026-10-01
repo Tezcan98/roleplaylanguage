@@ -129,7 +129,7 @@ try {
 
   // --- word practice -------------------------------------------------------------------
   check('word practice is offered from the notebook', await ev(() => window.__game.drill.available));
-  await ev(() => window.__game.drill.open()); await sleep(300);
+  await ev(() => { window.__game.drill.open(); }); await sleep(300);
   for (let i = 0; i < 8; i++) {
     await ev(() => {
       const right = [...document.querySelectorAll('.drill .choice')];

@@ -1,6 +1,11 @@
 import { EV } from '../core/events.js';
 import { NpcChatBox } from '../ui/NpcChatBox.js';
 
+const CHAT_BUSY = {
+  limit: { tr: 'Biraz dinlenelim, sonra yine konuşuruz.', en: 'Let’s rest a bit and talk again later.' },
+  down: { tr: 'Şu an sohbet edemiyorum.', en: 'I can’t chat right now.' },
+};
+
 /**
  * Walks a character's dialogue graph. Each node shows a line and runs one activity;
  * the result decides the next node and which effects fire.
@@ -96,7 +101,7 @@ export class DialogueController {
         if (r.correction) this.view.setHint(`Doğrusu: ${r.correction}`);
         this.tts.speak(r.reply, { speaker: npc });
       } catch (e) {
-        if (live()) this.view.setLine(e.code === 'limit' ? 'Biraz dinlenelim, sonra yine konuşuruz.' : 'Şu an sohbet edemiyorum.', e.code === 'limit' ? "Let's rest a bit and talk again later." : "I can't chat right now.");
+        if (live()) { const m = e.code === 'limit' ? CHAT_BUSY.limit : CHAT_BUSY.down; this.view.setLine(m.tr, m.en); }
       }
       if (live()) box.busy(false);
     };
