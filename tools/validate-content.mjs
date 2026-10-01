@@ -21,10 +21,10 @@ for (const [who, d] of Object.entries(DIALOGUES)) {
 }
 
 // 2. for every chapter/quest, what each present character's start() returns exists
-const fakeCtx = (chapter, quest, has) => ({
+const fakeCtx = (chapter, quest, has, flags = false) => ({
   q: quest?.id ?? null, chapter: chapter.id, loc: 'house', day: chapter.day, isNight: false, words: 0, seated: false, hasDuty: !!quest,
   reached: (id) => { const i = chapter.quests.findIndex((x) => x.id === id); return i >= 0 && i <= chapter.quests.indexOf(quest); },
-  has: () => has, count: () => (has ? 3 : 0), flag: () => false,
+  has: () => has, count: () => (has ? 3 : 0), flag: () => flags,
   get targetHotspot() { const t = typeof quest?.target === 'function' ? quest.target(this) : quest?.target; return t?.hotspot ?? null; },
 });
 for (const ch of STORY.chapters) {
@@ -53,6 +53,29 @@ for (const ch of STORY.chapters) {
       if (rule) usable.set(t.hotspot, usable.get(t.hotspot) || (!rule.locked?.(c) && rule.available?.(c) !== false));
     }
     usable.forEach((ok, h) => { if (!ok) fail(`${ch.id}/${q.id} → target ${h} is locked / unavailable during this quest`); });
+
+    // 4. a quest finished by talking: some reachable dialogue option must complete it
+    if (!q.complete) {
+      let completes = false;
+      for (const [has, flags] of [[false, false], [true, false], [false, true], [true, true]]) {
+        const c = fakeCtx(ch, q, has, flags);
+        const t = typeof q.target === 'function' ? q.target(c) : q.target;
+        const d = t?.npc && DIALOGUES[t.npc];
+        if (!d) { completes = true; continue; } // finished elsewhere (hotspot effects, items…)
+        const seen = new Set(), stack = [d.start(c)];
+        while (stack.length) {
+          const id = stack.pop();
+          if (!id || id === 'end' || seen.has(id) || !d.nodes[id]) continue;
+          seen.add(id);
+          const n = d.nodes[id];
+          for (const o of [n, ...(n.options ?? [])]) {
+            if ((o.do ?? []).some((e) => e === 'quest' || e === `quest:${q.id}`)) completes = true;
+            if (o.next) stack.push(o.next);
+          }
+        }
+      }
+      if (!completes) fail(`${ch.id}/${q.id} → talking to the target never completes the quest`);
+    }
   }
 }
 

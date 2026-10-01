@@ -394,7 +394,7 @@ export const DIALOGUES = {
           { tr: 'Matematik kitabın var mı?', en: 'Do you have a maths book?', wrong: true },
         ] },
       c2: { say: 'Ben matematiği çok seviyorum. Sen hangi dersi seviyorsun?', en: 'I love maths. Which lesson do you like?', words: [['sevmek', 'to love / like']],
-        options: [{ tr: 'Ben Türkçeyi seviyorum.', en: 'I like Turkish.' }, { tr: 'Ben de matematiği seviyorum.', en: 'I like maths too.' }] },
+        options: [{ tr: 'Ben Türkçeyi seviyorum.', en: 'I like Turkish.', do: ['quest:meet-can'] }, { tr: 'Ben de matematiği seviyorum.', en: 'I like maths too.', do: ['quest:meet-can'] }] },
     },
   },
 
@@ -404,8 +404,8 @@ export const DIALOGUES = {
       friendMeet: { say: 'Ben de geldim! Yarın için bir planımız var mı?', en: 'I’m here too! Do we have a plan for tomorrow?', words: [['plan', 'plan'], ['yarın', 'tomorrow']], options: [{ tr: 'Yarın yine buluşalım.', en: 'Let’s meet again tomorrow.', do: ['quest'] }] },
       z1: { say: 'Merhaba! Kalemin var mı? Benimki kayboldu.', en: 'Hi! Do you have a pencil? Mine got lost.', words: [['kalem', 'pencil'], ['kaybolmak', 'to get lost']],
         options: [{ tr: 'Al, benim kalemimi kullan.', en: 'Here, use my pencil.', next: 'z2' }, { tr: 'Maalesef yok.', en: "Sorry, I don't.", next: 'z3' }] },
-      z2: { say: 'Çok teşekkür ederim! Çok naziksin.', en: "Thank you so much! You're very kind.", words: [['nazik', 'kind']], options: [{ tr: 'Rica ederim.', en: "You're welcome." }] },
-      z3: { say: 'Olsun, öğretmenden isterim.', en: "Never mind, I'll ask the teacher.", options: [{ tr: 'Tamam.', en: 'Okay.' }] },
+      z2: { say: 'Çok teşekkür ederim! Çok naziksin.', en: "Thank you so much! You're very kind.", words: [['nazik', 'kind']], options: [{ tr: 'Rica ederim.', en: "You're welcome.", do: ['quest:meet-zehra'] }] },
+      z3: { say: 'Olsun, öğretmenden isterim.', en: "Never mind, I'll ask the teacher.", options: [{ tr: 'Tamam.', en: 'Okay.', do: ['quest:meet-zehra'] }] },
     },
   },
 
