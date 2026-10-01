@@ -56,7 +56,7 @@ export class LabelLayer {
     else this.thought.style.display = 'none';
     const wall = performance.now() / 1000;
     this.bubbles.forEach((b) => {
-      if (wall < b.until && b.character.visible) this.#pin(b.node, b.character.position, 2.3 * b.character.group.scale.y);
+      if (wall < b.until && b.character.visible) this.#pin(b.node, b.character.position, Math.max(2.75, 3.05 * b.character.group.scale.y)); // above the name tag
       else b.node.style.display = 'none';
     });
   }
