@@ -4,7 +4,7 @@
     "grass": {
       "map": "assets/textures/grass.webp",
       "scale": 2,
-      "tint": "#B8E27C",
+      "tint": "#CFEFA0",
       "normal": "assets/textures/grass_n.webp"
     },
     "dirt": {

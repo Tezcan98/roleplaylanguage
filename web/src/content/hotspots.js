@@ -24,8 +24,7 @@ export const HOTSPOTS = {
     },
   },
   'yard.door': { label: 'Eve gir', travel: ['house', 'door'] },
-  'yard.square': { label: 'Köy meydanına git', travel: ['village', 'yardRoad'] },
-  'village.yard': { label: 'Avluya dön', travel: ['yard', 'squareRoad'], available: (c) => !c.online },
+  'village.yard': { label: 'Eve dön', travel: ['yard', 'gate'], available: (c) => !c.online },
   // online play from the main menu: leaving the square goes back to the menu, not home
   'village.menu': { label: 'Ana menüye dön', use: ['main-menu'], available: (c) => c.online },
   'village.fountain': free('village_fountain'),
@@ -33,16 +32,8 @@ export const HOTSPOTS = {
   'village.benchWest': free('village_bench'),
   'village.benchEast': free('village_bench'),
   'village.bakkalCounter': free('village_shop'),
-  'yard.gate': {
-    label: 'Okula git', lockedLabel: 'Bahçe kapısı', use: ['chapter'],
-    available: (c) => c.q === 'go-school' || c.targetHotspot === 'yard.gate',
-  },
-  // any other time: go to school to practise (1 credit); home life waits until you are back
-  'yard.practice': {
-    label: 'Okula git: pratik (1 kredi)', lockedLabel: 'Bahçe kapısı', use: ['school-practice'],
-    available: (c) => c.q !== 'go-school' && c.targetHotspot !== 'yard.gate' && !c.online,
-    locked: (c) => (c.isNight ? ['Gece okul kapalı.', 'The school is closed at night.'] : null),
-  },
+  // garden gate = the street: choose school or the village square (see the 'street' effect)
+  'yard.gate': { label: 'Sokağa çık', use: ['street'], link: ['schoolyard', 'village'] },
   'house.sofra': { label: 'Sofraya otur', use: ['sit:sofraS'], available: (c) => !c.seated },
   'house.breadTable': {
     label: 'Ekmeği sofraya koy',
@@ -83,4 +74,4 @@ export const HOTSPOTS = {
 /** Location graph derived from the travel rules, used to point the quest arrow at the right door. */
 export const LINKS = Object.entries(HOTSPOTS)
   .filter(([, r]) => r.travel || r.link)
-  .map(([hotspot, r]) => ({ hotspot, from: hotspot.split('.')[0], to: r.travel?.[0] ?? r.link }));
+  .flatMap(([hotspot, r]) => [r.travel?.[0] ?? r.link].flat().map((to) => ({ hotspot, from: hotspot.split('.')[0], to })));

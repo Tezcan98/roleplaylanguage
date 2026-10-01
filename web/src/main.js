@@ -286,20 +286,13 @@ const textbook = new TextbookController({
 effects
   .register('lesson', (id) => lessons.enter(id || story.chapter?.lessonId || 'l1'))
   .register('textbook', (unit) => textbook.open(unit))
-  // garden gate outside school hours: practise at school for 1 credit, home life waits
-  .register('school-practice', async () => {
-    story.pause();
-    const paid = await lessons.practice({
-      onDone: () => travel.go('yard', 'gate', () => { cast.apply(story.chapter.cast); story.resumeStory(); toasts.show('Eve döndün', gloss('Back home — your day continues where you left it')); }),
-    });
-    if (!paid) story.resumeStory();
-  })
+  .register('school-practice', () => schoolPractice())
   .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, gloss('Credits earned')); });
 
 // --- multiplayer village square (server: tools/serve.mjs or server/index.mjs) ---
 const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
-  bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }] }),
+  bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st) => village.voiceState(st), relayOnly: params.has('relayonly') }),
   remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, girlLook: PLAYER_LOOK_GIRL }), ball: villageBall,
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   world, player, settings, labels, toasts,
@@ -438,6 +431,34 @@ function backToMenu() {
   });
 }
 effects.register('main-menu', () => backToMenu());
+
+/** Outside school days: practise at school for 1 credit; home life waits until you are back. */
+async function schoolPractice() {
+  story.pause();
+  const paid = await lessons.practice({
+    onDone: () => travel.go('yard', 'gate', () => { cast.apply(story.chapter.cast); story.resumeStory(); toasts.show('Eve döndün', gloss('Back home — your day continues where you left it')); }),
+  });
+  if (!paid) story.resumeStory();
+}
+
+// the garden gate is the street: school or the village square (the one the quest needs comes first)
+const streetChoice = new ChoiceCard(host, modes);
+effects.register('street', async () => {
+  const schoolDay = gameCtx.targetHotspot === 'yard.gate';
+  const night = time.isNight;
+  const SCHOOL = {
+    day: { label: '🏫 Okula git', en: 'Go to school', value: 'school' },
+    practice: { label: '🏫 Okula git: pratik (1 kredi)', en: 'Practise at school for 1 credit', value: 'practice' },
+    closed: { label: '🏫 Okul (gece kapalı)', en: 'The school is closed at night.', value: null, disabled: true },
+  };
+  const school = schoolDay ? SCHOOL.day : night ? SCHOOL.closed : SCHOOL.practice;
+  const square = { label: '🏘️ Köy meydanına git', en: 'Go to the village square', value: 'square' };
+  const toSquare = gameCtx.targetNpcLoc === 'village' || story.target()?.hotspot?.startsWith('village.');
+  const pick = await streetChoice.pick({ title: 'Nereye gidiyorsun?', en: 'Where are you going?', options: toSquare ? [square, school] : [school, square] });
+  if (pick === 'school') effects.run(['chapter']);
+  else if (pick === 'practice') schoolPractice();
+  else if (pick === 'square') travel.go('village', 'yardRoad');
+});
 
 function startNew(then) {
   fader.run(() => {

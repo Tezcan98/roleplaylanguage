@@ -8,6 +8,7 @@
  *   npm run playtest:multiplayer -- --standalone  production server (server/) on another port,
  *                                                  like GitHub Pages + your own server
  *   … -- --village=wss://meydan.ornek.com/ws/village   a deployed server
+ *   … -- --relayonly   voice may only go through the TURN relay (proves the relay works)
  */
 import { args, log, sleep, waitFor, startServer, startVillageServer, openBrowser, watchErrors, screenshot } from './lib.mjs';
 
@@ -26,7 +27,7 @@ async function player(tag, name, { viaMenu = false, room = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1000, height: 620 }, permissions: ['microphone'] });
   const page = await ctx.newPage();
   errors.push(...watchErrors(page, `${tag} `));
-  await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
+  await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${opt.relayonly ? '&relayonly' : ''}${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
   if (room) await page.evaluate((r) => window.__game.settings.set('serverRegion', r), room);
   if (viaMenu) {
@@ -133,7 +134,7 @@ try {
   await A.click('.main-menu.open button:has-text("Meydana gir")');
   check('A can go back in from the menu', !!(await waitFor(() => A.evaluate(() => window.__game.village.net.connected), 15000)));
 
-  await B.evaluate(() => window.__game.travel.go('yard', 'squareRoad'));
+  await B.evaluate(() => window.__game.travel.go('yard', 'gate'));
   check('leaving the square removes the player', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 0)));
   if (checks.some(([, ok]) => !ok)) await screenshot(A, 'multiplayer-A');
 } catch (e) {

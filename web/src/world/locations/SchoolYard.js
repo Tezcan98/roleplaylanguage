@@ -18,7 +18,8 @@ export class SchoolYard extends Location {
 
     this.prop(kit, 'prop.school', 0, 0, -13, 0, () => {
       const g = mf.group(mf.at(mf.box(20, 6, 6, { tex: 'brick', repeat: [5, 2] }), 0, 3, 0));
-      const roof = mf.box(21, 0.5, 7, { tex: 'roof', repeat: [6, 2] }); g.add(mf.at(roof, 0, 6.25, 0));
+      g.add(mf.at(mf.hipRoof(21.2, 7.2, 2.4, { tex: 'roof', repeat: [10, 2] }), 0, 6, 0));
+      g.add(mf.at(mf.box(21.3, 0.2, 7.3, DARK), 0, 5.95, 0));
       g.add(mf.at(mf.box(2, 2.8, 0.15, DARK), 0, 1.4, 3.02));
       g.add(mf.at(mf.box(3.4, 1.2, 0.1, { tex: 'schoolSign' }), 0, 4.2, 3.05));
       return g;

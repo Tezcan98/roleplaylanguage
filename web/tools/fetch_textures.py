@@ -21,14 +21,14 @@ QUALITY = 78
 # The multiplier converts the procedural tiling to the photo's real-world size;
 # the tint is multiplied into the material colour (photo grass is rather grey).
 TEXTURES = {
-    'grass': ('grass_ground', True, 2, '#B8E27C'),
+    'grass': ('leafy_grass', True, 2, '#CFEFA0'),
     'dirt': ('dirt_floor', True, 2),
     'floorWood': ('wood_floor', True, 2),
     'darkWood': ('wood_planks_dirt', False, 1),
     'lightWood': ('brown_planks_03', False, 1),
-    'plaster': ('beige_wall_001', True, 1.5),
-    'whiteWall': ('painted_plaster_wall', True, 1.5),
-    'roof': ('clay_roof_tiles', True, 1),
+    'plaster': ('beige_wall_002', True, 1.5),
+    'whiteWall': ('white_stucco', True, 1.5),
+    'roof': ('clay_roof_tiles_02', True, 1),
     'stone': ('cobblestone_floor_01', True, 1.5),
     'brick': ('brick_wall_001', True, 1.5),
     'bark': ('bark_brown_02', False, 1),

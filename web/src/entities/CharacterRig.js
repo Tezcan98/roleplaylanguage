@@ -24,18 +24,23 @@ export function buildRig(mf, o) {
   const head = new THREE.Group(); head.position.y = 1.84; body.add(head);
   head.add(mf.sphere(0.3, o.skin, 20));
   [-0.1, 0.1].forEach((x) => head.add(mf.at(mf.sphere(0.04, 0x1B2440, 8), x, 0.03, 0.27)));
-  if (o.hair) {
+  if (o.hair && !o.headscarf) {
     const h = mf.mesh(new THREE.SphereGeometry(0.32, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), o.hair);
     h.position.y = 0.04; h.rotation.x = -0.25; head.add(h);
   }
   if (o.sides) [-0.27, 0.27].forEach((x) => head.add(mf.at(mf.box(0.08, 0.18, 0.25, o.sides), x, 0.02, -0.02)));
-  if (o.bun) head.add(mf.at(mf.sphere(0.15, o.hair, 10), 0, 0.16, -0.28));
-  if (o.headscarf) { // grandma's yazma: covers the hair, ties under the chin, falls over the shoulders
-    const scarf = mf.mesh(new THREE.SphereGeometry(0.34, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), o.headscarf);
-    scarf.position.y = 0.02; scarf.rotation.x = -0.35; head.add(scarf);
-    head.add(mf.at(mf.cyl(0.2, 0.36, 0.5, o.headscarf, 14), 0, -0.3, -0.08));
+  if (o.bun && !o.headscarf) head.add(mf.at(mf.sphere(0.15, o.hair, 10), 0, 0.16, -0.28));
+  if (o.headscarf) {
+    // başörtüsü: covers hair, ears and neck and leaves the face open, falls over the shoulders
+    const OPEN = 1.7; // radians of the face opening (front, +z)
+    const shell = mf.mesh(new THREE.SphereGeometry(0.335, 24, 16, Math.PI / 2 + OPEN / 2, Math.PI * 2 - OPEN, 0, Math.PI * 0.8), o.headscarf);
+    shell.position.set(0, 0.01, -0.01);
+    head.add(shell);
+    const cap = mf.mesh(new THREE.SphereGeometry(0.338, 24, 8, 0, Math.PI * 2, 0, Math.PI * 0.3), o.headscarf); // forehead band
+    cap.rotation.x = 0.22; cap.position.y = 0.01; head.add(cap);
+    head.add(mf.at(mf.cyl(0.21, 0.44, 0.5, o.headscarf, 18), 0, -0.36, -0.02)); // neck and shoulders
   }
-  if (o.mustache) head.add(mf.at(mf.box(0.22, 0.05, 0.05, o.mustache), 0, -0.09, 0.28));
+  if (o.mustache)  if (o.mustache) head.add(mf.at(mf.box(0.22, 0.05, 0.05, o.mustache), 0, -0.09, 0.28));
   if (o.cap) {
     head.add(mf.at(mf.cyl(0.33, 0.33, 0.1, o.cap, 16), 0, 0.24, 0));
     head.add(mf.at(mf.box(0.32, 0.04, 0.2, o.cap), 0, 0.2, 0.3));

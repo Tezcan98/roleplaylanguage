@@ -9,7 +9,10 @@ export class CallUI {
     this.name = el('span');
     this.muteBtn = el('button', { class: 'chipbtn', text: '🔇 Sessize al', attrs: { type: 'button' } });
     this.endBtn = el('button', { class: 'chipbtn danger', text: 'Bitir', attrs: { type: 'button' } });
-    this.bar = el('div', { class: 'callbar' }, [el('span', { class: 'live', text: '● SESLİ' }), this.name, this.muteBtn, this.endBtn]);
+    // the browser blocked the other side's audio until a tap
+    this.unmuteBtn = el('button', { class: 'chipbtn primary', text: '🔊 Sesi aç', attrs: { type: 'button' } });
+    this.unmuteBtn.hidden = true;
+    this.bar = el('div', { class: 'callbar' }, [el('span', { class: 'live', text: '● SESLİ' }), this.name, this.unmuteBtn, this.muteBtn, this.endBtn]);
     this.bar.hidden = true;
     host.append(this.bar);
   }
@@ -49,5 +52,10 @@ export class CallUI {
     this.bar.hidden = false;
   }
 
-  hideCall() { this.bar.hidden = true; }
+  showUnmute(play) {
+    this.unmuteBtn.hidden = false;
+    this.unmuteBtn.onclick = async () => { if (await play()) this.unmuteBtn.hidden = true; };
+  }
+
+  hideCall() { this.bar.hidden = true; this.unmuteBtn.hidden = true; }
 }

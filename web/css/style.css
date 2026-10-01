@@ -196,20 +196,20 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{
 
 /* ---------- Arabic glosses (right-to-left) ---------- */
 .en-t,.e,.cen,.qe{unicode-bidi:plaintext}
-body.gloss-rtl .en-t,body.gloss-rtl .rtl{font-family:Cairo,Nunito,sans-serif;font-style:normal}
+body.gloss-rtl .en-t,body.gloss-rtl .rtl{font-family:var(--gloss-font,Nunito,sans-serif);font-style:normal}
 body.gloss-rtl p.en-t,body.gloss-rtl div.en-t,body.gloss-rtl .cen,body.gloss-rtl .qe,body.gloss-rtl .toast small,body.gloss-rtl .cap-en,body.gloss-rtl .rtl{direction:rtl;text-align:right}
 body.gloss-rtl .cap-en,body.gloss-rtl .cen{text-align:center}
 body.gloss-rtl .word .en-t,body.gloss-rtl .choice .e{unicode-bidi:isolate;direction:rtl}
 body.gloss-rtl .choice .e{text-align:left}
 
 /* ---------- help button & panel, intro ---------- */
-.help-btn{position:absolute;left:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 168px);pointer-events:auto;display:flex;align-items:center;gap:6px;min-height:48px;padding:0 14px 0 10px;border-radius:999px;border:3px solid var(--wood);background:var(--gold);color:var(--ink);font:800 22px Cairo,Fredoka,sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
-.help-btn span{font:700 15px Cairo,sans-serif}
+.help-btn{position:absolute;left:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 168px);pointer-events:auto;display:flex;align-items:center;gap:6px;min-height:48px;padding:0 14px 0 10px;border-radius:999px;border:3px solid var(--wood);background:var(--gold);color:var(--ink);font:800 22px var(--gloss-font,Fredoka,sans-serif);cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
+.help-btn span{font:700 15px var(--gloss-font,sans-serif)}
 .help-btn[hidden],body.menu .help-btn{display:none}
 .help-panel{width:min(520px,100%);max-height:80vh}
-.help-body{overflow:auto;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px;font-family:Cairo,Nunito,sans-serif;-webkit-user-select:text;user-select:text}
+.help-body{overflow:auto;padding:12px 16px 16px;display:flex;flex-direction:column;gap:10px;font-family:var(--gloss-font,Nunito,sans-serif);-webkit-user-select:text;user-select:text}
 .help-body section{background:#fff;border:2px solid rgba(58,42,30,.25);border-radius:12px;padding:8px 12px}
-.help-body h3{margin:0 0 4px;font:700 17px Cairo,sans-serif;color:#8A5A12}
+.help-body h3{margin:0 0 4px;font:700 17px var(--gloss-font,sans-serif);color:#8A5A12}
 .help-body p{margin:2px 0;font-weight:700;font-size:15px;line-height:1.6}
 .help-body .big-ar{font-size:18px;color:var(--wood)}
 .help-body .tr-line,.help-body .tr-inline{font-family:Nunito,sans-serif;color:var(--muted);font-size:13px}
@@ -217,11 +217,11 @@ body.gloss-rtl .choice .e{text-align:left}
 .help-actions{justify-content:space-between}
 .intro .card{align-items:stretch;text-align:center}
 .intro-icon{font-size:56px;line-height:1;text-align:center}
-.intro .ctitle,.intro .ctext{font-family:Cairo,Fredoka,sans-serif;text-align:center}
+.intro .ctitle,.intro .ctext{font-family:var(--gloss-font,Fredoka,sans-serif);text-align:center}
 .intro-dots{display:flex;justify-content:center;gap:6px}
 .intro-dots span{width:9px;height:9px;border-radius:50%;background:rgba(58,42,30,.25)}
 .intro-dots span.on{background:var(--gold);border:1px solid var(--wood)}
-.linkbtn{background:none;border:0;color:var(--muted);font:700 14px Cairo,Nunito,sans-serif;cursor:pointer;text-decoration:underline;align-self:center;min-height:36px}
+.linkbtn{background:none;border:0;color:var(--muted);font:700 14px var(--gloss-font,Nunito,sans-serif);cursor:pointer;text-decoration:underline;align-self:center;min-height:36px}
 .menu-square{margin:14px 0 6px;padding:12px;border:2px dashed var(--wood);border-radius:14px;display:flex;flex-direction:column;gap:8px}
 .menu-square .chap{margin:0}
 .menu-square .note:empty{display:none}
@@ -251,7 +251,7 @@ body.gloss-rtl .choice .e{text-align:left}
 .chat-row{display:flex;gap:6px;align-items:center}
 .chat-in{flex:1;min-width:0;min-height:46px;border-radius:10px;border:2px solid var(--wood);padding:0 10px;font:700 16px Nunito,sans-serif;background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
 .iconbtn.chat-btn{font-size:18px}
-body.gloss-rtl .gl{font-family:Cairo,Nunito,sans-serif}
+body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
 .list-action{margin:8px 12px 0}
 .list-action[hidden]{display:none}
 .drill .card{max-width:520px}
@@ -261,7 +261,7 @@ body.gloss-rtl .gl{font-family:Cairo,Nunito,sans-serif}
 #rotate{display:none;position:fixed;inset:0;z-index:100;background:var(--wood);color:var(--parch);flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;pointer-events:auto;padding:24px}
 #rotate .rot-ico{font-size:72px;animation:rot 2.2s ease-in-out infinite}
 #rotate .rot-tr{font:700 26px Fredoka,sans-serif;margin:0}
-#rotate .rot-gl{font:700 17px Nunito,Cairo,sans-serif;margin:0;opacity:.85}
+#rotate .rot-gl{font:700 17px Nunito,var(--gloss-font,sans-serif);margin:0;opacity:.85}
 @keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
 @media (orientation:portrait) and (pointer:coarse) and (max-width:900px){#rotate{display:flex}}
 @media (orientation:landscape) and (max-height:520px){
@@ -295,3 +295,10 @@ body.gloss-rtl .gl{font-family:Cairo,Nunito,sans-serif}
 .setup-grid{display:grid;grid-template-columns:1fr;gap:10px 16px}
 .setup-grid section{display:flex;flex-direction:column;gap:2px}
 @media (min-width:760px) and (min-height:521px){.main-menu .card{width:min(820px,100%)}.menu-cols{grid-template-columns:1fr 1.15fr}}
+.pick-card .btn.pick{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.2;padding:8px 14px}
+.pick-card .btn.pick small{font:700 13px Nunito,sans-serif;opacity:.75}
+.pick-card .btn.pick:disabled{opacity:.5}
+html[data-gloss=ur] .en-t,html[data-gloss=ur] .gl,html[data-gloss=ur] .help-body{line-height:2.1}
+html[data-gloss-scale] .en-t,html[data-gloss-scale] .help-body p,html[data-gloss-scale] .intro .ctext{font-size:calc(var(--gloss-scale) * 1em)}
+html[data-gloss-scale] p.en-t{font-size:calc(var(--gloss-scale) * 15px)}
+html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}

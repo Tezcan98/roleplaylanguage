@@ -1,4 +1,5 @@
 import { WebSocketServer } from 'ws';
+import { createHmac } from 'node:crypto';
 import { ChatFilter } from './ChatFilter.js';
 
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
@@ -30,8 +31,10 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *   { type: 'call-end' }                  hang up
  *   { type: 'ball', x, z, vx, vz }        kicked the shared ball (relayed, last state kept for newcomers)
  *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to your call partner
+ *   { type: 'call-diag', state, detail? } how the voice connection went (logged, for support)
  * server → client
- *   { type: 'welcome', id, name, look, peers, ball? } | { type: 'error', message }
+ *   { type: 'welcome', id, name, look, peers, ball?, ice } | { type: 'error', message }
+ *     ice: WebRTC ICE servers for voice calls (STUN + TURN with short-lived credentials)
  *   { type: 'join', peer } | { type: 'leave', id } | { type: 'states', players }
  *   { type: 'talk', id, on } | { type: 'say', id, text } | { type: 'ball', id, x, z, vx, vz }
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
@@ -52,8 +55,13 @@ export class VillageServer {
    * @param {number} [o.maxPerIp]  simultaneous connections per IP (default: unlimited)
    * @param {(req: import('node:http').IncomingMessage) => string} [o.clientIp]
    */
-  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress } = {}) {
+  /**
+   * @param {object} [o.turn]  { secret, urls: string[] } → TURN credentials in the TURN REST style
+   *   (username "<expiry>:<id>", password HMAC-SHA1(secret, username)), valid for a day
+   */
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null } = {}) {
     this.log = log;
+    this.turn = turn?.issue || (turn?.secret && turn.urls?.length) ? turn : null;
     this.wss = new WebSocketServer({
       server, path, maxPayload: 32 * 1024,
       verifyClient: ({ origin, req }, done) => {
@@ -69,6 +77,21 @@ export class VillageServer {
       ws.alive = false;
       ws.ping();
     }), HEARTBEAT);
+  }
+
+  /**
+   * ICE servers for one player: public STUN, plus our TURN relay when there is one —
+   * either a TurnRelay (issue/release) or coturn's shared secret (TURN REST credentials, 24 h).
+   */
+  iceFor(id) {
+    const ice = [{ urls: 'stun:stun.l.google.com:19302' }];
+    if (this.turn?.issue) ice.push(this.turn.issue(id));
+    else if (this.turn) {
+      const username = `${Math.floor(Date.now() / 1000) + 86400}:${id}`;
+      const credential = createHmac('sha1', this.turn.secret).update(username).digest('base64');
+      ice.push({ urls: this.turn.urls, username, credential });
+    }
+    return ice;
   }
 
   /** Numbers for the /health endpoint. */
@@ -154,6 +177,9 @@ export class VillageServer {
         this.log(`[village] call ${from.name} ↔ ${c.name}`);
         break;
       }
+      case 'call-diag': // the client reports how a voice connection went
+        if (typeof msg.state === 'string') this.log(`[village] voice ${c.name}: ${msg.state.slice(0, 20)}${typeof msg.detail === 'string' ? ` (${msg.detail.slice(0, 120)})` : ''}`);
+        break;
       case 'call-end':
         this.#endCall(c, 'hangup');
         break;
@@ -179,7 +205,7 @@ export class VillageServer {
     let unique = clean, n = 2;
     while (taken.has(unique.toLocaleLowerCase('tr'))) unique = `${clean}${n++}`;
     Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], gender: gender === 'girl' ? 'girl' : 'boy' } });
-    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ball: this.#balls.has(room) ? { ...this.#balls.get(room), vx: 0, vz: 0 } : undefined });
+    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ball: this.#balls.has(room) ? { ...this.#balls.get(room), vx: 0, vz: 0 } : undefined, ice: this.iceFor(c.id) });
     this.#toRoom(c, { type: 'join', peer: this.#public(c) });
     members.set(c.id, c);
     this.log(`[village] ${c.name} joined ${room} (${members.size})`);
@@ -195,6 +221,7 @@ export class VillageServer {
 
   #leave(c) {
     if (!c.id) return;
+    this.turn?.release?.(c.id);
     this.#endCall(c, 'left');
     const members = this.#room(c.room);
     if (!members.delete(c.id)) return;

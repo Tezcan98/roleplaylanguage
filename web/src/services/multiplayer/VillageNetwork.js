@@ -39,7 +39,7 @@ export class VillageNetwork {
       ws.onmessage = (e) => {
         let msg;
         try { msg = JSON.parse(e.data); } catch { return; }
-        if (msg.type === 'welcome') { clearTimeout(timer); this.id = msg.id; this.name = msg.name; this.room = room; resolve(msg); }
+        if (msg.type === 'welcome') { clearTimeout(timer); this.id = msg.id; this.name = msg.name; this.room = room; this.ice = msg.ice ?? null; resolve(msg); }
         else if (msg.type === 'error' && !this.id) { clearTimeout(timer); fail(msg.message); }
         else this.#emit(msg.type, msg);
       };

@@ -27,7 +27,7 @@ try {
   await page.evaluate(() => window.__game.player.position.set(3.6, 0, -2.7)); await sleep(300);
   await page.keyboard.press('e'); await sleep(800);
   check('dialogue opens', (await page.evaluate(() => window.__game.dialogue.talking)) === 'anne');
-  check('fonts are bundled', await page.evaluate(() => document.fonts.check('700 20px Fredoka') && document.fonts.check('700 16px Cairo')));
+  check('fonts are bundled', await page.evaluate(() => document.fonts.check('700 20px Fredoka') && document.fonts.check("700 16px 'Noto Naskh Arabic'")));
   check('textures are bundled', (await page.evaluate(() => performance.getEntriesByType('resource').filter((r) => r.name.endsWith('.webp')).length)) > 0);
   const essential = [...blocked].filter((u) => !/onnxruntime|vits-web|piper|huggingface/.test(u)); // optional neural voices may try the network
   check('nothing essential comes from the internet', essential.length === 0, essential.join(', '));

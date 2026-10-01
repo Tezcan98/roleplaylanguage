@@ -28,7 +28,7 @@ function walk(v, key, seen = new Set()) {
   seen.add(v);
   if (Array.isArray(v)) {
     // [tr, en] word pairs and textbook lines
-    if (v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string' && key !== 'expect' && key !== 'keywords' && key !== 'botAnswers' && key !== 'botWrong') add(v[1]);
+    if (v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string' && key !== 'expect' && key !== 'travel' && key !== 'link' && key !== 'keywords' && key !== 'botAnswers' && key !== 'botWrong') add(v[1]);
     v.forEach((x) => walk(x, key, seen));
     return;
   }
@@ -53,7 +53,7 @@ for (const f of files(new URL('../src', import.meta.url).pathname)) {
 // [tr, en] message pairs inside rule functions (door locks, house rules, decline texts)
 for (const f of ['content/hotspots.js', 'content/freeActions.js', 'systems/VillageMultiplayer.js']) {
   const src = readFileSync(new URL(`../src/${f}`, import.meta.url), 'utf8');
-  for (const m of src.matchAll(/\['[^'\]]*',\s*(["'])((?:(?!\1).)+)\1\]/g)) add(m[2]);
+  for (const m of src.matchAll(/\['[^'\]]*',\s*(["'])((?:(?!\1).)+)\1\]/g)) if (/\s|[.!?]$/.test(m[2])) add(m[2]); // sentences, not ['yard', 'gate']
 }
 // options that show meanings (listening / "what does X mean?")
 const meaningNodes = [...Object.values(C.DIALOGUES).flatMap((d) => Object.values(d.nodes)), ...C.TEXTBOOK.units.flatMap((u) => u.pages)];

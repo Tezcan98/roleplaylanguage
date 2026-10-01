@@ -10,6 +10,9 @@
  *                     default: the GitHub Pages site, the Android app and localhost
  *   MAX_PER_IP        simultaneous connections per IP, default 8
  *   TRUST_PROXY       1 → read the client IP from X-Forwarded-For (set it behind Caddy/nginx)
+ *   TURN_PUBLIC_IP    voice calls across networks: run the built-in TURN relay on this public IPv4
+ *                     (UDP 3478 + 49160-49260; TURN_HOST = name in the turn: URL, default the IP)
+ *   TURN_SECRET, TURN_URLS  …or use an external coturn: its static-auth-secret and turn: URLs (comma separated)
  *   GEMINI_API_KEY    enables free conversation with village characters (POST /api/npc-chat)
  *   GEMINI_MODEL      default gemini-flash-latest
  *   NPC_CHAT_PER_MINUTE / NPC_CHAT_PER_DAY (per IP, default 8 / 150), NPC_CHAT_GLOBAL_PER_DAY (default 1200)
@@ -21,6 +24,7 @@ import { VillageServer } from './VillageServer.js';
 import { DEFAULT_ORIGINS, parseOrigins, originAllowed } from './origins.js';
 import { NpcChat } from './NpcChat.js';
 import { npcChatRoute } from './npcChatRoute.js';
+import { TurnRelay } from './TurnRelay.js';
 
 const env = process.env;
 const port = Number(process.argv[2] ?? env.PORT ?? 8090);
@@ -43,13 +47,18 @@ const http = createServer((req, res) => {
   res.end('Yılmaz Ailesi köy meydanı sunucusu — WebSocket: /ws/village, durum: /health\n');
 });
 
-const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp });
-http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'})`));
+const turnHost = env.TURN_HOST || env.TURN_PUBLIC_IP;
+const turn = env.TURN_PUBLIC_IP
+  ? new TurnRelay({ publicIp: env.TURN_PUBLIC_IP, urls: [`turn:${turnHost}:3478?transport=udp`], allowPrivate: env.TURN_ALLOW_PRIVATE === '1' })
+  : env.TURN_SECRET ? { secret: env.TURN_SECRET, urls: String(env.TURN_URLS ?? '').split(',').map((u) => u.trim()).filter(Boolean) } : null;
+const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn });
+http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'}; turn ${village.turn ? 'on' : 'off'})`));
 
 for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, () => {
     console.log(`[village] ${sig}, closing`);
     village.close();
+    turn?.stop?.();
     http.close(() => process.exit(0));
     setTimeout(() => process.exit(0), 3000).unref();
   });

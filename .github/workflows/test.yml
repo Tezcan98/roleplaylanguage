@@ -25,6 +25,8 @@ jobs:
         run: npm run playtest:features -w web
       - name: Village multiplayer (two players, voice chat)
         run: npm run playtest:multiplayer -w web
+      - name: Voice through the TURN relay only (relay-only WebRTC)
+        run: npm run playtest:turn -w web
       - name: Standalone server (game and village on different hosts, like GitHub Pages)
         run: npm run playtest:standalone -w web
       - name: Offline build

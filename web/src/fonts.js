@@ -5,5 +5,8 @@ import '@fontsource/fredoka/700.css';
 import '@fontsource/nunito/600.css';
 import '@fontsource/nunito/700.css';
 import '@fontsource/nunito/800.css';
-import '@fontsource/cairo/600.css';
-import '@fontsource/cairo/700.css';
+// gloss fonts (assets/i18n/languages.json → font)
+import '@fontsource/noto-naskh-arabic/500.css';
+import '@fontsource/noto-naskh-arabic/700.css';
+import '@fontsource/noto-nastaliq-urdu/500.css';
+import '@fontsource/noto-nastaliq-urdu/700.css';

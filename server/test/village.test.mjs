@@ -5,16 +5,18 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import WebSocket from 'ws';
+import { createHmac } from 'node:crypto';
 import { VillageServer } from '../src/VillageServer.js';
 import { ChatFilter } from '../src/ChatFilter.js';
 import { originAllowed, parseOrigins } from '../src/origins.js';
 
 let http, village, url;
+const TURN = { secret: 'test-secret', urls: ['turn:example.org:3478?transport=udp'] };
 const ORIGINS = parseOrigins('https://tezcan98.github.io,http://localhost:*');
 
 before(async () => {
   http = createServer();
-  village = new VillageServer({ server: http, log: () => {}, allowOrigin: (o) => originAllowed(o, ORIGINS), maxPerIp: 6 });
+  village = new VillageServer({ server: http, log: () => {}, allowOrigin: (o) => originAllowed(o, ORIGINS), maxPerIp: 6, turn: TURN });
   await new Promise((r) => http.listen(0, '127.0.0.1', r));
   url = `ws://127.0.0.1:${http.address().port}/ws/village`;
 });
@@ -203,4 +205,21 @@ test('gender travels in the look (anything else counts as boy)', async () => {
   assert.equal(w.look.gender, 'boy');
   assert.equal(w.peers[0].look.gender, 'girl');
   await a.close(); await b.close();
+});
+
+test('welcome hands out STUN + a TURN credential that coturn accepts (HMAC of the username)', async () => {
+  const a = await join('Sesli', 'ice');
+  const turn = a.welcome.ice.find((s) => String(s.urls).includes('turn:'));
+  assert.ok(a.welcome.ice.some((s) => String(s.urls).startsWith('stun:')));
+  const [expiry, id] = turn.username.split(':');
+  assert.equal(id, a.welcome.id);
+  assert.ok(Number(expiry) > Date.now() / 1000 + 3600, 'valid for hours');
+  assert.equal(turn.credential, createHmac('sha1', TURN.secret).update(turn.username).digest('base64'));
+  await a.close();
+});
+
+test('TURN relay refuses private, loopback and link-local peers', async () => {
+  const { blockedPeer } = await import('../src/TurnRelay.js');
+  for (const ip of ['127.0.0.1', '127.0.0.53', '10.1.2.3', '192.168.1.5', '172.20.0.1', '169.254.1.1', '100.64.0.1', '0.0.0.0', '::1', 'fe80::1']) assert.equal(blockedPeer(ip), true, ip);
+  for (const ip of ['31.58.245.116', '8.8.8.8', '178.240.232.77', '172.32.0.1']) assert.equal(blockedPeer(ip), false, ip);
 });

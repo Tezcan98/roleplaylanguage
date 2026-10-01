@@ -218,6 +218,13 @@ export class VillageMultiplayer {
     this.toasts.show(`${name} ile sesli sohbet başladı`, micOk ? 'Voice chat started' : 'Mikrofon yok: sadece dinleyebilirsin · listen only');
   }
 
+  /** How the voice connection is doing (from VoiceChat). */
+  voiceState(st) {
+    if (st === 'connected') this.toasts.show('Ses bağlandı 🔊', 'Voice connected');
+    else if (st === 'failed') this.toasts.show('Ses bağlantısı kurulamadı', 'Voice could not connect on this network. You can still talk with text.');
+    else if (st === 'blocked-audio') this.calls.showUnmute(() => this.voice.resumeAudio());
+  }
+
   #endCall(message) {
     const id = this.voice.partner;
     const c = id && this.remotes.get(id);

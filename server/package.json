@@ -2,15 +2,21 @@
   "name": "@yilmaz/server",
   "version": "0.5.0",
   "private": true,
-  "description": "Köy meydanı çok oyunculu sunucusu (WebSocket). Kendi sunucunda çalışır.",
+  "description": "K\u00f6y meydan\u0131 \u00e7ok oyunculu sunucusu (WebSocket). Kendi sunucunda \u00e7al\u0131\u015f\u0131r.",
   "type": "module",
   "main": "src/VillageServer.js",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node src/index.mjs",
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
+    "node-turn": "^0.0.6",
     "ws": "^8.22.0"
+  },
+  "overrides": {
+    "log4js": "^6.9.1"
   }
 }

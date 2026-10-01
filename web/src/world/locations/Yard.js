@@ -20,10 +20,11 @@ export class Yard extends Location {
     // house front
     this.prop(kit, 'prop.house', 0, 0, -14, 0, () => {
       const g = mf.group(mf.at(mf.box(10, 4, 6, { tex: 'whiteWall', repeat: [3, 1] }), 0, 2, 0));
-      const roof = mf.cone(7.6, 2.6, { tex: 'roof', repeat: [4, 2] }, 4);
-      roof.rotation.y = Math.PI / 4; roof.scale.z = 0.66; g.add(mf.at(roof, 0, 5.3, 0));
+      // hip roof with 0.6 m eaves all round, plus a fascia board along the edge
+      g.add(mf.at(mf.hipRoof(11.2, 7.2, 2.3, { tex: 'roof', repeat: [6, 2] }), 0, 4, 0));
+      g.add(mf.at(mf.box(11.3, 0.18, 7.3, DARK), 0, 3.95, 0));
       g.add(mf.at(mf.box(1.3, 2.3, 0.12, DARK), 0, 1.15, 3.05));
-      g.add(mf.at(mf.box(0.7, 1.6, 0.7, { tex: 'brick' }), 3, 6, -1));
+      g.add(mf.at(mf.box(0.7, 1.9, 0.7, { tex: 'brick' }), 3, 5.4, -1.2)); // chimney through the roof
       return g;
     });
     // windows glow warm at night
@@ -36,8 +37,6 @@ export class Yard extends Location {
     C.addBox(-5.1, 5.1, -17.1, -10.9);
     this.hotspot('yard.door', 0, -10.2);
     this.anchor('houseDoor', 0, -9.4, 0);
-    this.anchor('squareRoad', 18, 0, -Math.PI / 2);
-    this.hotspot('yard.square', 21, 0, 2.0);
 
     // fountain (çeşme)
     this.prop(kit, 'prop.cesme', 6.3, 0, -11.3, 0, () => {
@@ -146,9 +145,8 @@ export class Yard extends Location {
       mf.at(mf.box(0.2, 2.2, 0.2, DARK), -1.4, 1.1, 0), mf.at(mf.box(0.2, 2.2, 0.2, DARK), 1.4, 1.1, 0),
       mf.at(mf.box(3.2, 0.25, 0.25, DARK), 0, 2.2, 0),
       mf.at(mf.box(1.6, 0.45, 0.06, { tex: 'lightWood' }), 0, 2.65, 0)));
-    add(mf.ground(2.4, 17, { tex: 'dirt', repeat: [1, 6] }, 0.021)).position.z = 15.5;
-    this.hotspot('yard.gate', 0, 22.8, 1.9);
-    this.hotspot('yard.practice', 0, 22.8, 1.9); // same gate, outside the school-day quest
+    add(mf.ground(2.4, 19.5, { tex: 'dirt', repeat: [1, 7] }, 0.021)).position.z = 14.25; // from the yard to the garden gate, no gap
+    this.hotspot('yard.gate', 0, 22.8, 1.9); // the street: school or the village square
     this.anchor('gate', 0, 22, Math.PI);
   }
 }

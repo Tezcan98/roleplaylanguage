@@ -14,6 +14,7 @@ Oyunun geri kalanı sunucuya ihtiyaç duymaz.
 | nginx | `/etc/nginx/sites-available/yilmaz-village` (yalnızca bu alan adı; diğer sitelere dokunulmadı) |
 | Sertifika | Let's Encrypt `31-58-245-116.sslip.io`, certbot kendisi yeniler (yenilemede `nginx reload`) |
 | Yedek | Kurulumdan önceki nginx ayarları: `/root/nginx-backup-before-yilmaz-*.tgz` |
+| TURN | Sesli sohbet için yerleşik röle (`src/TurnRelay.js`, node-turn): UDP 3478 ve 49160-49260, servis ortamında `TURN_PUBLIC_IP`. Oyunculara katılırken rastgele, ayrılınca silinen hesaplar verilir; iç ağ / yerel adreslere aktarım kapalıdır. coturn sistemdeki libevent sürüm uyuşmazlığı yüzünden kurulmadı (sisteme dokunmamak için). |
 
 `sslip.io` adı IP'yi kendiliğinden çözer, DNS ayarı gerekmez. Kendi alt alan adına
 (ör. `meydan.te-robotik.com.tr`) geçmek için: DNS'te A kaydı → 31.58.245.116, nginx
@@ -38,6 +39,7 @@ Günlük: `journalctl -u yilmaz-village -f`. Tamamen kaldırmak:
 - Kullanıcı adı ve balonlarda küfür filtresi (`src/ChatFilter.js`), 140 karakter sınırı.
 - Ses sinyali yalnızca birbirini onaylamış iki oyuncu arasında aktarılır; ses sunucudan geçmez.
 - Sessiz bağlantılar 30 sn'de bir yoklanır ve düşürülür.
+- Sesli sohbet farklı ağlarda TURN üzerinden geçer; istemci bağlantı sonucunu bildirir (`journalctl -u yilmaz-village | grep voice`).
 
 ## Başka bir makineye kurulum
 

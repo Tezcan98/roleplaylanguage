@@ -43,6 +43,34 @@ export class MeshFactory {
   sphere(r, spec, seg = 12) { return this.mesh(new THREE.SphereGeometry(r, seg, Math.max(6, (seg * 0.75) | 0)), spec); }
   cyl(rt, rb, h, spec, seg = 10) { return this.mesh(new THREE.CylinderGeometry(rt, rb, h, seg), spec); }
   cone(r, h, spec, seg = 8) { return this.mesh(new THREE.ConeGeometry(r, h, seg), spec); }
+  /**
+   * Hip roof over a w × d footprint (x × z), height h, ridge along the longer side.
+   * Each slope gets its own UVs (u along the eaves, v up the slope) so tiles run downhill.
+   */
+  hipRoof(w, d, h, spec) {
+    const alongX = w >= d, L = Math.max(w, d) / 2, S = Math.min(w, d) / 2, r = L - S; // half lengths, half ridge
+    const P = (a, y, b) => (alongX ? [a, y, b] : [b, y, a]); // (along, up, across) → (x, y, z)
+    const slope = Math.hypot(S, h);
+    const pos = [], uv = [];
+    const tri = (A, B, C, ua, ub, uc) => { pos.push(...A, ...B, ...C); uv.push(...ua, ...ub, ...uc); };
+    for (const side of [1, -1]) { // long slopes: trapezoids
+      const e0 = P(-L, 0, side * S), e1 = P(L, 0, side * S), r0 = P(-r, h, 0), r1 = P(r, h, 0);
+      const u = (a) => (a + L) / (2 * L);
+      if (side > 0) { tri(e0, e1, r1, [u(-L), 0], [u(L), 0], [u(r), 1]); tri(e0, r1, r0, [u(-L), 0], [u(r), 1], [u(-r), 1]); }
+      else { tri(e1, e0, r0, [u(L), 0], [u(-L), 0], [u(-r), 1]); tri(e1, r0, r1, [u(L), 0], [u(-r), 1], [u(r), 1]); }
+    }
+    for (const end of [1, -1]) { // hip ends: triangles
+      const a = P(end * L, 0, S), b = P(end * L, 0, -S), top = P(end * r, h, 0);
+      if (end > 0) tri(b, a, top, [0, 0], [S / L, 0], [S / L / 2, 1]); else tri(a, b, top, [0, 0], [S / L, 0], [S / L / 2, 1]);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(uv.map((x, i) => (i % 2 ? x * slope / (2 * L) : x)), 2));
+    g.computeVertexNormals();
+    const m = this.mesh(g, spec);
+    m.material.side = THREE.DoubleSide; // eaves seen from below
+    return m;
+  }
   torus(r, t, spec, seg = 16, arc = Math.PI * 2) { return this.mesh(new THREE.TorusGeometry(r, t, 8, seg, arc), spec); }
   ico(r, spec, detail = 0) { return this.mesh(new THREE.IcosahedronGeometry(r, detail), spec); }
 

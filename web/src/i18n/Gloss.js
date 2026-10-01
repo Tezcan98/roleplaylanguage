@@ -35,6 +35,11 @@ export async function loadGlossLang(code, base = 'assets/i18n/') {
   const dir = glossDir();
   document.body.classList.toggle('gloss-rtl', dir === 'rtl');
   document.documentElement.dataset.gloss = lang;
+  const font = glossInfo()?.font;
+  document.documentElement.style.setProperty('--gloss-font', font ? `'${font}', Nunito, sans-serif` : 'Nunito, sans-serif');
+  const scale = glossInfo()?.scale;
+  if (scale) document.documentElement.style.setProperty('--gloss-scale', String(scale)); else document.documentElement.style.removeProperty('--gloss-scale');
+  document.documentElement.toggleAttribute('data-gloss-scale', !!scale);
   return lang;
 }
 

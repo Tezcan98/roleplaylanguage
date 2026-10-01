@@ -17,7 +17,8 @@
     "test": "npm run check && npm run playtest:smoke && npm run playtest:features && npm run playtest:multiplayer && npm run playtest:standalone && npm run playtest:offline",
     "playtest:standalone": "node tools/playtest/multiplayer.mjs --standalone",
     "playtest:features": "node tools/playtest/features.mjs",
-    "i18n": "node tools/extract-glosses.mjs"
+    "i18n": "node tools/extract-glosses.mjs",
+    "playtest:turn": "TURN_PUBLIC_IP=127.0.0.1 TURN_ALLOW_PRIVATE=1 node tools/playtest/multiplayer.mjs --standalone --relayonly"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",
@@ -28,8 +29,9 @@
     "three": "^0.160.0"
   },
   "devDependencies": {
-    "@fontsource/cairo": "^5.3.0",
     "@fontsource/fredoka": "^5.3.0",
+    "@fontsource/noto-naskh-arabic": "^5.3.0",
+    "@fontsource/noto-nastaliq-urdu": "^5.3.0",
     "@fontsource/nunito": "^5.3.0",
     "@yilmaz/server": "*",
     "playwright": "^1.63.0",

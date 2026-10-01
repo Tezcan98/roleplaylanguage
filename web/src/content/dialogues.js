@@ -322,7 +322,7 @@ export const DIALOGUES = {
     },
     nodes: {
       wait: { say: 'Merhaba oğlum! Önce dedene yardım et.', en: 'Hi son! Help your grandpa first.', words: [['önce', 'first']], options: [{ tr: 'Tamam baba.', en: 'Okay dad.' }] },
-      b1: { say: 'Ahmet, gel! Lastik patladı. Anahtarı bulur musun?', en: 'Ahmet, come! A tire burst. Can you find the wrench?', words: [['lastik', 'tire'], ['anahtar', 'wrench / key']],
+      b1: { say: 'Ahmet, gel! Araba çalışmıyor, motoru tamir ediyorum. Anahtarı bulur musun?', en: 'Ahmet, come! The car won’t start, I’m fixing the engine. Can you find the wrench?', words: [['motor', 'engine'], ['tamir etmek', 'to repair'], ['anahtar', 'wrench / key']],
         options: [{ tr: 'Anahtar nerede?', en: 'Where is the wrench?', next: 'b2' }] },
       b2: { say: 'Üzüm asmasının altında, masanın üstünde.', en: 'Under the grapevine, on the table.', words: [['altında', 'under'], ['masa', 'table'], ['üstünde', 'on']],
         options: [{ tr: 'Buluyorum!', en: "I'll find it!", do: ['quest:talk-dad'] }] },

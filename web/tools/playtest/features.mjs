@@ -117,8 +117,11 @@ try {
   const questBefore = await ev(() => window.__game.story.quest?.id);
   await ev(() => { const g = window.__game; g.player.position.set(0, 0, 22.3); }); await sleep(400);
   const gateLabel = await ev(() => document.getElementById('act').textContent);
-  check('garden gate offers school practice for 1 credit', gateLabel.includes('pratik'), gateLabel);
+  check('the garden gate leads to the street', gateLabel.includes('Sokağa çık'), gateLabel);
   await page.keyboard.press('e');
+  const choices = await waitFor(() => ev(() => [...document.querySelectorAll('.pick-card .btn.pick')].map((b) => b.textContent)), 5000);
+  check('street: choose school (practice, 1 credit) or the village square', !!choices && choices.some((t) => t.includes('pratik')) && choices.some((t) => t.includes('meydan')), JSON.stringify(choices));
+  await page.click('.pick-card .btn.pick:has-text("pratik")');
   await waitFor(() => page.$('.overlay.open .card .btn:has-text("Krediyle")'), 5000);
   await page.click('.overlay.open .card .btn:has-text("Krediyle")');
   await waitFor(() => page.$('.classroom.open'), 10000);
