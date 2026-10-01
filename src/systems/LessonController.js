@@ -37,7 +37,10 @@ export class LessonController {
     session.on('question', (q) => this.#ask(session, q));
     session.on('answer', (a) => {
       this.view.answer(a, me.id);
-      if (a.studentId !== me.id) this.labels.bubble(this.cast.get(a.studentId), a.text, a.correct ? 'ok' : 'bad');
+      if (a.studentId !== me.id) {
+        this.labels.bubble(this.cast.get(a.studentId), a.text, a.correct ? 'ok' : 'bad');
+        this.tts.speak(a.text, { speaker: a.studentId });
+      }
     });
     session.on('scores', ({ scores }) => this.view.scoresUpdate(scores, me.id));
     session.on('end', ({ scores }) => {
