@@ -20,14 +20,14 @@ export class SpeakActivity extends Activity {
     const { speech, tts } = this.services;
     const target = spec.show ?? spec.expect?.[0] ?? '';
     return new Promise(async (resolve) => {
-      if (this.services.gate) {
+      const devSkip = new URLSearchParams(location.search).has('dev') || new URLSearchParams(location.search).has('debug');
+      if (this.services.gate && !devSkip) {
         const allowed = await this.services.gate.request({ title: 'Sesli sınav', titleEn: 'Speech exam', cost: 1 });
         if (!allowed) { resolve({ option: {} , ok: false }); return; }
       }
       let lastHeard = '';
       const done = (ok) => resolve({ option: { next: spec.next, do: spec.do }, ok, transcript: lastHeard || target });
       const heard = el('div', { class: 'transcript' });
-      const devSkip = new URLSearchParams(location.search).has('dev') || new URLSearchParams(location.search).has('debug');
       const fb = el('div', { class: 'fb' });
 
       this.mic = el('button', {
