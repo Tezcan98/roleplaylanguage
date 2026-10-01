@@ -16,13 +16,13 @@ export class ClassAccessGate {
       const ad = el('button', { class: 'btn alt', text: '▶ Reklam izle (+1 kredi)', attrs: { type: 'button' } });
       const cancel = el('button', { class: 'btn alt', text: 'Vazgeç', attrs: { type: 'button' } });
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card' }, [
-        el('p', { class: 'chap', text: 'Ders' }),
+        el('p', { class: 'chap', text: resource.titleEn ? 'Ders' : 'Sesli sınav' }),
         el('h2', { class: 'ctitle', text: resource.title }),
         el('p', { class: 'cen en-t', text: resource.titleEn ? `Lesson: ${resource.titleEn}` : 'Speech exam' }),
         balance, pay, ad, cancel,
       ])]);
       const refresh = () => {
-        balance.textContent = `Bu ders ${cost} kredi. Kredin: ${this.wallet.balance}`;
+        balance.textContent = `${resource.titleEn ? 'Bu ders' : 'Bu sınav'} ${cost} kredi. Kredin: ${this.wallet.balance}`;
         pay.textContent = `Krediyle gir (−${cost})`;
         pay.disabled = this.wallet.balance < cost;
       };
