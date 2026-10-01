@@ -11,8 +11,7 @@ const FEEDBACK = {
 
 /**
  * Say it out loud. Uses the SpeechEvaluator service (speech-to-text + Turkish detection +
- * answer matching). After two misses a "skip" appears so nobody gets stuck; without a
- * microphone API the player reads aloud and confirms.
+ * answer matching). The speech exam is gated by the shared credit/rewarded-ad system.
  *
  * spec: { expect: string[], keywords?: string[], show?: string, hint?, prompt?, next?, do? }
  */
@@ -29,8 +28,6 @@ export class SpeakActivity extends Activity {
       const done = (ok) => resolve({ option: { next: spec.next, do: spec.do }, ok, transcript: lastHeard || target });
       const heard = el('div', { class: 'transcript' });
       const fb = el('div', { class: 'fb' });
-      const skip = null;
-      let misses = 0;
 
       this.mic = el('button', {
         class: 'mic', html: MIC, attrs: { type: 'button', 'aria-label': 'Konuş' },
@@ -51,7 +48,6 @@ export class SpeakActivity extends Activity {
               fb.className = 'fb bad';
               fb.textContent = /not-allowed|denied/i.test(e.message) ? 'Mikrofon izni gerekli.' : 'Mikrofon çalışmadı, tekrar dene.';
             } finally { this.mic?.classList.remove('rec'); }
-            // A speech exam cannot be bypassed after failed attempts; retry or close the dialogue.
           },
         },
       });
