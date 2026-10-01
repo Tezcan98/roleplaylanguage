@@ -59,6 +59,7 @@ import { RemotePlayers } from './systems/RemotePlayers.js';
 import { VillageMultiplayer } from './systems/VillageMultiplayer.js';
 import { UsernameDialog } from './ui/UsernameDialog.js';
 import { PushToTalk } from './ui/PushToTalk.js';
+import { CallUI } from './ui/CallUI.js';
 import { TextbookView } from './ui/TextbookView.js';
 
 import { ActivityRegistry } from './activities/Activity.js';
@@ -255,12 +256,14 @@ const village = new VillageMultiplayer({
   remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK }),
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
+  calls: new CallUI(host, modes),
   usernames: new UsernameDialog(host, modes),
-  recognizer: params.has('fakemic') ? null : new WebSpeechRecognizer('tr-TR'),
+  recognizer: params.has('fakemic') ? new ScriptedRecognizer() : new WebSpeechRecognizer('tr-TR'),
 });
 
 // --- interaction ---
 const interactions = new InteractionSystem([
+  village, // "voice chat with X" next to another player in the square
   toys,
   new NpcInteractions({ cast, dialogue, story }),
   new ItemInteractions({ items }),

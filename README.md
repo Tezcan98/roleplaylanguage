@@ -37,7 +37,7 @@ URL parametreleri:
 - **İki günlük hikaye (9 bölüm):** Pazar sabahı → kahvaltı → çamaşır → masal → akşam yemeği → gece/uyku → Pazartesi okul → ödev. Saat görevlerle ilerler, gece ve gündüz değişir.
 - **Alıştırma tipleri:** seçmeli, dinleme (cümle gizli, sesle duyulur), kelime sıralama, sesli konuşma (konuşma tanıma + Türkçe tespiti + benzerlik puanı).
 - **Dede'nin masalları:** her ziyarette yeni bir etkileşimli Nasreddin Hoca masalı (5 masal).
-- **Köy meydanı (çok oyunculu):** avlunun doğusundan gidilir; bakkal ve muhtarla konuşulur. İlk girişte kullanıcı adı sorulur; meydandaki diğer oyuncular görünür, **bas-konuş** (düğme ya da `T`) ile sesli konuşulur (WebRTC, uzaklaştıkça ses kısılır). Tarayıcı destekliyorsa söylenen cümle oyuncunun üstünde yazı balonu olarak da çıkar.
+- **Köy meydanı (çok oyunculu):** avlunun doğusundan gidilir; bakkal ve muhtarla konuşulur. İlk girişte kullanıcı adı sorulur. Toplu alanda konuşmalar **yazıyla** görünür: bas-konuş (düğme ya da `T`) söyleneni konuşma tanımayla yazıya çevirip herkese balon olarak gösterir. **Sesli sohbet birebirdir ve onay ister:** bir oyuncunun yanına gidip "sesli sohbet et" dersin, karşı taraf kabul ederse ikiniz arasında WebRTC sesli görüşme açılır (sessize al / bitir; uzaklaşınca kendiliğinden biter). Sunucu ses sinyalini yalnızca onaylı ikili arasında aktarır.
 - **Serbest dolaşma:** TV, su içme, kitap okuma, pencereden bakma, el yıkama, bahçe sulama, top, kedi. **Ev kuralları:** ödev ya da iş varken, sofrada veya yatma saatinde TV açılınca anne uyarır ve özür dilettirir.
 - **Okul:** kredi ya da reklamla girilen ders, öğretmenin sesli soruları, bot sınıf arkadaşlarıyla canlı puan tablosu (multiplayer arayüzü hazır).
 - **Ders kitabı:** okuma, "fil hafızası" kartları (kelime ↔ sesi benzeyen İngilizce kelime ↔ komik resim), alıştırmalar. Ünite 1 günlük ödevdir.
@@ -65,7 +65,7 @@ src/
   activities/         Activity arayüzü + Choice, Listen, Order, Speak
   services/           speech/ (Piper TTS, STT, dil tespiti), monetization/ (kredi, reklam, ders kapısı),
                       multiplayer/ (ClassroomSession, VillageNetwork, VoiceChat/WebRTC), storage/, Settings
-server/               VillageServer (WebSocket: odalar, konumlar, bas-konuş, WebRTC sinyali), index.mjs
+server/               VillageServer (WebSocket: odalar, konumlar, yazı balonları, onaylı birebir görüşme ve WebRTC sinyali), index.mjs
   ui/                 DOM bileşenleri (Hud, QuestPanel, DialogueView, CardOverlay, ...)
   content/            veriler: story, dialogues, tales, characters, items, hotspots,
                       freeActions (+ ev kuralları), lessons, textbook
