@@ -64,9 +64,14 @@ export class HouseInterior extends Location {
     this.anchor('sofraS', -0.8, 0.75, Math.PI);
 
     // Small bedroom partition: the bed now reads as a separate room, with a doorway.
-    noCast(mf.at(mf.box(0.16, 2.7, 2.5, WALL), 2.85, 1.35, 3.05));
+    // Partition wall with a real doorway into the bedroom.
+    noCast(mf.at(mf.box(0.16, 0.35, 2.5, WALL), 2.85, 0.18, 3.05));
+    noCast(mf.at(mf.box(0.16, 1.25, 2.5, WALL), 2.85, 2.48, 3.05));
     noCast(mf.at(mf.box(2.9, 2.7, 0.16, WALL), 4.35, 1.35, 1.78));
-    // Door opening is left between the living room and bedroom.
+    C.addBox(2.7, 3.0, 1.78, 2.12);
+    C.addBox(2.7, 3.0, 4.0, 4.35);
+    C.addBox(2.9, 5.8, 1.62, 1.94);
+    // Door opening remains clear between z≈2.12 and z≈4.0.
 
     this.bread = mf.group(
       mf.at(mf.sphere(0.2, 0xD9A05B, 12), 0, 0.02, 0),
