@@ -20,12 +20,16 @@ export class SpeakActivity extends Activity {
   mount(container, spec) {
     const { speech, tts } = this.services;
     const target = spec.show ?? spec.expect?.[0] ?? '';
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
+      if (this.services.gate) {
+        const allowed = await this.services.gate.request({ title: 'Sesli sınav', titleEn: 'Speech exam', cost: 1 });
+        if (!allowed) { resolve({ option: {} , ok: false }); return; }
+      }
       let lastHeard = '';
       const done = (ok) => resolve({ option: { next: spec.next, do: spec.do }, ok, transcript: lastHeard || target });
       const heard = el('div', { class: 'transcript' });
       const fb = el('div', { class: 'fb' });
-      const skip = el('button', { class: 'chipbtn', text: 'Geç', attrs: { type: 'button' }, style: { display: 'none' }, on: { click: () => done(false) } });
+      const skip = null;
       let misses = 0;
 
       this.mic = el('button', {
@@ -47,7 +51,7 @@ export class SpeakActivity extends Activity {
               fb.className = 'fb bad';
               fb.textContent = /not-allowed|denied/i.test(e.message) ? 'Mikrofon izni gerekli.' : 'Mikrofon çalışmadı, tekrar dene.';
             } finally { this.mic?.classList.remove('rec'); }
-            if (++misses >= 2) skip.style.display = '';
+            // A speech exam cannot be bypassed after failed attempts; retry or close the dialogue.
           },
         },
       });
@@ -62,7 +66,6 @@ export class SpeakActivity extends Activity {
           this.mic,
           noMic ? el('span', { class: 'fb', text: 'Tarayıcın ses tanımayı desteklemiyor. Okuyunca mikrofona bas.' }) : null,
           !spec.hide && el('button', { class: 'chipbtn', html: `${ICONS.speaker} Örnek`, attrs: { type: 'button' }, on: { click: () => tts.speak(target, { speaker: 'ahmet' }) } }),
-          skip,
         ]),
         heard, fb,
       ]);
