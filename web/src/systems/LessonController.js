@@ -1,4 +1,8 @@
 import * as THREE from 'three';
+import { playerName } from '../i18n/Persona.js';
+
+const PRACTICE_QUESTIONS = 6;
+const shuffle = (a) => a.map((x) => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(([, x]) => x);
 
 /**
  * Runs a classroom lesson: access gate (credits / ad) → seat everyone → questions from a
@@ -23,6 +27,20 @@ export class LessonController {
     this.travel.go('classroom', 'door', () => this.#start(lesson));
   }
 
+  /**
+   * Free practice any time (1 credit): a mixed lesson from every lesson's questions with the
+   * teacher and classmates; `onDone()` runs after the summary (the caller takes Ahmet home).
+   * @returns {Promise<boolean>} false when the player didn't pay
+   */
+  async practice({ onDone }) {
+    const pool = Object.values(this.lessons).flatMap((l) => l.questions);
+    const lesson = { id: 'practice', title: 'Serbest pratik', titleEn: 'Free practice', cost: 1, practice: true, questions: shuffle(pool).slice(0, PRACTICE_QUESTIONS) };
+    if (!(await this.gate.request(lesson))) return false;
+    this.onPracticeDone = onDone;
+    this.travel.go('classroom', 'door', () => { this.cast.move('ogretmen', 'classroom', 'teacher', 'teach'); this.#start(lesson); });
+    return true;
+  }
+
   async #start(lesson) {
     const room = this.world.get('classroom');
     this.bots.forEach((b) => this.cast.move(b.id, 'classroom', b.seat, 'sitBench'));
@@ -31,7 +49,7 @@ export class LessonController {
     this.camera.setFixed(new THREE.Vector3(0, 3.2, 5.6), new THREE.Vector3(0, 1.2, -2.5));
     this.#pop = this.modes.push('lesson');
 
-    const me = { id: 'ahmet', name: 'Ahmet' };
+    const me = { id: 'ahmet', name: playerName() };
     const session = this.active = this.sessionFactory(lesson, this.bots);
     session.on('roster', ({ students }) => this.view.open(students, students.length));
     session.on('question', (q) => this.#ask(session, q));
@@ -88,6 +106,7 @@ export class LessonController {
     this.player.position.z += 0.9;
     this.camera.clearFixed();
     this.#pop?.();
+    if (lesson.practice) { this.onPracticeDone?.(); return; }
     this.effects.run([`flag:lesson-${lesson.id}`, ...(lesson.after ?? [])]);
   }
 

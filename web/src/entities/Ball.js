@@ -16,10 +16,21 @@ export class Ball {
 
   get position() { return this.mesh.position; }
 
-  kick(from) {
+  /** Kick away from `from`; `power` 0..1 (a running player kicks harder than a walking one). */
+  kick(from, power = 1) {
     const dir = new THREE.Vector3(this.position.x - from.x, 0, this.position.z - from.z).normalize();
-    this.vel.copy(dir.multiplyScalar(8 + Math.random() * 2));
-    this.hopVel = 3 + Math.random() * 2;
+    this.vel.copy(dir.multiplyScalar((4 + 5 * power) * (0.9 + Math.random() * 0.2)));
+    this.hopVel = power > 0.6 ? 2 + Math.random() * 2 : 0;
+  }
+
+  get moving() { return this.vel.lengthSq() > 1e-3; }
+
+  /** Network snapshot / restore (multiplayer square: everyone plays with the same ball). */
+  state() { const { x, z } = this.position; return { x, z, vx: this.vel.x, vz: this.vel.z }; }
+  setState({ x, z, vx = 0, vz = 0 }) {
+    if (![x, z, vx, vz].every(Number.isFinite)) return;
+    this.position.x = x; this.position.z = z;
+    this.vel.set(vx, 0, vz);
   }
 
   update(dt) {

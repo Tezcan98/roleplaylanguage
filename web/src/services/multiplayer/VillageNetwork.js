@@ -1,6 +1,6 @@
 /**
  * WebSocket client for the multiplayer village square (protocol: server/VillageServer.js).
- * `connect(name, room)` resolves with the welcome message; events are delivered via `on(type, fn)`.
+ * `connect(name, room, gender)` resolves with the welcome message; events are delivered via `on(type, fn)`.
  */
 export class VillageNetwork {
   #ws = null;
@@ -27,13 +27,13 @@ export class VillageNetwork {
   on(type, fn) { if (!this.#handlers.has(type)) this.#handlers.set(type, new Set()); this.#handlers.get(type).add(fn); }
   #emit(type, payload) { this.#handlers.get(type)?.forEach((fn) => fn(payload)); }
 
-  connect(name, room = 'istanbul') {
+  connect(name, room = 'ankara', gender = 'boy') {
     this.close();
     return new Promise((resolve, reject) => {
       const ws = this.#ws = new WebSocket(this.url);
       const fail = (message) => { reject(new Error(message)); this.close(); };
       const timer = setTimeout(() => fail('timeout'), 6000);
-      ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', name, room }));
+      ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', name, room, gender }));
       ws.onerror = () => { clearTimeout(timer); fail('unreachable'); };
       ws.onclose = () => { if (this.id) this.#emit('disconnected', {}); this.id = null; };
       ws.onmessage = (e) => {

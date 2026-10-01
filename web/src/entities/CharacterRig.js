@@ -30,6 +30,11 @@ export function buildRig(mf, o) {
   }
   if (o.sides) [-0.27, 0.27].forEach((x) => head.add(mf.at(mf.box(0.08, 0.18, 0.25, o.sides), x, 0.02, -0.02)));
   if (o.bun) head.add(mf.at(mf.sphere(0.15, o.hair, 10), 0, 0.16, -0.28));
+  if (o.headscarf) { // grandma's yazma: covers the hair, ties under the chin, falls over the shoulders
+    const scarf = mf.mesh(new THREE.SphereGeometry(0.34, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.62), o.headscarf);
+    scarf.position.y = 0.02; scarf.rotation.x = -0.35; head.add(scarf);
+    head.add(mf.at(mf.cyl(0.2, 0.36, 0.5, o.headscarf, 14), 0, -0.3, -0.08));
+  }
   if (o.mustache) head.add(mf.at(mf.box(0.22, 0.05, 0.05, o.mustache), 0, -0.09, 0.28));
   if (o.cap) {
     head.add(mf.at(mf.cyl(0.33, 0.33, 0.1, o.cap, 16), 0, 0.24, 0));

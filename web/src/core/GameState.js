@@ -2,6 +2,9 @@
  * Serializable game data. Domain classes (Inventory, Vocabulary, TimeSystem)
  * are thin facades over the slices below, so saving is just `snapshot()`.
  */
+/** Every new game starts with this many lesson credits. */
+export const START_CREDITS = 50;
+
 export class GameState {
   constructor() { this.reset(); }
 
@@ -15,7 +18,7 @@ export class GameState {
     this.inventory = {};
     this.taken = [];
     this.words = {};
-    this.credits = 0;
+    this.credits = START_CREDITS;
   }
 
   snapshot() {

@@ -12,6 +12,7 @@ export class StoryDirector {
   #talking = false;
   #pendingNext = false;
   #started = false;
+  #paused = false;
 
   constructor({ story, state, bus, time, cast, travel, cards, toasts, fader }) {
     Object.assign(this, { story, state, bus, time, cast, travel, cards, toasts, fader });
@@ -31,7 +32,15 @@ export class StoryDirector {
   setEffects(effects) { this.effects = effects; }
 
   get chapter() { return this.story.chapters[this.state.chapter] ?? null; }
-  get quest() { return this.chapter?.quests[this.state.quest] ?? null; }
+  get quest() { return this.#paused ? null : this.chapter?.quests[this.state.quest] ?? null; }
+
+  /**
+   * Off-story time (online square, school practice): no quest, no arrow, nothing completes;
+   * NPCs fall back to small talk. `resumeStory()` picks up exactly where it was.
+   */
+  pause() { this.#paused = true; this.bus.emit(EV.QUEST, { quest: null }); }
+  resumeStory() { this.#paused = false; this.bus.emit(EV.QUEST, { quest: this.quest }); }
+  get paused() { return this.#paused; }
   questIndex(id) { return this.chapter?.quests.findIndex((q) => q.id === id) ?? -1; }
   /** True once the quest with `id` has become current (or is already done) in this chapter. */
   reached(id) { const i = this.questIndex(id); return i >= 0 && this.state.quest >= i; }

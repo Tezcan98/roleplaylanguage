@@ -226,3 +226,12 @@ body.gloss-rtl .choice .e{text-align:left}
 .menu-square .chap{margin:0}
 .menu-square .note:empty{display:none}
 .name-in{min-height:50px;border-radius:10px;border:2px solid var(--wood);padding:0 12px;font:700 18px Nunito,sans-serif;background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
+.profile-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0 10px;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.6);font:800 15px Nunito,sans-serif}
+.server-picker{display:flex;flex-direction:column;gap:4px}
+.server-select{min-height:46px;border-radius:10px;border:2px solid var(--wood);padding:0 10px;font:700 16px Nunito,sans-serif;background:#fff;color:var(--ink)}
+.choice-row{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 8px}
+.choice-row .chipbtn[aria-pressed="true"]{background:var(--gold);border-color:var(--ink)}
+.big-chip{font-size:17px;min-height:52px}
+.setup .card{max-height:92vh;overflow-y:auto}
+.setup .chap{margin:10px 0 0}
+.setup .cen{margin:0 0 4px}

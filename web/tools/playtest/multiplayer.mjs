@@ -29,8 +29,10 @@ async function player(tag, name, { viaMenu = false } = {}) {
   await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
   if (viaMenu) {
-    await page.fill('.name-in', name); await page.click('text=Meydana gir');
-    await waitFor(() => page.evaluate(() => { document.querySelector('.overlay.open .card .btn')?.click(); return window.__game.village.net.connected; }), 15000, 400);
+    await page.click('.main-menu.open button:has-text("Meydana gir")');
+    await waitFor(() => page.$('.overlay.open input'), 15000);
+    await page.fill('.overlay.open input', name); await page.click('.overlay.open button:has-text("Meydana gir")');
+    await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 15000, 400);
     await sleep(800);
     await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300); // first-visit card
     return page;
@@ -56,6 +58,16 @@ try {
   const names = [await A.evaluate(() => window.__game.village.net.name), await B.evaluate(() => window.__game.village.net.name)];
   check('unique usernames', names[0] !== names[1], names.join(' / '));
   check('players see each other', (await A.evaluate(() => window.__game.village.remotes.count)) === 1 && (await B.evaluate(() => window.__game.village.remotes.count)) === 1);
+  // the square's ball: run into it on A, it moves on B too
+  const ballAt = (p) => p.evaluate(() => { const b = window.__game.toys.toys.find((t) => t.toy.location.id === 'village').toy.position; return [b.x, b.z]; });
+  const ball0 = await ballAt(B);
+  await A.evaluate(async () => {
+    const g = window.__game, b = g.toys.toys.find((t) => t.toy.location.id === 'village').toy.position;
+    const [bx, bz] = [b.x, b.z];
+    for (let i = 0; i < 30; i++) { g.player.position.set(bx - 1.4 + i * 0.06, 0, bz); await new Promise((r) => requestAnimationFrame(r)); }
+  });
+  const moved = await waitFor(async () => { const [x, z] = await ballAt(B); const d = Math.hypot(x - ball0[0], z - ball0[1]); return d > 0.5 ? d : 0; }, 5000);
+  check('kicking the ball by running into it, seen by the other player', !!moved, `${(moved || 0).toFixed(2)} m`);
   check('no voice links in public', (await peers(A)) === 0 && (await peers(B)) === 0);
 
   await A.dispatchEvent('.ptt', 'pointerdown'); await sleep(1200); await A.dispatchEvent('.ptt', 'pointerup'); await sleep(800);
@@ -67,7 +79,7 @@ try {
     const C = await browser.newPage();
     await C.goto(`${server.url}/?nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
     const opt = await waitFor(() => C.evaluate(() => [...document.querySelectorAll('.server-select option')].map((o) => o.textContent).find((t) => t.includes('2 kişi'))), 15000);
-    check('menu shows live player counts per room', !!opt && opt.startsWith('İstanbul'), opt);
+    check('menu shows live player counts per room', !!opt && opt.startsWith('Ankara'), opt);
     await C.close();
   }
 
@@ -98,6 +110,15 @@ try {
   await A.keyboard.press('e'); await waitFor(() => B.$('text=Engelle')); await B.click('text=Engelle'); await sleep(800);
   await A.keyboard.press('e'); await sleep(1500);
   check('a blocked player cannot ask again', !(await B.$('text=Kabul et')) && !(await inCall(A)) && !(await inCall(B)));
+
+  // online from the menu: the square's exit leads back to the main menu, not home
+  const exitLabel = await A.evaluate(() => { const g = window.__game; g.player.position.set(-15.6, 0, 0); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });
+  check('online exit says "Ana menüye dön"', exitLabel.includes('Ana menüye dön'), exitLabel);
+  await A.keyboard.press('e');
+  check('…and returns to the main menu', !!(await waitFor(() => A.$('.main-menu.open'), 8000)) && (await A.evaluate(() => window.__game.world.current.id)) === 'yard');
+  check('B sees A leave', !!(await waitFor(async () => (await B.evaluate(() => window.__game.village.remotes.count)) === 0)));
+  await A.click('.main-menu.open button:has-text("Meydana gir")');
+  check('A can go back in from the menu', !!(await waitFor(() => A.evaluate(() => window.__game.village.net.connected), 15000)));
 
   await B.evaluate(() => window.__game.travel.go('yard', 'squareRoad'));
   check('leaving the square removes the player', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 0)));

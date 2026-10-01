@@ -113,6 +113,7 @@ export class HouseInterior extends Location {
     C.addBox(-3.5, 1.5, -4.6, -3.4);
     this.anchor('sedirL', -2.6, -3.75, 0);
     this.anchor('sedirR', 0.4, -3.75, 0);
+    this.anchor('sedirM', -1.1, -3.75, 0); // grandma (nine)
 
     // TV
     this.prop(kit, 'prop.tv', 5.6, 0, -0.5, -Math.PI / 2, () => {

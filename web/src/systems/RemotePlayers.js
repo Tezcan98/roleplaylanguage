@@ -7,7 +7,7 @@ import { Character } from '../entities/Character.js';
 export class RemotePlayers {
   #players = new Map();
 
-  constructor({ mf, baseLook }) { Object.assign(this, { mf, baseLook }); }
+  constructor({ mf, baseLook, girlLook = baseLook }) { Object.assign(this, { mf, baseLook, girlLook }); }
 
   list() { return [...this.#players.values()].map((p) => p.char); }
   ids() { return [...this.#players.keys()]; }
@@ -16,7 +16,7 @@ export class RemotePlayers {
 
   add(location, { id, name, look, x = -14.8, z = 0, rot = 0, talking = false }) {
     if (this.#players.has(id)) return;
-    const char = new Character(`remote-${id}`, { ...this.baseLook, ...look, props: [] }, { mf: this.mf });
+    const char = new Character(`remote-${id}`, { ...(look?.gender === 'girl' ? this.girlLook : this.baseLook), ...look, props: [] }, { mf: this.mf });
     char.name = name;
     char.voice = talking;
     char.place({ x, z, rot });

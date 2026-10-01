@@ -20,9 +20,10 @@ export class VillageMultiplayer {
   #since = 0;
   #last = '';
   #warnedStt = false;
+  #ballRolling = false; // we kicked it last: report where it stops, for players who join later
 
-  constructor({ bus, net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, locationId = 'village' }) {
-    Object.assign(this, { net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, locationId });
+  constructor({ bus, net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, ball = null, locationId = 'village' }) {
+    Object.assign(this, { net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, ball, locationId });
     bus.on(EV.LOCATION, ({ id }) => (id === locationId ? this.join() : this.leave()));
     net.on('join', ({ peer }) => { this.remotes.add(this.#loc(), peer); this.toasts.show(`${peer.name} meydana geldi`, 'joined the square'); this.#count(); });
     net.on('leave', ({ id }) => {
@@ -33,6 +34,7 @@ export class VillageMultiplayer {
     });
     net.on('states', ({ players }) => this.remotes.setStates(players));
     net.on('talk', ({ id, on }) => this.remotes.setTalking(id, on));
+    net.on('ball', (b) => this.ball?.setState(b)); // someone else kicked the shared ball
     net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
     net.on('call-request', async ({ from, name }) => {
       if (this.isBlocked(from, name)) { this.net.send({ type: 'call-answer', to: from, accept: false }); return; }
@@ -92,9 +94,10 @@ export class VillageMultiplayer {
         this.settings.set('username', name);
       }
       if (this.world.current.id !== this.locationId) return;
-      const room = this.settings.get('serverRegion', 'istanbul');
-      const welcome = await this.net.connect(name, room);
+      const room = this.settings.get('serverRegion', 'ankara');
+      const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'));
       welcome.peers.forEach((p) => this.remotes.add(this.#loc(), p));
+      if (welcome.ball) this.ball?.setState(welcome.ball);
       this.ptt.show(true);
       this.#count();
       this.toasts.show(`Meydana hoş geldin, ${welcome.name}!`, 'Bas-konuş: söylediğin yazı olarak görünür · Push-to-talk shows your words as text');
@@ -103,6 +106,9 @@ export class VillageMultiplayer {
       this.toasts.show('Çok oyunculu sunucuya bağlanılamadı', `Playing offline (${e.message})`);
     } finally { this.joining = false; }
   }
+
+  /** The local player kicked the shared ball: everyone else gets its new position and speed. */
+  ballKicked(ball) { if (this.net.connected) { this.net.send({ type: 'ball', ...ball.state() }); this.#ballRolling = true; } }
 
   leave() {
     if (this.voice.inCall) this.net.send({ type: 'call-end' });
@@ -185,6 +191,7 @@ export class VillageMultiplayer {
     this.#since += dt;
     if (this.#since < SEND_EVERY) return;
     this.#since = 0;
+    if (this.#ballRolling && !this.ball.moving) { this.#ballRolling = false; this.net.send({ type: 'ball', ...this.ball.state() }); }
     const P = this.player.position;
     const s = { x: +P.x.toFixed(2), z: +P.z.toFixed(2), rot: +this.player.group.rotation.y.toFixed(2), moving: !!this.player.moving };
     const key = JSON.stringify(s);
