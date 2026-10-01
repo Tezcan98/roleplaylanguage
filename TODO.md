@@ -2,9 +2,9 @@
 
 ## Near-term — village / language-learning vertical slice
 
-- [ ] Add a real bakkal shopping flow: choose an item, understand the price, and receive it in inventory.
+- [x] Add a real bakkal shopping flow: choose an item, understand the price, and receive it in inventory. *(Monday evening: order, add up the prices, pay, change.)*
 - [ ] Add an optional **speak** task at the bakkal (for example: “Bir ekmek lütfen.”) using the existing speech activity.
-- [ ] Add a later **speak** task with the muhtar (for example: ask where the school/clinic is) without making early chapters depend on microphone input.
+- [x] Add a later **speak** task with the muhtar (for example: ask where the school/clinic is) without making early chapters depend on microphone input. *(Monday evening letter quest: “Dedem bu mektubu gönderdi.”)*
 - [ ] Add persistent object state where useful (fountain used, bench occupied, shop visited) so interactions can affect later dialogue.
 - [ ] Add more village NPC routines (child, farmer, tea-house regular) with time-of-day positions.
 - [ ] Add a kahvehane and simple social interactions inspired by life-sim / RPG language-learning games.

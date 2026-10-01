@@ -35,7 +35,8 @@ export class VillageSquare extends Location {
       mf.at(mf.box(0.8, 0.9, 0.8, LIGHT_WOOD), 2.3, 0.45, 2.85)));
     C.addBox(6.1, 13.5, -10.2, -4.9);
     this.anchor('bakkal', 9.8, -3.7, Math.PI);
-    this.hotspot('village.bakkalCounter', 9.8, -4.25, 1.8);
+    // by the side crates, outside the grocer's talk range so both actions are reachable
+    this.hotspot('village.bakkalCounter', 12.9, -4.2, 1.0);
 
     // muhtar's office with a flag
     this.prop(kit, 'prop.muhtarOffice', -10, 0, -7.5, 0, () => mf.group(
