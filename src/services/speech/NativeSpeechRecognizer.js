@@ -62,8 +62,9 @@ export class NativeSpeechRecognizer extends SpeechRecognizer {
 
   cancel() {
     const active = this.#active;
-    this.#cleanup();
-    if (active) SpeechRecognition.stop().catch(() => {});
+    if (!active) return;
+    active.finish({ matches: [] });
+    SpeechRecognition.stop().catch(() => {});
   }
 
   #cleanup() {
