@@ -60,7 +60,24 @@ export const LESSONS = {
     ],
   },
 
-};
+  l4: {
+    id: 'l4', title: 'Hafta sonu ve arkadaşlar', titleEn: 'Weekend and friends', cost: 1,
+    questions: [
+      { q: 'Arkadaşınla nerede buluşursun?', en: 'Where do you meet your friend?', hint: 'Köy meydanında.',
+        expect: ['Köy meydanında', 'Meydanda'], keywords: ['meydan'],
+        botAnswers: ['Köy meydanında.', 'Meydanda buluşuruz.'], botWrong: ['Okulda.', 'Evde.'] },
+      { q: 'Cumartesi okul var mı?', en: 'Is there school on Saturday?', hint: 'Hayır, okul yok.',
+        expect: ['Hayır okul yok', 'Cumartesi okul yok'], keywords: ['yok'],
+        botAnswers: ['Hayır, okul yok.', 'Cumartesi okul yok.'], botWrong: ['Evet, okul var.', 'Evet.'] },
+      { q: 'Kiminle buluşacaksın?', en: 'Who will you meet?', hint: 'Arkadaşlarımla.',
+        expect: ['Arkadaşlarımla', 'Elif ile', 'Can ile'], keywords: ['arkadaş'],
+        botAnswers: ['Arkadaşlarımla.', 'Elif ile buluşacağım.'], botWrong: ['Öğretmenimle.', 'Muhtarla.'] },
+      { q: 'Hafta sonu eğlenir misin?', en: 'Will you have fun at the weekend?', hint: 'Evet, eğleneceğim.',
+        expect: ['Evet eğleneceğim', 'Evet'], keywords: ['eğlen'],
+        botAnswers: ['Evet, eğleneceğim.', 'Tabii!'], botWrong: ['Hayır.', 'Okula gideceğim.'] },
+    ],
+  },
+;
 
 /** Exactly three classmates + the player = four students per classroom. */
 export const CLASSMATE_BOTS = [
