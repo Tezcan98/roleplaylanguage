@@ -15,6 +15,9 @@ export class NativeSpeechRecognizer extends SpeechRecognizer {
   #confidence = 0;
   #pending = null;
   #listener = null;
+  #stateListener = null;
+  #resolve = null;
+  #reject = null;
   #stopTimer = null;
 
   constructor(lang = 'tr-TR') {
