@@ -102,7 +102,7 @@ export default {
       face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#D8C4E8"/><path d="M12 50q0-30 20-32q20 2 20 32z" fill="#F3EFE8"/><circle cx="32" cy="37" r="14" fill="#E9B98F"/><path d="M17 33q4-13 15-13t15 13q-6-6-15-6t-15 6z" fill="#F3EFE8"/><circle cx="26" cy="37" r="4" fill="none" stroke="#1B2440" stroke-width="1.6"/><circle cx="38" cy="37" r="4" fill="none" stroke="#1B2440" stroke-width="1.6"/><circle cx="26" cy="37" r="1.3" fill="#1B2440"/><circle cx="38" cy="37" r="1.3" fill="#1B2440"/><path d="M27 45q5 3 10 0" stroke="#9B6570" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
     },
   },
-  voices: { nine: { id: 'tr_TR-fettah-medium', pitch: 0.95 } },
+  voices: { nine: { id: 'tr_TR-dfki-medium', pitch: 0.9 } },
   // on the middle of the sedir all day; asleep on the first night
   castAll: { nine: ['house', 'sedirM', 'sitBench'] },
   cast: { 'd1-night': { nine: null } },

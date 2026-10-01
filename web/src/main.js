@@ -75,6 +75,7 @@ import { SpeakActivity } from './activities/SpeakActivity.js';
 import { DialogueController } from './dialogue/DialogueController.js';
 import { WebSpeechTTS } from './services/speech/TextToSpeech.js';
 import { PiperTTS } from './services/speech/PiperTTS.js';
+import { ServerTTS } from './services/speech/ServerTTS.js';
 import { CharacterVoices } from './services/speech/CharacterVoices.js';
 import { Settings } from './services/Settings.js';
 import { LocalSaveRepository } from './services/storage/SaveRepository.js';
@@ -94,6 +95,8 @@ import { Fader } from './ui/Fader.js';
 import { CardOverlay } from './ui/CardOverlay.js';
 import { MainMenu } from './ui/MainMenu.js';
 import { WordDrill } from './systems/WordDrill.js';
+import { ChessGame } from './systems/ChessGame.js';
+import { ChessView } from './ui/ChessView.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
@@ -125,9 +128,12 @@ const nativeKit = native ? await loadNativeAdapters() : null;
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
 await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
 setupLandscape(host); // phones: played sideways
-// boy (Ahmet) or girl (Meryem): the content is rewritten once, before any system reads it
+// boy (Ahmet) or girl (Sare): the content is rewritten once, before any system reads it
 setPlayerGender(params.get('gender') ?? settings.get('gender', 'boy'));
 personalizeContent(STORY, DIALOGUES, FREE_ACTIONS, HOUSE_RULES, LESSONS, CLASSMATE_BOTS, TEXTBOOK, ITEMS);
+if (playerGender() === 'girl') VOICES.ahmet = { id: 'tr_TR-dfki-medium', pitch: 1.15 }; // the player's own voice
+// the village server (localhost: the dev server's own) — multiplayer, free chat and Turkish speech
+const villageServer = VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native });
 const bus = new EventBus();
 const state = new GameState();
 const modes = new ModeStack();
@@ -181,7 +187,9 @@ const controller = new PlayerController({ player, input, world, modes, cast });
 
 // --- dialogue ---
 const progressShown = new Set();
+const ttsServerUrl = manifest.ttsServer ?? villageServer.replace(/^ws/, 'http').replace(/\/ws\/village$/, '/api/tts');
 const tts = new CharacterVoices({
+  server: params.has('nospeechserver') ? null : new ServerTTS(params.get('tts') ?? ttsServerUrl),
   neural: new PiperTTS({
     onProgress: (voice, f) => {
       const step = Math.floor(f * 4); // toast at 0/25/50/75%
@@ -214,7 +222,6 @@ const dialogueView = new DialogueView(host, {
   onChat: () => dialogue.startChat(),
 });
 // free conversation with village characters (Gemini behind the village server; off without a key)
-const villageServer = VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native });
 const npcChat = new NpcChatClient({ url: manifest.npcChat || NpcChatClient.urlFor(villageServer), lang: glossLang, player: playerName });
 const chatRecognizer = params.has('fakemic') ? new ScriptedRecognizer() : (native ? new nativeKit.NativeSpeechRecognizer('tr-TR') : new WebSpeechRecognizer('tr-TR'));
 const dialogue = new DialogueController({
@@ -235,8 +242,8 @@ effects
   })
   .register('wear', (what, off) => { player.wear(what, off !== 'off'); state.flags[`wear-${what}`] = off !== 'off'; })
   .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); })
-  .register('sit', (anchor) => {
-    const a = world.get('house').anchors.get(anchor);
+  .register('sit', (anchor) => { // a seat in the current place (sofra at home, tea-garden stools…)
+    const a = world.current.anchors.get(anchor) ?? world.get('house').anchors.get(anchor);
     if (a) { player.place(a); player.sit(true); }
   })
   .register('place-bread', () => {
@@ -309,6 +316,11 @@ const village = new VillageMultiplayer({
   }),
   recognizer: chatRecognizer,
 });
+
+// --- giant chess on the square: online the server's board, offline against the computer ---
+const chess = new ChessGame({ mf, square: world.get('village'), view: new ChessView(host, { modes }), net: villageNet, vocab, toasts });
+village.chess = chess;
+effects.register('chess', () => chess.open());
 
 // --- interaction ---
 const interactions = new InteractionSystem([
@@ -493,7 +505,7 @@ const game = new Game({ help, prayer, village, toys, foliage: Foliage, modes, ti
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
 
-// headscarves: off at home, on outside and for the prayer (mom, and Meryem if she wears one)
+// headscarves: off at home, on outside and for the prayer (mom, and Sare if she wears one)
 const coverable = [player, ...[...npcs.values()].filter((n) => n.def.look?.homeUncovered)];
 setInterval(() => coverable.forEach((c) => {
   if (!(c === player ? PLAYER_LOOKS[playerLook] : c.def.look)?.homeUncovered) return;

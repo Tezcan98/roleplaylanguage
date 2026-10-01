@@ -113,6 +113,17 @@ try {
   await A.keyboard.press('e'); await sleep(1500);
   check('a blocked player cannot ask again', !(await B.$('text=Kabul et')) && !(await inCall(A)) && !(await inCall(B)));
 
+  // giant chess: A takes white, B black, A moves; B (and the board on the square) follow
+  await A.evaluate(() => window.__game.village.chess.open()); await B.evaluate(() => window.__game.village.chess.open());
+  await A.click('.chess button:has-text("Beyaz ol")');
+  await waitFor(() => B.$('.chess button:has-text("Siyah ol")'));
+  await B.click('.chess button:has-text("Siyah ol")');
+  await waitFor(() => A.evaluate(() => window.__game.village.chess.myColor === 'w' && window.__game.village.chess.state?.seats?.b));
+  await A.click('.chess-board [data-sq="e2"]'); await A.click('.chess-board [data-sq="e4"]');
+  const seen = await waitFor(() => B.evaluate(() => window.__game.village.chess.state?.last?.to === 'e4' && document.querySelector('.chess-board [data-sq="e4"]')?.textContent === '♟'), 6000);
+  check('chess: a move on one screen shows on the other player’s board', !!seen);
+  await A.evaluate(() => window.__game.village.chess.view.close()); await B.evaluate(() => window.__game.village.chess.view.close());
+
   // a phone locking its screen drops the socket: the game reconnects by itself
   await B.evaluate(() => window.__game.village.net.dropForTest());
   check('after a dropped connection the player comes back by itself', !!(await waitFor(async () => (await B.evaluate(() => window.__game.village.net.connected)) && (await A.evaluate(() => window.__game.village.remotes.count)) === 1, 15000)));
@@ -126,7 +137,7 @@ try {
   await C.close();
 
   // online from the menu: the square's exit leads back to the main menu, not home
-  const exitLabel = await A.evaluate(() => { const g = window.__game; g.player.position.set(-15.6, 0, 0); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });
+  const exitLabel = await A.evaluate(() => { const g = window.__game; g.player.position.set(-24.6, 0, 0); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });
   check('online exit says "Ana menüye dön"', exitLabel.includes('Ana menüye dön'), exitLabel);
   await A.keyboard.press('e');
   check('…and returns to the main menu', !!(await waitFor(() => A.$('.main-menu.open'), 8000)) && (await A.evaluate(() => window.__game.world.current.id)) === 'yard');

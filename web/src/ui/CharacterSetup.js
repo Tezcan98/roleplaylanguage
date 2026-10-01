@@ -2,13 +2,13 @@ import { el } from './dom.js';
 import { gloss, loadGlossLang, glossLanguages } from '../i18n/Gloss.js';
 import { ServerPicker } from './ServerPicker.js';
 
-export const PLAYER_NAMES = { boy: 'Ahmet', girl: 'Meryem' };
-/** The four characters: [gender, look, icon, Turkish label, English]. */
+export const PLAYER_NAMES = { boy: 'Ahmet', girl: 'Sare' };
+/** The four characters to pick from: [gender, look, icon, name] — the picture tells them apart. */
 export const CHARACTERS = [
-  ['boy', 'modest', '👦', 'Ahmet · mütevazı', 'Ahmet · modest build'],
-  ['boy', 'strong', '💪', 'Ahmet · kaslı', 'Ahmet · strong build'],
-  ['girl', 'covered', '🧕', 'Meryem · başörtülü', 'Meryem · headscarf outside, hair open at home'],
-  ['girl', 'open', '👧', 'Meryem · başı açık', 'Meryem · without a headscarf'],
+  ['boy', 'modest', '👦', 'Ahmet'],
+  ['boy', 'strong', '💪', 'Ahmet'],
+  ['girl', 'covered', '🧕', 'Sare'],
+  ['girl', 'open', '👧', 'Sare'],
 ];
 export const characterOf = (gender, look) => CHARACTERS.find(([g, l]) => g === gender && l === look) ?? CHARACTERS.find(([g]) => g === gender) ?? CHARACTERS[0];
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
@@ -48,10 +48,10 @@ export class CharacterSetup {
         class: 'chipbtn', text: name, attrs: { type: 'button', 'data-lang': code, 'aria-pressed': String(code === p.lang) },
         on: { click: async () => { p.lang = code; mark(langs, 'lang', code); await loadGlossLang(code); texts.forEach(([n, en]) => { n.textContent = gloss(en); }); } },
       })));
-      const genders = el('div', { class: 'choice-row chars' }, CHARACTERS.map(([gender, look, icon, label, en]) => el('button', {
+      const genders = el('div', { class: 'choice-row chars' }, CHARACTERS.map(([gender, look, icon, label]) => el('button', {
         class: 'chipbtn char-card', attrs: { type: 'button', 'data-char': `${gender}-${look}`, 'aria-pressed': String(gender === p.gender && look === p.look) },
         on: { click: () => { p.gender = gender; p.look = look; mark(genders, 'char', `${gender}-${look}`); } },
-      }, [el('span', { class: 'ci', text: icon }), el('span', { text: label }), g(en, 'en-t cc-en')])));
+      }, [el('span', { class: 'ci', text: icon }), el('span', { text: label })])));
       const name = el('input', { class: 'name-in', attrs: { type: 'text', maxlength: '16', placeholder: 'Kullanıcı adın', autocomplete: 'nickname' } });
       name.value = p.username;
       const err = el('p', { class: 'note' });

@@ -11,8 +11,11 @@ import { fileURLToPath } from 'node:url';
 import { VillageServer } from '../../server/src/VillageServer.js';
 import { NpcChat } from '../../server/src/NpcChat.js';
 import { npcChatRoute } from '../../server/src/npcChatRoute.js';
+import { Tts } from '../../server/src/Tts.js';
 
 // NPC chat: real Gemini with GEMINI_API_KEY, otherwise canned answers so the UI can be tried and tested
+// Turkish speech: PIPER_DIR=<piper folder> npm start (otherwise the game falls back to the browser)
+const tts = new Tts({ piperDir: process.env.PIPER_DIR, cacheDir: process.env.TTS_CACHE ?? '/tmp/yilmaz-tts', log: () => {} });
 const chat = new NpcChat({ apiKey: process.env.GEMINI_API_KEY, fake: !process.env.GEMINI_API_KEY, perMinute: 60 });
 
 // usage: node tools/serve.mjs [port] [dir]  (dir defaults to web/; `dist` serves the build)
@@ -27,6 +30,12 @@ const TYPES = {
 
 const http = createServer(async (req, res) => {
   if (npcChatRoute(req, res, { chat })) return;
+  if (req.url.startsWith('/api/tts')) {
+    const u = new URL(req.url, 'http://x');
+    const r = await tts.handle(u.searchParams.get('v'), u.searchParams.get('t'), req.socket.remoteAddress);
+    res.writeHead(r.status, { 'Content-Type': r.status === 200 ? 'audio/wav' : 'application/json' });
+    return res.end(r.status === 200 ? r.body : JSON.stringify({ error: r.error }));
+  }
   if (req.url === '/health') { // same as the production server: players per room for the menu
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({ ok: true, ...village.stats() }));

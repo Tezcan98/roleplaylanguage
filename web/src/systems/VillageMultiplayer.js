@@ -40,6 +40,7 @@ export class VillageMultiplayer {
     net.on('states', ({ players }) => this.remotes.setStates(players));
     net.on('talk', ({ id, on }) => this.remotes.setTalking(id, on));
     net.on('ball', (b) => this.ball?.setState(b)); // someone else kicked the shared ball
+    net.on('chess', (st) => this.chess?.applyServer(st)); // the square's giant chess board
     net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
     net.on('call-request', async ({ from, name }) => {
       if (this.isBlocked(from, name)) { this.net.send({ type: 'call-answer', to: from, accept: false }); return; }
@@ -136,6 +137,7 @@ export class VillageMultiplayer {
       const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''));
       welcome.peers.forEach((p) => this.remotes.add(this.#loc(), p));
       if (welcome.ball) this.ball?.setState(welcome.ball);
+      if (welcome.chess) this.chess?.applyServer(welcome.chess);
       this.ptt.show(true);
       this.#count();
       this.toasts.show(`${this.#roomLabel()} meydanına hoş geldin, ${welcome.name}!`, 'Bas-konuş: söylediğin yazı olarak görünür · Push-to-talk shows your words as text');
@@ -160,6 +162,7 @@ export class VillageMultiplayer {
   }
 
   #reset() {
+    this.chess?.goOffline();
     this.#endCall(null);
     this.remotes.clear();
     this.ptt.show(false);

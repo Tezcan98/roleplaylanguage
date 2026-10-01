@@ -13,6 +13,7 @@ export class MainMenu {
     Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => settings.set('serverRegion', id) });
     this.root = el('div', { class: 'overlay main-menu' });
+    document.addEventListener('fullscreenchange', () => { if (this.root.classList.contains('open')) this.show(); });
     host.append(this.root);
     this.show();
   }
@@ -41,8 +42,13 @@ export class MainMenu {
     const btn = (text, cls, fn) => el('button', { class: cls, text, attrs: { type: 'button' }, on: { click: fn } });
     const go = (fn) => () => { this.hide(); fn(); };
 
+    // full screen: Android / desktop browsers can do it; on iPhone the game must be added to the home screen
+    const canFull = !!document.documentElement.requestFullscreen && !document.fullscreenElement;
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) && !matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;
     this.root.replaceChildren(el('div', { class: 'card' }, [
+      canFull && btn('⛶ Tam ekran', 'chipbtn fs-btn', () => document.documentElement.requestFullscreen({ navigationUI: 'hide' }).then(() => screen.orientation?.lock?.('landscape')).catch(() => {}).finally(() => this.show())),
       el('h1', { class: 'big', text: 'Yılmaz Ailesi' }),
+      ios && el('p', { class: 'fs-tip', text: `Tam ekran için: Paylaş ⬆️ → Ana Ekrana Ekle · ${gloss('For full screen: Share → Add to Home Screen')}` }),
       el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
       el('div', { class: 'profile-line' }, [
         el('span', { text: `${characterOf(gender, s.get('look', ''))[2]} ${PLAYER_NAMES[gender]} · ${lang}${s.get('username') ? ` · @${s.get('username')}` : ''}` }),

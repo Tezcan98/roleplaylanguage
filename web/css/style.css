@@ -3,7 +3,7 @@
   
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;background:#9ED2F5;font-family:Nunito,'Trebuchet MS',sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none;touch-action:none}
+html,body{margin:0;height:100%;height:100dvh;overflow:hidden;overscroll-behavior:none;position:fixed;inset:0;width:100%;background:#9ED2F5;font-family:Nunito,'Trebuchet MS',sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none;touch-action:none}
 canvas{display:block}
 button{font-family:inherit}
 button:focus-visible{outline:3px solid #2F6FDB;outline-offset:2px}
@@ -131,11 +131,12 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{
 .bubble.bad{border-color:#B83A3A;background:#FBEAEA}
 
 /* ---------- classroom ---------- */
-.classroom{position:absolute;inset:auto 0 0 0;display:none;justify-content:center;padding:10px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 10px);pointer-events:none}
+.classroom{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);right:max(8px,env(safe-area-inset-right));width:min(420px,46vw);display:none;pointer-events:none} /* side panel: the classroom stays visible on the left */
 .classroom.open{display:flex}
-.cls{pointer-events:auto;width:min(720px,100%);max-height:64vh;display:grid;grid-template-columns:1fr 180px;gap:8px;background:var(--wood);border:3px solid var(--gold);border-radius:14px;padding:8px}
+.cls{pointer-events:auto;width:100%;max-height:100%;display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:6px;background:rgba(42,30,21,.86);border:3px solid var(--gold);border-radius:14px;padding:6px}
 .cls-main{background:var(--parch);border-radius:10px;padding:12px;overflow:auto;display:flex;flex-direction:column;gap:8px}
-.cls-side{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cls-side{display:flex;flex-direction:row;gap:6px;min-width:0;max-height:96px}
+.cls-side>*{flex:1;overflow:auto;font-size:12px}
 .cls-score,.cls-feed{background:var(--parch);border-radius:10px;padding:8px 10px;font-size:13px;font-weight:800}
 .cls-score h4,.cls-feed h4{margin:0 0 4px;font:600 14px Fredoka,sans-serif;color:#8A5A12}
 .cls-score ul{margin:0;padding:0}
@@ -145,7 +146,7 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{
 .cls-feed div{border-bottom:1px solid rgba(58,42,30,.15);padding:3px 0}
 .cls-q{font:700 21px Fredoka,sans-serif;margin:0;color:var(--wood)}
 .live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:#fff;background:#E4574A;border-radius:999px;padding:2px 8px}
-@media (max-width:560px){.cls{grid-template-columns:1fr}.cls-side{flex-direction:row}.cls-side>*{flex:1}}
+@media (orientation:portrait){.classroom{top:auto;left:8px;width:auto;height:52vh}}
 
 /* ---------- ad / gate ---------- */
 .ad{background:rgba(0,0,0,.88);flex-direction:column;gap:16px;color:#fff}
@@ -270,10 +271,10 @@ body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
   #quest{top:calc(env(safe-area-inset-top,0px) + 12px + var(--hud-h,40px));left:max(8px,env(safe-area-inset-left));max-width:min(300px,38vw);padding:5px 10px}
   #quest .qt{font-size:13px}
   #toasts{max-width:42vw}
-  #dlg{max-height:calc(100vh - 16px);bottom:8px;width:min(620px,calc(100vw - 16px))}
+  #dlg{max-height:calc(100dvh - 16px);bottom:8px;width:min(620px,calc(100vw - 16px))}
   #dlg .line{font-size:18px}
   .overlay{padding:8px}
-  .card{padding:14px 18px;gap:8px;max-height:calc(100vh - 16px)}
+  .card{padding:14px 18px;gap:8px;max-height:calc(100dvh - 16px)}
   .card .big{font-size:30px;margin:0}
   .main-menu .card,.setup .card{width:min(820px,100%)}
   .main-menu .menu-cols{grid-template-columns:1fr 1.15fr}
@@ -312,3 +313,22 @@ html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
 .char-card .ci{font-size:24px;line-height:1}
 .char-card .cc-en{margin:0;font-size:12px;font-weight:700}
 .chars .chipbtn[aria-pressed="true"]{background:var(--gold);border-color:var(--ink)}
+.chess .card{width:min(460px,100%);gap:8px}
+.chess-seats{display:flex;gap:12px;flex-wrap:wrap;font-weight:700}
+.chess-seat{display:flex;align-items:center;gap:6px}
+.chess-status{margin:0;font-weight:800}
+.chess-board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;width:min(100%,360px);align-self:center;border:4px solid var(--wood);border-radius:8px;overflow:hidden}
+.chess-board .sq{border:0;padding:0;font-size:min(7vw,34px);line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;aspect-ratio:1}
+.chess-board .sq.l{background:#EDE3CF}.chess-board .sq.d{background:#8B6A4E}
+.chess-board .sq[data-c="w"]{color:#FFFDF8;text-shadow:0 0 2px #000,0 0 1px #000}
+.chess-board .sq[data-c="b"]{color:#1B1B1B}
+.chess-board .sq.last{box-shadow:inset 0 0 0 3px rgba(224,176,74,.9)}
+.chess-board .sq.sel{background:#E0B04A}
+.chess-board .sq.to{background-image:radial-gradient(circle,rgba(62,142,74,.75) 22%,transparent 24%)}
+.chess-words{font-size:12px;margin:0}
+@media (orientation:landscape) and (max-height:520px){.chess .card{width:min(760px,100%);display:grid;grid-template-columns:1fr auto;align-items:start}.chess .card > *{grid-column:1}.chess-board{grid-column:2;grid-row:1 / span 6;width:min(78vh,330px)}}
+.fs-btn{position:absolute;top:10px;right:10px}
+.fs-tip{font-size:13px;margin:0;color:var(--muted)}
+.main-menu .card{position:relative}
+body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesson #toasts{display:none!important}
+@media (orientation:landscape) and (max-height:520px){.classroom .cls-q{font-size:17px}.classroom .cls-main{padding:8px;gap:5px}}

@@ -229,6 +229,12 @@ const GENERATORS = {
     g.fillText('KÖY', s / 2, s * 0.38);
     g.fillText('İLKOKULU', s / 2, s * 0.6);
   },
+  cayOcagiSign(g, s) {
+    g.fillStyle = '#8E2B1E'; g.fillRect(0, 0, s, s);
+    g.fillStyle = '#F7E3B5'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `bold ${s * 0.26}px Fredoka, sans-serif`;
+    g.fillText('ÇAY OCAĞI', s / 2, s / 2, s * 0.95);
+  },
   alphabet(g, s) {
     g.fillStyle = '#FFF9EC'; g.fillRect(0, 0, s, s);
     const letters = 'A B C Ç D E F G Ğ H I İ J K L M N O Ö P R S Ş T U Ü V Y Z'.split(' ');

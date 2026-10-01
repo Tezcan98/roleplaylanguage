@@ -68,6 +68,10 @@ export const FREE_ACTIONS = {
     label: 'Kuyuyu incele', think: 'Kuyunun içi çok derin.', say: 'Kuyuyu inceledim.', minutes: 2,
     words: [['kuyu', 'well'], ['derin', 'deep'], ['incelemek', 'to examine']],
   },
+  village_tea: {
+    label: 'Çay iç', think: 'Oh, sıcacık çay!', say: 'Çay bahçesinde oturup çay içtim.', minutes: 10,
+    words: [['çay bahçesi', 'tea garden'], ['bardak', 'glass'], ['şeker', 'sugar']],
+  },
   village_bench: {
     label: 'Bankta otur', think: 'Meydanda biraz dinleniyorum.', say: 'Bankta oturdum.', minutes: 5,
     words: [['bank', 'bench'], ['dinlenmek', 'to rest'], ['meydan', 'square']],

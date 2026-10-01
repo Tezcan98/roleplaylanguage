@@ -11,7 +11,6 @@ import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as C from '../src/content/index.js';
 import { SLIDES } from '../src/ui/IntroSlides.js';
-import { CHARACTERS } from '../src/ui/CharacterSetup.js';
 
 const out = new Set();
 // identifiers (anchors, flags, chapter ids) are not texts
@@ -39,7 +38,6 @@ for (const [name, table] of Object.entries(C)) walk(table, name);
 Object.values(C.KIND_NAMES).forEach((k) => add(k.en));
 C.ITEMS.forEach((i) => { add(i.en); add(i.bagEn); });
 SLIDES.forEach((x) => { add(x.title); add(x.text); });
-CHARACTERS.forEach(([, , , , en]) => add(en));
 Object.values(C.NPCS).forEach((n) => add(String(n.role).split(' · ')[1]));
 
 // English literals in UI code: second argument of toasts.show(...), and gloss('...') calls

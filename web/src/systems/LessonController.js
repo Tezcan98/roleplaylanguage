@@ -51,7 +51,7 @@ export class LessonController {
     this.bots.forEach((b) => this.cast.move(b.id, 'classroom', b.seat, 'sitBench'));
     this.player.place(room.anchors.get('seat4'));
     this.player.sit(true);
-    this.camera.setFixed(new THREE.Vector3(0, 3.2, 5.6), new THREE.Vector3(0, 1.2, -2.5));
+    this.camera.setFixed(new THREE.Vector3(3.4, 3.4, 6.6), new THREE.Vector3(2.9, 1.0, -2.2)); // board, teacher and classmates on the left; the lesson panel on the right
     this.#pop = this.modes.push('lesson');
     const run = this.run = {}; // identity of this lesson run (closing it stops the stages)
     this.view.openLesson(lesson);

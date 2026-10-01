@@ -10,7 +10,9 @@ export class WebSpeechTTS {
     u.rate = rate;
     u.pitch = Math.max(0, Math.min(2, pitch));
     const voice = speechSynthesis.getVoices().find((v) => v.lang?.toLowerCase().startsWith(this.lang.slice(0, 2)));
-    if (voice) u.voice = voice;
+    // no Turkish voice on this device: stay silent rather than read Turkish with an English voice
+    if (!voice) return;
+    u.voice = voice;
     speechSynthesis.speak(u);
   }
 

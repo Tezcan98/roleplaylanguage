@@ -63,7 +63,7 @@ export default {
       ],
     },
   },
-  voices: { kardes: { id: 'tr_TR-fahrettin-medium', pitch: 1.55 } },
+  voices: { kardes: { id: 'tr_TR-fettah-medium', pitch: 1.4 } },
   castAll: { kardes: ['house', 'start', 'roam'] },
   dialogues: { kardes: { start: (ctx) => (ctx.flag('met-kardes') ? nextThing(ctx) : 'hello'), nodes: nodes() } },
 };

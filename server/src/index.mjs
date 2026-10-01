@@ -13,6 +13,7 @@
  *   TURN_PUBLIC_IP    voice calls across networks: run the built-in TURN relay on this public IPv4
  *                     (UDP 3478 + 49160-49260; TURN_HOST = name in the turn: URL, default the IP)
  *   TURN_SECRET, TURN_URLS  …or use an external coturn: its static-auth-secret and turn: URLs (comma separated)
+ *   PIPER_DIR, TTS_CACHE  Turkish speech: Piper binary + voices folder, and where generated lines are kept
  *   GEMINI_API_KEY    enables free conversation with village characters (POST /api/npc-chat)
  *   GEMINI_MODEL      default gemini-flash-latest
  *   NPC_CHAT_PER_MINUTE / NPC_CHAT_PER_DAY (per IP, default 8 / 150), NPC_CHAT_GLOBAL_PER_DAY (default 1200)
@@ -25,6 +26,7 @@ import { DEFAULT_ORIGINS, parseOrigins, originAllowed } from './origins.js';
 import { NpcChat } from './NpcChat.js';
 import { npcChatRoute } from './npcChatRoute.js';
 import { TurnRelay } from './TurnRelay.js';
+import { Tts } from './Tts.js';
 
 const env = process.env;
 const port = Number(process.argv[2] ?? env.PORT ?? 8090);
@@ -32,6 +34,7 @@ const host = env.HOST ?? '0.0.0.0';
 const origins = parseOrigins(env.ALLOWED_ORIGINS ?? DEFAULT_ORIGINS);
 const clientIp = (req) => (env.TRUST_PROXY === '1' && String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim()) || req.socket.remoteAddress;
 const started = Date.now();
+const tts = new Tts({ piperDir: env.PIPER_DIR, cacheDir: env.TTS_CACHE ?? '/tmp/yilmaz-tts' });
 const chat = new NpcChat({
   apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL || undefined,
   perMinute: Number(env.NPC_CHAT_PER_MINUTE ?? 8), perDay: Number(env.NPC_CHAT_PER_DAY ?? 150), globalPerDay: Number(env.NPC_CHAT_GLOBAL_PER_DAY ?? 1200),
@@ -40,9 +43,20 @@ const chat = new NpcChat({
 const http = createServer((req, res) => {
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
-    return res.end(JSON.stringify({ ok: true, uptime: Math.round((Date.now() - started) / 1000), npcChat: chat.enabled, ...village.stats() }));
+    return res.end(JSON.stringify({ ok: true, uptime: Math.round((Date.now() - started) / 1000), npcChat: chat.enabled, tts: tts.enabled, ...village.stats() }));
   }
   if (npcChatRoute(req, res, { chat, allowOrigin: (o) => originAllowed(o, origins), clientIp })) return;
+  if (req.url.startsWith('/api/tts')) {
+    const u = new URL(req.url, 'http://x');
+    const origin = req.headers.origin;
+    const cors = origin && originAllowed(origin, origins) ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
+    tts.handle(u.searchParams.get('v'), u.searchParams.get('t'), clientIp(req)).then((r) => {
+      if (r.status !== 200) { res.writeHead(r.status, { 'Content-Type': 'application/json', ...cors }); return res.end(JSON.stringify({ error: r.error })); }
+      res.writeHead(200, { 'Content-Type': 'audio/wav', 'Content-Length': r.body.length, 'Cache-Control': 'public, max-age=31536000, immutable', ...cors });
+      res.end(r.body);
+    });
+    return;
+  }
   res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
   res.end('Yılmaz Ailesi köy meydanı sunucusu — WebSocket: /ws/village, durum: /health\n');
 });

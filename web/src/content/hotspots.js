@@ -32,6 +32,9 @@ export const HOTSPOTS = {
   'village.benchWest': free('village_bench'),
   'village.benchEast': free('village_bench'),
   'village.bakkalCounter': free('village_shop'),
+  // giant chess on the square (ChessGame), and the stools of the tea garden
+  'village.chess': { label: 'Satranç oyna', use: ['chess'] },
+  ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`village.cay${i + 1}`, { label: 'Çay bahçesinde otur', use: [`sit:cay${i + 1}`, 'free:village_tea'] }])),
   // garden gate = the street: choose school or the village square (see the 'street' effect)
   'yard.gate': { label: 'Sokağa çık', use: ['street'], link: ['schoolyard', 'village'] },
   'house.sofra': { label: 'Sofraya otur', use: ['sit:sofraS'], available: (c) => !c.seated },

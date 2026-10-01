@@ -32,6 +32,8 @@ export class RenderContext {
     this.scene.add(this.hemi, this.sun, this.sun.target);
 
     addEventListener('resize', () => this.resize());
+    // phones: the address bar showing / hiding changes the visible height without a window resize
+    visualViewport?.addEventListener('resize', () => this.resize());
   }
 
   resize() {

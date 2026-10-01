@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { createHmac } from 'node:crypto';
 import { ChatFilter } from './ChatFilter.js';
+import { ChessTable } from './ChessTable.js';
 
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 const SHIRTS = [0xE4574A, 0x2F6FDB, 0x3E8E4A, 0xE0B04A, 0x7A3552, 0x16A085, 0xD35400, 0x8E44AD];
@@ -36,6 +37,8 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *   { type: 'ball', x, z, vx, vz }        kicked the shared ball (relayed, last state kept for newcomers)
  *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to your call partner
  *   { type: 'call-diag', state, detail? } how the voice connection went (logged, for support)
+ *   { type: 'chess-sit', color } | { type: 'chess-stand' } | { type: 'chess-move', from, to, promotion? } | { type: 'chess-new' }
+ *                                         the square's giant chess board
  * server → client
  *   { type: 'welcome', id, name, look, peers, ball?, ice } | { type: 'error', message }
  *     ice: WebRTC ICE servers for voice calls (STUN + TURN with short-lived credentials)
@@ -44,12 +47,14 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
  *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
  *   { type: 'rtc', from, data }
+ *   { type: 'chess', fen, turn, check, over, seats, last }  the board, after every change (also in welcome)
  */
 export class VillageServer {
   #rooms = new Map(); // room → Map(id → client)
   #seq = 0;
 
   #perIp = new Map();
+  #chess = new Map(); // room → ChessTable
   #balls = new Map(); // room → last ball state reported (the kicker also reports where it stops)
 
   /**
@@ -181,6 +186,15 @@ export class VillageServer {
         this.log(`[village] call ${from.name} ↔ ${c.name}`);
         break;
       }
+      case 'chess-sit': case 'chess-stand': case 'chess-move': case 'chess-new': {
+        const t = this.#table(c.room);
+        const ok = msg.type === 'chess-sit' ? t.sit(c, msg.color)
+          : msg.type === 'chess-stand' ? t.stand(c.id)
+            : msg.type === 'chess-move' ? t.move(c.id, msg)
+              : t.restart(c.id);
+        if (ok) this.#toAll(c.room, t.state()); else this.#send(c, t.state()); // a refused move snaps back
+        break;
+      }
       case 'call-diag': // the client reports how a voice connection went
         if (typeof msg.state === 'string') this.log(`[village] voice ${c.name}: ${msg.state.slice(0, 20)}${typeof msg.detail === 'string' ? ` (${msg.detail.slice(0, 120)})` : ''}`);
         break;
@@ -209,7 +223,7 @@ export class VillageServer {
     let unique = clean, n = 2;
     while (taken.has(unique.toLocaleLowerCase('tr'))) unique = `${clean}${n++}`;
     Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], ...lookOf(gender, style) } });
-    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ball: this.#balls.has(room) ? { ...this.#balls.get(room), vx: 0, vz: 0 } : undefined, ice: this.iceFor(c.id) });
+    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ball: this.#balls.has(room) ? { ...this.#balls.get(room), vx: 0, vz: 0 } : undefined, chess: this.#table(room).state(), ice: this.iceFor(c.id) });
     this.#toRoom(c, { type: 'join', peer: this.#public(c) });
     members.set(c.id, c);
     this.log(`[village] ${c.name} joined ${room} (${members.size})`);
@@ -226,6 +240,8 @@ export class VillageServer {
   #leave(c) {
     if (!c.id) return;
     this.turn?.release?.(c.id);
+    const table = this.#chess.get(c.room);
+    if (table?.stand(c.id)) this.#toAll(c.room, table.state(), c);
     this.#endCall(c, 'left');
     const members = this.#room(c.room);
     if (!members.delete(c.id)) return;
@@ -254,6 +270,12 @@ export class VillageServer {
 
   #dist(a, b) { return Math.hypot(a.x - b.x, a.z - b.z); }
   #public({ id, name, look, x, z, rot, talking }) { return { id, name, look, x, z, rot, talking }; }
+  #table(room) { if (!this.#chess.has(room)) this.#chess.set(room, new ChessTable()); return this.#chess.get(room); }
+  /** Everyone in the room (optionally except one). */
+  #toAll(room, msg, except = null) {
+    const data = JSON.stringify(msg);
+    this.#room(room).forEach((m) => { if (m !== except && m.ws.readyState === 1) m.ws.send(data); });
+  }
   #room(name) { if (!this.#rooms.has(name)) this.#rooms.set(name, new Map()); return this.#rooms.get(name); }
   #send(c, msg) { if (c.ws.readyState === 1) c.ws.send(JSON.stringify(msg)); }
   #toRoom(from, msg) {

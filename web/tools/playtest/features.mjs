@@ -1,6 +1,6 @@
 /**
  * The player-requested features, each checked in a real browser:
- * character setup (language, girl → Meryem), 50 credits, grandma's advice rotation, free
+ * character setup (language, girl → Sare), 50 credits, grandma's advice rotation, free
  * NPC chat (dev server's canned answers), physical ball, square fence, school practice for
  * 1 credit (story paused and resumed), classroom door after the lesson, word practice,
  * textbook units with credits.  Exit 1 on the first failed check.
@@ -34,14 +34,14 @@ try {
   await Promise.all([page.waitForNavigation({ timeout: 30000 }), page.click('.setup button:has-text("Kaydet")')]);
   await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
   const profile = await page.textContent('.main-menu .profile-line');
-  check('after setup the menu shows the profile', profile.includes('Meryem') && profile.includes('Español') && profile.includes('Deneme_1'), profile);
+  check('after setup the menu shows the profile', profile.includes('Sare') && profile.includes('Español') && profile.includes('Deneme_1'), profile);
   check('no setup the second time', !(await page.$('.overlay.open.setup')));
 
   // --- girl: texts rewritten, look -----------------------------------------------------
   const texts = await ev(() => JSON.stringify(Object.values(window.__game.dialogue.dialogues).map((d) => d.nodes)));
-  check('girl: dialogue texts say Meryem, not Ahmet', !/\bAhmet\b/.test(texts) && texts.includes('Meryem'));
+  check('girl: dialogue texts say Sare, not Ahmet', !/\bAhmet\b/.test(texts) && texts.includes('Sare'));
   check('girl: the family says “kızım”', texts.includes('kızım') && !texts.includes('oğlum'));
-  check('girl: Spanish meanings (and her name in them)', await ev(() => window.__game.glossProbe('Ahmet! Do your homework first!')).then((t) => t.includes('Meryem') && !t.includes('Do your')), await ev(() => window.__game.glossProbe('Ahmet! Do your homework first!')));
+  check('girl: Spanish meanings (and her name in them)', await ev(() => window.__game.glossProbe('Ahmet! Do your homework first!')).then((t) => t.includes('Sare') && !t.includes('Do your')), await ev(() => window.__game.glossProbe('Ahmet! Do your homework first!')));
 
   // --- new game: credits, story --------------------------------------------------------
   await page.goto(`${server.url}/?debug&fakemic&fastclass&nointro&fresh&quality=low`);
@@ -125,10 +125,10 @@ try {
   for (const key of ['ArrowRight', 'ArrowUp', 'ArrowLeft', 'ArrowDown']) {
     await ev(() => window.__game.player.position.set(11, 0, -1.5)); await sleep(150);
     await page.keyboard.down(key);
-    for (let i = 0; i < 16; i++) { await sleep(250); edge = Math.max(edge, await ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); })); }
+    for (let i = 0; i < 28; i++) { await sleep(250); edge = Math.max(edge, await ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); })); }
     await page.keyboard.up(key);
   }
-  check('the square fence stops the player', edge > 15.5 && edge <= 16.7, `furthest ${edge.toFixed(2)} m from the centre (fence at 17)`);
+  check('the square fence stops the player', edge > 24.5 && edge <= 25.7, `furthest ${edge.toFixed(2)} m from the centre (fence at 26)`);
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(600);
   await drainUi(page);
 

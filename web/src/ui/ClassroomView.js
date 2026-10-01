@@ -43,6 +43,7 @@ export class ClassroomView {
     this.feed.replaceChildren();
     this.scores.replaceChildren();
     this.root.classList.add('open');
+    document.body.classList.add('in-lesson');
   }
 
   open(students, liveCount) {
@@ -51,7 +52,7 @@ export class ClassroomView {
     this.head.hidden = true;
     this.root.classList.add('open');
   }
-  close() { this.root.classList.remove('open'); this.slot.replaceChildren(); this.nav.replaceChildren(); }
+  close() { this.root.classList.remove('open'); this.slot.replaceChildren(); this.nav.replaceChildren(); document.body.classList.remove('in-lesson'); }
 
   #clear() { this.slot.replaceChildren(); this.nav.replaceChildren(); this.words.replaceChildren(); this.status_(''); }
 

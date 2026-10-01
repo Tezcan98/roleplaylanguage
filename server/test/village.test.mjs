@@ -225,3 +225,27 @@ test('TURN relay refuses private, loopback and link-local peers', async () => {
   for (const ip of ['127.0.0.1', '127.0.0.53', '10.1.2.3', '192.168.1.5', '172.20.0.1', '169.254.1.1', '100.64.0.1', '0.0.0.0', '::1', 'fe80::1']) assert.equal(blockedPeer(ip), true, ip);
   for (const ip of ['31.58.245.116', '8.8.8.8', '178.240.232.77', '172.32.0.1']) assert.equal(blockedPeer(ip), false, ip);
 });
+
+test('giant chess: seats, only the side to move may move, everyone sees the board, leaving frees the seat', async () => {
+  const w = await join('Beyaz', 'chess');
+  const b = await join('Siyah', 'chess');
+  const v = await join('İzleyen', 'chess');
+  assert.equal(v.welcome.chess.fen.split(' ')[0], 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
+  w.send({ type: 'chess-sit', color: 'w' });
+  await v.next('chess');
+  b.send({ type: 'chess-sit', color: 'w' }); // taken
+  assert.equal((await b.next('chess')).seats.w.name, 'Beyaz');
+  b.send({ type: 'chess-sit', color: 'b' });
+  assert.equal((await v.next('chess')).seats.b.name, 'Siyah');
+  b.send({ type: 'chess-move', from: 'e7', to: 'e5' }); // not black's turn
+  assert.equal((await b.next('chess')).turn, 'w');
+  w.send({ type: 'chess-move', from: 'e2', to: 'e5' }); // illegal
+  assert.equal((await w.next('chess')).last, null);
+  w.send({ type: 'chess-move', from: 'e2', to: 'e4' });
+  const s = await v.next('chess');
+  assert.deepEqual([s.last.from, s.last.to, s.turn], ['e2', 'e4', 'b']);
+  v.inbox.length = 0;
+  await w.close();
+  assert.equal((await v.next('chess')).seats.w, null);
+  await b.close(); await v.close();
+});
