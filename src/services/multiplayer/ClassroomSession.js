@@ -31,6 +31,7 @@ export class LocalClassroomSession extends ClassroomSession {
     Object.assign(this, { lesson, bots, speed });
     this.scores = {};
     this.index = -1;
+    this.turnIndex = -1;
   }
 
   async join(player) {
@@ -49,16 +50,19 @@ export class LocalClassroomSession extends ClassroomSession {
     if (this.index >= qs.length) { this.emit('end', { scores: { ...this.scores } }); return; }
     const q = qs[this.index];
     this.firstCorrect = null;
-    this.emit('question', { index: this.index, total: qs.length, ...q });
-    this.bots.forEach((b, i) => {
-      const delay = (2500 + Math.random() * 4000 + i * 700) / this.speed;
+    this.turnIndex = this.index % (this.bots.length + 1);
+    const students = [this.player, ...this.bots];
+    const speaker = students[this.turnIndex];
+    this.emit('question', { index: this.index, total: qs.length, ...q, turnStudentId: speaker.id });
+    if (speaker.id !== this.player.id) {
+      const delay = (1400 + Math.random() * 2200) / this.speed;
       this.#timers.push(setTimeout(() => {
-        const correct = Math.random() < b.skill;
+        const correct = Math.random() < speaker.skill;
         const text = correct ? q.botAnswers[(Math.random() * q.botAnswers.length) | 0] : q.botWrong[(Math.random() * q.botWrong.length) | 0];
-        this.#score(b.id, correct);
-        this.emit('answer', { studentId: b.id, text, correct });
+        this.#score(speaker.id, correct);
+        this.emit('answer', { studentId: speaker.id, text, correct });
       }, delay));
-    });
+    }
   }
 
   submit(index, { text, correct }) {
