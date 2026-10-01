@@ -361,8 +361,10 @@ new MainMenu(host, {
   onHelp: () => intro.show(),
   onStart: async () => { await introFirst(); startNew(); },
   onContinue: () => continueGame(),
+  // straight into the multiplayer square (keeps an existing save, otherwise a new story)
+  onSquare: async () => { await introFirst(); (saved ? continueGame : startNew)(() => travel.go('village', 'yardRoad')); },
 });
-function startNew() {
+function startNew(then) {
   fader.run(() => {
     saves.clear();
     const requestedDay = Number(params.get('day'));
@@ -372,17 +374,18 @@ function startNew() {
     story.startChapter(dayIndex >= 0 ? dayIndex : 0, () => {
       enterPlay();
       const think = story.chapter.think;
-      if (think) labels.think(think, 5, game.t);
+      if (think && !then) labels.think(think, 5, game.t);
+      then?.();
     });
   });
 }
-function continueGame() {
+function continueGame(then) {
   fader.run(() => {
     state.restore(saved);
     player.wear('jacket', !!state.flags['wear-jacket']);
     items.refresh();
     hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setCredits(wallet.balance); hud.setTextbook(inventory.has('kitap'));
-    story.resume(world.get(state.location).spawn, enterPlay);
+    story.resume(world.get(state.location).spawn, () => { enterPlay(); then?.(); });
   });
 }
 

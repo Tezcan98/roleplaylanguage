@@ -7,13 +7,13 @@
 | # | Ne | Nereden | Nereye yazılacak |
 |---|---|---|---|
 | 1 | **Google Play geliştirici hesabı** (tek seferlik 25 $) | play.google.com/console | — |
-| 2 | **AdMob uygulama kimliği** (`ca-app-pub-XXXX~YYYY`) | admob.google.com → Uygulamalar → Uygulama ekle | `android/app/src/main/AndroidManifest.xml` → `com.google.android.gms.ads.APPLICATION_ID` (yer tutucu hazır) |
-| 3 | **AdMob ödüllü reklam birimi kimliği** (`ca-app-pub-XXXX/ZZZZ`) | AdMob → Reklam birimleri → Ödüllü | `assets/manifest.json` → `"admob": { "rewardedId": "…" }` |
-| 4 | **Çok oyunculu sunucu adresi** (`wss://…/ws/village`) | Render / Fly.io / VPS'e `npm run server` | `assets/manifest.json` → `"villageServer"` |
-| 5 | **TURN sunucusu** (sesli sohbet farklı ağlarda bağlansın): kullanıcı adı + şifre | metered.ca / Twilio Network Traversal | `assets/manifest.json` → `"iceServers"` |
+| 2 | **AdMob uygulama kimliği** (`ca-app-pub-XXXX~YYYY`) | admob.google.com → Uygulamalar → Uygulama ekle | `mobile/android/app/src/main/AndroidManifest.xml` → `com.google.android.gms.ads.APPLICATION_ID` (yer tutucu hazır) |
+| 3 | **AdMob ödüllü reklam birimi kimliği** (`ca-app-pub-XXXX/ZZZZ`) | AdMob → Reklam birimleri → Ödüllü | `web/assets/manifest.json` → `"admob": { "rewardedId": "…" }` |
+| 4 | ✅ **Çok oyunculu sunucu** | kendi sunucun (31.58.245.116), bkz. `server/README.md` | `web/assets/manifest.json` → `"villageServer"` (yazıldı) |
+| 5 | **TURN sunucusu** (sesli sohbet farklı ağlarda bağlansın): kullanıcı adı + şifre | metered.ca / Twilio Network Traversal | `web/assets/manifest.json` → `"iceServers"` |
 | 6 | **İmzalama anahtarı (keystore)** — senin bilgisayarında üretilir, **kaybetme** | `keytool -genkey -v -keystore yilmaz.keystore -alias yilmaz -keyalg RSA -keysize 2048 -validity 10000` | Android Studio → Generate Signed Bundle |
-| 7 | (İsteğe bağlı) **Whisper konuşma tanıma sunucusu** | kendi sunucun (faster-whisper) | `assets/manifest.json` → `"sttEndpoint"` |
-| 8 | (İsteğe bağlı) **Firebase** çökme raporu: `google-services.json` | console.firebase.google.com | `android/app/` |
+| 7 | (İsteğe bağlı) **Whisper konuşma tanıma sunucusu** | kendi sunucun (faster-whisper) | `web/assets/manifest.json` → `"sttEndpoint"` |
+| 8 | (İsteğe bağlı) **Firebase** çökme raporu: `google-services.json` | console.firebase.google.com | `mobile/android/app/` |
 
 > Anahtarlar istemciye gömülür ama bunlar gizli değildir (AdMob kimlikleri ve sunucu adresleri herkese açık bilgilerdir). Gizli anahtar (ör. OpenAI) **asla** uygulamaya konmaz; bir sunucu arkasında tutulur.
 

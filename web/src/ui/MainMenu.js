@@ -1,7 +1,25 @@
 import { el } from './dom.js';
 
 export class MainMenu {
-  constructor(host, { onStart, onContinue, onHelp, hasSave, settings }) {
+  constructor(host, { onStart, onContinue, onHelp, onSquare, hasSave, settings }) {
+    // multiplayer straight from the menu: pick a username, land in the village square
+    const nameIn = el('input', { class: 'name-in', attrs: { type: 'text', maxlength: '16', placeholder: 'Kullanıcı adın · اسم المستخدم', autocomplete: 'nickname' } });
+    nameIn.value = settings.get('username', '') ?? '';
+    const nameErr = el('p', { class: 'note' });
+    const goSquare = () => {
+      const name = nameIn.value.trim();
+      if (!/^[\p{L}\p{N}_ .-]{2,16}$/u.test(name)) { nameErr.textContent = 'Kullanıcı adı 2-16 harf/rakam olmalı · ٢-١٦ حرفاً'; nameIn.focus(); return; }
+      settings.set('username', name);
+      this.hide();
+      onSquare(name);
+    };
+    nameIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') goSquare(); });
+    const square = onSquare && el('div', { class: 'menu-square' }, [
+      el('p', { class: 'chap', text: 'Köy meydanı · çok oyunculu · ساحة القرية' }),
+      nameIn,
+      el('button', { class: 'btn', text: 'Meydana gir · ادخل الساحة', attrs: { type: 'button' }, on: { click: goSquare } }),
+      nameErr,
+    ]);
     const help = el('ul', { class: 'help', style: { display: 'none' } }, [
       'Joystick veya WASD ile yürü.',
       'Parlayan oku takip et: görevin orada.',
@@ -31,6 +49,7 @@ export class MainMenu {
       el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
       hasSave && el('button', { class: 'btn', text: 'Devam et', attrs: { type: 'button' }, on: { click: () => { this.hide(); onContinue(); } } }),
       el('button', { class: hasSave ? 'btn alt' : 'btn', text: hasSave ? 'Yeni oyun' : 'Hikayeye başla', attrs: { type: 'button' }, on: { click: () => { this.hide(); onStart(); } } }),
+      square,
       el('button', { class: 'btn alt', text: 'Nasıl oynanır? · كيف ألعب؟', attrs: { type: 'button' }, on: { click: () => { if (onHelp) onHelp(); else help.style.display = help.style.display === 'block' ? 'none' : 'block'; } } }),
       help,
       el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler (Piper)' })]),

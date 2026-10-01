@@ -21,23 +21,32 @@ const errors = [];
 const checks = [];
 const check = (name, ok, detail = '') => { checks.push([name, ok]); log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`); };
 
-async function player(tag, name) {
+/** A joins from the main menu (username + "Meydana gir"), B walks there from the story. */
+async function player(tag, name, { viaMenu = false } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1000, height: 620 }, permissions: ['microphone'] });
   const page = await ctx.newPage();
   errors.push(...watchErrors(page, `${tag} `));
   await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  if (viaMenu) {
+    await page.fill('.name-in', name); await page.click('text=Meydana gir');
+    await waitFor(() => page.evaluate(() => { document.querySelector('.overlay.open .card .btn')?.click(); return window.__game.village.net.connected; }), 15000, 400);
+    await sleep(800);
+    await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300); // first-visit card
+    return page;
+  }
   await page.click('text=Hikayeye başla'); await sleep(1200);
   await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);
   await page.evaluate(() => window.__game.travel.go('village', 'yardRoad')); await sleep(1500);
-  await page.fill('.overlay.open input', name); await page.click('text=Meydana gir'); await sleep(1500);
+  await page.fill('.overlay.open input', name); await page.click('.overlay.open button:has-text("Meydana gir")'); await sleep(1500);
   await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300); // first-visit card
   return page;
 }
 
 let failed = false;
 try {
-  const A = await player('A', 'Ayşe');
+  const A = await player('A', 'Ayşe', { viaMenu: true });
+  check('main menu → village square', (await A.evaluate(() => window.__game.world.current.id)) === 'village' && (await A.evaluate(() => window.__game.village.net.connected)));
   const B = await player('B', 'Ayşe'); // same name on purpose
   const at = (p, x, z) => p.evaluate(([x, z]) => window.__game.player.position.set(x, 0, z), [x, z]);
   const label = (p) => p.evaluate(() => (document.getElementById('act').hidden ? null : document.getElementById('act').textContent));
