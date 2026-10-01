@@ -20,6 +20,13 @@ for (const [who, d] of Object.entries(DIALOGUES)) {
   }
 }
 
+// 1b. the day on the chapter card matches the in-game clock (day 1 = Sunday)
+const DAYS = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+for (const ch of STORY.chapters) {
+  const shown = ch.intro?.num?.split(' · ')[0];
+  if (shown && DAYS.includes(shown) && shown !== DAYS[(ch.day - 1) % 7]) fail(`${ch.id} → card says ${shown}, clock says ${DAYS[(ch.day - 1) % 7]}`);
+}
+
 // 2. for every chapter/quest, what each present character's start() returns exists
 const fakeCtx = (chapter, quest, has, flags = false) => ({
   q: quest?.id ?? null, chapter: chapter.id, loc: 'house', day: chapter.day, isNight: false, words: 0, seated: false, hasDuty: !!quest,

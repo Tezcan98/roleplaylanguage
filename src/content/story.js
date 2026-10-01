@@ -396,7 +396,7 @@ export const STORY = {
     },
 
     {
-      id: 'd5-morning', day: 5, time: '07:30', location: 'house', spawn: 'bedside',
+      id: 'd5-morning', day: 6, time: '07:30', location: 'house', spawn: 'bedside',
       cast: {
         anne: ['house', 'kitchen', 'cook'],
         baba: ['house', 'sedirL', 'sitBench'],
@@ -404,9 +404,9 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Perşembe · Bölüm 17', title: 'Hafta sonuna doğru',
-        text: 'Bir gün daha geçti. Hafta sonu yaklaşıyor; ama önce okul.',
-        en: 'Another day has passed. The weekend is getting closer, but first: school.',
+        num: 'Cuma · Bölüm 17', title: 'Hafta sonuna doğru',
+        text: 'Cuma sabahı! Haftanın son okul günü; sonra hafta sonu.',
+        en: 'Friday morning! The last school day of the week, then the weekend.',
       },
       quests: [
         { id: 'morning-4', title: 'Günaydın', obj: 'Annene günaydın de', en: 'Say good morning to mom', target: { npc: 'anne' }, minutes: 10 },
@@ -415,7 +415,7 @@ export const STORY = {
     },
 
     {
-      id: 'd5-school', day: 5, time: '08:40', location: 'schoolyard', spawn: 'gate', lessonId: 'l4',
+      id: 'd5-school', day: 6, time: '08:40', location: 'schoolyard', spawn: 'gate', lessonId: 'l4',
       cast: {
         anne: null, baba: null, dede: null,
         ogretmen: ['classroom', 'teacher', 'teach'],
@@ -425,7 +425,7 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Perşembe · Bölüm 18', title: 'Hafta sonu planı',
+        num: 'Cuma · Bölüm 18', title: 'Hafta sonu planı',
         text: 'Dersten sonra herkes hafta sonu ne yapacağını konuşuyor.',
         en: 'After class, everyone is talking about their weekend plans.',
       },
@@ -437,7 +437,7 @@ export const STORY = {
     },
 
     {
-      id: 'd5-home', day: 5, time: '17:00', location: 'house', spawn: 'door',
+      id: 'd5-home', day: 6, time: '17:00', location: 'house', spawn: 'door',
       cast: {
         anne: ['house', 'kitchen', 'cook'],
         baba: ['house', 'sedirL', 'sitBench'],
@@ -446,9 +446,9 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Perşembe · Bölüm 19', title: 'Yarın cuma',
-        text: 'Yarın son okul günü. Bu akşam biraz dinlenip hafta sonuna hazırlanabilirsin.',
-        en: 'Tomorrow is the last school day. Tonight you can rest and get ready for the weekend.',
+        num: 'Cuma · Bölüm 19', title: 'Okul haftası bitti',
+        text: 'Bu hafta okul bitti! Bu akşam biraz dinlenip hafta sonuna hazırlanabilirsin.',
+        en: 'School is over for this week! Tonight you can rest and get ready for the weekend.',
       },
       quests: [
         { id: 'read-5', title: 'Kısa tekrar', obj: 'Kitabından kısa bir tekrar yap', en: 'Do a short review in your book', target: { hotspot: 'house.shelf' }, complete: { use: 'house.shelf' }, minutes: 15 },
@@ -457,7 +457,7 @@ export const STORY = {
     },
 
     {
-      id: 'd6-morning', day: 6, time: '09:00', location: 'village', spawn: 'yardRoad',
+      id: 'd6-morning', day: 7, time: '09:00', location: 'village', spawn: 'yardRoad',
       cast: {
         anne: ['house', 'kitchen', 'cook'],
         baba: ['house', 'sedirL', 'sitBench'],
@@ -481,7 +481,7 @@ export const STORY = {
     },
 
     {
-      id: 'd7-morning', day: 7, time: '10:00', location: 'yard', spawn: 'houseDoor',
+      id: 'd7-morning', day: 8, time: '10:00', location: 'yard', spawn: 'houseDoor',
       cast: {
         anne: ['yard', 'laundry', 'laundry'],
         baba: ['yard', 'car', 'repair'],
