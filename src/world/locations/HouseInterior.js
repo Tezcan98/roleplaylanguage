@@ -78,6 +78,18 @@ export class HouseInterior extends Location {
     this.hotspot('house.tv', 4.5, -0.5, 1.6);
 
     // kitchen corner
+    this.prop(kit, 'prop.fridge', 2.95, 0, -4.15, 0, () => mf.box(0.75, 1.9, 0.72, { tex: 'whiteWall' }));
+    this.prop(kit, 'prop.stove', 3.85, 0, -4.15, 0, () => mf.group(
+      mf.at(mf.box(0.8, 0.9, 0.72, { tex: 'metal' }), 0, 0.45, 0),
+      mf.at(mf.cyl(0.12, 0.12, 0.02, 0x2A1E15, 16), -0.2, 0.91, -0.16),
+      mf.at(mf.cyl(0.12, 0.12, 0.02, 0x2A1E15, 16), 0.2, 0.91, 0.16)
+    ));
+    this.prop(kit, 'prop.dishpan', 3.55, 0.98, -4.18, 0, () => mf.cyl(0.28, 0.34, 0.09, 0x8EC5FF, 16));
+    this.prop(kit, 'prop.teaTray', -0.8, 0, -0.4, 0, () => mf.group(
+      mf.at(mf.cyl(0.62, 0.62, 0.05, 0xB5482E, 24), 0, 0.31, 0),
+      mf.at(mf.cyl(0.07, 0.07, 0.12, 0xE8D6A8, 10), -0.2, 0.39, 0),
+      mf.at(mf.cyl(0.07, 0.07, 0.12, 0xE8D6A8, 10), 0.2, 0.39, 0)
+    ));
     this.prop(kit, 'prop.kitchen', 4.3, 0, -4.2, 0, () => {
       const g = mf.group(mf.at(mf.box(3.2, 0.9, 0.8, { tex: 'whiteWall' }), 0, 0.45, 0), mf.at(mf.box(3.3, 0.06, 0.85, { tex: 'metal' }), 0, 0.93, 0));
       [-1, 0, 1].forEach((x) => g.add(mf.at(mf.box(0.05, 0.6, 0.02, 0x9AA3AE), x * 0.9, 0.45, 0.41)));
