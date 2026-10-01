@@ -399,7 +399,7 @@ if (native) {
     const overlay = document.querySelector('.overlay.open');
     if (overlay) {
       overlay.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-      overlay.querySelector('button:not([disabled])')?.click();
+      overlay.querySelector('button:not([disabled]):last-of-type')?.click();
       return;
     }
     App.minimizeApp().catch(() => { if (canGoBack) window.history.back(); });
