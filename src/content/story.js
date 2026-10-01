@@ -83,12 +83,14 @@ export const STORY = {
         en: 'The whole family is at the table. Hot tea, cheese, olives, tomatoes… But where is the bread?',
       },
       quests: [
-        { id: 'bread', title: 'Dedenin isteği', obj: 'Dedeni dinle', en: 'Listen to grandpa', target: { npc: 'dede' } },
+        { id: 'sit-breakfast', title: 'Kahvaltıya otur', obj: 'Sofraya otur', en: 'Sit down for breakfast', target: { hotspot: 'house.sofra' }, complete: { use: 'house.sofra' } },
+        { id: 'bread', title: 'Dedenin isteği', obj: 'Oturduğun yerden dedenle konuş', en: 'Talk to grandpa from the breakfast table', target: { npc: 'dede' } },
         {
           id: 'bring-bread', title: 'Ekmek',
-          obj: (c) => (c.has('ekmek') ? 'Ekmeği dedene ver' : 'Mutfaktan ekmeği al'),
-          en: (c) => (c.has('ekmek') ? 'Give the bread to grandpa' : 'Get the bread from the kitchen'),
-          target: (c) => (c.has('ekmek') ? { npc: 'dede' } : { item: 'ekmek' }),
+          obj: (c) => (c.has('ekmek') ? 'Ekmeği sofraya koy' : 'Mutfaktan ekmeği al'),
+          en: (c) => (c.has('ekmek') ? 'Put the bread on the table' : 'Get the bread from the kitchen'),
+          target: (c) => (c.has('ekmek') ? { hotspot: 'house.breadTable' } : { item: 'ekmek' }),
+          complete: (c) => (c.has('ekmek') ? { use: 'house.breadTable' } : { pick: 'ekmek' }),
           minutes: 5,
         },
         { id: 'tea', title: 'Çay', obj: 'Babanla konuş', en: 'Talk to your dad', target: { npc: 'baba' }, minutes: 15 },
