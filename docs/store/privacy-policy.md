@@ -35,11 +35,18 @@ Doğal/neural karakter sesleri etkinleştirilirse gerekli ses modelleri **Huggin
 
 Köy meydanında kullanıcı adları ve genel konuşma metinleri sunucudan diğer oyunculara aktarılır. Kötüye kullanımı azaltmak için kullanıcı adı ve genel konuşmada Türkçe, Arapça ve İngilizce kısa bir küfür filtresi uygulanır. Oyuncular ayrıca cihazlarında başka oyuncuları engelleyebilir.
 
-## 7. Çocuklar ve ebeveynler
+## 7. Saklama ve silme
+
+- Yerel oyun ilerlemesi ve ayarlar, uygulamanın cihazdaki localStorage verisi temizlendiğinde silinir.
+- Kullanıcı adı, çok oyunculu bağlantı açık olduğu sürece sunucu tarafında oturum verisi olarak tutulur; kalıcı hesap sistemi yoktur.
+- Sunucunun geçici bağlantı/log verileri üretim sunucusunun yapılandırmasına bağlıdır ve yayın öncesinde gerçek saklama süresi ayrıca belirlenmelidir.
+- Kalıcı kullanıcı hesabı veya hesap silme özelliği eklenirse bu politika ve Play Console beyanları buna göre güncellenmelidir.
+
+## 8. Çocuklar ve ebeveynler
 
 Uygulamada çevrimiçi oyuncu etkileşimi ve sesli sohbet bulunur. Uygulamanın hedef kitlesi çocuklar olarak seçilecekse Google Play'in çocuklar/aileler için güncel şartları ayrıca değerlendirilmelidir; özellikle sesli sohbet özelliği için uygun yaş ve güvenlik ayarları belirlenmelidir.
 
-## 8. İletişim
+## 9. İletişim
 
 Gizlilik politikasıyla ilgili sorularınız için uygulamanın Google Play mağaza sayfasında yayınlanan geliştirici iletişim adresini kullanabilirsiniz.
 
