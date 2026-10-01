@@ -23,6 +23,59 @@ export const LESSONS = {
         expect: ['Annem babam ve dedem var'], keywords: ['anne', 'baba', 'dede', 'kardeş', 'nene', 'babaanne'],
         botAnswers: ['Annem, babam ve kardeşim var.', 'Annem ve babam var.'], botWrong: ['Kedim var!', 'Bilmiyorum.'] },
     ],
+
+  },
+  l2: {
+    id: 'l2', title: 'Sınıf eşyaları ve yönler', titleEn: 'Classroom objects and directions', cost: 1,
+    questions: [
+      { q: 'Bu ne? (kalem)', en: 'What is this? (pencil)', hint: 'Bu bir kalem.',
+        expect: ['Bu bir kalem', 'Kalem'], keywords: ['kalem'],
+        botAnswers: ['Bu bir kalem.', 'Kalem!'], botWrong: ['Bu bir kitap.', 'Masa.'] },
+      { q: 'Kitap nerede?', en: 'Where is the book?', hint: 'Masanın üstünde.',
+        expect: ['Masanın üstünde', 'Kitap masanın üstünde'], keywords: ['üstünde', 'masa'],
+        botAnswers: ['Masanın üstünde.', 'Kitap masada.'], botWrong: ['Bahçede.', 'Çantanın altında.'] },
+      { q: 'Sağ elin hangisi?', en: 'Which is your right hand?', hint: 'Sağ = right',
+        expect: ['Sağ elim', 'Bu sağ elim'], keywords: ['sağ'],
+        botAnswers: ['Sağ elim!', 'Bu sağ taraf.'], botWrong: ['Sol elim.', 'Arkam.'] },
+      { q: 'Pencere nerede?', en: 'Where is the window?', hint: 'Pencere sınıfta.',
+        expect: ['Pencere sınıfta', 'Sınıfta'], keywords: ['sınıf'],
+        botAnswers: ['Pencere sınıfta.', 'Sınıfta.'], botWrong: ['Bahçede.', 'Mutfakta.'] },
+    ],
+  },
+  l3: {
+    id: 'l3', title: 'Günlük hayat ve planlar', titleEn: 'Daily life and plans', cost: 1,
+    questions: [
+      { q: 'Bugün ne yapıyorsun?', en: 'What are you doing today?', hint: 'Bugün okula gidiyorum.',
+        expect: ['Bugün okula gidiyorum', 'Okula gidiyorum'], keywords: ['okula', 'gidiyorum'],
+        botAnswers: ['Bugün okula gidiyorum.', 'Ders çalışıyorum.'], botWrong: ['Dün uyudum.', 'Yarın.'] },
+      { q: 'Hafta sonu ne yapacaksın?', en: 'What will you do at the weekend?', hint: 'Arkadaşlarımla buluşacağım.',
+        expect: ['Arkadaşlarımla buluşacağım', 'Arkadaşlarımla buluşacağım'], keywords: ['arkadaşlarımla'],
+        botAnswers: ['Arkadaşlarımla buluşacağım.', 'Köye gideceğim.'], botWrong: ['Okula gideceğim.', 'Dün buluştum.'] },
+      { q: 'Saat kaç?', en: 'What time is it?', hint: 'Saat dokuz.',
+        expect: ['Saat dokuz', 'Dokuz'], keywords: ['saat', 'dokuz'], // any time said with “saat” counts
+        botAnswers: ['Saat dokuz.', 'Dokuz.'], botWrong: ['Saat üç.', 'On iki.'] },
+      { q: 'Akşam ne yapıyorsun?', en: 'What do you do in the evening?', hint: 'Akşam kitap okuyorum.',
+        expect: ['Akşam kitap okuyorum', 'Kitap okuyorum'], keywords: ['kitap', 'okuyorum'],
+        botAnswers: ['Akşam kitap okuyorum.', 'Ailemle konuşuyorum.'], botWrong: ['Okula gidiyorum.', 'Kahvaltı yapıyorum.'] },
+    ],
+  },
+
+  l4: {
+    id: 'l4', title: 'Hafta sonu ve arkadaşlar', titleEn: 'Weekend and friends', cost: 1,
+    questions: [
+      { q: 'Arkadaşınla nerede buluşursun?', en: 'Where do you meet your friend?', hint: 'Köy meydanında.',
+        expect: ['Köy meydanında', 'Meydanda'], keywords: ['meydan'],
+        botAnswers: ['Köy meydanında.', 'Meydanda buluşuruz.'], botWrong: ['Okulda.', 'Evde.'] },
+      { q: 'Cumartesi okul var mı?', en: 'Is there school on Saturday?', hint: 'Hayır, okul yok.',
+        expect: ['Hayır okul yok', 'Cumartesi okul yok'], keywords: ['yok'],
+        botAnswers: ['Hayır, okul yok.', 'Cumartesi okul yok.'], botWrong: ['Evet, okul var.', 'Evet.'] },
+      { q: 'Kiminle buluşacaksın?', en: 'Who will you meet?', hint: 'Arkadaşlarımla.',
+        expect: ['Arkadaşlarımla', 'Elif ile', 'Can ile'], keywords: ['arkadaş'],
+        botAnswers: ['Arkadaşlarımla.', 'Elif ile buluşacağım.'], botWrong: ['Öğretmenimle.', 'Muhtarla.'] },
+      { q: 'Hafta sonu eğlenir misin?', en: 'Will you have fun at the weekend?', hint: 'Evet, eğleneceğim.',
+        expect: ['Evet eğleneceğim', 'Evet'], keywords: ['eğlen'],
+        botAnswers: ['Evet, eğleneceğim.', 'Tabii!'], botWrong: ['Hayır.', 'Okula gideceğim.'] },
+    ],
   },
 };
 

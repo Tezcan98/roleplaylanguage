@@ -56,6 +56,7 @@ export class VillageSquare extends Location {
     });
     this.anchor('benchWest', -5.8, 4.2, 0);
     this.anchor('benchEast', 5.8, 4.2, Math.PI);
+    this.anchor('zehra', 2.8, 3.2, -0.6); // friends hang out by the fountain
     this.hotspot('village.benchWest', -5.8, 6.15, 1.8);
     this.hotspot('village.benchEast', 5.8, 6.15, 1.8);
 

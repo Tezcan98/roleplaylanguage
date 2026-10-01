@@ -246,15 +246,267 @@ export const STORY = {
         { id: 'set-table', title: 'Sofra', obj: 'Sofrayı hazırla', en: 'Set the table', target: { hotspot: 'house.table' }, complete: { use: 'house.table' } },
         { id: 'wash-dishes', title: 'Bulaşıklar', obj: 'Bulaşıkları yıka', en: 'Wash the dishes', target: { hotspot: 'house.dishes' }, complete: { use: 'house.dishes' } },
         { id: 'sweep-house', title: 'Temizlik', obj: 'Odayı süpür', en: 'Sweep the room', target: { hotspot: 'house.sweep' }, complete: { use: 'house.sweep' } },
-        { id: 'water-plant', title: 'Çiçek', obj: 'Salondaki çiçeği sula', en: 'Water the plant in the living room', target: { hotspot: 'house.plant' }, complete: { use: 'house.plant' } },
-        { id: 'free-evening', title: 'Serbest zaman', obj: 'Dolaş, oyna, herkesle konuş', en: 'Explore, play and chat with everyone', target: null, final: true },
+        { id: 'water-plant', title: 'Çiçek', obj: 'Salondaki çiçeği sula', en: 'Water the plant in the living room', target: { hotspot: 'house.plant' }, complete: { use: 'house.plant' }, after: ['chapter'] },
+      ],
+    },
+
+    {
+      id: 'd2-night', day: 2, time: '20:30', location: 'house', spawn: 'door',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['house', 'sedirR', 'sitBench'],
+        ogretmen: null, elif: null, can: null, zehra: null,
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Pazartesi · Bölüm 10', title: 'Akşam sakinliği',
+        text: 'Ödev bitti. Ev biraz sessiz. Yarın yine okul var ama bu akşam biraz aileyle vakit var.',
+        en: 'Homework is done. The house is quiet. School is tomorrow, but there is still time with the family tonight.',
+      },
+      quests: [
+        { id: 'read-night', title: 'Biraz oku', obj: 'Kitabından biraz oku', en: 'Read a little from your book', target: { hotspot: 'house.shelf' }, complete: { use: 'house.shelf' }, minutes: 20 },
+        { id: 'talk-dede-night', title: 'Dedenle sohbet', obj: 'Dedenle biraz sohbet et', en: 'Chat with grandpa for a while', target: { npc: 'dede' }, after: ['chapter'], minutes: 15 },
+      ],
+    },
+
+    {
+      id: 'd3-morning', day: 3, time: '07:30', location: 'house', spawn: 'bedside',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        dede: ['yard', 'garden', 'garden'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Salı · Bölüm 11', title: 'Yeni okul günü',
+        text: 'Salı sabahı. Dün öğrendiklerini hatırlıyor musun? Bugün sınıfta yeni bir ders var.',
+        en: 'Tuesday morning. Do you remember what you learned yesterday? There is a new lesson today.',
+      },
+      quests: [
+        { id: 'wake-2', title: 'Günaydın', obj: 'Annene günaydın de', en: 'Say good morning to mom', target: { npc: 'anne' }, minutes: 10 },
+        { id: 'school-2', title: 'Okul', obj: 'Bahçe kapısından okula git', en: 'Go to school through the garden gate', target: { hotspot: 'yard.gate' } },
+      ],
+    },
+
+    {
+      id: 'd3-school', day: 3, time: '08:40', location: 'schoolyard', spawn: 'gate', lessonId: 'l2',
+      cast: {
+        anne: null, baba: null, dede: null,
+        ogretmen: ['classroom', 'teacher', 'teach'],
+        elif: ['schoolyard', 'elif', 'stand'],
+        can: ['schoolyard', 'can', 'stand'],
+        zehra: ['classroom', 'seat2', 'sitBench'],
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Salı · Bölüm 12', title: 'Sınıf eşyaları',
+        text: 'Elif, Can ve Zehra seni bahçede bekliyor. Bugün sınıfta yeni kelimeler öğreneceksiniz.',
+        en: 'Elif, Can and Zehra are waiting in the schoolyard. Today you will learn new words in class.',
+      },
+      quests: [
+        { id: 'meet-can', title: 'Can ile konuş', obj: 'Can ile konuş', en: 'Talk to Can', target: { npc: 'can' } },
+        { id: 'lesson-2', title: 'İkinci ders', obj: 'Sınıfa gir ve derse katıl', en: 'Enter the classroom and join the lesson', target: { hotspot: 'school.door' }, complete: { flag: 'lesson-l2' }, minutes: 45 },
+        { id: 'teacher-2', title: 'Bugünün ödevi', obj: 'Öğretmenle konuş', en: 'Talk to the teacher', target: { npc: 'ogretmen' }, minutes: 10 },
+        { id: 'go-home-2', title: 'Eve dönüş', obj: 'Okuldan eve dön', en: 'Go home from school', target: { hotspot: 'school.exit' } },
+      ],
+    },
+
+    {
+      id: 'd3-home', day: 3, time: '17:00', location: 'house', spawn: 'door',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['house', 'sedirR', 'sitBench'],
+        ogretmen: null, elif: null, can: null, zehra: null,
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Salı · Bölüm 13', title: 'Okuldan sonra',
+        text: 'Eve geldin. Bugünkü ders daha zordu. Önce kısa bir tekrar, sonra aileyle sohbet.',
+        en: 'You are home. Today’s lesson was harder. First a short review, then time with the family.',
+      },
+      quests: [
+        { id: 'review-2', title: 'Dersi tekrar et', obj: 'Kitabından bugünkü konuyu tekrar et', en: 'Review today’s topic in your book', target: { hotspot: 'house.shelf' }, complete: { use: 'house.shelf' }, minutes: 20 },
+        { id: 'talk-baba-tools', title: 'Babaya yardım', obj: 'Babanla konuş', en: 'Talk to dad', target: { npc: 'baba' }, minutes: 15 },
+        { id: 'talk-dede-3', title: 'Bahçe planı', obj: 'Dedenle yarın için konuş', en: 'Talk to grandpa about tomorrow', target: { npc: 'dede' }, after: ['chapter'], minutes: 15 },
+      ],
+    },
+
+    {
+      id: 'd4-morning', day: 4, time: '07:30', location: 'house', spawn: 'bedside',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['yard', 'garden', 'garden'],
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Çarşamba · Bölüm 14', title: 'Çarşamba',
+        text: 'Haftanın ortası geldi. Okuldan sonra arkadaşlarınla buluşmak için plan yapabilirsiniz.',
+        en: 'It is Wednesday already. After school, you can make plans to meet your friends.',
+      },
+      quests: [
+        { id: 'morning-3', title: 'Günaydın', obj: 'Annene günaydın de', en: 'Say good morning to mom', target: { npc: 'anne' }, minutes: 10 },
+        { id: 'school-3', title: 'Okula git', obj: 'Bahçe kapısından okula git', en: 'Go to school', target: { hotspot: 'yard.gate' } },
+      ],
+    },
+
+    {
+      id: 'd4-school', day: 4, time: '08:40', location: 'schoolyard', spawn: 'gate', lessonId: 'l3',
+      cast: {
+        anne: null, baba: null, dede: null,
+        ogretmen: ['classroom', 'teacher', 'teach'],
+        elif: ['schoolyard', 'elif', 'stand'],
+        can: ['schoolyard', 'can', 'stand'],
+        zehra: ['classroom', 'seat2', 'sitBench'],
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Çarşamba · Bölüm 15', title: 'Günlük hayat',
+        text: 'Bugün ders günlük hayattan konuşuyor. Arkadaşların da derse katılıyor.',
+        en: 'Today’s lesson is about everyday life. Your friends are joining in too.',
+      },
+      quests: [
+        { id: 'meet-zehra', title: 'Zehra ile konuş', obj: 'Zehra ile konuş', en: 'Talk to Zehra', target: { npc: 'zehra' } },
+        { id: 'lesson-3', title: 'Üçüncü ders', obj: 'Sınıfa gir ve derse katıl', en: 'Enter the classroom and join the lesson', target: { hotspot: 'school.door' }, complete: { flag: 'lesson-l3' }, minutes: 45 },
+        { id: 'teacher-3', title: 'Sınıf görevi', obj: 'Öğretmenle konuş', en: 'Talk to the teacher', target: { npc: 'ogretmen' }, minutes: 10 },
+        { id: 'go-home-3', title: 'Eve dönüş', obj: 'Okuldan eve dön', en: 'Go home from school', target: { hotspot: 'school.exit' } },
+      ],
+    },
+
+    {
+      id: 'd4-home', day: 4, time: '16:30', location: 'house', spawn: 'door',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['house', 'sedirR', 'sitBench'],
+        ogretmen: null, elif: ['village', 'benchWest', 'sitBench'], can: ['village', 'benchEast', 'sitBench'], zehra: ['village', 'zehra', 'stand'],
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Çarşamba · Bölüm 16', title: 'Arkadaşlarla buluşma',
+        text: 'Ödev bugün kısa. Akşam arkadaşların köy meydanında buluşacak. Birlikte konuşup oyun oynayabilirsiniz.',
+        en: 'Homework is short today. Your friends will meet at the village square this evening. You can talk and play together.',
+      },
+      quests: [
+        { id: 'water-garden-2', title: 'Bahçeye yardım', obj: 'Bahçeyi sula', en: 'Water the garden', target: { hotspot: 'yard.garden' }, complete: { use: 'yard.garden' }, minutes: 15 },
+        { id: 'friend-plan', title: 'Buluşma', obj: 'Köy meydanında Elif ile buluş', en: 'Meet Elif at the village square', target: { npc: 'elif' }, after: ['chapter'], minutes: 20 },
+      ],
+    },
+
+    {
+      id: 'd5-morning', day: 5, time: '07:30', location: 'house', spawn: 'bedside',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['yard', 'garden', 'garden'],
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Perşembe · Bölüm 17', title: 'Hafta sonuna doğru',
+        text: 'Bir gün daha geçti. Hafta sonu yaklaşıyor; ama önce okul.',
+        en: 'Another day has passed. The weekend is getting closer, but first: school.',
+      },
+      quests: [
+        { id: 'morning-4', title: 'Günaydın', obj: 'Annene günaydın de', en: 'Say good morning to mom', target: { npc: 'anne' }, minutes: 10 },
+        { id: 'school-4', title: 'Okula git', obj: 'Okula git', en: 'Go to school', target: { hotspot: 'yard.gate' } },
+      ],
+    },
+
+    {
+      id: 'd5-school', day: 5, time: '08:40', location: 'schoolyard', spawn: 'gate', lessonId: 'l4',
+      cast: {
+        anne: null, baba: null, dede: null,
+        ogretmen: ['classroom', 'teacher', 'teach'],
+        elif: ['schoolyard', 'elif', 'stand'],
+        can: ['schoolyard', 'can', 'stand'],
+        zehra: ['classroom', 'seat2', 'sitBench'],
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Perşembe · Bölüm 18', title: 'Hafta sonu planı',
+        text: 'Dersten sonra herkes hafta sonu ne yapacağını konuşuyor.',
+        en: 'After class, everyone is talking about their weekend plans.',
+      },
+      quests: [
+        { id: 'chat-weekend', title: 'Hafta sonu planı', obj: 'Elif ile hafta sonu planını konuş', en: 'Talk to Elif about the weekend plan', target: { npc: 'elif' } },
+        { id: 'lesson-4', title: 'Ders', obj: 'Sınıfa gir ve derse katıl', en: 'Enter the classroom and join the lesson', target: { hotspot: 'school.door' }, complete: { flag: 'lesson-l4' }, minutes: 45 },
+        { id: 'go-home-4', title: 'Eve dön', obj: 'Okuldan eve dön', en: 'Go home from school', target: { hotspot: 'school.exit' } },
+      ],
+    },
+
+    {
+      id: 'd5-home', day: 5, time: '17:00', location: 'house', spawn: 'door',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['house', 'sedirR', 'sitBench'],
+        ogretmen: null, elif: null, can: null, zehra: null,
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Perşembe · Bölüm 19', title: 'Yarın cuma',
+        text: 'Yarın son okul günü. Bu akşam biraz dinlenip hafta sonuna hazırlanabilirsin.',
+        en: 'Tomorrow is the last school day. Tonight you can rest and get ready for the weekend.',
+      },
+      quests: [
+        { id: 'read-5', title: 'Kısa tekrar', obj: 'Kitabından kısa bir tekrar yap', en: 'Do a short review in your book', target: { hotspot: 'house.shelf' }, complete: { use: 'house.shelf' }, minutes: 15 },
+        { id: 'talk-mom-weekend', title: 'Hafta sonu', obj: 'Annenle hafta sonunu konuş', en: 'Talk to mom about the weekend', target: { npc: 'anne' }, after: ['chapter'], minutes: 15 },
+      ],
+    },
+
+    {
+      id: 'd6-morning', day: 6, time: '09:00', location: 'village', spawn: 'yardRoad',
+      cast: {
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['house', 'sedirR', 'sitBench'],
+        elif: ['village', 'benchWest', 'sitBench'],
+        can: ['village', 'benchEast', 'sitBench'],
+        zehra: ['village', 'zehra', 'stand'],
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Cumartesi · Bölüm 20', title: 'Hafta sonu başladı',
+        text: 'Okul yok! Arkadaşların köy meydanında. Muhtar da bugün köyde büyük bir hazırlık olduğunu söylüyor.',
+        en: 'No school! Your friends are at the village square. The muhtar says there is a big preparation in the village today.',
+      },
+      quests: [
+        { id: 'sat-elif', title: 'Elif ile buluş', obj: 'Elif ile konuş', en: 'Talk to Elif', target: { npc: 'elif' }, minutes: 10 },
+        { id: 'sat-can', title: 'Can ile buluş', obj: 'Can ile konuş', en: 'Talk to Can', target: { npc: 'can' }, minutes: 10 },
+        { id: 'sat-zehra', title: 'Zehra ile buluş', obj: 'Zehra ile konuş', en: 'Talk to Zehra', target: { npc: 'zehra' }, minutes: 10 },
+        { id: 'sat-muhtar', title: 'Köy hazırlığı', obj: 'Muhtarla konuş', en: 'Talk to the muhtar', target: { npc: 'muhtar' }, after: ['chapter'], minutes: 20 },
+      ],
+    },
+
+    {
+      id: 'd7-morning', day: 7, time: '10:00', location: 'yard', spawn: 'houseDoor',
+      cast: {
+        anne: ['yard', 'laundry', 'laundry'],
+        baba: ['yard', 'car', 'repair'],
+        dede: ['yard', 'pergolaSeat', 'sitBench'],
+        elif: ['village', 'benchWest', 'sitBench'],
+        can: ['village', 'benchEast', 'sitBench'],
+        zehra: ['village', 'zehra', 'stand'],
+        ...VILLAGE_NPCS,
+      },
+      intro: {
+        num: 'Pazar · Bölüm 21', title: 'Pazar günü',
+        text: 'Hafta sonunun son günü. Ailenin yanında biraz yardım ediyor, sonra arkadaşlarınla yeniden buluşuyorsun.',
+        en: 'The last day of the weekend. You help your family for a while, then meet your friends again.',
+      },
+      quests: [
+        { id: 'sun-garden', title: 'Pazar bahçesi', obj: 'Bahçeyi sula', en: 'Water the garden', target: { hotspot: 'yard.garden' }, complete: { use: 'yard.garden' }, minutes: 15 },
+        { id: 'sun-dede', title: 'Pazar sohbeti', obj: 'Dedenle oturup konuş', en: 'Sit and talk with grandpa', target: { npc: 'dede' }, minutes: 30 },
+        { id: 'sun-friends', title: 'Son buluşma', obj: 'Köy meydanına gidip arkadaşlarınla konuş', en: 'Go to the village square and talk with your friends', target: { npc: 'elif' }, after: ['chapter'], minutes: 30 },
       ],
     },
   ],
 
   outro: {
     num: 'Şimdilik bu kadar', title: 'Devam edecek…', button: 'Dolaşmaya devam',
-    text: (c) => `Harika iki gün! ${c.words} kelime öğrendin. Yeni bölümler yakında.`,
-    en: 'Two great days! New chapters are coming soon.',
+    text: (c) => `Harika bir hafta! ${c.words} kelime öğrendin. Yeni bölümler yakında.`,
+    en: 'What a great week! New chapters are coming soon.',
   },
 };

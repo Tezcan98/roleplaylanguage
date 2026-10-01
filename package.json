@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node tools/serve.mjs 8080",
     "server": "node server/index.mjs 8090",
-    "voices": "node tools/fetch-voices.mjs"
+    "voices": "node tools/fetch-voices.mjs",
+    "check": "node tools/validate-content.mjs"
   },
   "dependencies": {
     "ws": "^8.22.0"

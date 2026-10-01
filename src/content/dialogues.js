@@ -14,6 +14,7 @@ export const DIALOGUES = {
   muhtar: {
     start: (ctx) => {
       if (ctx.q === 'letter' && ctx.has('mektup')) return 'm1';
+      if (ctx.q === 'sat-muhtar') return 'wedding';
       return ctx.q === 'go-school' ? 'school' : 'idle';
     },
     nodes: {
@@ -28,6 +29,7 @@ export const DIALOGUES = {
         ] },
       m3: { say: 'Dedene selam söyle!', en: 'Say hello to your grandpa for me!', words: [['selam söylemek', 'to send regards']],
         options: [{ tr: 'Söylerim muhtar amca!', en: 'I will, uncle muhtar!', do: ['take:mektup', 'flag:letter-delivered'] }] },
+      wedding: { say: 'Cumartesi köyde düğün var! Meydanda hazırlık yapıyoruz. Arkadaşlarınla da eğlenebilirsin.', en: 'There is a wedding in the village on Saturday! We are preparing in the square. You can have fun with your friends too.', words: [['düğün', 'wedding'], ['hazırlık', 'preparation'], ['eğlenmek', 'to have fun']], options: [{ tr: 'Çok güzel! Yardım ederim.', en: 'Great! I will help.', do: ['quest'] }] },
       idle: { say: 'Hoş geldin evlat! Ben köyün muhtarı Hasan.', en: "Welcome, kid! I'm Hasan, the village headman.", words: [['köy', 'village'], ['meydan', 'square'], ['muhtar', 'village headman']],
         options: [{ tr: 'Merhaba muhtar amca!', en: 'Hello, uncle muhtar!' }] },
       school: { say: 'Okul yolu bahçe kapısından. Geç kalma!', en: "The way to school is through the garden gate. Don't be late!", words: [['yol', 'road / way'], ['geç kalmak', 'to be late']],
@@ -75,6 +77,8 @@ export const DIALOGUES = {
         case 'sleep': return 'gn3';
         case 'wake': return 'm1';
         case 'homework': return 'hwGo';
+        case 'wake-2': case 'morning-3': case 'morning-4': return 'mGreet';
+        case 'talk-mom-weekend': return 'weekend';
         case 'show-mom': return 'hw1';
         case 'buy': return ctx.has('sut') ? 'shBack' : 'shRemind';
         default: break;
@@ -219,7 +223,10 @@ export const DIALOGUES = {
         ] },
       m3: { say: 'Aferin! Montunu giy, bahçe kapısından okula git.', en: 'Well done! Put on your jacket and go to school through the garden gate.', words: [['okul', 'school']],
         options: [{ tr: 'Görüşürüz anne!', en: 'See you mom!', do: ['quest'] }] },
+      weekend: { say: 'Cumartesi arkadaşlarınla buluşabilirsin. Pazar günü de ailece bahçede olalım.', en: 'You can meet your friends on Saturday. On Sunday let’s spend time in the garden as a family.', words: [['cumartesi', 'Saturday'], ['pazar', 'Sunday']], options: [{ tr: 'Tamam anne!', en: 'Okay mom!', do: ['quest'] }] },
       m4: { say: 'Okula geç kalma! Yol bahçe kapısından.', en: "Don't be late for school! The way is through the garden gate.", options: [{ tr: 'Tamam anne!', en: 'Okay mom!' }] },
+      mGreet: { say: 'Günaydın oğlum! Kahvaltını yaptın mı? Okula geç kalma.', en: "Good morning son! Did you have breakfast? Don't be late for school.", words: [['günaydın', 'good morning'], ['kahvaltı', 'breakfast']],
+        options: [{ tr: 'Günaydın anne! Görüşürüz.', en: 'Good morning mom! See you.', do: ['quest'] }] },
     },
   },
 
@@ -231,6 +238,9 @@ export const DIALOGUES = {
         case 'bread': return 'br1';
         case 'bring-bread': return 'brW';
         case 'place-bread': return 'br3';
+        case 'talk-dede-night': return 'nightChat';
+        case 'talk-dede-3': return 'midweekChat';
+        case 'sun-dede': return 'sunChat';
         case 'laundry-listen': case 'laundry': return 'later';
         case 'masal': return 'kazan.start';
         case 'letter':
@@ -284,6 +294,10 @@ export const DIALOGUES = {
       later: { say: 'Önce annene yardım et. Sonra gel, sana güzel bir masal anlatacağım.', en: "Help your mom first. Then come, I'll tell you a nice tale.", options: [{ tr: 'Tamam dede!', en: 'Okay grandpa!' }] },
       allTold: { say: 'Bütün masallarımı anlattım! Hangisini tekrar dinlemek istersin?', en: 'I have told all my tales! Which one would you like to hear again?',
         options: TALES.map((t) => ({ tr: t.title, en: '', next: `${t.id}.start` })) },
+      // --- week chats (Monday night, Tuesday, Sunday) ---
+      nightChat: { say: 'Yarın yine okul var. Erken yatarsan sabah dinç kalkarsın.', en: 'School is tomorrow again. If you go to bed early, you will wake up fresh.', words: [['erken', 'early'], ['dinç', 'fresh / energetic']], options: [{ tr: 'İyi geceler dede!', en: 'Good night grandpa!', do: ['quest'] }] },
+      midweekChat: { say: 'Yarın bahçede domateslere bakacağım. Hafta sonu da arkadaşlarınla buluşursun.', en: 'I will check the tomatoes tomorrow. At the weekend you can meet your friends.', words: [['yarın', 'tomorrow'], ['hafta sonu', 'weekend']], options: [{ tr: 'Tamam dede!', en: 'Okay grandpa!', do: ['quest'] }] },
+      sunChat: { say: 'Güzel bir hafta geçirdin. Şimdi biraz dinlenip arkadaşlarının yanına gidebilirsin.', en: 'You had a good week. Now you can rest a little and go see your friends.', words: [['hafta', 'week'], ['dinlenmek', 'to rest']], options: [{ tr: 'Teşekkürler dede!', en: 'Thanks grandpa!', do: ['quest'] }] },
       ...taleNodes(),
     },
   },
@@ -293,6 +307,7 @@ export const DIALOGUES = {
       switch (ctx.q) {
         case 'talk-mom': case 'take-jacket': case 'go-out': case 'talk-dede': case 'bucket': return 'wait';
         case 'talk-dad': return 'b1';
+        case 'talk-baba-tools': return 'tools';
         case 'wrench': return ctx.has('anahtar') ? 'bq' : 'bw';
         case 'tea': return 't1';
         case 'dinner-dad': return 'dn1';
@@ -320,6 +335,7 @@ export const DIALOGUES = {
         ] },
       b4: { say: 'Sen bir tanesin! Annen domates istiyor. Bahçeden üç domates topla, eve götür.', en: "You're the best! Mom wants tomatoes. Pick three tomatoes from the garden and take them home.", words: [['istemek', 'to want'], ['üç', 'three']],
         options: [{ tr: 'Tamam baba!', en: 'Okay dad!' }] },
+      tools: { say: 'Bugün alet çantasını düzenledim. Hafta sonu arabaya bakacağız.', en: 'I organized the toolbox today. We will look at the car on the weekend.', words: [['alet', 'tool'], ['çanta', 'bag'], ['düzenlemek', 'to organize']], options: [{ tr: 'Ben de yardım ederim baba.', en: 'I will help too, dad.', do: ['quest'] }] },
       idle: { say: 'Araba neredeyse hazır!', en: 'The car is almost ready!', words: [['neredeyse', 'almost']], options: [{ tr: 'Kolay gelsin baba!', en: 'Take it easy dad!' }] },
 
       // --- breakfast: build the sentence ---
@@ -345,8 +361,15 @@ export const DIALOGUES = {
   },
 
   elif: {
-    start: (ctx) => (ctx.q === 'meet-elif' ? 'e1' : ctx.loc === 'classroom' ? 'eClass' : 'eIdle'),
+    start: (ctx) => {
+      if (ctx.q === 'sun-friends') return 'sunMeet';
+      if (['friend-plan', 'chat-weekend', 'sat-elif'].includes(ctx.q)) return 'friendMeet';
+      return ctx.q === 'meet-elif' ? 'e1' : ctx.loc === 'classroom' ? 'eClass' : 'eIdle';
+    },
     nodes: {
+      sunMeet: { say: 'Bu hafta çok eğlendik! Haftaya yine meydanda buluşalım mı?', en: 'We had so much fun this week! Shall we meet at the square again next week?', words: [['eğlenmek', 'to have fun'], ['haftaya', 'next week']],
+        options: [{ tr: 'Tabii, haftaya görüşürüz!', en: 'Sure, see you next week!', do: ['quest'] }] },
+      friendMeet: { say: 'Hafta sonu yaklaşıyor! Cumartesi köy meydanında buluşalım mı?', en: 'The weekend is coming! Shall we meet at the village square on Saturday?', words: [['buluşmak', 'to meet'], ['hafta sonu', 'weekend']], options: [{ tr: 'Tabii, buluşalım!', en: 'Sure, let’s meet!', do: ['quest'] }] },
       e1: { ask: 'speak', say: 'Merhaba! Sen yeni misin? Adın ne?', en: "Hi! Are you new? What's your name?", words: [['yeni', 'new'], ['ad', 'name']],
         expect: ['Benim adım Ahmet', 'Adım Ahmet', 'Ben Ahmet'], show: 'Benim adım Ahmet.', showEn: 'My name is Ahmet.', next: 'e2' },
       e2: { say: 'Memnun oldum Ahmet! Ben Elif. Bu da Can, o çok komik.', en: "Nice to meet you Ahmet! I'm Elif. This is Can, he's very funny.", words: [['memnun oldum', 'nice to meet you']],
@@ -361,8 +384,9 @@ export const DIALOGUES = {
   },
 
   can: {
-    start: () => 'c1',
+    start: (ctx) => (ctx.q === 'sat-can' ? 'friendMeet' : 'c1'),
     nodes: {
+      friendMeet: { say: 'Bugün çok güzel! Biraz top oynayalım mı?', en: 'Today is great! Shall we play ball?', words: [['oynamak', 'to play']], options: [{ tr: 'Evet, oynayalım!', en: 'Yes, let’s play!', do: ['quest'] }] },
       c1: { ask: 'listen', say: 'Bugün matematik dersi var mı?', en: 'Is there a maths lesson today?', prompt: 'Can ne soruyor?', words: [['matematik', 'maths'], ['bugün', 'today']],
         options: [
           { tr: 'Bugün matematik dersi var mı?', en: 'Is there a maths lesson today?', next: 'c2' },
@@ -375,8 +399,9 @@ export const DIALOGUES = {
   },
 
   zehra: {
-    start: () => 'z1',
+    start: (ctx) => (ctx.q === 'sat-zehra' ? 'friendMeet' : 'z1'),
     nodes: {
+      friendMeet: { say: 'Ben de geldim! Yarın için bir planımız var mı?', en: 'I’m here too! Do we have a plan for tomorrow?', words: [['plan', 'plan'], ['yarın', 'tomorrow']], options: [{ tr: 'Yarın yine buluşalım.', en: 'Let’s meet again tomorrow.', do: ['quest'] }] },
       z1: { say: 'Merhaba! Kalemin var mı? Benimki kayboldu.', en: 'Hi! Do you have a pencil? Mine got lost.', words: [['kalem', 'pencil'], ['kaybolmak', 'to get lost']],
         options: [{ tr: 'Al, benim kalemimi kullan.', en: 'Here, use my pencil.', next: 'z2' }, { tr: 'Maalesef yok.', en: "Sorry, I don't.", next: 'z3' }] },
       z2: { say: 'Çok teşekkür ederim! Çok naziksin.', en: "Thank you so much! You're very kind.", words: [['nazik', 'kind']], options: [{ tr: 'Rica ederim.', en: "You're welcome." }] },
@@ -385,8 +410,9 @@ export const DIALOGUES = {
   },
 
   ogretmen: {
-    start: (ctx) => (ctx.q === 'homework-assign' ? 't1' : ctx.q === 'lesson' ? 'tWait' : 'tIdle'),
+    start: (ctx) => (['teacher-2', 'teacher-3'].includes(ctx.q) ? 'dailyTask' : ctx.q === 'homework-assign' ? 't1' : ctx.q === 'lesson' ? 'tWait' : 'tIdle'),
     nodes: {
+      dailyTask: { say: 'Bugün de güzel çalıştın. Evde kısa bir tekrar yapman yeterli.', en: 'You worked well today too. A short review at home is enough.', words: [['tekrar', 'review'], ['yeterli', 'enough']], options: [{ tr: 'Tamam öğretmenim!', en: 'Okay, teacher!', do: ['quest'] }] },
       tWait: { say: 'Hoş geldin! Yerine otur, ders başlıyor.', en: 'Welcome! Take your seat, the lesson is starting.', options: [{ tr: 'Tamam öğretmenim.', en: 'Okay, teacher.' }] },
       t1: { say: 'Ahmet, bugün çok güzel çalıştın! Ödevin: kitabındaki Ünite 1.', en: 'Ahmet, you worked really well today! Your homework: Unit 1 in your book.', words: [['ödev', 'homework'], ['ünite', 'unit'], ['çalışmak', 'to work / study']],
         options: [{ tr: 'Tamam öğretmenim! Evde yaparım.', en: "Okay teacher! I'll do it at home.", next: 't2' }] },

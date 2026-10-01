@@ -7,6 +7,8 @@ export class GameContext {
     Object.assign(this, { state, inventory, story, world, time, vocab, player });
   }
   get seated() { return !!this.player?.seated; }
+  /** Hotspot id the current quest points at (doors use it to open exactly when needed). */
+  get targetHotspot() { return this.story.target()?.hotspot ?? null; }
   get q() { return this.story.quest?.id ?? null; }
   get chapter() { return this.story.chapter?.id ?? null; }
   get loc() { return this.world.current?.id ?? null; }

@@ -33,7 +33,7 @@ export const HOTSPOTS = {
   'village.bakkalCounter': free('village_shop'),
   'yard.gate': {
     label: 'Okula git', lockedLabel: 'Bahçe kapısı', use: ['chapter'],
-    locked: (c) => (c.q === 'go-school' ? null : ['Okul yolu. Bugün okula gitmiyorsun.', "The road to school. You're not going today."]),
+    locked: (c) => (c.targetHotspot === 'yard.gate' ? null : ['Okul yolu. Şimdi okula gitmiyorsun.', "The road to school. You're not going there now."]),
   },
   'house.sofra': { label: 'Sofraya otur', use: ['sit:sofraS'], available: (c) => !c.seated },
   'house.breadTable': {
@@ -53,13 +53,13 @@ export const HOTSPOTS = {
   'yard.tap': free('wash'),
   'yard.garden': free('water_garden'),
   'school.door': {
-    label: 'Sınıfa gir', lockedLabel: 'Sınıf kapısı', use: ['lesson:l1'], link: 'classroom',
-    locked: (c) => (c.reached('lesson') ? null : ['Önce yeni arkadaşınla tanış!', 'Meet your new friend first!']),
+    label: 'Sınıfa gir', lockedLabel: 'Sınıf kapısı', use: ['lesson'], link: 'classroom',
+    locked: (c) => (String(c.q ?? '').startsWith('lesson') ? null : ['Önce arkadaşınla tanış!', 'Meet your friend first!']),
   },
   'classroom.door': { label: 'Bahçeye çık', travel: ['schoolyard', 'door'] },
   'school.exit': {
     label: 'Eve dön', lockedLabel: 'Okul kapısı', use: ['chapter'],
-    locked: (c) => (c.reached('go-home') ? null : ['Daha ders bitmedi!', "The lesson isn't over yet!"]),
+    locked: (c) => (c.targetHotspot === 'school.exit' || c.reached('go-home') ? null : ['Daha ders bitmedi!', "The lesson isn't over yet!"]),
   },
   'house.desk': {
     label: 'Ödev yap', use: ['textbook'],
