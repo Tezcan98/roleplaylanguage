@@ -14,6 +14,7 @@ export const DIALOGUES = {
   muhtar: {
     start: (ctx) => {
       if (ctx.q === 'letter' && ctx.has('mektup')) return 'm1';
+      if (ctx.q === 'sat-muhtar') return 'wedding';
       return ctx.q === 'go-school' ? 'school' : 'idle';
     },
     nodes: {
