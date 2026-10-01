@@ -12,8 +12,22 @@ import { nextTale, taleNodes, TALES } from './tales.js';
  */
 export const DIALOGUES = {
   muhtar: {
-    start: (ctx) => (ctx.q === 'go-school' ? 'school' : 'idle'),
+    start: (ctx) => {
+      if (ctx.q === 'letter' && ctx.has('mektup')) return 'm1';
+      return ctx.q === 'go-school' ? 'school' : 'idle';
+    },
     nodes: {
+      m1: { ask: 'speak', say: 'Hoş geldin evlat! Elindeki ne?', en: "Welcome, kid! What's that in your hand?", words: [['göndermek', 'to send']],
+        expect: ['Dedem bu mektubu gönderdi', 'Dedem mektup gönderdi', 'Dedemden mektup'], show: 'Dedem bu mektubu gönderdi.', showEn: 'My grandpa sent this letter.', next: 'm2' },
+      m2: { ask: 'listen', say: 'Cumartesi köyde düğün var! Dedene söyle, herkes davetli.', en: "There's a wedding in the village on Saturday! Tell your grandpa, everyone is invited.",
+        prompt: 'Muhtar mektubu okudu. Ne dedi?', words: [['cumartesi', 'Saturday'], ['düğün', 'wedding'], ['davetli', 'invited']],
+        options: [
+          { tr: 'Pazar günü okul yok.', en: 'No school on Sunday.', wrong: true },
+          { tr: 'Cumartesi köyde düğün var.', en: "There's a wedding in the village on Saturday.", next: 'm3' },
+          { tr: 'Cuma günü pazar kurulacak.', en: 'There will be a market on Friday.', wrong: true },
+        ] },
+      m3: { say: 'Dedene selam söyle!', en: 'Say hello to your grandpa for me!', words: [['selam söylemek', 'to send regards']],
+        options: [{ tr: 'Söylerim muhtar amca!', en: 'I will, uncle muhtar!', do: ['take:mektup', 'flag:letter-delivered'] }] },
       idle: { say: 'Hoş geldin evlat! Ben köyün muhtarı Hasan.', en: "Welcome, kid! I'm Hasan, the village headman.", words: [['köy', 'village'], ['meydan', 'square'], ['muhtar', 'village headman']],
         options: [{ tr: 'Merhaba muhtar amca!', en: 'Hello, uncle muhtar!' }] },
       school: { say: 'Okul yolu bahçe kapısından. Geç kalma!', en: "The way to school is through the garden gate. Don't be late!", words: [['yol', 'road / way'], ['geç kalmak', 'to be late']],
@@ -22,8 +36,21 @@ export const DIALOGUES = {
   },
 
   bakkal: {
-    start: () => 'shop',
+    start: (ctx) => (ctx.q === 'buy' && !ctx.has('sut') ? 'b1' : 'shop'),
     nodes: {
+      b1: { ask: 'order', say: 'Hoş geldin Ahmet! Ne istiyorsun?', en: 'Welcome Ahmet! What would you like?', words: [['istemek', 'to want']],
+        answer: 'Bir ekmek ve bir süt lütfen.', answerEn: 'A bread and a milk, please.', next: 'b2' },
+      b2: { ask: 'listen', say: 'Ekmek on lira, süt on beş lira.', en: 'Bread is ten lira, milk is fifteen lira.', prompt: 'Dinle: toplam kaç lira?',
+        hint: '10 + 15 = 25 (yirmi beş)', words: [['on', 'ten'], ['on beş', 'fifteen'], ['lira', 'lira (money)'], ['toplam', 'total']],
+        options: [
+          { tr: 'Otuz lira.', en: 'Thirty lira.', wrong: true },
+          { tr: 'Yirmi beş lira.', en: 'Twenty-five lira.', next: 'b3' },
+          { tr: 'On beş lira.', en: 'Fifteen lira.', wrong: true },
+        ] },
+      b3: { say: 'Evet, yirmi beş lira. Buyur, ekmeğin ve sütün.', en: "Yes, twenty-five lira. Here's your bread and milk.", words: [['yirmi beş', 'twenty-five']],
+        options: [{ tr: 'Buyurun, otuz lira.', en: 'Here you are, thirty lira.', next: 'b4' }] },
+      b4: { say: 'Teşekkürler. Paranın üstü beş lira. Annene selam söyle!', en: "Thanks. Your change is five lira. Say hello to your mom!", words: [['paranın üstü', 'change (money)'], ['beş', 'five']],
+        options: [{ tr: 'Teşekkür ederim, iyi akşamlar!', en: 'Thank you, good evening!', do: ['take:para:25', 'give:ekmek', 'give:sut'] }] },
       shop: { say: 'Hoş geldin! Bakkalda ekmek, süt, peynir ve zeytin var.', en: 'Welcome! The shop has bread, milk, cheese and olives.',
         words: [['bakkal', 'grocer'], ['ekmek', 'bread'], ['süt', 'milk'], ['peynir', 'cheese'], ['zeytin', 'olive']],
         options: [{ tr: 'Bir ekmek lütfen.', en: 'One bread, please.' }, { tr: 'Sadece bakıyorum.', en: "I'm just looking." }] },
@@ -49,6 +76,7 @@ export const DIALOGUES = {
         case 'wake': return 'm1';
         case 'homework': return 'hwGo';
         case 'show-mom': return 'hw1';
+        case 'buy': return ctx.has('sut') ? 'shBack' : 'shRemind';
         default: break;
       }
       switch (ctx.chapter) {
@@ -149,8 +177,20 @@ export const DIALOGUES = {
         options: [{ tr: 'Tamam anne, hemen yapıyorum.', en: "Okay mom, I'm doing it right away." }] },
       hw1: { ask: 'speak', say: 'Ödevini yaptın mı?', en: 'Did you do your homework?', words: [['yapmak', 'to do']],
         expect: ['Evet, ödevimi yaptım', 'Ödevimi yaptım', 'Evet yaptım'], show: 'Evet, ödevimi yaptım!', showEn: 'Yes, I did my homework!', next: 'hw2' },
-      hw2: { say: 'Aferin sana! Çok çalışkansın. Şimdi oynayabilirsin.', en: "Well done! You're so hard-working. Now you can play.", words: [['oynamak', 'to play']],
-        options: [{ tr: 'Yaşasın! Teşekkürler anne!', en: 'Hooray! Thanks mom!', do: ['quest', 'credits:2'] }] },
+      hw2: { say: 'Aferin sana! Çok çalışkansın. Bir ricam var: bakkaldan bir ekmek ve bir süt alır mısın? Al, otuz lira.', en: "Well done! You're so hard-working. I have a favour to ask: will you buy a bread and a milk at the grocer? Here, thirty lira.",
+        words: [['rica', 'favour / request'], ['bakkal', 'grocer'], ['otuz', 'thirty'], ['para', 'money']],
+        options: [{ tr: 'Tamam anne, hemen giderim!', en: "Okay mom, I'll go right away!", do: ['give:para:30', 'quest', 'credits:2'] }] },
+      shRemind: { say: 'Bakkal köy meydanında. Avludan doğuya, sağa doğru yürü. Ekmek ve süt, unutma!', en: "The grocer is in the village square. Walk east from the yard, to the right. Bread and milk, don't forget!",
+        words: [['doğu', 'east'], ['sağ', 'right']], options: [{ tr: 'Unutmam!', en: "I won't forget!" }] },
+      shBack: { say: 'Ekmeği ve sütü aldın mı? Aferin! Paranın üstü ne kadar?', en: 'Did you get the bread and milk? Great! How much change is there?', hint: '30 − 25 = 5',
+        options: [
+          { tr: 'On lira.', en: 'Ten lira.', wrong: true },
+          { tr: 'Beş lira.', en: 'Five lira.', next: 'shDone' },
+          { tr: 'Yirmi lira.', en: 'Twenty lira.', wrong: true },
+        ] },
+      shDone: { say: 'Hesabın çok iyi! Beş lira senin olsun, harçlık. Deden de seni çağırıyor.', en: 'Your maths is great! Keep the five lira, pocket money. Grandpa is calling you too.',
+        words: [['hesap', 'maths / bill'], ['harçlık', 'pocket money']],
+        options: [{ tr: 'Teşekkürler anne!', en: 'Thanks mom!', do: ['take:ekmek', 'take:sut', 'quest'] }] },
       warnTvHomework: { say: 'Ahmet! Ödevin varken televizyon izlenmez. Önce ödev, sonra oyun!', en: 'Ahmet! No TV while you have homework. Homework first, then play!', words: [['ödev', 'homework'], ['önce', 'first']],
         options: [{ tr: 'Tamam anne, ödevimi yapıyorum.', en: "Okay mom, I'm doing my homework.", next: 'sorry' }, { tr: 'Ama sadece beş dakika!', en: 'But only five minutes!', next: 'noBut' }] },
 
@@ -192,6 +232,9 @@ export const DIALOGUES = {
         case 'bring-bread': return ctx.has('ekmek') ? 'br3' : 'brW';
         case 'laundry-listen': case 'laundry': return 'later';
         case 'masal': return 'kazan.start';
+        case 'letter':
+          if (ctx.flag('letter-delivered')) return 'ltBack';
+          return ctx.has('mektup') ? 'ltWait' : 'lt1';
         default: return nextTale(ctx) ?? 'allTold';
       }
     },
@@ -226,6 +269,16 @@ export const DIALOGUES = {
       br4: { say: 'Sağ ol evladım! Ne kibar çocuksun.', en: 'Thank you my child! What a polite kid you are.', words: [['sağ ol', 'thanks'], ['kibar', 'polite']],
         options: [{ tr: 'Afiyet olsun dede!', en: 'Enjoy, grandpa!', do: ['take:ekmek', 'quest'] }] },
 
+      lt1: { say: 'Ahmet, gel evladım. Bu mektubu muhtara götürür müsün? Muhtar köy meydanında, beyaz binada.', en: 'Ahmet, come my child. Will you take this letter to the muhtar? He is in the village square, at the white building.',
+        words: [['mektup', 'letter'], ['götürmek', 'to take (somewhere)'], ['beyaz', 'white']],
+        options: [{ tr: 'Tabii dede, hemen götürüyorum!', en: "Of course grandpa, I'm taking it right away!", do: ['give:mektup'] }] },
+      ltWait: { say: 'Mektubu muhtara verdin mi? Muhtar meydanda, beyaz binanın önünde.', en: 'Did you give the letter to the muhtar? He is in the square, in front of the white building.',
+        options: [{ tr: 'Gidiyorum dede.', en: "I'm going, grandpa." }] },
+      ltBack: { ask: 'order', say: 'Geldin mi evladım? Muhtar ne dedi?', en: 'You are back, my child? What did the muhtar say?',
+        answer: 'Cumartesi köyde düğün var.', answerEn: "There's a wedding in the village on Saturday.", next: 'ltEnd' },
+      ltEnd: { say: 'Düğün mü? Ne güzel! Davul zurna çalar, hep beraber halay çekeriz.', en: 'A wedding? How lovely! The drum and pipe will play and we will all dance the halay together.',
+        words: [['davul', 'drum'], ['zurna', 'folk pipe'], ['halay', 'circle folk dance']],
+        options: [{ tr: 'Ben de halay çekeceğim!', en: "I'll dance the halay too!", do: ['quest'] }] },
       later: { say: 'Önce annene yardım et. Sonra gel, sana güzel bir masal anlatacağım.', en: "Help your mom first. Then come, I'll tell you a nice tale.", options: [{ tr: 'Tamam dede!', en: 'Okay grandpa!' }] },
       allTold: { say: 'Bütün masallarımı anlattım! Hangisini tekrar dinlemek istersin?', en: 'I have told all my tales! Which one would you like to hear again?',
         options: TALES.map((t) => ({ tr: t.title, en: '', next: `${t.id}.start` })) },

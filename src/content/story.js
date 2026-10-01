@@ -218,6 +218,20 @@ export const STORY = {
       quests: [
         { id: 'homework', title: 'Ünite 1', obj: 'Masaya otur, kitabındaki Ünite 1\'i bitir', en: 'Sit at the desk and finish Unit 1 in your book', target: { hotspot: 'house.desk' }, complete: { flag: 'homework-u1' }, minutes: 45 },
         { id: 'show-mom', title: 'Aferin', obj: 'Annene ödevini anlat', en: 'Tell mom about your homework', target: { npc: 'anne' } },
+        {
+          id: 'buy', title: 'Bakkal',
+          obj: (c) => (c.has('sut') ? 'Ekmekle sütü annene götür' : 'Köy meydanındaki bakkaldan ekmek ve süt al'),
+          en: (c) => (c.has('sut') ? 'Take the bread and milk to mom' : 'Buy bread and milk at the grocer in the village square'),
+          target: (c) => (c.has('sut') ? { npc: 'anne' } : { npc: 'bakkal' }),
+          minutes: 25,
+        },
+        {
+          id: 'letter', title: 'Mektup',
+          obj: (c) => (c.flag('letter-delivered') ? 'Muhtarın haberini dedene anlat' : c.has('mektup') ? 'Mektubu muhtara götür (köy meydanı)' : 'Dedenle konuş'),
+          en: (c) => (c.flag('letter-delivered') ? "Tell grandpa the muhtar's news" : c.has('mektup') ? 'Take the letter to the muhtar (village square)' : 'Talk to grandpa'),
+          target: (c) => (c.flag('letter-delivered') || !c.has('mektup') ? { npc: 'dede' } : { npc: 'muhtar' }),
+          minutes: 25,
+        },
         { id: 'free-evening', title: 'Serbest zaman', obj: 'Dolaş, oyna, herkesle konuş', en: 'Explore, play and chat with everyone', target: null, final: true },
       ],
     },

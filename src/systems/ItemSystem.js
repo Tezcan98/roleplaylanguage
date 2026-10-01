@@ -5,8 +5,8 @@ import { EV } from '../core/events.js';
  * pickable); this system spawns, animates and hands them to the inventory.
  */
 export class ItemSystem {
-  constructor({ defs, world, kit, state, inventory, vocab, bus, story }) {
-    Object.assign(this, { world, state, inventory, vocab, bus, story });
+  constructor({ defs, names = {}, world, kit, state, inventory, vocab, bus, story }) {
+    Object.assign(this, { names, world, state, inventory, vocab, bus, story });
     this.items = defs.map((d) => {
       const mesh = kit.props.create(`item.${d.kind}`, () => d.build(kit.mf));
       mesh.position.set(...d.pos);
@@ -25,7 +25,7 @@ export class ItemSystem {
   /** Display info for a kind (first matching def). */
   info(kind) {
     const i = this.items.find((d) => d.kind === kind);
-    return i ? { tr: i.bagTr ?? i.tr, en: i.bagEn ?? i.en } : { tr: kind, en: '' };
+    return i ? { tr: i.bagTr ?? i.tr, en: i.bagEn ?? i.en } : this.names[kind] ?? { tr: kind, en: '' };
   }
 
   refresh() { this.items.forEach((i) => { i.mesh.visible = this.exists(i); }); }

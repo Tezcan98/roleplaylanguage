@@ -53,3 +53,10 @@ export const ITEMS = [
     build: (mf) => mf.group(mf.box(0.5, 0.6, 0.18, 0xB5482E), mf.at(mf.box(0.06, 0.5, 0.02, 0xE0B04A), 0, 0, 0.1)),
   },
 ];
+
+/** Bag names for kinds that are given in dialogues rather than picked up in the world. */
+export const KIND_NAMES = {
+  para: { tr: 'lira', en: 'Turkish lira' },
+  sut: { tr: 'süt', en: 'milk' },
+  mektup: { tr: 'mektup', en: 'letter' },
+};

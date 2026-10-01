@@ -93,7 +93,7 @@ import { DialogueView } from './ui/DialogueView.js';
 import { STORY } from './content/story.js';
 import { NPCS, PLAYER_LOOK, VOICES } from './content/characters.js';
 import { DIALOGUES } from './content/dialogues.js';
-import { ITEMS } from './content/items.js';
+import { ITEMS, KIND_NAMES } from './content/items.js';
 import { HOTSPOTS, LINKS } from './content/hotspots.js';
 import { FREE_ACTIONS, HOUSE_RULES } from './content/freeActions.js';
 import { LESSONS, CLASSMATE_BOTS } from './content/lessons.js';
@@ -156,7 +156,7 @@ const npcs = new Map(Object.entries(NPCS).map(([id, def]) => [id, new Npc(id, de
 const cast = new CastDirector({ npcs, world, player });
 const travel = new TravelService({ world, player, cast, camera, fader, state });
 const story = new StoryDirector({ story: STORY, state, bus, time, cast, travel, cards, toasts, fader });
-const items = new ItemSystem({ defs: ITEMS, world, kit, state, inventory, vocab, bus, story });
+const items = new ItemSystem({ defs: ITEMS, names: KIND_NAMES, world, kit, state, inventory, vocab, bus, story });
 const gameCtx = new GameContext({ state, inventory, story, world, time, vocab });
 story.setContext(gameCtx);
 const controller = new PlayerController({ player, input, world, modes, cast });
@@ -197,7 +197,12 @@ dialogue.setContext(gameCtx);
 effects
   .register('quest', (id) => story.complete(id))
   .register('chapter', () => story.nextChapter())
-  .register('take', (kind) => inventory.remove(kind))
+  .register('take', (kind, n) => inventory.remove(kind, n ? Number(n) : Infinity))
+  .register('give', (kind, n) => {
+    inventory.add(kind, n ? Number(n) : 1);
+    const { tr, en } = items.info(kind);
+    toasts.show(`+${n ?? 1} ${tr}`, en);
+  })
   .register('wear', (what, off) => { player.wear(what, off !== 'off'); state.flags[`wear-${what}`] = off !== 'off'; })
   .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); });
 story.setEffects(effects);
