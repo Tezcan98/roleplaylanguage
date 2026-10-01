@@ -157,7 +157,7 @@ const cast = new CastDirector({ npcs, world, player });
 const travel = new TravelService({ world, player, cast, camera, fader, state });
 const story = new StoryDirector({ story: STORY, state, bus, time, cast, travel, cards, toasts, fader });
 const items = new ItemSystem({ defs: ITEMS, names: KIND_NAMES, world, kit, state, inventory, vocab, bus, story });
-const gameCtx = new GameContext({ state, inventory, story, world, time, vocab });
+const gameCtx = new GameContext({ state, inventory, story, world, time, vocab, player });
 story.setContext(gameCtx);
 const controller = new PlayerController({ player, input, world, modes, cast });
 
@@ -262,7 +262,7 @@ const village = new VillageMultiplayer({
 // --- interaction ---
 const interactions = new InteractionSystem([
   toys,
-  new NpcInteractions({ cast, dialogue }),
+  new NpcInteractions({ cast, dialogue, story }),
   new ItemInteractions({ items }),
   new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts, effects, bus, ctx: gameCtx }),
 ], modes);

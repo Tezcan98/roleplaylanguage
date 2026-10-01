@@ -3,9 +3,10 @@
  * Content never touches systems directly — only this facade.
  */
 export class GameContext {
-  constructor({ state, inventory, story, world, time, vocab }) {
-    Object.assign(this, { state, inventory, story, world, time, vocab });
+  constructor({ state, inventory, story, world, time, vocab, player }) {
+    Object.assign(this, { state, inventory, story, world, time, vocab, player });
   }
+  get seated() { return !!this.player?.seated; }
   get q() { return this.story.quest?.id ?? null; }
   get chapter() { return this.story.chapter?.id ?? null; }
   get loc() { return this.world.current?.id ?? null; }

@@ -40,6 +40,8 @@ export class LessonController {
       if (a.studentId !== me.id) {
         this.labels.bubble(this.cast.get(a.studentId), a.text, a.correct ? 'ok' : 'bad');
         this.tts.speak(a.text, { speaker: a.studentId });
+        // a classmate just took their turn: move on to the next question
+        if (this.current?.turnStudentId === a.studentId) setTimeout(() => { if (this.active === session) session.next(); }, 2500);
       }
     });
     session.on('scores', ({ scores }) => this.view.scoresUpdate(scores, me.id));

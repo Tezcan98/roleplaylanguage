@@ -65,15 +65,13 @@ export class HouseInterior extends Location {
     this.hotspot('house.sofra', -0.8, 0.78, 1.0);
     this.hotspot('house.breadTable', -0.45, -0.55, 1.0);
 
-    // Small bedroom partition: the bed now reads as a separate room, with a doorway.
-    // Partition wall with a real doorway into the bedroom.
+    // Bedroom partition with a real doorway (open between z≈2.12 and z≈4.0).
     noCast(mf.at(mf.box(0.16, 2.7, 0.34, WALL), 2.85, 1.35, 1.97));
     noCast(mf.at(mf.box(0.16, 2.7, 0.30, WALL), 2.85, 1.35, 4.15));
     noCast(mf.at(mf.box(2.9, 2.7, 0.16, WALL), 4.35, 1.35, 1.78));
     C.addBox(2.7, 3.0, 1.78, 2.12);
     C.addBox(2.7, 3.0, 4.0, 4.35);
     C.addBox(2.9, 5.8, 1.62, 1.94);
-    // Door opening remains clear between z≈2.12 and z≈4.0.
 
     this.bread = mf.group(
       mf.at(mf.sphere(0.2, 0xD9A05B, 12), 0, 0.02, 0),
@@ -181,8 +179,6 @@ export class HouseInterior extends Location {
     });
 
     this.anchor('start', 0.8, -2.6, 0);
-    this.anchor('sofraGuest', -0.8, 1.7, Math.PI);
-    this.anchor('breadTable', -0.8, -0.4, 0);
     this.anchor('sofraGuest', -0.8, 1.7, Math.PI);
     this.anchor('bedside', 2.8, 2.6, -Math.PI / 2);
     this.anchor('door', -4.9, 2.1, Math.PI / 2);

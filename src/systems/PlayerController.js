@@ -4,8 +4,12 @@ export class PlayerController {
 
   update(dt, t) {
     const { player } = this;
-    let { x, z } = this.modes.is('play') && !player.seated ? this.input.axis() : { x: 0, z: 0 };
-    const mag = Math.min(1, Math.hypot(x, z));
+    let { x, z } = this.modes.is('play') ? this.input.axis() : { x: 0, z: 0 };
+    let mag = Math.min(1, Math.hypot(x, z));
+    if (player.seated) {
+      if (mag > 0.3) player.sit(false); // pushing the stick stands Ahmet up (e.g. from the sofra)
+      else { x = z = mag = 0; }
+    }
     player.moving = mag > 0.08;
     if (mag > 0.08) {
       const loc = this.world.current, n = Math.hypot(x, z);

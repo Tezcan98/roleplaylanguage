@@ -2,13 +2,21 @@ import { EV } from '../core/events.js';
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
-/** "Talk to X" for NPCs standing near the player. */
+/** "Talk to X" for NPCs near the player; the quest's target person wins when in range (e.g. around the sofra). */
 export class NpcInteractions {
-  constructor({ cast, dialogue }) { Object.assign(this, { cast, dialogue }); }
+  constructor({ cast, dialogue, story }) { Object.assign(this, { cast, dialogue, story }); }
   find(pos) {
-    let best = 2.8, npc = null;
-    for (const n of this.cast.present()) { const d = dist(n.position, pos); if (d < best) { best = d; npc = n; } }
-    return npc && { label: `${npc.def.short} ile konuş`, dist: best, priority: 1, run: () => this.dialogue.open(npc.id) };
+    const range = 2.8, wanted = this.story?.target()?.npc;
+    let best = null;
+    for (const n of this.cast.present()) {
+      const d = dist(n.position, pos);
+      if (d >= range) continue;
+      const isTarget = n.id === wanted;
+      if (!best || (isTarget && !best.isTarget) || (isTarget === best.isTarget && d < best.d)) best = { n, d, isTarget };
+    }
+    if (!best) return null;
+    const { n, d, isTarget } = best;
+    return { label: `${n.def.short} ile konuş`, dist: d, priority: isTarget ? 1.5 : 1, run: () => this.dialogue.open(n.id) };
   }
 }
 
@@ -38,7 +46,8 @@ export class HotspotInteractions {
       if (!rule || d > h.radius || rule.available?.(this.ctx) === false || (best && best.dist < d)) continue;
       const label = typeof rule.label === 'function' ? rule.label(this.ctx) : rule.label;
       const locked = rule.locked?.(this.ctx);
-      const priority = rule.use?.every((e) => e.startsWith('free:')) ? 0 : 1; // free-roam fun yields to story actions
+      // the current quest's target wins; free-roam fun yields to story actions
+      const priority = this.story.target()?.hotspot === h.id ? 2 : rule.use?.every((e) => e.startsWith('free:')) ? 0 : 1;
       best = locked
         ? { label: rule.lockedLabel ?? label, dist: d, priority, run: () => this.toasts.show(...locked) }
         : { label, dist: d, priority, run: () => this.use(h.id, rule) };
@@ -55,7 +64,7 @@ export class HotspotInteractions {
 
 /**
  * Asks every provider what the player could do here and offers the most important,
- * then closest one (priority: quest item 2 > people and doors 1 > free-roam fun 0).
+ * then closest one (priority: quest item / quest hotspot 2 > people and doors 1 > free-roam fun 0).
  * New kinds of interaction = new provider; nothing else changes.
  */
 export class InteractionSystem {

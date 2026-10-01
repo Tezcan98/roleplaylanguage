@@ -229,7 +229,8 @@ export const DIALOGUES = {
         case 'talk-mom': case 'take-jacket': case 'go-out': case 'talk-dede': return 'd1';
         case 'bucket': return ctx.has('kova') ? 'dq' : 'dw';
         case 'bread': return 'br1';
-        case 'bring-bread': return ctx.has('ekmek') ? 'br3' : 'brW';
+        case 'bring-bread': return 'brW';
+        case 'place-bread': return 'br3';
         case 'laundry-listen': case 'laundry': return 'later';
         case 'masal': return 'kazan.start';
         case 'letter':
@@ -266,8 +267,9 @@ export const DIALOGUES = {
       brW: { say: 'Ekmek mutfakta, tezgahın üstünde.', en: 'The bread is in the kitchen, on the counter.', options: [{ tr: 'Tamam dede.', en: 'Okay grandpa.' }] },
       br3: { ask: 'speak', say: 'Getirdin mi? Ver bakalım.', en: 'Did you bring it? Let me have it.', expect: ['Buyurun dede', 'Buyur dede', 'Buyurun'], show: 'Buyurun dede.', showEn: 'Here you are, grandpa.',
         words: [['buyurun', 'here you are (polite)']], next: 'br4' },
-      br4: { say: 'Sağ ol evladım! Ne kibar çocuksun.', en: 'Thank you my child! What a polite kid you are.', words: [['sağ ol', 'thanks'], ['kibar', 'polite']],
-        options: [{ tr: 'Afiyet olsun dede!', en: 'Enjoy, grandpa!', do: ['take:ekmek', 'quest'] }] },
+      br4: { say: 'Sağ ol evladım! Ne kibar çocuksun. Ekmeği sofranın ortasına koy, herkes alsın.', en: 'Thank you my child! What a polite kid you are. Put the bread in the middle of the table so everyone can have some.',
+        words: [['sağ ol', 'thanks'], ['kibar', 'polite'], ['orta', 'middle']],
+        options: [{ tr: 'Tamam dede!', en: 'Okay grandpa!' }] },
 
       lt1: { say: 'Ahmet, gel evladım. Bu mektubu muhtara götürür müsün? Muhtar köy meydanında, beyaz binada.', en: 'Ahmet, come my child. Will you take this letter to the muhtar? He is in the village square, at the white building.',
         words: [['mektup', 'letter'], ['götürmek', 'to take (somewhere)'], ['beyaz', 'white']],
