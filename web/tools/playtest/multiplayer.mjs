@@ -63,6 +63,14 @@ try {
   check('push-to-talk shows a text bubble to others', bubbles.length > 0, JSON.stringify(bubbles));
   check('…and sends no audio', (await peers(B)) === 0);
 
+  {
+    const C = await browser.newPage();
+    await C.goto(`${server.url}/?nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
+    const opt = await waitFor(() => C.evaluate(() => [...document.querySelectorAll('.server-select option')].map((o) => o.textContent).find((t) => t.includes('2 kişi'))), 15000);
+    check('menu shows live player counts per room', !!opt && opt.startsWith('İstanbul'), opt);
+    await C.close();
+  }
+
   await at(A, 2, 4); await at(B, 3.5, 4);
   const l = await waitFor(async () => { const x = await label(A); return x?.includes('sesli sohbet') ? x : null; }) ?? await label(A);
   check('"voice chat" offered next to a player', !!l && l.includes('sesli sohbet'), l);

@@ -1,5 +1,6 @@
 import { el } from './dom.js';
 
+/** Rooms on the village server (one machine; each room is its own square). */
 const SERVERS = [
   ['istanbul', 'İstanbul'],
   ['ankara', 'Ankara'],
@@ -66,7 +67,7 @@ export class MainMenu {
     };
     renderServers();
     refreshServers();
-    const serverTimer = setInterval(() => {
+    this.serverTimer = setInterval(() => {
       if (this.root?.classList.contains('open')) refreshServers();
     }, 5000);
 
@@ -132,8 +133,7 @@ export class MainMenu {
       el('label', { class: 'toggle' }, [el('span', { text: 'Çeviri dili · لغة الترجمة:' }), gloss]),
     ])]);
     host.append(this.root);
-    this.root.addEventListener('DOMNodeRemoved', () => clearInterval(serverTimer), { once: true });
   }
 
-  hide() { this.root.classList.remove('open'); }
+  hide() { this.root.classList.remove('open'); clearInterval(this.serverTimer); }
 }

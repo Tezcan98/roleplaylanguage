@@ -8,6 +8,13 @@ export class VillageNetwork {
 
   constructor(url) { this.url = url; }
 
+  /**
+   * Which village server to use:
+   * - `?mp=wss://…` in the address wins (`?mp=local` → this page's own server);
+   * - on localhost (npm start, tests) the dev server's built-in village is used;
+   * - otherwise `villageServer` from assets/manifest.json (GitHub Pages, the Android app);
+   * - without one, the page's own host (works when the game and server share a domain).
+   */
   static resolveUrl({ manifestUrl = '', override = null, native = false, loc = location } = {}) {
     const local = `${loc.protocol === 'https:' ? 'wss' : 'ws'}://${loc.host}/ws/village`;
     if (override) return override === 'local' ? local : override;
