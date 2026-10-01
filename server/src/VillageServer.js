@@ -37,6 +37,7 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *   { type: 'ball', x, z, vx, vz }        kicked the shared ball (relayed, last state kept for newcomers)
  *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to your call partner
  *   { type: 'call-diag', state, detail? } how the voice connection went (logged, for support)
+ *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
  *   { type: 'chess-sit', color } | { type: 'chess-stand' } | { type: 'chess-move', from, to, promotion? } | { type: 'chess-new' }
  *                                         the square's giant chess board
  * server → client
@@ -195,6 +196,9 @@ export class VillageServer {
         if (ok) this.#toAll(c.room, t.state()); else this.#send(c, t.state()); // a refused move snaps back
         break;
       }
+      case 'goal': // a match in the schoolyard: the scorer's screen tells the others
+        if (msg.side === 'a' || msg.side === 'b') this.#toRoom(c, { type: 'goal', id: c.id, side: msg.side });
+        break;
       case 'call-diag': // the client reports how a voice connection went
         if (typeof msg.state === 'string') this.log(`[village] voice ${c.name}: ${msg.state.slice(0, 20)}${typeof msg.detail === 'string' ? ` (${msg.detail.slice(0, 120)})` : ''}`);
         break;

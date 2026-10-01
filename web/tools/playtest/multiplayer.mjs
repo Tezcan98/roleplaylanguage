@@ -124,6 +124,20 @@ try {
   check('chess: a move on one screen shows on the other player’s board', !!seen);
   await A.evaluate(() => window.__game.village.chess.view.close()); await B.evaluate(() => window.__game.village.chess.view.close());
 
+  // the schoolyard is a public place too: both go there, A scores, both scoreboards say 1-0
+  await A.evaluate(() => window.__game.travel.go('schoolyard', 'squareRoad')); await B.evaluate(() => window.__game.travel.go('schoolyard', 'squareRoad'));
+  const meet = await waitFor(async () => (await A.evaluate(() => window.__game.village.joinedAt === 'schoolyard' && window.__game.village.remotes.count)) === 1 && (await B.evaluate(() => window.__game.village.remotes.count)) === 1, 15000);
+  check('schoolyard: a public place with its own room', !!meet);
+  await A.evaluate(async () => {
+    const g = window.__game, b = g.toys.toys.find((t) => t.toy.location.id === 'schoolyard').toy;
+    b.setState({ x: 8.8, z: -2, vx: 0, vz: 0 });
+    for (let i = 0; i < 25; i++) { g.player.position.set(7.4 + i * 0.07, 0, -2); await new Promise((r) => requestAnimationFrame(r)); }
+  });
+  const goal = await waitFor(() => B.evaluate(() => window.__game.football?.score.a === 1), 8000);
+  check('football: a goal counts on both screens', !!goal && (await A.evaluate(() => window.__game.football.score.a)) === 1);
+  await A.evaluate(() => window.__game.travel.go('village', 'schoolRoad')); await B.evaluate(() => window.__game.travel.go('village', 'schoolRoad'));
+  await waitFor(async () => (await A.evaluate(() => window.__game.village.joinedAt === 'village' && window.__game.village.remotes.count)) === 1, 15000);
+
   // a phone locking its screen drops the socket: the game reconnects by itself
   await B.evaluate(() => window.__game.village.net.dropForTest());
   check('after a dropped connection the player comes back by itself', !!(await waitFor(async () => (await B.evaluate(() => window.__game.village.net.connected)) && (await A.evaluate(() => window.__game.village.remotes.count)) === 1, 15000)));

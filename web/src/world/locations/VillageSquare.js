@@ -115,12 +115,17 @@ export class VillageSquare extends Location {
     const post = (x, z) => add(mf.at(mf.box(0.18, 1, 0.18, WOOD), x, 0.5, z));
     for (let i = -HALF; i <= HALF; i += 2) {
       if (Math.abs(i) > 2) post(-HALF, i);
-      post(HALF, i); post(i, -HALF); post(i, HALF);
+      post(HALF, i); post(i, -HALF);
+      if (Math.abs(i) > 2) post(i, HALF); // south gate: the road to the school
     }
     const rail = (x, z, w, d) => [0.75, 0.4].forEach((y) => add(mf.at(mf.box(w, 0.08, d, WOOD), x, y, z)));
-    rail(0, -HALF, HALF * 2, 0.08); rail(0, HALF, HALF * 2, 0.08); rail(HALF, 0, 0.08, HALF * 2);
+    rail(0, -HALF, HALF * 2, 0.08); rail(HALF, 0, 0.08, HALF * 2);
+    rail(-(HALF + 2) / 2, HALF, HALF - 2, 0.08); rail((HALF + 2) / 2, HALF, HALF - 2, 0.08);
     rail(-HALF, -(HALF + 2) / 2, 0.08, HALF - 2); rail(-HALF, (HALF + 2) / 2, 0.08, HALF - 2);
 
+    add(mf.ground(2.4, 8, { tex: 'dirt', repeat: [1, 3] }, 0.0)).position.set(0, 0, HALF + 3);
+    this.hotspot('village.school', 0, HALF - 0.8, 2.0);
+    this.anchor('schoolRoad', 0, HALF - 2.2, Math.PI);
     this.anchor('yardRoad', -HALF + 2.2, 0, Math.PI / 2);
     this.hotspot('village.yard', -HALF + 0.8, 0, 2.2);
     this.hotspot('village.menu', -HALF + 0.8, 0, 2.2); // same exit when playing online from the menu

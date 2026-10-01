@@ -96,6 +96,7 @@ import { CardOverlay } from './ui/CardOverlay.js';
 import { MainMenu } from './ui/MainMenu.js';
 import { WordDrill } from './systems/WordDrill.js';
 import { ChessGame } from './systems/ChessGame.js';
+import { Football } from './systems/Football.js';
 import { ChessView } from './ui/ChessView.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
@@ -274,7 +275,7 @@ const toys = new ToySystem({ world, player, free, tts });
 const yard = world.get('yard');
 // balls are kicked by running into them; the square's ball is shared by everyone online
 toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true });
-toys.add(new Ball(mf, world.get('schoolyard'), { x: -3, z: 2 }), { action: 'ball', touch: true });
+const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) });
 const villageBall = toys.add(new Ball(mf, world.get('village'), { x: 4, z: 3 }), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) });
 toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
 
@@ -301,8 +302,10 @@ effects
 const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st) => village.voiceState(st), relayOnly: params.has('relayonly') }),
-  remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS }), ball: villageBall,
+  remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS }),
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
+  // public places: the square, and the schoolyard for football (its own room: <city>-okul)
+  places: { village: { suffix: '', ball: villageBall, label: '' }, schoolyard: { suffix: '-okul', ball: schoolBall, label: 'Okul bahçesi' } },
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
   calls: new CallUI(host, modes),
@@ -320,6 +323,9 @@ const village = new VillageMultiplayer({
 // --- giant chess on the square: online the server's board, offline against the computer ---
 const chess = new ChessGame({ mf, square: world.get('village'), view: new ChessView(host, { modes }), net: villageNet, vocab, toasts });
 village.chess = chess;
+const football = new Football({ world, ball: schoolBall, village, toasts, tts });
+village.onGoal = (place, side) => { if (place === 'schoolyard') football.scored(side, false); };
+world.get('schoolyard').animated.push((dt) => football.update(dt));
 effects.register('chess', () => chess.open());
 
 // --- interaction ---
@@ -466,11 +472,13 @@ effects.register('street', async () => {
   };
   const school = schoolDay ? SCHOOL.day : night ? SCHOOL.closed : SCHOOL.practice;
   const square = { label: '🏘️ Köy meydanına git', en: 'Go to the village square', value: 'square' };
+  const match = { label: '⚽ Okul bahçesinde maç yap', en: 'Play football in the schoolyard', value: 'match' };
   const toSquare = gameCtx.targetNpcLoc === 'village' || story.target()?.hotspot?.startsWith('village.');
-  const pick = await streetChoice.pick({ title: 'Nereye gidiyorsun?', en: 'Where are you going?', options: toSquare ? [square, school] : [school, square] });
+  const pick = await streetChoice.pick({ title: 'Nereye gidiyorsun?', en: 'Where are you going?', options: toSquare ? [square, school, match] : [school, square, match] });
   if (pick === 'school') effects.run(['chapter']);
   else if (pick === 'practice') schoolPractice();
   else if (pick === 'square') travel.go('village', 'yardRoad');
+  else if (pick === 'match') travel.go('schoolyard', 'gate');
 });
 
 function startNew(then) {
@@ -533,4 +541,4 @@ setInterval(() => {
 }, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { football, chess, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

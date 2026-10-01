@@ -5,7 +5,55 @@ import { Foliage } from '../../engine/Foliage.js';
 const DARK = { tex: 'darkWood' };
 
 /** The village primary school from outside: courtyard, flagpole, entrance. */
+/** The football pitch on the yard: goals at both ends (x), centre spot. */
+export const PITCH = { x0: -10, x1: 10, z0: -8.6, z1: 4.6, goalHalf: 1.5 };
+PITCH.cz = (PITCH.z0 + PITCH.z1) / 2;
+
 export class SchoolYard extends Location {
+  /** Score on the board by the pitch. */
+  writeScore(a, b) {
+    const c = this.scoreCanvas;
+    if (!c) return;
+    const g = c.getContext('2d');
+    g.fillStyle = '#1B2440'; g.fillRect(0, 0, c.width, c.height);
+    g.fillStyle = '#FFFFFF'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = 'bold 30px Fredoka, sans-serif'; g.fillText('MAVİ  –  KIRMIZI', c.width / 2, 34);
+    g.font = 'bold 72px Fredoka, sans-serif';
+    g.fillStyle = '#5DADE2'; g.fillText(String(a), c.width * 0.3, 100);
+    g.fillStyle = '#FFFFFF'; g.fillText('-', c.width / 2, 100);
+    g.fillStyle = '#EC7063'; g.fillText(String(b), c.width * 0.7, 100);
+    this.scoreTex.needsUpdate = true;
+  }
+
+  /** White lines, two goals with nets, a score board. */
+  #pitch(mf, C) {
+    const add = (m) => this.add(m);
+    const { x0, x1, z0, z1, cz, goalHalf } = PITCH;
+    const white = 0xF4F6F7, line = (x, z, w, d) => add(mf.at(mf.box(w, 0.01, d, white), x, 0.035, z));
+    line((x0 + x1) / 2, z0, x1 - x0, 0.12); line((x0 + x1) / 2, z1, x1 - x0, 0.12);
+    line(x0, cz, 0.12, z1 - z0); line(x1, cz, 0.12, z1 - z0); line(0, cz, 0.12, z1 - z0);
+    const ring = mf.torus(1.8, 0.05, white, 40); ring.rotation.x = Math.PI / 2; ring.position.set(0, 0.035, cz); add(ring);
+    [x0, x1].forEach((gx, i) => {
+      const dir = i ? 1 : -1;
+      line(gx - dir * 1.5, cz, 0.12, 5); line(gx - dir * 0.75, cz - 2.5, 1.5, 0.12); line(gx - dir * 0.75, cz + 2.5, 1.5, 0.12); // goal area
+      const post = (z) => { add(mf.at(mf.cyl(0.06, 0.06, 1.6, white, 8), gx, 0.8, z)); C.addCircle(gx, z, 0.12); };
+      post(cz - goalHalf); post(cz + goalHalf);
+      add(mf.at(mf.cyl(0.06, 0.06, goalHalf * 2, white, 8), gx, 1.6, cz)).rotation.x = Math.PI / 2;
+      const net = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.6, goalHalf * 2), new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true, transparent: true, opacity: 0.35 }));
+      net.position.set(gx + dir * 0.45, 0.8, cz); add(net);
+      C.addBox(gx + dir * 0.9 - 0.05, gx + dir * 0.9 + 0.05, cz - goalHalf, cz + goalHalf); // back of the net
+    });
+    // score board on a post beside the pitch
+    this.scoreCanvas = document.createElement('canvas'); this.scoreCanvas.width = 320; this.scoreCanvas.height = 140;
+    this.scoreTex = new THREE.CanvasTexture(this.scoreCanvas); this.scoreTex.colorSpace = THREE.SRGBColorSpace;
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.05), new THREE.MeshBasicMaterial({ map: this.scoreTex }));
+    board.position.set(-12.6, 2.6, cz); board.rotation.y = Math.PI / 2; add(board);
+    add(mf.at(mf.cyl(0.07, 0.07, 2.2, { tex: 'metal' }, 8), -12.7, 1.1, cz));
+    C.addCircle(-12.7, cz, 0.2);
+    this.writeScore(0, 0);
+    this.anchor('kickoff', 0, cz + 2.5, Math.PI);
+  }
+
   constructor() {
     super({ id: 'schoolyard', name: 'Okul bahçesi', spawn: 'gate', bounds: { x: [-16, 16], z: [-9.4, 12] } });
   }
@@ -33,11 +81,11 @@ export class SchoolYard extends Location {
     C.addBox(-10.1, 10.1, -16.1, -9.9);
     this.hotspot('school.door', 0, -9.2, 1.6);
 
-    // flagpole with the Turkish flag
-    add(mf.at(mf.cyl(0.06, 0.08, 7, { tex: 'metal' }, 8), 7, 3.5, -6));
-    C.addCircle(7, -6, 0.2);
+    // flagpole with the Turkish flag (beside the pitch)
+    add(mf.at(mf.cyl(0.06, 0.08, 7, { tex: 'metal' }, 8), 12.6, 3.5, -8.6));
+    C.addCircle(12.6, -8.6, 0.2);
     const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.2, 12, 1), mf.mat({ tex: 'flag' }, { side: THREE.DoubleSide }));
-    flag.position.set(7.9, 6.3, -6);
+    flag.position.set(13.5, 6.3, -8.6);
     add(flag);
     const base = flag.geometry.attributes.position.array.slice();
     this.animated.push((dt, t) => {
@@ -50,12 +98,14 @@ export class SchoolYard extends Location {
       flag.geometry.computeVertexNormals();
     });
 
-    // benches and trees
-    [[-8, -3], [-8, 1]].forEach(([x, z]) => {
-      this.prop(kit, 'prop.bench', x, 0, z, Math.PI / 2, () => mf.group(
+    this.#pitch(mf, C);
+
+    // benches for the spectators and trees
+    [[-5.5, 8], [5.5, 8]].forEach(([x, z]) => {
+      this.prop(kit, 'prop.bench', x, 0, z, Math.PI, () => mf.group(
         mf.at(mf.box(2, 0.08, 0.5, { tex: 'lightWood' }), 0, 0.45, 0), mf.at(mf.box(2, 0.5, 0.08, { tex: 'lightWood' }), 0, 0.75, -0.25),
         mf.at(mf.box(0.08, 0.45, 0.45, DARK), -0.9, 0.22, 0), mf.at(mf.box(0.08, 0.45, 0.45, DARK), 0.9, 0.22, 0)));
-      C.addBox(x - 0.3, x + 0.3, z - 1, z + 1);
+      C.addBox(x - 1, x + 1, z - 0.3, z + 0.3);
     });
     const tree = (x, z, s) => this.prop(kit, 'prop.tree', x, 0, z, Math.random() * 6, () => mf.group(
       mf.at(mf.cyl(0.2, 0.3, 1.8, { tex: 'bark' }), 0, 0.9, 0),
@@ -68,6 +118,11 @@ export class SchoolYard extends Location {
     }));
 
     this.hotspot('school.exit', 0, 11, 1.8);
+    this.hotspot('school.leave', 0, 11, 1.8); // the same gate outside school days
+    // a path east to the village square (the square is the other public place)
+    add(mf.ground(5, 2.2, { tex: 'dirt', repeat: [2, 1] }, 0.021)).position.set(13.5, 0.021, 0.2);
+    this.hotspot('school.square', 15.2, 0.2, 1.8);
+    this.anchor('squareRoad', 13.6, 0.2, -Math.PI / 2);
     this.anchor('gate', 0, 10, Math.PI);
     this.anchor('door', 0, -8.4, 0);
     this.anchor('elif', -3, -5, 0.6);

@@ -62,8 +62,14 @@ export const HOTSPOTS = {
   'classroom.door': { label: 'Bahçeye çık', travel: ['schoolyard', 'door'] },
   'school.exit': {
     label: 'Eve dön', lockedLabel: 'Okul kapısı', use: ['chapter'],
+    available: (c) => String(c.chapter ?? '').endsWith('-school') && !c.story?.paused,
     locked: (c) => (c.targetHotspot === 'school.exit' || c.reached('go-home') ? null : ['Daha ders bitmedi!', "The lesson isn't over yet!"]),
   },
+  // outside a school day (a match, a visit): the same gate just leads home
+  'school.leave': { label: 'Eve dön', travel: ['yard', 'gate'], available: (c) => !(String(c.chapter ?? '').endsWith('-school') && !c.story?.paused) && !c.online },
+  // the two public places are connected: schoolyard ↔ village square
+  'school.square': { label: 'Köy meydanına git', travel: ['village', 'schoolRoad'] },
+  'village.school': { label: 'Okul bahçesine git ⚽', travel: ['schoolyard', 'squareRoad'] },
   'house.desk': {
     label: 'Ödev yap', use: ['textbook'],
     available: (c) => c.has('kitap'),
