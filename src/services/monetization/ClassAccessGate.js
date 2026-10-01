@@ -1,4 +1,5 @@
 import { el } from '../../ui/dom.js';
+import { gloss } from '../../i18n/Gloss.js';
 
 /**
  * Pay-to-enter for lessons: spend credits, or watch a rewarded ad to earn one.
@@ -18,7 +19,7 @@ export class ClassAccessGate {
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card' }, [
         el('p', { class: 'chap', text: resource.titleEn ? 'Ders' : 'Sesli sınav' }),
         el('h2', { class: 'ctitle', text: resource.title }),
-        el('p', { class: 'cen en-t', text: resource.titleEn ? `Lesson: ${resource.titleEn}` : 'Speech exam' }),
+        el('p', { class: 'cen en-t', text: resource.titleEn ? gloss(resource.titleEn) : gloss('Speech exam') }),
         balance, pay, ad, cancel,
       ])]);
       const refresh = () => {

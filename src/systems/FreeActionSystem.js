@@ -1,4 +1,5 @@
 import { EV } from '../core/events.js';
+import { wordNote } from '../i18n/Gloss.js';
 
 const val = (v, ctx) => (typeof v === 'function' ? v(ctx) : v);
 
@@ -22,7 +23,7 @@ export class FreeActionSystem {
     const words = val(a.words, this.ctx) ?? [];
     words.forEach(([tr, en]) => this.vocab.learn(tr, en));
     this.labels.think(val(a.think, this.ctx), 3.5, this.clock());
-    this.toasts.show(`🗣 ${val(a.say, this.ctx)}`, words.map(([tr, en]) => `${tr} = ${en}`).join(' · '));
+    this.toasts.show(`🗣 ${val(a.say, this.ctx)}`, words.map(([tr, en]) => wordNote(tr, en)).join(' · '));
     if (a.minutes) this.time.advance(a.minutes);
     if (a.anim) this.world.current.play?.(a.anim);
     this.bus.emit(EV.FREE_ACTION, { id });

@@ -12,7 +12,7 @@ export class Game {
   tick() {
     const dt = Math.min(this.#clock.getDelta(), 0.05);
     const t = (this.t += dt);
-    const { prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
+    const { help, prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
     const playing = modes.base === 'play';
 
     time.update(dt);
@@ -28,6 +28,7 @@ export class Game {
 
     actionButton.show(interactions.update(player.position));
     joystick.visible = modes.is('play');
+    help.visible = modes.is('play');
     marker.update(dt, t, playing && !dialogue.talking);
 
     const partner = dialogue.talking ? cast.get(dialogue.talking) : null;

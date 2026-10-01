@@ -61,6 +61,8 @@ import { UsernameDialog } from './ui/UsernameDialog.js';
 import { PushToTalk } from './ui/PushToTalk.js';
 import { CallUI } from './ui/CallUI.js';
 import { CaptionView } from './ui/CaptionView.js';
+import { HelpPanel } from './ui/HelpPanel.js';
+import { IntroSlides } from './ui/IntroSlides.js';
 import { PrayerScene } from './systems/PrayerScene.js';
 import { MealService } from './systems/MealService.js';
 import { TextbookView } from './ui/TextbookView.js';
@@ -94,6 +96,7 @@ import { MainMenu } from './ui/MainMenu.js';
 import { ListModal } from './ui/ListModal.js';
 import { DialogueView } from './ui/DialogueView.js';
 
+import { gloss, wordNote, setGlossLang } from './i18n/Gloss.js';
 import {
   STORY, NPCS, PLAYER_LOOK, VOICES, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
   LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS,
@@ -111,6 +114,7 @@ const host = document.getElementById('ui');
 // --- core ---
 const settings = new Settings();
 const quality = params.get('quality') ?? settings.get('quality', 'medium');
+setGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default
 const bus = new EventBus();
 const state = new GameState();
 const modes = new ModeStack();
@@ -203,7 +207,7 @@ effects
   .register('give', (kind, n) => {
     inventory.add(kind, n ? Number(n) : 1);
     const { tr, en } = items.info(kind);
-    toasts.show(`+${n ?? 1} ${tr}`, en);
+    toasts.show(`+${n ?? 1} ${tr}`, gloss(en));
   })
   .register('wear', (what, off) => { player.wear(what, off !== 'off'); state.flags[`wear-${what}`] = off !== 'off'; })
   .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); })
@@ -256,7 +260,7 @@ const textbook = new TextbookController({
 effects
   .register('lesson', (id) => lessons.enter(id || story.chapter?.lessonId || 'l1'))
   .register('textbook', (unit) => textbook.open(unit))
-  .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, 'Credits earned'); });
+  .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, gloss('Credits earned')); });
 
 // --- multiplayer village square (server: tools/serve.mjs or server/index.mjs) ---
 const villageNet = new VillageNetwork(VillageNetwork.defaultUrl(manifest.villageServer));
@@ -267,6 +271,13 @@ const village = new VillageMultiplayer({
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
   calls: new CallUI(host, modes),
   usernames: new UsernameDialog(host, modes),
+  // first time in the square: how talking works here (Arabic, with Turkish)
+  onFirstVisit: () => cards.show({
+    num: 'Köy meydanı · ساحة القرية', title: 'Burada gerçek oyuncular var',
+    text: 'Söylediğin cümle başının üstünde yazı olarak görünür. Sesli sohbet sadece iki kişi arasında ve karşı taraf kabul ederse açılır.',
+    en: 'هنا لاعبون حقيقيون. ما تقوله يظهر نصاً فوق رأسك («Bas, konuş» أو T). المحادثة الصوتية بين شخصين فقط وبعد موافقة الطرف الآخر. كن لطيفاً!',
+    button: 'Tamam · حسناً',
+  }),
   recognizer: params.has('fakemic') ? new ScriptedRecognizer() : new WebSpeechRecognizer('tr-TR'),
 });
 
@@ -284,10 +295,10 @@ const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, pl
 
 const hud = new Hud(host, {
   onBookOpen: () => textbook.open(),
-  onBook: () => list.open('Kelime defteri', vocab.entries(), 'Henüz kelime yok. Biriyle konuş!'),
+  onBook: () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!'),
   onBag: () => list.open('Çanta', inventory.entries().map(([kind, n]) => {
     const i = items.info(kind);
-    return n > 1 ? [`${n} ${i.tr}`, `${n} ${i.en}`] : [i.tr, i.en];
+    return n > 1 ? [`${n} ${i.tr}`, `${n} ${gloss(i.en)}`] : [i.tr, gloss(i.en)];
   }), 'Çantan boş.'),
 });
 
@@ -304,7 +315,7 @@ bus.on(EV.CHAPTER, ({ chapter }) => {
 });
 bus.on(EV.ITEM_PICKED, ({ item, isNew }) => {
   effects.run(item.onPick);
-  const note = `${isNew ? 'Yeni kelime: ' : ''}${item.tr} = ${item.en}`;
+  const note = `${isNew ? 'Yeni kelime: ' : ''}${wordNote(item.tr, item.en)}`;
   const name = item.bagTr ?? item.tr;
   if (item.goal) toasts.show(`${name[0].toLocaleUpperCase('tr')}${name.slice(1)}: ${inventory.count(item.kind)}/${item.goal}`, isNew ? note : '');
   else toasts.show(`${item.verb.replace(/ al$/, '')} aldın!`, note);
@@ -324,10 +335,32 @@ const enterPlay = () => {
   document.body.classList.remove('menu');
   autosaveOn = true;
 };
+const intro = new IntroSlides(host, modes);
+const help = new HelpPanel(host, {
+  modes,
+  getState: () => ({
+    quest: story.objective(),
+    bag: inventory.entries().map(([kind, n]) => { const i = items.info(kind); return [n > 1 ? `${n} ${i.tr}` : i.tr, n > 1 ? `${n} ${gloss(i.en)}` : gloss(i.en)]; }),
+    words: vocab.size,
+  }),
+  onIntro: () => intro.show(),
+  onWords: () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!'),
+});
+// the first time, the introduction comes before the story (skip with ?nointro)
+const introFirst = async () => {
+  if (settings.get('introSeen', false) || params.has('nointro')) return;
+  await intro.show();
+  settings.set('introSeen', true);
+};
 new MainMenu(host, {
   settings,
   hasSave: !!saved,
-  onStart: () => fader.run(() => {
+  onHelp: () => intro.show(),
+  onStart: async () => { await introFirst(); startNew(); },
+  onContinue: () => continueGame(),
+});
+function startNew() {
+  fader.run(() => {
     saves.clear();
     const requestedDay = Number(params.get('day'));
     const dayIndex = Number.isInteger(requestedDay) && requestedDay > 0
@@ -338,18 +371,21 @@ new MainMenu(host, {
       const think = story.chapter.think;
       if (think) labels.think(think, 5, game.t);
     });
-  }),
-  onContinue: () => fader.run(() => {
+  });
+}
+function continueGame() {
+  fader.run(() => {
     state.restore(saved);
     player.wear('jacket', !!state.flags['wear-jacket']);
     items.refresh();
     hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setCredits(wallet.balance); hud.setTextbook(inventory.has('kitap'));
     story.resume(world.get(state.location).spawn, enterPlay);
-  }),
-});
+  });
+}
 
-const game = new Game({ prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+
+const game = new Game({ help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 game.start();
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

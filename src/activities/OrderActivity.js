@@ -1,5 +1,6 @@
 import { Activity } from './Activity.js';
 import { el } from '../ui/dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 function shuffle(list) {
   const a = [...list];
@@ -53,7 +54,7 @@ export class OrderActivity extends Activity {
       };
       this.root = el('div', {}, [
         el('p', { class: 'act-prompt', text: spec.prompt ?? 'Cümleyi kur:' }),
-        spec.answerEn && el('p', { class: 'en en-t', text: spec.answerEn }),
+        spec.answerEn && el('p', { class: 'en en-t', text: gloss(spec.answerEn) }),
         line,
         el('div', { class: 'tiles' }, this.tiles),
         el('div', { class: 'listen-row' }, [reset]),

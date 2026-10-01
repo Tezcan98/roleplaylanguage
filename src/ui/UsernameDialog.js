@@ -1,4 +1,5 @@
 import { el } from './dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 const VALID = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 
@@ -17,7 +18,7 @@ export class UsernameDialog {
       const form = el('form', { class: 'card' }, [
         el('p', { class: 'chap', text: 'Çok oyunculu köy meydanı' }),
         el('h2', { class: 'ctitle', text: 'Adın ne?' }),
-        el('p', { class: 'cen en-t', text: 'Choose a username. Other players will see it.' }),
+        el('p', { class: 'cen en-t', text: gloss('Choose a username. Other players will see it.') }),
         el('div', { class: 'free' }, [input]), err, ok, skip,
       ]);
       const root = el('div', { class: 'overlay open dim' }, [form]);

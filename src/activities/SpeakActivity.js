@@ -1,5 +1,6 @@
 import { Activity } from './Activity.js';
 import { el, ICONS } from '../ui/dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 const MIC = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 
@@ -64,7 +65,7 @@ export class SpeakActivity extends Activity {
         el('p', { class: 'act-prompt', text: spec.prompt ?? (noMic ? 'Sesli oku, sonra butona bas:' : 'Mikrofona bas ve söyle:') }),
         spec.hide ? el('p', { class: 'speak-target masked', text: spec.hint ?? '…' })
           : el('p', { class: 'speak-target', text: target }),
-        spec.showEn && el('p', { class: 'en en-t', text: spec.showEn }),
+        spec.showEn && el('p', { class: 'en en-t', text: gloss(spec.showEn) }),
         el('div', { class: 'speak-row' }, [
           this.mic,
           devSkip && el('button', { class: 'chipbtn', text: 'Geç (DEV)', attrs: { type: 'button' }, on: { click: () => done(true) } }),

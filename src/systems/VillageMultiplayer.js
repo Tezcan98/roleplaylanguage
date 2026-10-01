@@ -21,8 +21,8 @@ export class VillageMultiplayer {
   #last = '';
   #warnedStt = false;
 
-  constructor({ bus, net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, locationId = 'village' }) {
-    Object.assign(this, { net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, locationId });
+  constructor({ bus, net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, locationId = 'village' }) {
+    Object.assign(this, { net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, locationId });
     bus.on(EV.LOCATION, ({ id }) => (id === locationId ? this.join() : this.leave()));
     net.on('join', ({ peer }) => { this.remotes.add(this.#loc(), peer); this.toasts.show(`${peer.name} meydana geldi`, 'joined the square'); this.#count(); });
     net.on('leave', ({ id }) => {
@@ -66,6 +66,7 @@ export class VillageMultiplayer {
       this.ptt.show(true);
       this.#count();
       this.toasts.show(`Meydana hoş geldin, ${welcome.name}!`, 'Bas-konuş: söylediğin yazı olarak görünür · Push-to-talk shows your words as text');
+      if (!this.settings.get('villageIntroSeen', false)) { this.settings.set('villageIntroSeen', true); this.onFirstVisit?.(); }
     } catch (e) {
       this.toasts.show('Çok oyunculu sunucuya bağlanılamadı', `Playing offline (${e.message})`);
     } finally { this.joining = false; }

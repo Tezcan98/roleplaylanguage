@@ -150,7 +150,7 @@ export const DIALOGUES = {
       lm: { say: 'Deden asmanın altında seni bekliyor.', en: 'Grandpa is waiting for you under the vine.', options: [{ tr: 'Gidiyorum!', en: "I'm going!" }] },
 
       // --- dinner ---
-      dm1: { ask: 'listen', say: 'Çorba çok sıcak, dikkat et!', en: 'The soup is very hot, be careful!', prompt: 'Annen ne dedi?', words: [['sıcak', 'hot'], ['dikkat etmek', 'to be careful']],
+      dm1: { ask: 'listen', optionsAreMeanings: true, say: 'Çorba çok sıcak, dikkat et!', en: 'The soup is very hot, be careful!', prompt: 'Annen ne dedi?', words: [['sıcak', 'hot'], ['dikkat etmek', 'to be careful']],
         options: [
           { tr: 'The soup is cold, eat it quickly!', en: '', wrong: true },
           { tr: 'The soup is very hot, be careful!', en: '', next: 'dm2' },

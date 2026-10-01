@@ -1,7 +1,7 @@
 import { el } from './dom.js';
 
 export class MainMenu {
-  constructor(host, { onStart, onContinue, hasSave, settings }) {
+  constructor(host, { onStart, onContinue, onHelp, hasSave, settings }) {
     const help = el('ul', { class: 'help', style: { display: 'none' } }, [
       'Joystick veya WASD ile yürü.',
       'Parlayan oku takip et: görevin orada.',
@@ -20,15 +20,22 @@ export class MainMenu {
     ]);
     quality.value = settings.get('quality', 'medium');
     quality.addEventListener('change', () => { settings.set('quality', quality.value); location.reload(); });
+    const gloss = el('select', { attrs: { id: 'glossLang' } }, [
+      el('option', { text: 'العربية', attrs: { value: 'ar' } }),
+      el('option', { text: 'English', attrs: { value: 'en' } }),
+    ]);
+    gloss.value = settings.get('glossLang', 'ar');
+    gloss.addEventListener('change', () => { settings.set('glossLang', gloss.value); location.reload(); });
     this.root = el('div', { class: 'overlay open' }, [el('div', { class: 'card' }, [
       el('h1', { class: 'big', text: 'Yılmaz Ailesi' }),
       el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
       hasSave && el('button', { class: 'btn', text: 'Devam et', attrs: { type: 'button' }, on: { click: () => { this.hide(); onContinue(); } } }),
       el('button', { class: hasSave ? 'btn alt' : 'btn', text: hasSave ? 'Yeni oyun' : 'Hikayeye başla', attrs: { type: 'button' }, on: { click: () => { this.hide(); onStart(); } } }),
-      el('button', { class: 'btn alt', text: 'Nasıl oynanır?', attrs: { type: 'button' }, on: { click: () => { help.style.display = help.style.display === 'block' ? 'none' : 'block'; } } }),
+      el('button', { class: 'btn alt', text: 'Nasıl oynanır? · كيف ألعب؟', attrs: { type: 'button' }, on: { click: () => { if (onHelp) onHelp(); else help.style.display = help.style.display === 'block' ? 'none' : 'block'; } } }),
       help,
       el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler (Piper)' })]),
       el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
+      el('label', { class: 'toggle' }, [el('span', { text: 'Çeviri dili · لغة الترجمة:' }), gloss]),
     ])]);
     host.append(this.root);
   }

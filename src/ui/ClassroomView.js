@@ -1,4 +1,5 @@
 import { el, ICONS } from './dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 /** Lesson overlay: question, answer activity, live feed and scoreboard. */
 export class ClassroomView {
@@ -38,7 +39,7 @@ export class ClassroomView {
   question({ index, total, q, en }) {
     this.count.textContent = `Soru ${index + 1}/${total}`;
     this.q.textContent = q;
-    this.en.textContent = en;
+    this.en.textContent = gloss(en);
     this.status.textContent = '';
     this.status.className = 'fb';
     this.slot.replaceChildren();
@@ -63,7 +64,7 @@ export class ClassroomView {
     const place = rows.findIndex(([id]) => id === me) + 1;
     this.count.textContent = 'Ders bitti!';
     this.q.textContent = place === 1 ? 'Birinci oldun! 🏆' : `${place}. oldun. Aferin!`;
-    this.en.textContent = place === 1 ? 'You came first!' : `You came ${place}. Well done!`;
+    this.en.textContent = place === 1 ? gloss('You came first!') : gloss('You came {place}. Well done!', { place });
     this.status_('');
     this.slot.replaceChildren(el('button', { class: 'btn', text: 'Dersi bitir', attrs: { type: 'button' }, on: { click: onDone } }));
   }

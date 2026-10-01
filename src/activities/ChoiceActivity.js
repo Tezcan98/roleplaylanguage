@@ -1,5 +1,6 @@
 import { Activity } from './Activity.js';
 import { el } from '../ui/dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 /**
  * Pick an answer. Wrong options get struck through and `spec.onWrong` is called
@@ -20,7 +21,7 @@ export class ChoiceActivity extends Activity {
         },
       }, [
         el('span', { class: 'k', text: `${i + 1}.` }),
-        el('span', { class: 't' }, [el('span', { text: opt.tr }), opt.en && el('span', { class: 'e en-t', text: opt.en })]),
+        el('span', { class: 't' }, [el('span', { text: spec.optionsAreMeanings ? gloss(opt.tr) : opt.tr }), opt.en && el('span', { class: 'e en-t', text: gloss(opt.en) })]),
       ]));
       this.root = el('div', { class: 'choices' }, this.buttons);
       container.append(this.root);

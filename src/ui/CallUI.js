@@ -1,4 +1,5 @@
 import { el } from './dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 /** Incoming voice-chat request (accept / decline) and the in-call bar. */
 export class CallUI {
@@ -23,7 +24,7 @@ export class CallUI {
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card' }, [
         el('p', { class: 'chap', text: 'Sesli sohbet isteği' }),
         el('h2', { class: 'ctitle', text: `${fromName} seninle konuşmak istiyor` }),
-        el('p', { class: 'cen en-t', text: `${fromName} wants to voice chat with you` }),
+        el('p', { class: 'cen en-t', text: gloss('{name} wants to voice chat with you', { name: fromName }) }),
         count, yes, no,
       ])]);
       let left = seconds;

@@ -1,4 +1,5 @@
 import { el } from './dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 export class QuestPanel {
   constructor(host) {
@@ -13,6 +14,6 @@ export class QuestPanel {
     if (!obj) return;
     this.t.textContent = `Görev: ${obj.title}`;
     this.o.textContent = obj.text;
-    this.e.textContent = obj.en;
+    this.e.textContent = gloss(obj.en);
   }
 }

@@ -1,4 +1,5 @@
 import { el } from './dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 /** Chapter / story cards. Blocks input while open. */
 export class CardOverlay {
@@ -19,7 +20,7 @@ export class CardOverlay {
     this.num.textContent = card.num ?? '';
     this.title.textContent = card.title;
     this.text.textContent = typeof card.text === 'function' ? card.text() : card.text;
-    this.en.textContent = card.en ?? '';
+    this.en.textContent = gloss(card.en) ?? '';
     this.btn.textContent = card.button ?? 'Başla';
     const pop = this.modes.push('card');
     this.root.classList.add('open');

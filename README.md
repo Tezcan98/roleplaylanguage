@@ -23,6 +23,7 @@ Aynı ağdaki başka bir cihazdan (telefon) `http://<bilgisayarın-ip>:8080` ile
 URL parametreleri:
 - `?debug`: `window.__game` üzerinden sistemlere erişim (otomatik test için).
 - `?fakemic`: mikrofon yerine beklenen cevabı "duyan" sahte tanıyıcıyı kullanır (test için).
+- `?nointro`: ilk açılış tanıtımını atlar (testler için). `?gloss=en|ar`: açıklama dilini geçersiz kılar.
 - `?fresh`: kayıtlı oyunu yok sayar. `?quality=high|medium|low`: kalite ayarını geçersiz kılar. `?fastclass`: sınıf botlarını hızlandırır.
 
 `assets/manifest.json` içindeki isteğe bağlı ayarlar: `sttEndpoint` (Whisper sunucusu), `classroomServer` (multiplayer WebSocket sunucusu, `src/services/multiplayer/ClassroomSession.js` içindeki protokol).
@@ -33,6 +34,8 @@ URL parametreleri:
 - **Dinleme (STT):** varsayılan olarak tarayıcının Web Speech API'si kullanılır. `assets/manifest.json` içine `"sttEndpoint": "http://.../stt"` eklenirse ses kaydı bu sunucuya gönderilir (Whisper gibi bir sunucu, `{ text, language, language_probability }` döndürmeli). Whisper'ın dil tespiti, oyuncunun gerçekten Türkçe konuşup konuşmadığını doğrular. Sunucu yoksa `LanguageDetector` metin üzerinden tahmin yapar.
 
 ## Oyunda neler var
+
+- **Arapça:** Türkçe cümlelerin altındaki anlamlar, görevler, ipuçları ve bildirimler Arapça (sağdan sola). Menüden İngilizceye çevrilebilir. Köşedeki **؟ مساعدة** düğmesi şu anki görevi, çantayı, kontrolleri ve meydan kurallarını Arapça anlatır. İlk açılışta Arapça/Türkçe bir tanıtım gelir (menüde "Nasıl oynanır?" ile tekrar açılır). Ders kitabındaki hafıza kartları Arapça ses benzerlikleri kullanır (süt ≈ سوط, kova ≈ قهوة, kitap ≈ كتاب).
 
 - **İki günlük hikaye (9 bölüm):** Pazar sabahı → kahvaltı → çamaşır → masal → akşam yemeği → gece/uyku → Pazartesi okul → ödev. Saat görevlerle ilerler, gece ve gündüz değişir.
 - **Alıştırma tipleri:** seçmeli, dinleme (cümle gizli, sesle duyulur), kelime sıralama, sesli konuşma (konuşma tanıma + Türkçe tespiti + benzerlik puanı).
@@ -90,6 +93,10 @@ Sistemler birbirini doğrudan çağırmak yerine `EventBus` üzerinden haberleş
 - **Görev / bölüm:** `src/content/story.js`. Bir bölüm saati, kimin nerede durduğunu (`cast`) ve görev zincirini belirler. Karakterler sadece bölüm geçişlerinde yer değiştirir, böylece kimse oyuncunun gözü önünde ışınlanmaz.
 - **Diyalog:** `src/content/dialogues.js`. Düğümler `say/en/words/hint/options` alanlarından oluşur. Seçenekler `next`, `do` (efektler) ve `wrong` alanlarını alır.
 - **Eşya:** `src/content/items.js`. **Kapı ve geçiş:** `src/content/hotspots.js`.
+
+## Çeviri
+
+Açıklamalar İngilizce yazılır, `src/i18n/ar.js` İngilizce → Arapça sözlüktür. Yeni içerik ekledikten sonra eksikleri gör: `node tools/extract-glosses.mjs --missing ar`. Elle yazılan arayüz metinleri `src/i18n/ar-ui.js` içinde.
 
 ## 3D model ve doku ekleme
 
