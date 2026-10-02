@@ -64,6 +64,7 @@ export class VillageMultiplayer {
     net.on('talk', ({ id, on }) => this.remotes.setTalking(id, on));
     net.on('ball', (b) => this.balls[b.n ?? 0]?.setState(b)); // someone else kicked a shared ball
     net.on('goal', ({ side }) => this.onGoal?.(this.joinedAt, side, false)); // someone scored in a match
+    net.on('score-reset', () => this.onScoreReset?.(this.joinedAt)); // someone reset the score board
     net.on('chess', (st) => { if (this.joinedAt === 'village') this.chess?.applyServer(st); }); // the square's giant chess board
     net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
     net.on('call-request', async ({ from, name }) => {
@@ -318,6 +319,8 @@ export class VillageMultiplayer {
 
   update(dt, t) {
     if (!this.net.connected) return;
+    const onPitch = !!this.onPitch?.(this.player.position); // a match: the hard-shot button there, not the talk button
+    if (onPitch === !this.ptt.root.hidden) this.ptt.show(!onPitch);
     this.remotes.update(dt, t);
     this.#since += dt;
     if (this.#since < SEND_EVERY) return;

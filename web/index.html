@@ -28,5 +28,9 @@
 <div id="ui"></div>
 <noscript>Bu oyun JavaScript gerektirir.</noscript>
 <script type="module" src="src/main.js"></script>
+<script>
+  // the newest version on every visit, the last copy offline (sw.js); only on the real website
+  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
 </body>
 </html>

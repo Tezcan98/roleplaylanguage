@@ -18,6 +18,7 @@ export class SchoolYard extends Location {
   #pitch(mf) {
     this.scoreWriter = buildPitch(this, mf, { ...PITCH, board: { x: -12.6, z: PITCH.cz, rot: Math.PI / 2 } });
     this.anchor('kickoff', 0, PITCH.cz + 2.5, Math.PI);
+    this.hotspot('school.scoreReset', -12.0, PITCH.cz, 1.3); // under the score board
   }
 
   constructor() {

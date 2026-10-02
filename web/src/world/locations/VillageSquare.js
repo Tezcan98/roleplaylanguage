@@ -138,6 +138,7 @@ export class VillageSquare extends Location {
     add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.02))
       .position.set((SQUARE_PITCH.fence.x0 + SQUARE_PITCH.fence.x1) / 2, 0.02, (SQUARE_PITCH.fence.z0 + SQUARE_PITCH.fence.z1) / 2);
     this.anchor('kickoff', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, SQUARE_PITCH.cz - 2.5, 0);
+    this.hotspot('village.scoreReset', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, 12.7, 1.3); // under the score board
 
     // trees, each in a ring of stones with soil inside (none on the pitch)
     [[-5, 12], [6, 12], [14, -14], [-4, -14], [-21, -6], [-21, 6], [30, -12], [-30, -12], [-6, 22], [-3.5, 25], [-22, 25], [22, -6],

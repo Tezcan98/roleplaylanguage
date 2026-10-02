@@ -8,6 +8,7 @@ const COOL = 2.5; // s after a goal before another can count
  */
 export class Football {
   #cool = 0;
+  #prevX = new Map(); // ball → x a frame ago (a goal must come in over the line from the pitch)
 
   /** `place` = location id; `pitch` = { x0, x1, z0, z1, goalHalf, cz, fence? }; `writeScore(a, b)` = its board. */
   constructor({ place, pitch, balls, writeScore, world, village, toasts }) {
@@ -31,10 +32,12 @@ export class Football {
     const { x0, x1, cz, goalHalf } = this.pitch;
     for (const ball of this.balls) {
       this.#fence(ball);
-      if (this.#cool > 0) continue;
-      const p = ball.position;
-      if (Math.abs(p.z - cz) > goalHalf) continue;
-      const side = p.x > x1 + 0.2 ? 'a' : p.x < x0 - 0.2 ? 'b' : null;
+      if (this.#cool > 0) { this.#prevX.set(ball, ball.position.x); continue; }
+      const p = ball.position, prev = this.#prevX.get(ball) ?? p.x;
+      this.#prevX.set(ball, p.x);
+      if (Math.abs(p.z - cz) > goalHalf || Math.abs(p.x - prev) > 1.5) continue; // a jump (put back, or a position from the network) is no shot
+      // in over the goal line from the pitch side, and inside the net (not from behind or the side)
+      const side = prev <= x1 + 0.2 && p.x > x1 + 0.2 && p.x < x1 + 0.9 ? 'a' : prev >= x0 - 0.2 && p.x < x0 - 0.2 && p.x > x0 - 0.9 ? 'b' : null;
       if (!side) continue;
       const online = this.village.net.connected && this.village.joinedAt === this.place;
       const mine = !online || Date.now() - (this.village.lastKick ?? 0) < 5000;
@@ -43,6 +46,21 @@ export class Football {
       this.scored(side, true, ball);
       if (online) this.village.goal(side);
     }
+  }
+
+  /** Is the player on this pitch (inside its fence, or near its lines)? */
+  has(pos) {
+    if (this.world.current?.id !== this.place) return false;
+    const f = this.pitch.fence ?? { x0: this.pitch.x0 - 1.5, x1: this.pitch.x1 + 1.5, z0: this.pitch.z0 - 1.5, z1: this.pitch.z1 + 1.5 };
+    return pos.x > f.x0 && pos.x < f.x1 && pos.z > f.z0 && pos.z < f.z1;
+  }
+
+  /** Score back to 0 - 0 (`mine`: tell the others in this place). */
+  reset(mine) {
+    this.score = { a: 0, b: 0 };
+    this.writeScore(0, 0);
+    this.toasts.show('Skor sıfırlandı · 0 - 0', 'Score reset');
+    if (mine && this.village.net.connected && this.village.joinedAt === this.place) this.village.net.send({ type: 'score-reset' });
   }
 
   /** Count a goal (mine or reported by another player), cheer, put the ball back. */

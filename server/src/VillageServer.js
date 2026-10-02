@@ -227,6 +227,9 @@ export class VillageServer {
         if (ok) this.#toAll(c.room, t.state()); else this.#send(c, t.state()); // a refused move snaps back
         break;
       }
+      case 'score-reset': // someone reset the score board of this place's pitch
+        this.#toRoom(c, { type: 'score-reset', id: c.id });
+        break;
       case 'goal': // a match in the schoolyard: the scorer's screen tells the others
         if (msg.side === 'a' || msg.side === 'b') this.#toRoom(c, { type: 'goal', id: c.id, side: msg.side });
         break;

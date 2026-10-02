@@ -375,6 +375,9 @@ const football = new Football({ place: 'schoolyard', pitch: PITCH, balls: [schoo
 const squareFootball = new Football({ place: 'village', pitch: SQUARE_PITCH, balls: villageBalls, writeScore: (a, b) => world.get('village').writeScore(a, b), world, village, toasts });
 const matches = { schoolyard: football, village: squareFootball };
 village.onGoal = (place, side) => matches[place]?.scored(side, false);
+village.onScoreReset = (place) => matches[place]?.reset(false);
+village.onPitch = (pos) => Object.values(matches).some((m) => m.has(pos));
+effects.register('score-reset', () => matches[world.current.id]?.reset(true));
 world.get('schoolyard').animated.push((dt) => football.update(dt));
 world.get('village').animated.push((dt) => squareFootball.update(dt));
 // the tea garden and the chess benches: villagers chat, sit down to listen in

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 /**
  * A football pitch inside a location: white lines, two goals with nets (at x0 and x1),
@@ -52,19 +53,23 @@ export function buildPitch(loc, mf, p) {
   return writeScore;
 }
 
-/** Chain-link fence: metal posts, a see-through diamond mesh and a top rail; gaps (doors) on the z0 side. */
+/**
+ * Chain-link fence: metal posts, a see-through diamond mesh and a top rail; gaps (doors) on the
+ * z0 side. All the wire is ONE mesh with one texture (see-through surfaces are costly on phones).
+ */
 function wireFence(loc, mf, { x0, x1, z0, z1, gaps = [] }) {
   const add = (m) => loc.add(m), C = loc.collision, H = 2.2;
-  const wire = new THREE.MeshBasicMaterial({ map: chainLink(), transparent: true, side: THREE.DoubleSide, depthWrite: false, alphaTest: 0.05 });
   const metal = { tex: 'metal' };
+  const wires = [];
   const panel = (ax, az, bx, bz) => {
     const len = Math.hypot(bx - ax, bz - az);
     if (len < 0.05) return;
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(len, H), wire.clone());
-    m.material.map = wire.map.clone(); m.material.map.repeat.set(len / 1.2, H / 1.2); m.material.map.needsUpdate = true;
-    m.position.set((ax + bx) / 2, H / 2, (az + bz) / 2);
-    m.rotation.y = Math.atan2(-(bz - az), bx - ax);
-    add(m);
+    const g = new THREE.PlaneGeometry(len, H);
+    const uv = g.attributes.uv;
+    for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len / 1.2, uv.getY(i) * H / 1.2); // the diamonds keep their size
+    g.rotateY(Math.atan2(-(bz - az), bx - ax));
+    g.translate((ax + bx) / 2, H / 2, (az + bz) / 2);
+    wires.push(g);
     add(mf.at(mf.box(Math.abs(bx - ax) || 0.05, 0.05, Math.abs(bz - az) || 0.05, metal), (ax + bx) / 2, H, (az + bz) / 2)); // top rail
     C.addBox(Math.min(ax, bx) - 0.06, Math.max(ax, bx) + 0.06, Math.min(az, bz) - 0.06, Math.max(az, bz) + 0.06);
     for (let i = 0, n = Math.max(1, Math.round(len / 2.5)); i <= n; i++) {
@@ -76,6 +81,9 @@ function wireFence(loc, mf, { x0, x1, z0, z1, gaps = [] }) {
   for (const [a, b] of [...gaps].sort((p, q) => p[0] - q[0])) { panel(from, z0, a, z0); from = b; }
   panel(from, z0, x1, z0);
   panel(x0, z1, x1, z1); panel(x0, z0, x0, z1); panel(x1, z0, x1, z1);
+  const mesh = new THREE.Mesh(mergeGeometries(wires), new THREE.MeshBasicMaterial({ map: chainLink(), transparent: true, side: THREE.DoubleSide, depthWrite: false, alphaTest: 0.05 }));
+  wires.forEach((g) => g.dispose());
+  add(mesh);
 }
 
 let LINK = null;

@@ -194,6 +194,22 @@ try {
   await sleep(1500);
   const bz = await ev(() => window.__game.squareFootball.balls[0].position.z);
   check('square pitch: the wire fence keeps the ball in (even at the door)', bz > 14, `z = ${bz.toFixed(2)}`);
+  // goals: in over the line from the pitch counts, from behind the goal does not
+  const sqScore = () => ev(() => window.__game.squareFootball.score.a + window.__game.squareFootball.score.b);
+  const score0 = await sqScore();
+  await ev(() => { const P = { x1: 26.5, cz: 21 }, b = window.__game.squareFootball.balls[0]; b.setState({ x: P.x1 + 0.7, z: P.cz, vx: -3, vz: 0 }); }); // rolling into the net from behind
+  await sleep(1200);
+  check('a ball going in from behind the goal is no goal', (await sqScore()) === score0);
+  await sleep(2600); // the cool-down after a (non-)goal
+  await ev(() => { const g = window.__game, b = g.squareFootball.balls[0]; g.village.lastKick = Date.now(); b.setState({ x: 24.5, z: 21, vx: 7, vz: 0 }); }); // a shot from the pitch (online: my kick)
+  const scoredNow = await waitFor(async () => (await sqScore()) === score0 + 1, 4000);
+  check('…a shot from the pitch is', !!scoredNow);
+  await ev(() => { const g = window.__game, h = g.world.current.hotspots.get('village.scoreReset'); g.player.position.set(h.pos.x, 0, h.pos.z); }); await sleep(500);
+  check('under the score board: "Skoru sıfırla"', (await ev(() => document.getElementById('act').textContent)).includes('Skoru sıfırla'));
+  await page.keyboard.press('e'); await sleep(400);
+  check('…the score is 0 - 0 again', (await sqScore()) === 0);
+  await ev(() => window.__game.player.position.set(15, 0, 20)); await sleep(600); // on the pitch, far from the balls
+  check('on the pitch: the hard-shot button stays, no talk button', await ev(() => !document.getElementById('shot').hidden && document.querySelector('.ptt-wrap').hidden));
   await ev(() => { const t = window.__game.tts; t._said = []; const speak = t.speak.bind(t); t.speak = (x, o) => { t._said.push(o?.speaker); return speak(x, o); }; }); // who speaks aloud from now on
   await ev(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('cay1')); g.player.sit(true); });
   const heard = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].some((b) => b.textContent && b.style.display !== 'none')), 16000);

@@ -405,3 +405,13 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .fs-back small{font:700 12px Nunito,sans-serif}
 .menu-install{width:100%;font-size:16px}
 .fs-back{display:inline-flex;align-items:center;gap:4px}
+/* choice lists (e.g. which book): buttons keep their height, the card scrolls instead of squeezing them */
+.pick-card > *{flex-shrink:0}
+.pick-card{overflow-y:auto}
+@media (orientation:landscape) and (max-height:520px){
+  .pick-card{width:min(640px,100%);gap:6px}
+  .pick-card .ctitle{font-size:22px;margin:0}
+  .pick-card .btn.pick{min-height:0;padding:6px 12px;font-size:16px}
+  .pick-card .btn.pick small{font-size:12px}
+  .pick-card .btn.alt{min-height:40px}
+}
