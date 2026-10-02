@@ -286,7 +286,7 @@ const yard = world.get('yard');
 toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true, learnOnKick: false });
 const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, learnOnKick: false, onKick: (b) => village.ballKicked(b) });
 const villageBalls = [{ x: 13.5, z: SQUARE_PITCH.cz }, { x: 10, z: SQUARE_PITCH.cz - 2 }]
-  .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) }));
+  .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, learnOnKick: false, onKick: (b) => village.ballKicked(b) }));
 toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
 
 // --- school: credits, ads, multiplayer lesson ---
