@@ -33,6 +33,7 @@ const MAX_PLAYERS = 24; // per square (server/src/VillageServer.js)
 /** City cards with live player counts and a crowd meter (polled from /health while `start()`ed). */
 export class ServerPicker {
   #timer = null;
+  #touched = false; // the player clicked a card (then their choice stays)
   #counts = Object.fromEntries(SERVERS.map(([id]) => [id, 0]));
   #value;
 
@@ -57,7 +58,7 @@ export class ServerPicker {
       const on = id === this.#value;
       return el('button', {
         class: `server-card lvl-${level}${on ? ' on' : ''}`, attrs: { type: 'button', role: 'radio', 'aria-checked': String(on), 'data-server': id },
-        on: { click: () => { this.#value = id; this.#render(); this.onChange?.(id); } },
+        on: { click: () => { this.#touched = true; this.#value = id; this.#render(); this.onChange?.(id); } },
       }, [
         el('span', { class: 'sc-city', text: label }),
         el('span', { class: 'sc-count', text: `👥 ${n}` }),
@@ -76,6 +77,11 @@ export class ServerPicker {
       if (!r.ok) throw new Error(String(r.status));
       const data = await r.json();
       this.#counts = Object.fromEntries(SERVERS.map(([id]) => [id, Number(data.rooms?.[id] ?? 0)]));
+      // until the player picks one: the square where people are (friends find each other)
+      if (!this.#touched) {
+        const [best] = SERVERS.map(([id]) => id).sort((a, b) => this.#counts[b] - this.#counts[a]);
+        if (this.#counts[best] > this.#counts[this.#value]) { this.#value = best; this.onChange?.(best); }
+      }
       this.#render();
     } catch {
       this.status.textContent = `Sunucu durumu alınamadı · ${gloss('Could not reach the server.')}`;

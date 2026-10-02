@@ -11,6 +11,7 @@ import { FREE_ACTIONS, HOUSE_RULES } from './freeActions.js';
 import { LESSONS, CLASSMATE_BOTS } from './lessons.js';
 import { TEXTBOOK } from './textbook.js';
 import { ADDONS, MEALS } from './addons/index.js';
+import { KAHVE_TALKS } from './addons/kahvehane.js';
 import { PRAYER_STEPS, PRAYER_WORDS } from './addons/prayer.js';
 import { composeContent } from '../core/ContentComposer.js';
 
@@ -18,5 +19,5 @@ composeContent({ story: STORY, dialogues: DIALOGUES, hotspots: HOTSPOTS, kindNam
 
 export {
   STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, TEACHER_MAN, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
-  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS,
+  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS, KAHVE_TALKS,
 };

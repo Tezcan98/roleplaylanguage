@@ -71,18 +71,19 @@ try {
   const moved = await ev((a) => { const k = window.__game.cast.get('kardes').position; return Math.hypot(k.x - a[0], k.z - a[1]); }, p0);
   check('the little brother runs around the house', moved > 0.5, `${moved.toFixed(2)} m`);
   await talkTo('kardes');
-  check('he introduces himself (Abla for a girl)', (await nodeSay()).startsWith('Abla!'), await nodeSay());
+  check('he calls you to play, no introducing himself (Abla for a girl)', (await nodeSay()).startsWith('Abla!') && !(await nodeSay()).includes('adım'), await nodeSay());
   await drainUi(page);
   check('…and asks what things are (picture quiz)', await ev(() => !!window.__game.dialogue.ctx.state.flags['kardes-yatak']));
 
   // --- grandma (nine) ------------------------------------------------------------------
   await talkTo('nine');
-  check('grandma greets the first time', (await nodeSay()).includes('ninenim'));
+  const first = await nodeSay();
+  check('grandma just talks to you: did you pray today?', first.includes('namazını kıldın mı') && !first.includes('nasihat'), first);
   await drainUi(page);
-  check('…then gives her first advice and checks it', await ev(() => !!window.__game.story.state?.flags?.['nasihat-selam'] || !!window.__game.dialogue.ctx.state.flags['nasihat-selam']));
+  check('…a whole little chat', await ev(() => !!window.__game.dialogue.ctx.state.flags['nine-namaz']));
   await talkTo('nine');
   const second = await nodeSay();
-  check('next visit: a different piece of advice', second.includes('Yalan söyleme'), second);
+  check('next visit: something else (which surahs do you know?)', second.includes('Hangi sureleri'), second);
   await drainUi(page);
 
   // --- free chat (dev server: canned answers) ------------------------------------------
@@ -116,6 +117,27 @@ try {
   });
   check('running into the ball kicks it (no button)', kicked > 0.8, `${kicked.toFixed(2)} m`);
   check('no "Topa vur" button any more', !(await ev(() => document.getElementById('act').textContent.includes('Topa vur'))));
+  const shot = await ev(async () => {
+    const g = window.__game, b = g.toys.toys.find((t) => t.toy.location.id === 'yard' && t.action === 'ball').toy;
+    g.player.position.set(b.position.x - 0.8, 0, b.position.z); g.player.group.rotation.y = Math.PI / 2; // facing +x, the ball at the feet
+    await new Promise((r) => setTimeout(r, 300));
+    const shown = !document.getElementById('shot').hidden, p0 = [b.position.x, b.position.z];
+    g.toys.shoot();
+    await new Promise((r) => setTimeout(r, 900));
+    return { shown, d: Math.hypot(b.position.x - p0[0], b.position.z - p0[1]) };
+  });
+  check('⚡ hard shot: the button shows next to the ball and the ball flies', shot.shown && shot.d > 3, `${shot.d.toFixed(2)} m`);
+  // dad works all round his car, not only under the bonnet
+  const dad0 = await ev(() => { const b = window.__game.cast.get('baba').position; return [b.x, b.z]; });
+  const dadMoved = await waitFor(() => ev((a) => { const b = window.__game.cast.get('baba').position; return Math.hypot(b.x - a[0], b.z - a[1]) > 1; }, dad0), 12000);
+  check('dad walks round the car', !!dadMoved);
+  // Ali comes out into the garden with you and follows you around
+  await ev(() => { const g = window.__game; g.travel.place('house', 'start', { force: true }); }); await sleep(400);
+  await ev(() => { const g = window.__game; g.bus.emit('hotspot:used', { id: 'house.door' }); g.travel.place('yard', 'houseDoor', { force: true }); }); await sleep(400);
+  check('Ali comes out into the garden with you', await ev(() => window.__game.cast.get('kardes').location === 'yard'));
+  await ev(() => window.__game.player.position.set(6, 0, -4)); await sleep(2500);
+  const kidGap = await ev(() => { const g = window.__game, k = g.cast.get('kardes').position; return Math.hypot(k.x - 6, k.z + 4); });
+  check('…and follows you', kidGap < 3, `${kidGap.toFixed(2)} m behind`);
 
   // --- square fence --------------------------------------------------------------------
   await ev(() => window.__game.travel.place('village', 'yardRoad', { force: true })); await sleep(1500);
@@ -125,10 +147,10 @@ try {
   for (const key of ['ArrowRight', 'ArrowUp', 'ArrowLeft', 'ArrowDown']) {
     await ev(() => window.__game.player.position.set(11, 0, -1.5)); await sleep(150);
     await page.keyboard.down(key);
-    for (let i = 0; i < 28; i++) { await sleep(250); edge = Math.max(edge, await ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); })); }
+    for (let i = 0; i < 36; i++) { await sleep(250); edge = Math.max(edge, await ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); })); }
     await page.keyboard.up(key);
   }
-  check('the square fence stops the player', edge > 24.5 && edge <= 25.7, `furthest ${edge.toFixed(2)} m from the centre (fence at 26)`);
+  check('the square fence stops the player', edge > 32.5 && edge <= 33.7, `furthest ${edge.toFixed(2)} m from the centre (fence at 34)`);
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(600);
   await drainUi(page);
 
@@ -139,15 +161,21 @@ try {
   check('the garden gate leads to the street', gateLabel.includes('Sokağa çık'), gateLabel);
   await page.keyboard.press('e');
   const choices = await waitFor(() => ev(() => [...document.querySelectorAll('.pick-card .btn.pick')].map((b) => b.textContent)), 5000);
-  check('street: choose school (practice, 1 credit) or the village square', !!choices && choices.some((t) => t.includes('pratik')) && choices.some((t) => t.includes('meydan')), JSON.stringify(choices));
-  await page.click('.pick-card .btn.pick:has-text("pratik")');
+  check('street: choose school or the village square', !!choices && choices.some((t) => t.includes('Okula git')) && choices.some((t) => t.includes('meydan')), JSON.stringify(choices));
+  await page.click('.pick-card .btn.pick:has-text("Okula git")');
+  check('"Okula git" leads to the schoolyard first, not straight into a lesson', !!(await waitFor(() => ev(() => window.__game.world.current.id === 'schoolyard'), 6000)) && !(await page.$('.classroom.open')));
+  await ev(() => { const g = window.__game, d = g.world.current.hotspots.get('school.door'); g.player.position.set(d.pos.x, 0, d.pos.z + 0.6); }); await sleep(500);
+  const doorPractice = await ev(() => document.getElementById('act').textContent);
+  check('the classroom door offers practice (1 credit)', doorPractice.includes('pratik'), doorPractice);
+  await page.keyboard.press('e');
   await waitFor(() => page.$('.overlay.open .card .btn:has-text("Krediyle")'), 5000);
   await page.click('.overlay.open .card .btn:has-text("Krediyle")');
   await waitFor(() => page.$('.classroom.open'), 10000);
   check('practice: in the classroom, story paused', (await ev(() => window.__game.world.current.id)) === 'classroom' && (await ev(() => window.__game.story.paused)));
-  for (let i = 0; i < 40 && !(await ev(() => window.__game.world.current.id === 'yard' && !window.__game.story.paused)); i++) { await drainUi(page); await sleep(800); }
-  check('practice: back home afterwards, the day continues', (await ev(() => window.__game.world.current.id)) === 'yard' && (await ev(() => window.__game.story.quest?.id)) === questBefore);
+  for (let i = 0; i < 40 && !(await ev(() => window.__game.world.current.id === 'schoolyard' && !window.__game.story.paused)); i++) { await drainUi(page); await sleep(800); }
+  check('practice: back in the schoolyard afterwards, the day continues', (await ev(() => window.__game.world.current.id)) === 'schoolyard' && (await ev(() => window.__game.story.quest?.id)) === questBefore);
   check('practice cost 1 credit', (await ev(() => window.__game.wallet.balance)) === 49);
+  await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
 
   // --- word practice -------------------------------------------------------------------
   check('word practice is offered from the notebook', await ev(() => window.__game.drill.available));

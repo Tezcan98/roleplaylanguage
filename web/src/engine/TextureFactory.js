@@ -235,6 +235,13 @@ const GENERATORS = {
     g.font = `bold ${s * 0.26}px Fredoka, sans-serif`;
     g.fillText('ÇAY OCAĞI', s / 2, s / 2, s * 0.95);
   },
+  myGardenSign(g, s) {
+    g.fillStyle = '#C99B63'; g.fillRect(0, 0, s, s);
+    g.fillStyle = '#3B2418'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `bold ${s * 0.2}px Fredoka, sans-serif`;
+    g.fillText('BENİM', s / 2, s * 0.33, s * 0.95);
+    g.fillText('BAHÇEM', s / 2, s * 0.66, s * 0.95);
+  },
   alphabet(g, s) {
     g.fillStyle = '#FFF9EC'; g.fillRect(0, 0, s, s);
     const letters = 'A B C Ç D E F G Ğ H I İ J K L M N O Ö P R S Ş T U Ü V Y Z'.split(' ');

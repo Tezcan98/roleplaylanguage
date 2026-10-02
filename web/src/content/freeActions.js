@@ -72,6 +72,18 @@ export const FREE_ACTIONS = {
     label: 'Çay iç', think: 'Oh, sıcacık çay!', say: 'Çay bahçesinde oturup çay içtim.', minutes: 10,
     words: [['çay bahçesi', 'tea garden'], ['bardak', 'glass'], ['şeker', 'sugar']],
   },
+  village_coffee: {
+    label: 'Kahvehanede otur', think: 'Amcalar yine ne konuşuyor?', say: 'Kahvehanede oturup amcaların sohbetini dinledim.', minutes: 10,
+    words: [['kahvehane', 'coffeehouse'], ['sohbet', 'chat, conversation'], ['amca', 'uncle (also: any older man)']],
+  },
+  village_read: {
+    label: 'Otur, kitap oku', think: 'Bu kitap çok ilginç!', say: 'Kütüphanede oturup kitap okudum.', minutes: 15,
+    words: [['kütüphane', 'library'], ['sayfa', 'page'], ['ilginç', 'interesting']],
+  },
+  village_books: {
+    label: 'Raflara bak', think: 'Ne çok kitap var!', say: 'Kütüphanenin raflarına baktım.',
+    words: [['raf', 'shelf'], ['kitap', 'book'], ['yazar', 'author']],
+  },
   village_bench: {
     label: 'Bankta otur', think: 'Meydanda biraz dinleniyorum.', say: 'Bankta oturdum.', minutes: 5,
     words: [['bank', 'bench'], ['dinlenmek', 'to rest'], ['meydan', 'square']],

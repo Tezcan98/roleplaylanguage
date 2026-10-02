@@ -46,7 +46,17 @@ Günlük: `journalctl -u yilmaz-village -f`. Tamamen kaldırmak:
 - **Docker (en kolay, 80/443 boşsa):** `DOMAIN=alan.adi docker compose up -d --build` (Caddy sertifikayı kendisi alır).
 - **nginx zaten varsa:** `deploy/yilmaz-village.service` + `deploy/nginx.conf` (yukarıdaki kurulum böyle yapıldı).
 
-Ayarlar (ortam değişkenleri): `PORT`, `HOST`, `ALLOWED_ORIGINS`, `MAX_PER_IP`, `TRUST_PROXY` — ayrıntı `src/index.mjs`.
+Ayarlar (ortam değişkenleri): `PORT`, `HOST`, `ALLOWED_ORIGINS`, `MAX_PER_IP`, `TRUST_PROXY`, `PIPER_DIR`, `CHESS_SCORES` — ayrıntı `src/index.mjs`.
+
+## Sesler (Piper) ve satranç skor tablosu
+
+- **Kadın sesi:** anne, nine, öğretmen ve kızlar `tr_TR-dfki-medium` sesiyle konuşur. `PIPER_DIR` klasöründe
+  `tr_TR-fahrettin-medium`, `tr_TR-fettah-medium` **ve** `tr_TR-dfki-medium` (`.onnx` + `.onnx.json`) bulunmalı.
+  dfki eksikse sunucu o satırlar için hata verir, oyun da kadın karakterleri tarayıcının (kadın) sesine geçirir;
+  yine de doğru ses için modeli ekleyin: `https://huggingface.co/rhasspy/piper-voices/tree/main/tr/tr_TR/dfki/medium`.
+  Kontrol: `curl -o /dev/null -w '%{http_code}\n' 'https://31-58-245-116.sslip.io/api/tts?v=dfki&t=Merhaba'` → 200.
+- **Satranç:** İsmail Dede'nin skor tablosu (en çok maç yapanlar) `CHESS_SCORES` dosyasında tutulur
+  (varsayılan `/tmp/yilmaz-chess-scores.json`; systemd birimi `/var/lib/yilmaz-village/` kullanır, yeniden başlatmada silinmez).
 
 ## Test
 

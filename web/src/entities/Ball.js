@@ -23,6 +23,13 @@ export class Ball {
     this.hopVel = power > 0.6 ? 2 + Math.random() * 2 : 0;
   }
 
+  /** A hard shot in a direction (the way the player faces): fast and off the ground. */
+  shoot(dirX, dirZ, speed = 12.5) {
+    const n = Math.hypot(dirX, dirZ) || 1;
+    this.vel.set(dirX / n * speed, 0, dirZ / n * speed);
+    this.hopVel = 4 + Math.random();
+  }
+
   get moving() { return this.vel.lengthSq() > 1e-3; }
 
   /** Network snapshot / restore (multiplayer square: everyone plays with the same ball). */

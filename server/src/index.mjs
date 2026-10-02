@@ -14,6 +14,8 @@
  *                     (UDP 3478 + 49160-49260; TURN_HOST = name in the turn: URL, default the IP)
  *   TURN_SECRET, TURN_URLS  …or use an external coturn: its static-auth-secret and turn: URLs (comma separated)
  *   PIPER_DIR, TTS_CACHE  Turkish speech: Piper binary + voices folder, and where generated lines are kept
+ *                     (voices: tr_TR-fahrettin-medium, tr_TR-fettah-medium and tr_TR-dfki-medium — women speak with dfki)
+ *   CHESS_SCORES      file for İsmail Dede's chess score board, default /tmp/yilmaz-chess-scores.json
  *   GEMINI_API_KEY    enables free conversation with village characters (POST /api/npc-chat)
  *   GEMINI_MODEL      default gemini-flash-latest
  *   NPC_CHAT_PER_MINUTE / NPC_CHAT_PER_DAY (per IP, default 8 / 150), NPC_CHAT_GLOBAL_PER_DAY (default 1200)
@@ -27,6 +29,7 @@ import { NpcChat } from './NpcChat.js';
 import { npcChatRoute } from './npcChatRoute.js';
 import { TurnRelay } from './TurnRelay.js';
 import { Tts } from './Tts.js';
+import { ChessScoreFile } from './ChessScoreFile.js';
 
 const env = process.env;
 const port = Number(process.argv[2] ?? env.PORT ?? 8090);
@@ -65,7 +68,8 @@ const turnHost = env.TURN_HOST || env.TURN_PUBLIC_IP;
 const turn = env.TURN_PUBLIC_IP
   ? new TurnRelay({ publicIp: env.TURN_PUBLIC_IP, urls: [`turn:${turnHost}:3478?transport=udp`], allowPrivate: env.TURN_ALLOW_PRIVATE === '1' })
   : env.TURN_SECRET ? { secret: env.TURN_SECRET, urls: String(env.TURN_URLS ?? '').split(',').map((u) => u.trim()).filter(Boolean) } : null;
-const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn });
+const chessScores = new ChessScoreFile(env.CHESS_SCORES ?? '/tmp/yilmaz-chess-scores.json');
+const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save() });
 http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'}; turn ${village.turn ? 'on' : 'off'})`));
 
 for (const sig of ['SIGINT', 'SIGTERM']) {

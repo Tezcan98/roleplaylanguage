@@ -42,6 +42,10 @@ body.hide-en .en-t{display:none!important}
 #act{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 50px);pointer-events:auto;background:var(--gold);color:var(--ink);border:3px solid var(--wood);border-radius:18px;padding:0 20px;min-height:60px;font:700 18px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
 #act:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
 #act[hidden],#joy[hidden]{display:none}
+#shot{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 54px);pointer-events:auto;background:#E4574A;color:#fff;border:3px solid var(--wood);border-radius:18px;padding:0 16px;min-height:52px;font:700 17px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
+#shot:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
+#shot[hidden]{display:none}
+body.menu #shot{display:none!important}
 body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{display:none!important}
 
 /* ---------- overlays ---------- */
@@ -259,12 +263,8 @@ body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
 .drill-q{font-size:26px}
 @media (max-width:480px){.pill{padding:4px 10px;font-size:13px;min-height:38px;gap:6px}.hud{gap:6px}.hud .grp{gap:6px}}
 /* --- phones: the game is played sideways ------------------------------------------- */
-#rotate{display:none;position:fixed;inset:0;z-index:100;background:var(--wood);color:var(--parch);flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;pointer-events:auto;padding:24px}
-#rotate .rot-ico{font-size:72px;animation:rot 2.2s ease-in-out infinite}
-#rotate .rot-tr{font:700 26px Fredoka,sans-serif;margin:0}
-#rotate .rot-gl{font:700 17px Nunito,var(--gloss-font,sans-serif);margin:0;opacity:.85}
-@keyframes rot{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
-@media (orientation:portrait) and (pointer:coarse) and (max-width:900px){#rotate{display:flex}}
+/* full screen button (HUD, top right) */
+.pill.hud-fs{font-size:20px;padding:4px 12px;justify-content:center}
 @media (orientation:landscape) and (max-height:520px){
   .hud{top:calc(env(safe-area-inset-top,0px) + 6px);left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right))}
   .pill{padding:2px 10px;font-size:13px;min-height:34px;gap:6px}
@@ -289,6 +289,7 @@ body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
   #joy{width:104px;height:104px;left:max(16px,env(safe-area-inset-left));bottom:14px}
   #act{bottom:18px;right:max(14px,env(safe-area-inset-right));min-height:52px}
   .help-btn{left:auto;right:max(14px,env(safe-area-inset-right));bottom:84px;min-height:42px;font-size:18px}
+  #shot{right:max(14px,env(safe-area-inset-right));bottom:18px;min-height:44px}
 }
 .menu-cols{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
 .menu-col{display:flex;flex-direction:column;gap:10px}
@@ -317,7 +318,7 @@ html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
 .chess-seats{display:flex;gap:12px;flex-wrap:wrap;font-weight:700}
 .chess-seat{display:flex;align-items:center;gap:6px}
 .chess-status{margin:0;font-weight:800}
-.chess-board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;width:min(100%,360px);align-self:center;border:4px solid var(--wood);border-radius:8px;overflow:hidden}
+.chess-board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;flex-shrink:0;width:min(100%,360px);align-self:center;border:4px solid var(--wood);border-radius:8px;overflow:hidden}
 .chess-board .sq{border:0;padding:0;font-size:min(7vw,34px);line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;aspect-ratio:1}
 .chess-board .sq.l{background:#EDE3CF}.chess-board .sq.d{background:#8B6A4E}
 .chess-board .sq[data-c="w"]{color:#FFFDF8;text-shadow:0 0 2px #000,0 0 1px #000}
@@ -326,9 +327,29 @@ html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
 .chess-board .sq.sel{background:#E0B04A}
 .chess-board .sq.to{background-image:radial-gradient(circle,rgba(62,142,74,.75) 22%,transparent 24%)}
 .chess-words{font-size:12px;margin:0}
+.chess-seat.on{color:var(--green,#2E7D32)}
+.chess-clock{font-variant-numeric:tabular-nums;margin-left:4px}
+.chess-asks{flex-wrap:wrap;gap:6px}
+.chess-asks:empty,.chess-queue:empty,.chess-scores:empty{display:none}
+.chess-queue{margin:0;font-weight:700;font-size:13px}
+.chess-scores{font-size:13px}
+.chess-scores ol{margin:4px 0 0;padding-left:22px}
+.chess-scores li{display:flex;justify-content:space-between;gap:10px;font-weight:700}
+.chess-scores li .n{color:#8A5A12;font-weight:800;white-space:nowrap}
+.chess .card{max-height:calc(100vh - 24px);overflow-y:auto}
 @media (orientation:landscape) and (max-height:520px){.chess .card{width:min(760px,100%);display:grid;grid-template-columns:1fr auto;align-items:start}.chess .card > *{grid-column:1}.chess-board{grid-column:2;grid-row:1 / span 6;width:min(78vh,330px)}}
 .fs-btn{position:absolute;top:10px;right:10px}
 .fs-tip{font-size:13px;margin:0;color:var(--muted)}
 .main-menu .card{position:relative}
 body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesson #toasts{display:none!important}
 @media (orientation:landscape) and (max-height:520px){.classroom .cls-q{font-size:17px}.classroom .cls-main{padding:8px;gap:5px}}
+/* listening to the uncles in the kahvehane (AmbientTalk) */
+.talk-panel{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 130px);width:min(520px,calc(100vw - 300px));min-width:240px;background:rgba(42,30,21,.88);color:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:8px 12px;display:none;pointer-events:none;font-size:14px}
+.talk-panel.open{display:block}
+.talk-title{display:block;font:700 15px Fredoka,sans-serif;margin-bottom:2px}
+.talk-title small{font:700 12px Nunito,var(--gloss-font,sans-serif);color:#D9C7A3}
+.talk-line{margin:4px 0 0;font-weight:800;line-height:1.3}
+.talk-line b{color:var(--gold)}
+.talk-line small{display:block;color:#D9C7A3;font-weight:700;font-size:12px;font-family:Nunito,var(--gloss-font,sans-serif)}
+body.gloss-rtl .talk-line small{direction:rtl;text-align:right}
+@media (orientation:landscape) and (max-height:520px){.talk-panel{bottom:12px;width:min(440px,calc(100vw - 340px));font-size:13px;padding:6px 10px}}

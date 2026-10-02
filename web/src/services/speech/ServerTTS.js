@@ -8,16 +8,20 @@ const SHORT = { 'tr_TR-dfki-medium': 'dfki', 'tr_TR-fahrettin-medium': 'fahretti
 export class ServerTTS {
   #audio = null;
   #failures = 0;
+  #badVoices = new Set(); // voices this server can't make (e.g. no women's model installed)
+  #worked = new Set();
 
   constructor(url) { this.url = url; }
 
   /** Gives up after a few failures in a row (server unreachable), so the fallback takes over. */
   get supported() { return !!this.url && this.#failures < 3; }
+  /** A voice that fails while the others work (no women's model on the server) is skipped: her lines go straight to the fallback. */
+  has(voice) { return this.supported && !this.#badVoices.has(voice.id); }
 
   src(text, voiceId) { return `${this.url}?v=${SHORT[voiceId] ?? 'fahrettin'}&t=${encodeURIComponent(text.trim())}`; }
 
   /** Ask the server for a line ahead of time (the browser keeps it in its HTTP cache). */
-  warm(text, voice) { if (this.supported && text) fetch(this.src(text, voice.id)).catch(() => {}); }
+  warm(text, voice) { if (this.has(voice) && text) fetch(this.src(text, voice.id)).catch(() => {}); }
 
   speak(text, { voice, rate = 1 }) {
     this.cancel();
@@ -26,8 +30,14 @@ export class ServerTTS {
       a.preservesPitch = false;
       a.playbackRate = (voice.pitch ?? 1) * rate;
       a.onended = () => resolve();
-      a.onerror = () => { this.#failures++; reject(new Error('server tts failed')); };
-      a.play().then(() => { this.#failures = 0; }, (e) => { if (e?.name !== 'AbortError') reject(e); });
+      let played = false;
+      a.onerror = () => {
+        if (this.#worked.size && !this.#worked.has(voice.id)) this.#badVoices.add(voice.id); // the server works, this voice doesn't
+        else this.#failures++;
+        reject(new Error('server tts failed'));
+      };
+      a.onplaying = () => { if (!played) { played = true; this.#failures = 0; this.#worked.add(voice.id); } };
+      a.play().catch((e) => { if (e?.name !== 'AbortError') reject(e); });
     });
   }
 

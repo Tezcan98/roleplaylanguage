@@ -26,6 +26,7 @@ export class Npc extends Character {
   /** Put the NPC somewhere. Only called behind a fade or while the player is elsewhere. */
   station(location, anchor, behaviorName = 'stand') {
     this.location = location.id;
+    this.loc = location;
     this.home = location.anchors.get(anchor);
     if (!this.home) throw new Error(`${this.id}: unknown anchor ${location.id}.${anchor}`);
     this.place(this.home);
@@ -45,9 +46,12 @@ export class Npc extends Character {
     (this.behavior.props || []).forEach((p) => this.showProp(p, true));
   }
 
-  /** Walk the route: go to each stop, wait there (or jump on the bed), then on to the next. */
+  /**
+   * Walk the route: go to each stop, wait there (jump on the bed, or strike the stop's
+   * `pose`, facing `rot`), then on to the next. Stops with `wait: 0` are just waypoints.
+   */
   #roam(dt, t) {
-    const route = this.def.route, st = this.roam;
+    const b = this.behavior, route = this.def[b.routeKey ?? 'route'], st = this.roam;
     if (!route?.length) return;
     const stop = route[st.leg % route.length];
     const dx = stop.x - this.position.x, dz = stop.z - this.position.z, d = Math.hypot(dx, dz);
@@ -55,6 +59,7 @@ export class Npc extends Character {
       const step = Math.min(d, 1.3 * dt);
       this.position.x += (dx / d) * step; this.position.z += (dz / d) * step;
       this.turnTo(Math.atan2(dx, dz), 0.2);
+      b.pose(this.rig, t);
       this.walk(t, 1);
       this.position.y = 0;
       st.jumping = false;
@@ -62,15 +67,39 @@ export class Npc extends Character {
     }
     st.wait -= dt;
     st.jumping = !!stop.jump;
-    if (stop.jump) { this.position.y = 0.42 + Math.abs(Math.sin(t * 6)) * 0.45; this.behavior.jump(this.rig, t); } // on the bed
-    else { this.position.y = 0; this.walk(t, 0); }
+    if (stop.rot !== undefined) this.turnTo(stop.rot, 0.2);
+    if (stop.jump) { this.position.y = 0.42 + Math.abs(Math.sin(t * 6)) * 0.45; b.jump(this.rig, t); } // on the bed
+    else { this.position.y = 0; this.walk(t, 0); b.poses?.[stop.pose]?.(this.rig, t); }
     if (st.wait <= 0) { st.leg++; st.wait = route[st.leg % route.length].wait ?? 1 + Math.random() * 2; }
+  }
+
+  /** Stay near the player: catch up when they walk off, hop about while they stand still. */
+  #follow(dt, t, player) {
+    const dx = player.position.x - this.position.x, dz = player.position.z - this.position.z, d = Math.hypot(dx, dz);
+    const st = this.roam;
+    if (d > 2.2) {
+      const step = Math.min(d - 1.8, Math.min(6, 1.5 + d) * dt);
+      this.position.x += (dx / d) * step; this.position.z += (dz / d) * step;
+      this.loc?.collision?.resolve(this.position, 0.25, [[player.position.x, player.position.z, 0.6]]);
+      this.turnTo(Math.atan2(dx, dz), 0.2);
+      this.walk(t, 1);
+      this.position.y = 0;
+      st.wait = 2 + Math.random() * 3;
+      return;
+    }
+    this.faceTowards(player.position, 0.08);
+    st.wait -= dt;
+    if (st.wait < 0 && st.wait > -1.2) { this.position.y = Math.abs(Math.sin(t * 6)) * 0.3; this.behavior.jump(this.rig, t); return; } // a happy hop
+    if (st.wait <= -1.2) st.wait = 2 + Math.random() * 3;
+    this.position.y = 0;
+    this.walk(t, 0);
   }
 
   update(dt, t, player) {
     super.update(dt);
     if (this.behavior.roam && !this.talking) { this.#roam(dt, t); return; }
-    if (this.behavior.roam) { this.position.y = 0; this.roam.jumping = false; }
+    if (this.behavior.follow && !this.talking) { this.#follow(dt, t, player); return; }
+    if (this.behavior.roam || this.behavior.follow) { this.position.y = 0; this.roam.jumping = false; }
     const b = this.behavior, near = b.turnToPlayerWithin && Math.hypot(player.position.x - this.position.x, player.position.z - this.position.z) < b.turnToPlayerWithin;
     if (this.talking || near) {
       if (!b.seated) this.faceTowards(player.position, 0.15);

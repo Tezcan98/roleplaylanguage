@@ -38,8 +38,11 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to your call partner
  *   { type: 'call-diag', state, detail? } how the voice connection went (logged, for support)
  *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
- *   { type: 'chess-sit', color } | { type: 'chess-stand' } | { type: 'chess-move', from, to, promotion? } | { type: 'chess-new' }
- *                                         the square's giant chess board
+ *   { type: 'chess-ask', color } | { type: 'chess-dede', color? } | { type: 'chess-leave' } | { type: 'chess-resign' }
+ *   | { type: 'chess-move', from, to, promotion? }
+ *                                         the square's giant chess board, run by İsmail Dede (see ChessTable):
+ *                                         ask him for a colour, play against him, leave the line, resign
+ *                                         (older clients: chess-sit = ask, chess-stand = leave, chess-new is ignored)
  * server → client
  *   { type: 'welcome', id, name, look, peers, ball?, ice } | { type: 'error', message }
  *     ice: WebRTC ICE servers for voice calls (STUN + TURN with short-lived credentials)
@@ -48,7 +51,8 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
  *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
  *   { type: 'rtc', from, data }
- *   { type: 'chess', fen, turn, check, over, seats, last }  the board, after every change (also in welcome)
+ *   { type: 'chess', v: 2, phase, fen, turn, check, last, over, result, seats, queue, clocks, running, limit, scores }
+ *                                         the board, after every change and while clocks run out (also in welcome)
  */
 export class VillageServer {
   #rooms = new Map(); // room → Map(id → client)
@@ -68,9 +72,12 @@ export class VillageServer {
   /**
    * @param {object} [o.turn]  { secret, urls: string[] } → TURN credentials in the TURN REST style
    *   (username "<expiry>:<id>", password HMAC-SHA1(secret, username)), valid for a day
+   * @param {Map} [o.chessScores]  chess score board to start from; `onChessScore()` after every game (to save it)
    */
-  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null } = {}) {
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {} } = {}) {
     this.log = log;
+    this.chessScores = chessScores; // İsmail Dede's score board, shared by every square (name → games, wins…)
+    this.onChessScore = onChessScore;
     this.turn = turn?.issue || (turn?.secret && turn.urls?.length) ? turn : null;
     this.wss = new WebSocketServer({
       server, path, maxPayload: 32 * 1024,
@@ -81,7 +88,7 @@ export class VillageServer {
       },
     });
     this.wss.on('connection', (ws, req) => this.#connect(ws, clientIp(req)));
-    this.timer = setInterval(() => { this.#broadcastStates(); this.#dropFarCalls(); }, 100);
+    this.timer = setInterval(() => { this.#tickChess(); this.#broadcastStates(); this.#dropFarCalls(); }, 100);
     this.heartbeat = setInterval(() => this.wss.clients.forEach((ws) => {
       if (!ws.alive) return ws.terminate();
       ws.alive = false;
@@ -187,12 +194,13 @@ export class VillageServer {
         this.log(`[village] call ${from.name} ↔ ${c.name}`);
         break;
       }
-      case 'chess-sit': case 'chess-stand': case 'chess-move': case 'chess-new': {
+      case 'chess-ask': case 'chess-sit': case 'chess-dede': case 'chess-leave': case 'chess-stand': case 'chess-resign': case 'chess-move': {
         const t = this.#table(c.room);
-        const ok = msg.type === 'chess-sit' ? t.sit(c, msg.color)
-          : msg.type === 'chess-stand' ? t.stand(c.id)
-            : msg.type === 'chess-move' ? t.move(c.id, msg)
-              : t.restart(c.id);
+        const ok = msg.type === 'chess-ask' || msg.type === 'chess-sit' ? t.ask(c, msg.color)
+          : msg.type === 'chess-dede' ? t.askDede(c, msg.color)
+            : msg.type === 'chess-leave' || msg.type === 'chess-stand' ? t.leave(c.id)
+              : msg.type === 'chess-resign' ? t.resign(c.id)
+                : t.move(c.id, msg);
         if (ok) this.#toAll(c.room, t.state()); else this.#send(c, t.state()); // a refused move snaps back
         break;
       }
@@ -230,6 +238,7 @@ export class VillageServer {
     this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ball: this.#balls.has(room) ? { ...this.#balls.get(room), vx: 0, vz: 0 } : undefined, chess: this.#table(room).state(), ice: this.iceFor(c.id) });
     this.#toRoom(c, { type: 'join', peer: this.#public(c) });
     members.set(c.id, c);
+    if (this.#table(room).rejoin(c)) this.#toAll(room, this.#table(room).state()); // back at the board after a dropped connection
     this.log(`[village] ${c.name} joined ${room} (${members.size})`);
   }
 
@@ -245,7 +254,7 @@ export class VillageServer {
     if (!c.id) return;
     this.turn?.release?.(c.id);
     const table = this.#chess.get(c.room);
-    if (table?.stand(c.id)) this.#toAll(c.room, table.state(), c);
+    if (table?.disconnect(c.id, c.name)) this.#toAll(c.room, table.state(), c);
     this.#endCall(c, 'left');
     const members = this.#room(c.room);
     if (!members.delete(c.id)) return;
@@ -274,7 +283,12 @@ export class VillageServer {
 
   #dist(a, b) { return Math.hypot(a.x - b.x, a.z - b.z); }
   #public({ id, name, look, x, z, rot, talking }) { return { id, name, look, x, z, rot, talking }; }
-  #table(room) { if (!this.#chess.has(room)) this.#chess.set(room, new ChessTable()); return this.#chess.get(room); }
+  #table(room) {
+    if (!this.#chess.has(room)) this.#chess.set(room, new ChessTable({ scores: this.chessScores, onScore: this.onChessScore }));
+    return this.#chess.get(room);
+  }
+  /** Chess clocks run out and İsmail Dede moves even when nobody sends anything. */
+  #tickChess() { for (const [room, t] of this.#chess) if (t.tick()) this.#toAll(room, t.state()); }
   /** Everyone in the room (optionally except one). */
   #toAll(room, msg, except = null) {
     const data = JSON.stringify(msg);

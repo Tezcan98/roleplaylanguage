@@ -1,6 +1,6 @@
 /** Moves the player from input, resolving collisions against the current location. */
 export class PlayerController {
-  constructor({ player, input, world, modes, cast }) { Object.assign(this, { player, input, world, modes, cast }); }
+  constructor({ player, input, world, modes, cast, camera }) { Object.assign(this, { player, input, world, modes, cast, camera }); }
 
   update(dt, t) {
     const { player } = this;
@@ -12,6 +12,8 @@ export class PlayerController {
     }
     player.moving = mag > 0.08;
     if (mag > 0.08) {
+      const yaw = this.camera?.yaw ?? 0; // the view is turned: "up" means away from the camera
+      if (yaw) { const c = Math.cos(yaw), s = Math.sin(yaw); [x, z] = [x * c - z * s, x * s + z * c]; }
       const loc = this.world.current, n = Math.hypot(x, z);
       const speed = (loc.indoor ? 3.6 : 5.2) * mag * dt;
       const P = player.position;

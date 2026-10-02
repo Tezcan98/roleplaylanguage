@@ -1,8 +1,8 @@
 import { el } from './dom.js';
 
-/** Top bar: clock, word book and bag counters. */
+/** Top bar: clock, word book and bag counters (and `extra` buttons on the right, e.g. full screen). */
 export class Hud {
-  constructor(host, { onBook, onBag, onBookOpen }) {
+  constructor(host, { onBook, onBag, onBookOpen, extra = [] }) {
     this.clock = el('div', { class: 'pill clock', attrs: { 'aria-live': 'off' } });
     this.words = el('b', { text: '0' });
     this.bag = el('b', { text: '0' });
@@ -18,6 +18,7 @@ export class Hud {
       el('div', { class: 'grp' }, [
         this.clock,
         el('button', { class: 'pill', attrs: { type: 'button' }, on: { click: onBag } }, ['Çanta ', this.bag]),
+        ...extra,
       ]),
     ]);
     host.append(hud);
