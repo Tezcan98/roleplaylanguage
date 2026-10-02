@@ -17,8 +17,8 @@ export class ToySystem {
   }
 
   /** `touch: true` → kicked by running into it; `onKick(toy)` after a kick (multiplayer sync). */
-  add(toy, { action, range = 1.4, onUse, touch = false, onKick }) {
-    this.toys.push({ toy, action, range, onUse, touch, onKick, cool: 0 });
+  add(toy, { action, range = 1.4, onUse, touch = false, onKick, learnOnKick = true }) {
+    this.toys.push({ toy, action, range, onUse, touch, onKick, learnOnKick, cool: 0 });
     return toy;
   }
 
@@ -48,6 +48,22 @@ export class ToySystem {
     }
   }
 
+  kickHard() {
+    const here = this.world.current;
+    if (!here) return false;
+    let best = null;
+    for (const entry of this.toys) {
+      if (!entry.touch || entry.toy.location !== here) continue;
+      const d = dist(entry.toy.position, this.player.position);
+      if (d < entry.toy.radius + PLAYER_R + 0.7 && (!best || d < best.d)) best = { entry, d };
+    }
+    if (!best) return false;
+    best.entry.toy.kick(this.player.position, 1.8);
+    best.entry.cool = KICK_COOLDOWN;
+    best.entry.onKick?.(best.entry.toy);
+    return true;
+  }
+
   #touch(entry, speed, t) {
     const { toy } = entry, p = this.player.position;
     const d = dist(toy.position, p), reach = toy.radius + PLAYER_R;
@@ -56,7 +72,7 @@ export class ToySystem {
       toy.kick(p, Math.min(1, speed / 6));
       entry.cool = KICK_COOLDOWN;
       entry.onKick?.(toy);
-      if (t - this.#wordsAt > WORDS_EVERY) { this.#wordsAt = t; this.free.perform(entry.action); }
+      if (entry.learnOnKick && t - this.#wordsAt > WORDS_EVERY) { this.#wordsAt = t; this.free.perform(entry.action); }
     } else if (d > 1e-4) { // standing still against it: nudge it out of the way instead of walking through
       toy.position.x = p.x + (toy.position.x - p.x) / d * reach;
       toy.position.z = p.z + (toy.position.z - p.z) / d * reach;
