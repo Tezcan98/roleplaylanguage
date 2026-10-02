@@ -11,6 +11,49 @@ import { nextTale, taleNodes, TALES } from './tales.js';
  *   speak  — expect: ['accepted', ...], show?: 'what to read'
  */
 export const DIALOGUES = {
+  huseyin: {
+    start: () => 'coffee',
+    nodes: {
+      coffee: { say: 'Hoş geldin evlat. Burada çay sıcak, sözler daha sıcak.', en: 'Welcome, kid. The tea is hot here, and the words are even hotter.',
+        words: [['sıcak', 'hot'], ['söz', 'word / talk']], options: [{ tr: 'Merhaba Hüseyin Amca.', en: 'Hello Uncle Hüseyin.' }] },
+    },
+  },
+  kemal: {
+    start: () => 'coffee',
+    nodes: {
+      coffee: { say: 'Ben bir şey söylemem ama… bu köyde herkesin bilmediği bir şeyler var.', en: 'I say nothing, but… there are things in this village that not everyone knows.',
+        words: [['bilmek', 'to know'], ['gizli', 'secret']], options: [{ tr: 'Ne gibi?', en: 'Like what?' }] },
+    },
+  },
+  osman: {
+    start: () => 'coffee',
+    nodes: {
+      coffee: { say: 'Çay mı, kahve mi? Sohbet uzarsa ikisinden de yaparım.', en: 'Tea or coffee? If the conversation goes long, I can make both.',
+        words: [['sohbet', 'conversation'], ['uzamak', 'to get longer']], options: [{ tr: 'Bir çay lütfen.', en: 'A tea, please.' }] },
+    },
+  },
+  aliAmca: {
+    start: () => 'coffee',
+    nodes: {
+      coffee: { say: 'Dün gece gökyüzünde garip bir ışık gördüm. Ama siz bunu benden duymadınız.', en: 'I saw a strange light in the sky last night. But you did not hear that from me.',
+        words: [['garip', 'strange'], ['ışık', 'light'], ['duymak', 'to hear']], options: [{ tr: 'Tamam Ali Amca.', en: 'Okay, Uncle Ali.' }] },
+    },
+  },
+  aslanBey: {
+    start: () => 'mystery',
+    nodes: {
+      mystery: { say: 'Kütüphaneye gelen herkes bir kitap arar. Bazıları ise kitabın kendisini aradığını sanır.', en: 'Everyone who comes to the library searches for a book. Some think they are searching for the book itself.',
+        words: [['kütüphane', 'library'], ['aramak', 'to search'], ['sanmak', 'to think / suppose']],
+        options: [
+          { tr: 'Ne demek istiyorsunuz?', en: 'What do you mean?', next: 'hint' },
+          { tr: 'Bir kitap bakıyorum.', en: 'I am looking for a book.', next: 'hint' },
+        ] },
+      hint: { say: 'Meydandaki eski taşın altında bir hikâye yok. Ama o taşın neden orada olduğunu sorarsan, doğru soruyu sormaya başlarsın.', en: 'There is no story under the old stone in the square. But if you ask why that stone is there, you begin to ask the right question.',
+        words: [['eski', 'old'], ['taş', 'stone'], ['doğru', 'right / correct']],
+        options: [{ tr: 'Bunu sonra konuşalım.', en: 'Let’s talk about this later.' }] },
+    },
+  },
+
   muhtar: {
     start: (ctx) => {
       if (ctx.q === 'letter' && ctx.has('mektup')) return 'm1';
