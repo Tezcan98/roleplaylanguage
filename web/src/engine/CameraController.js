@@ -49,8 +49,14 @@ export class CameraController {
         this.#pos.set(mx, 3.6 * k, mz + 5 * k);
         this.#look.lerp(this.#tmp.set(mx, 1.1, mz), 0.08);
       } else {
-        this.#pos.set(P.x * 0.7, 7.2 * k, Math.min(P.z + 7.5 * k, maxZ));
-        this.#look.lerp(this.#tmp.set(P.x * 0.85, 0.8, P.z - 0.5), 0.1);
+        if (view === 1) {
+          this.#pos.set(P.x + 7 * k, 5.8 * k, Math.min(P.z + 4.5 * k, maxZ));
+        } else if (view === 2) {
+          this.#pos.set(P.x * 0.7, 10.5 * k, Math.min(P.z + 5 * k, maxZ));
+        } else {
+          this.#pos.set(P.x * 0.7, 7.2 * k, Math.min(P.z + 7.5 * k, maxZ));
+        }
+        this.#look.lerp(this.#tmp.set(P.x * 0.85, view === 2 ? 0.5 : 0.8, P.z - 0.5), 0.1);
       }
     } else if (partner) {
       const N = partner.position, mid = this.#tmp.copy(P).add(N).multiplyScalar(0.5);
