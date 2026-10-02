@@ -9,7 +9,9 @@ export class CameraController {
   #look = new THREE.Vector3(0, 1, -2);
   #tmp = new THREE.Vector3();
 
-  constructor(ctx) { this.ctx = ctx; this.camera = ctx.camera; this.camera.position.set(0, 9, 14); }
+  constructor(ctx) { this.ctx = ctx; this.camera = ctx.camera; this.camera.position.set(0, 9, 14); this.viewMode = 0; }
+  cycleView() { this.viewMode = (this.viewMode + 1) % 3; return this.viewMode; }
+  resetView() { this.viewMode = 0; }
 
   /** Jump straight to a framing (used after a scene change behind the fade). */
   snap(target, indoor) {
@@ -37,7 +39,7 @@ export class CameraController {
       cam.lookAt(0, 1, -2);
       return;
     }
-    const P = player.position, portrait = this.ctx.portrait;
+    const P = player.position, portrait = this.ctx.portrait, view = this.viewMode;
     const rig = location.cameraRig;
     if (rig === 'indoor' || rig === 'classroom') {
       const k = portrait ? 1.35 : 1;
@@ -60,8 +62,14 @@ export class CameraController {
       this.#look.lerp(new THREE.Vector3(mid.x, portrait ? 0.6 : 1.3, mid.z), 0.08);
     } else {
       const k = portrait ? 1.45 : 1;
-      this.#pos.set(P.x, 8 * k, P.z + 10 * k);
-      this.#look.lerp(this.#tmp.set(P.x, 1, P.z), 0.12);
+      if (view === 1) {
+        this.#pos.set(P.x + 9 * k, 5.8 * k, P.z + 5 * k);
+      } else if (view === 2) {
+        this.#pos.set(P.x, 12 * k, P.z + 6 * k);
+      } else {
+        this.#pos.set(P.x, 8 * k, P.z + 10 * k);
+      }
+      this.#look.lerp(this.#tmp.set(P.x, view === 2 ? 0.5 : 1, P.z), 0.12);
     }
     cam.position.lerp(this.#pos, 0.07);
     cam.lookAt(this.#look);
