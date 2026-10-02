@@ -2,7 +2,7 @@ import { el } from './dom.js';
 import { gloss, glossInfo } from '../i18n/Gloss.js';
 import { ServerPicker, SERVERS } from './ServerPicker.js';
 import { characterOf } from './CharacterSetup.js';
-import { fullscreenPossible, goFullscreen, fullscreenIcon } from './Landscape.js';
+import { fullscreenPossible, goFullscreen, fullscreenIcon, canInstall, installApp } from './Landscape.js';
 
 
 /**
@@ -21,6 +21,7 @@ export class MainMenu {
     this.root = el('div', { class: 'overlay main-menu' });
     document.addEventListener('fullscreenchange', () => { if (this.root.classList.contains('open')) this.show(this.#view); });
     host.append(this.root);
+    addEventListener('game-installable', () => { if (this.root.classList.contains('open') && this.#view === 'home') this.show(); });
     this.show();
   }
 
@@ -80,6 +81,7 @@ export class MainMenu {
         btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(save ? this.onContinue : this.onStart)),
         btn('🏘️ Meydana gir', 'btn alt menu-main', go(() => this.onSquare(this.servers.value))),
         el('p', { class: 'menu-where' }, [this.#where, ' · ', btn('Şehir değiştir', 'linkbtn', () => this.show('city'))]),
+        canInstall() && el('button', { class: 'btn alt menu-install', text: '📲 Uygulama olarak yükle (hep tam ekran)', attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),
         el('div', { class: 'profile-line' }, [
           el('span', { text: `${icon} ${name} · ${glossInfo().name}${s.get('username') ? ` · @${s.get('username')}` : ''}` }),
           btn('Değiştir', 'chipbtn', () => this.onProfile()),

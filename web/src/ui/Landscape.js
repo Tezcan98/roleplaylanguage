@@ -40,8 +40,35 @@ let wanted = false;
 try { wanted = sessionStorage.getItem('fullscreen') === '1'; } catch { /* private mode */ }
 const want = (on) => { wanted = on; try { sessionStorage.setItem('fullscreen', on ? '1' : '0'); } catch { /* ignore */ } };
 const restore = () => { if (wanted && fsEnabled() && !fsElement()) enter(); };
-addEventListener('click', restore, true);
-addEventListener('touchend', restore, true); // a tap is what lets a page go full screen again
+['pointerup', 'touchend', 'click', 'keydown'].forEach((e) => addEventListener(e, restore, true)); // a tap is what lets a page go full screen again
+
+// …and a button that says so, while the game is out of full screen against the player's wish
+let back = null;
+const paintBack = () => {
+  if (!back) {
+    back = el('button', { class: 'fs-back', html: ICON.enter, attrs: { type: 'button' } });
+    back.append(' Tam ekrana dön', el('small', { class: 'en-t', text: ` · ${gloss('Back to full screen')}` }));
+    back.addEventListener('click', () => enter());
+    document.body.append(back);
+  }
+  back.hidden = !(wanted && fsEnabled() && !fsElement());
+};
+document.addEventListener('fullscreenchange', paintBack);
+document.addEventListener('webkitfullscreenchange', paintBack);
+
+// Android / Chrome: install the game as an app — it then always opens full screen, and permission
+// prompts no longer throw it out of full screen
+let installPrompt = null;
+addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installPrompt = e; dispatchEvent(new Event('game-installable')); });
+addEventListener('appinstalled', () => { installPrompt = null; dispatchEvent(new Event('game-installable')); });
+export const canInstall = () => !!installPrompt;
+export async function installApp() {
+  if (!installPrompt) return false;
+  installPrompt.prompt();
+  const { outcome } = await installPrompt.userChoice.catch(() => ({ outcome: 'dismissed' }));
+  installPrompt = null;
+  return outcome === 'accepted';
+}
 
 async function enter() {
   try {
@@ -70,6 +97,7 @@ export function setupLandscape() {
   btn.addEventListener('click', async () => {
     if (!fsElement()) { goFullscreen(); return; }
     want(false); // the player turned it off
+    paintBack();
     try {
       screen.orientation?.unlock?.();
       await (document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document);

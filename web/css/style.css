@@ -400,3 +400,8 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 /* while playing the giant chess: colour, clock, turn */
 .chess-bar{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 14px + var(--hud-h,46px));pointer-events:none;font-weight:800}
 .chess-bar[hidden]{display:none}
+.fs-back{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);z-index:60;pointer-events:auto;min-height:44px;padding:0 16px;border-radius:999px;border:3px solid var(--wood);background:var(--gold);color:var(--ink);font:700 16px Fredoka,sans-serif;box-shadow:0 4px 0 var(--wood2)}
+.fs-back[hidden]{display:none}
+.fs-back small{font:700 12px Nunito,sans-serif}
+.menu-install{width:100%;font-size:16px}
+.fs-back{display:inline-flex;align-items:center;gap:4px}
