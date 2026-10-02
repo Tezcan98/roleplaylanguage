@@ -10,8 +10,8 @@ export class Football {
   #cool = 0;
 
   /** `place` = location id; `pitch` = { x0, x1, z0, z1, goalHalf, cz, fence? }; `writeScore(a, b)` = its board. */
-  constructor({ place, pitch, balls, writeScore, world, village, toasts, tts }) {
-    Object.assign(this, { place, pitch, balls, writeScore, world, village, toasts, tts });
+  constructor({ place, pitch, balls, writeScore, world, village, toasts }) {
+    Object.assign(this, { place, pitch, balls, writeScore, world, village, toasts });
     this.score = { a: 0, b: 0 }; // a = blue (scores into the right goal), b = red
   }
 
@@ -52,7 +52,6 @@ export class Football {
     this.writeScore(this.score.a, this.score.b);
     const team = side === 'a' ? 'Mavi' : 'Kırmızı';
     this.toasts.show(`GOOOL! ${team} takım attı · ${this.score.a} - ${this.score.b}`, 'Goal!');
-    this.tts.speak('Gol!', { speaker: 'can' });
     if (mine && ball) {
       setTimeout(() => {
         const i = this.balls.indexOf(ball);

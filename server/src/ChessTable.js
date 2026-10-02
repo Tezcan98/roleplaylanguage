@@ -5,15 +5,17 @@
  * whoever asks while a game is on waits in his line for the next one. Only the two
  * players move; walking away from the board changes nothing (a dropped connection gets a
  * grace period to come back under the same name, then the game is lost).
- * Each side has a clock, so nobody can keep the board for ever — a game against Dede
- * himself also has an overall time limit and gives way to people who are waiting.
+ * There is no clock between two players — but whoever does not move for three minutes loses
+ * (nobody keeps the board for ever). A game against Dede himself has an overall 10-minute
+ * limit and gives way to people who are waiting. Either player can offer a draw through
+ * Dede; the other accepts or declines (Dede himself accepts when the position is about even).
  * Dede keeps the score board: who has played the most games (shared by all squares).
  * Moves are validated with chess.js.
  */
 import { Chess } from 'chess.js';
 
 export const CHESS_RULES = {
-  clock: 5 * 60_000,     // ms per player
+  idle: 3 * 60_000,      // ms the side to move may think before the game is lost
   aiLimit: 10 * 60_000,  // a game against Dede ends after this…
   aiYield: 2 * 60_000,   // …or this long after someone starts waiting for the board
   aiDelay: 1200,         // ms Dede "thinks" before a move
@@ -57,8 +59,8 @@ export class ChessTable {
     this.last = null;
     this.phase = 'idle';   // idle → waiting (one seat taken) → playing → over → idle
     this.result = null;    // { winner: 'w' | 'b' | null, reason }
-    this.clocks = { w: this.rules.clock, b: this.rules.clock };
     this.turnAt = 0;       // when the side to move started thinking
+    this.draw = { offer: null, declined: null }; // colour that offers a draw / whose offer was just declined
     this.startedAt = 0;
     this.overAt = 0;
     this.waitingSince = 0; // someone is in the line while Dede plays
@@ -113,6 +115,31 @@ export class ChessTable {
     return true;
   }
 
+  /** "Dede, beraberlik teklif ediyorum." To a player: it waits for the answer; Dede answers at once. */
+  offerDraw(id) {
+    const c = this.#seatOf(id);
+    if (!c || !this.playing || this.draw.offer === c) return false;
+    if (this.seats[other(c)]?.ai) {
+      // Dede: material from his side; about even (within a pawn) → he accepts
+      let edge = 0;
+      for (const p of this.game.board().flat()) if (p) edge += (p.color === c ? -1 : 1) * VALUE[p.type];
+      if (edge <= 100) this.#finish(null, 'agreed');
+      else this.draw = { offer: null, declined: c };
+      return true;
+    }
+    this.draw = { offer: c, declined: null };
+    return true;
+  }
+
+  /** The other player answers a draw offer. */
+  answerDraw(id, accept) {
+    const c = this.#seatOf(id);
+    if (!c || !this.playing || this.draw.offer !== other(c)) return false;
+    if (accept) this.#finish(null, 'agreed');
+    else this.draw = { offer: null, declined: other(c) };
+    return true;
+  }
+
   /** A player's connection dropped: out of the line; a seat is kept a little while. */
   disconnect(id, name) {
     let changed = this.leave(id);
@@ -151,8 +178,7 @@ export class ChessTable {
     }
     if (!this.playing) return false;
     const turn = this.game.turn();
-    const left = this.clocks[turn] - (now - this.turnAt);
-    if (left <= 0) { this.clocks[turn] = 0; this.#finish(other(turn), 'time'); return true; }
+    if (!this.seats[turn]?.ai && now - this.turnAt > this.rules.idle) { this.#finish(other(turn), 'idle'); return true; }
     for (const c of ['w', 'b']) {
       if (this.seats[c]?.gone && now - this.seats[c].gone > this.rules.rejoin) { this.#finish(other(c), 'left'); return true; }
     }
@@ -167,8 +193,8 @@ export class ChessTable {
     const now = this.now(), turn = this.game.turn();
     let made;
     try { made = this.game.move(m); } catch { return false; }
-    this.clocks[turn] = Math.max(0, this.clocks[turn] - (now - this.turnAt));
     this.turnAt = now;
+    if (this.draw.offer !== turn) this.draw = { offer: null, declined: null }; // moving on answers an offer with no
     this.last = { from: made.from, to: made.to, san: made.san, piece: made.piece, captured: made.captured ?? null };
     if (this.game.isCheckmate()) this.#finish(turn, 'mate');
     else if (this.game.isGameOver()) this.#finish(null, 'draw');
@@ -193,7 +219,7 @@ export class ChessTable {
     this.last = null;
     this.result = null;
     this.phase = 'playing';
-    this.clocks = { w: this.rules.clock, b: this.rules.clock };
+    this.draw = { offer: null, declined: null };
     this.startedAt = this.turnAt = this.now();
     this.waitingSince = this.queue.length && (this.seats.w.ai || this.seats.b.ai) ? this.now() : 0;
     if (this.seats.w.ai) this.aiAt = this.now() + this.rules.aiDelay;
@@ -224,8 +250,6 @@ export class ChessTable {
 
   state() {
     const g = this.game, now = this.now();
-    const clocks = { ...this.clocks };
-    if (this.playing) clocks[g.turn()] = Math.max(0, clocks[g.turn()] - (now - this.turnAt));
     const seat = (s) => (s ? { id: s.id, name: s.name, ...(s.ai ? { ai: true } : {}), ...(s.gone ? { gone: true } : {}) } : null);
     return {
       type: 'chess', v: 2, phase: this.phase, fen: g.fen(), turn: g.turn(), check: g.isCheck(), last: this.last,
@@ -233,7 +257,9 @@ export class ChessTable {
       over: this.phase === 'over' ? (this.result.reason === 'mate' ? 'checkmate' : this.result.winner ? 'won' : 'draw') : null,
       result: this.result, seats: { w: seat(this.seats.w), b: seat(this.seats.b) },
       queue: this.queue.map(({ id, name, color }) => ({ id, name, color })),
-      clocks, running: this.playing ? g.turn() : null,
+      // time left for the side to move before the game is lost for not moving
+      idleLeft: this.playing && !this.seats[g.turn()]?.ai ? Math.max(0, this.rules.idle - (now - this.turnAt)) : null,
+      running: this.playing ? g.turn() : null, draw: { ...this.draw },
       limit: this.playing && (this.seats.w?.ai || this.seats.b?.ai) ? Math.max(0, this.rules.aiLimit - (now - this.startedAt)) : null,
       scores: this.board(),
     };

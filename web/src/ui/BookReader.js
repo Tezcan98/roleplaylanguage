@@ -57,9 +57,8 @@ export class BookReader {
     this.text.textContent = p.tr;
     this.en.textContent = gloss(p.en);
     this.words.replaceChildren(...(this.page === last ? b.words : []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { text: `= ${gloss(en)}` })])));
-    this.pageNo.textContent = `${this.page + 1} / ${b.pages.length}`;
+    this.pageNo.textContent = `${this.page + 1} / ${b.pages.length}`; // read quietly: 🔊 reads the page aloud on request
     this.prev.disabled = this.page === 0;
     this.next.textContent = this.page === last ? 'Bitir ✓' : 'Sonraki ▶';
-    this.onSpeak?.(p.tr);
   }
 }

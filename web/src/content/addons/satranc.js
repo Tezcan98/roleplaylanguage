@@ -7,6 +7,7 @@
 function dedeStart(ctx) {
   const me = ctx.chess?.me;
   if (!me) return 'i1';
+  if (me.color && me.drawOfferedToMe) return 'drawOffered';
   if (me.color) return me.phase === 'playing' ? 'playing' : 'waiting';
   if (me.inLine) return 'inLine';
   if (me.phase === 'playing' || me.phase === 'over') return 'busy';
@@ -54,12 +55,21 @@ export default {
       playing: { say: 'Oyun sürüyor evlat. Sıra sende olunca taşını al ve yeşil kareye götür. Ne istersin?', en: 'The game is on, child. On your turn take your piece and carry it to a green square. What would you like?',
         options: [
           { tr: 'Devam ediyorum.', en: "I'm carrying on." },
+          { tr: 'Beraberlik teklif ediyorum.', en: 'I offer a draw.', next: 'drawSent', do: ['chess-draw'] },
           { tr: 'Pes ediyorum.', en: 'I give up.', next: 'resigned', do: ['chess-resign'] },
         ] },
       waiting: { say: 'Rakibini bekliyoruz. Biri gelince oyun başlar.', en: 'We are waiting for your opponent. The game starts when someone comes.',
         options: [{ tr: 'Bekliyorum.', en: "I'll wait." }, { tr: 'Vazgeçtim, Dede.', en: "I've changed my mind, Dede.", do: ['chess-leave'] }] },
       inLine: { say: 'Sıradasın evlat, bu oyun bitince oynarsın.', en: 'You are in line, child; you play when this game is over.',
         options: [{ tr: 'Tamam.', en: 'Okay.' }, { tr: 'Sıradan çıkmak istiyorum.', en: 'I want to leave the line.', do: ['chess-leave'] }] },
+      drawSent: { say: 'Peki evlat, söylüyorum. Bakalım ne diyecek.', en: "All right, child, I'll pass it on. Let's see what the answer is.",
+        words: [['beraberlik', 'a draw'], ['teklif etmek', 'to offer']], options: [{ tr: 'Teşekkürler, Dede.', en: 'Thank you, Dede.' }] },
+      drawOffered: { say: 'Rakibin beraberlik teklif ediyor. Kabul ediyor musun?', en: 'Your opponent offers a draw. Do you accept?',
+        words: [['kabul etmek', 'to accept']],
+        options: [
+          { tr: 'Kabul ediyorum.', en: 'I accept.', do: ['chess-draw-accept'] },
+          { tr: 'Hayır, oyuna devam.', en: 'No, let’s play on.', do: ['chess-draw-decline'] },
+        ] },
       resigned: { say: 'Olsun evlat, bir dahaki sefere! Satranç sabır ister.', en: 'Never mind, child — next time! Chess needs patience.', options: [{ tr: 'Teşekkürler, Dede.', en: 'Thank you, Dede.' }] },
     } },
   },

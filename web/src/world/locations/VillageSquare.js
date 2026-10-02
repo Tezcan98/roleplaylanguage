@@ -442,7 +442,11 @@ export class VillageSquare extends Location {
     C.addBox(L.x - 5.4, L.x + 5.4, L.z - L.d / 2, L.z - L.d / 2 + 0.7);
     shelf(L.x - L.w / 2 + 0.4, L.z + 0.2, 5, Math.PI / 2); C.addBox(L.x - L.w / 2, L.x - L.w / 2 + 0.7, L.z - 2.4, L.z + 2.8);
     shelf(L.x + L.w / 2 - 0.4, L.z + 0.2, 5, -Math.PI / 2); C.addBox(L.x + L.w / 2 - 0.7, L.x + L.w / 2, L.z - 2.4, L.z + 2.8);
-    this.hotspot('village.libShelf', L.x + 3, L.z - L.d / 2 + 1.5, 1.2);
+    // a book from any shelf (wide spots: easy to hit on a phone)
+    this.hotspot('village.libShelf', L.x + 3, L.z - L.d / 2 + 1.6, 2.2);
+    this.hotspot('village.libShelf2', L.x - 3, L.z - L.d / 2 + 1.6, 2.2);
+    this.hotspot('village.libShelf3', L.x - L.w / 2 + 1.6, L.z + 0.6, 2);
+    this.hotspot('village.libShelf4', L.x + L.w / 2 - 1.6, L.z + 0.6, 2);
     // Aslan Bey's desk with an old lamp and a pile of books
     add(mf.at(mf.box(2.2, 0.85, 0.9, WOOD), L.x, 0.43, L.z - 1.6));
     add(mf.at(mf.cyl(0.12, 0.16, 0.45, 0xC8A15B, 10), L.x - 0.7, 1.08, L.z - 1.6));

@@ -13,6 +13,7 @@ export const VOICES = {
   default: { id: M1, pitch: 1 },
   ahmet: { id: M2, pitch: 1.18 },
   anne: WOMAN,
+  okuyucu: WOMAN, // reads library books aloud (on request)
   baba: { id: M2, pitch: 0.9 },
   dede: { id: M1, pitch: 0.84 },
   ogretmen: WOMAN,

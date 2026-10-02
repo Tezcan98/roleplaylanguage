@@ -211,6 +211,12 @@ export class VillageServer {
         this.log(`[village] call ${from.name} ↔ ${c.name}`);
         break;
       }
+      case 'chess-draw': case 'chess-draw-accept': case 'chess-draw-decline': { // a draw offered / answered through Dede
+        const t = this.#table(c.room);
+        const ok = msg.type === 'chess-draw' ? t.offerDraw(c.id) : t.answerDraw(c.id, msg.type === 'chess-draw-accept');
+        if (ok) this.#toAll(c.room, t.state());
+        break;
+      }
       case 'chess-ask': case 'chess-sit': case 'chess-dede': case 'chess-leave': case 'chess-stand': case 'chess-resign': case 'chess-move': {
         const t = this.#table(c.room);
         const ok = msg.type === 'chess-ask' || msg.type === 'chess-sit' ? t.ask(c, msg.color)

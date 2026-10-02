@@ -28,15 +28,47 @@ test('asking for a taken colour waits for the next game; the line is seated afte
   assert.deepEqual([t.phase, t.seats.w?.name, t.seats.b], ['waiting', 'Can', null]);
 });
 
-test('the clock: whoever runs out of time loses', () => {
-  const { t, at } = table({ clock: 10_000 });
+test('no clock, but whoever does not move for three minutes loses', () => {
+  const { t, at } = table({ idle: 10_000 });
   t.ask(A, 'w'); t.ask(B, 'b');
   t.move('a', { from: 'e2', to: 'e4' });
   at(9000);
-  assert.equal(t.state().clocks.b, 1000);
+  assert.equal(t.state().idleLeft, 1000, 'black has a second left');
+  assert.equal(t.state().clocks, undefined);
   assert.equal(at(2000), true);
-  assert.deepEqual(t.result, { winner: 'w', reason: 'time' });
+  assert.deepEqual(t.result, { winner: 'w', reason: 'idle' });
   assert.equal(t.board()[0].games, 1);
+});
+
+test('a draw offered through Dede: the other player accepts or declines; moving on declines', () => {
+  const { t } = table();
+  t.ask(A, 'w'); t.ask(B, 'b');
+  assert.equal(t.offerDraw('a'), true);
+  assert.equal(t.state().draw.offer, 'w');
+  assert.equal(t.answerDraw('a', true), false, 'you cannot accept your own offer');
+  assert.equal(t.answerDraw('b', false), true);
+  assert.deepEqual(t.state().draw, { offer: null, declined: 'w' });
+  t.offerDraw('a');
+  t.move('a', { from: 'e2', to: 'e4' }); // white offered and moved: the offer stands
+  assert.equal(t.state().draw.offer, 'w');
+  t.move('b', { from: 'e7', to: 'e5' }); // black played on instead of answering
+  assert.equal(t.state().draw.offer, null);
+  t.offerDraw('b');
+  assert.equal(t.answerDraw('a', true), true);
+  assert.deepEqual(t.result, { winner: null, reason: 'agreed' });
+});
+
+test('a draw against Dede: he accepts when it is about even, not when he is winning', () => {
+  const { t } = table();
+  t.askDede(A, 'w');
+  assert.equal(t.offerDraw('a'), true);
+  assert.deepEqual(t.result, { winner: null, reason: 'agreed' }, 'even position at the start');
+  const { t: t2 } = table();
+  t2.askDede(A, 'w');
+  t2.game.remove('d1'); // white has lost the queen
+  t2.offerDraw('a');
+  assert.equal(t2.phase, 'playing');
+  assert.equal(t2.state().draw.declined, 'w');
 });
 
 test('playing Dede: only on a free board; he answers by himself; the game gives way to people waiting', () => {

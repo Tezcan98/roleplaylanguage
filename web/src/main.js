@@ -103,7 +103,7 @@ import { Library } from './systems/Library.js';
 import { NeyMusic } from './systems/NeyMusic.js';
 import { BookReader } from './ui/BookReader.js';
 import { AmbientTalk } from './systems/AmbientTalk.js';
-import { KAHVEHANE, LIBRARY } from './world/locations/VillageSquare.js';
+import { KAHVEHANE, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
@@ -353,10 +353,26 @@ const chess = new ChessGame({
   onAskDede: () => dialogue.open('ismail'), // touching a piece when not playing: Dede decides who plays
 });
 gameCtx.chess = chess; // İsmail Dede's dialogue asks the board who plays (content/addons/satranc.js)
+// playing chess near the board: the camera looks at it from your side (white sits at +z)
+{
+  let viewFor = null;
+  const setView = (color) => {
+    if (color === viewFor) return;
+    viewFor = color;
+    if (!color) { camera.clearFixed(); return; }
+    const side = color === 'w' ? 1 : -1;
+    camera.setFixed(new THREE.Vector3(CHESS.cx, 8.5, CHESS.cz + side * 8.5), new THREE.Vector3(CHESS.cx, 0, CHESS.cz + side * 0.6));
+  };
+  world.get('village').animated.push(() => {
+    const mine = chess.myColor, near = Math.hypot(player.position.x - CHESS.cx, player.position.z - CHESS.cz) < 9;
+    setView(mine && chess.state?.phase === 'playing' && near && !dialogue.talking ? mine : null);
+  });
+  bus.on(EV.LOCATION, () => setView(null)); // left the square (the view stays with the board)
+}
 village.chess = chess;
 // football: the schoolyard's pitch and the fenced one in the square, each with its score board
-const football = new Football({ place: 'schoolyard', pitch: PITCH, balls: [schoolBall], writeScore: (a, b) => world.get('schoolyard').writeScore(a, b), world, village, toasts, tts });
-const squareFootball = new Football({ place: 'village', pitch: SQUARE_PITCH, balls: villageBalls, writeScore: (a, b) => world.get('village').writeScore(a, b), world, village, toasts, tts });
+const football = new Football({ place: 'schoolyard', pitch: PITCH, balls: [schoolBall], writeScore: (a, b) => world.get('schoolyard').writeScore(a, b), world, village, toasts });
+const squareFootball = new Football({ place: 'village', pitch: SQUARE_PITCH, balls: villageBalls, writeScore: (a, b) => world.get('village').writeScore(a, b), world, village, toasts });
 const matches = { schoolyard: football, village: squareFootball };
 village.onGoal = (place, side) => matches[place]?.scored(side, false);
 world.get('schoolyard').animated.push((dt) => football.update(dt));
@@ -367,7 +383,7 @@ village.ptt.onType = (text) => village.say(text); // typed instead of spoken (no
 // the open library: borrow a book, read it sitting on a bench
 const library = new Library({
   books: BOOKS, state, player, choice: new ChoiceCard(host, modes), toasts, vocab, wallet, world,
-  reader: new BookReader(host, { modes, onSpeak: (t) => tts.speak(t, { speaker: 'aslanBey' }), onClose: (b, page) => library.closed(b, page), onFinish: (b) => library.finished(b) }),
+  reader: new BookReader(host, { modes, onSpeak: (t) => tts.speak(t, { speaker: 'okuyucu' }), onClose: (b, page) => library.closed(b, page), onFinish: (b) => library.finished(b) }),
 });
 effects.register('library', () => library.atShelf());
 // a ney plays quietly in the background in Aslan Bey's open library
@@ -377,7 +393,10 @@ effects
   .register('chess-ask', (color) => chess.ask(color))
   .register('chess-dede', (color) => chess.playDede(color || 'w'))
   .register('chess-leave', () => chess.leave())
-  .register('chess-resign', () => chess.resign());
+  .register('chess-resign', () => chess.resign())
+  .register('chess-draw', () => chess.offerDraw())
+  .register('chess-draw-accept', () => chess.answerDraw(true))
+  .register('chess-draw-decline', () => chess.answerDraw(false));
 // the uncles in the kahvehane talk among themselves; come close and you hear them
 const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { location: 'village', x: KAHVEHANE.x, z: KAHVEHANE.z }, talks: KAHVE_TALKS });
 

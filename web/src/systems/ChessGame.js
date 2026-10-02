@@ -6,7 +6,8 @@ import { el } from '../ui/dom.js';
 /** Turkish piece names (taught while playing). */
 export const PIECE_WORDS = { k: ['şah', 'king'], q: ['vezir', 'queen'], r: ['kale', 'rook'], b: ['fil', 'bishop'], n: ['at', 'knight'], p: ['piyon', 'pawn'] };
 
-const CLOCK = 5 * 60_000; // offline: the same five minutes as on the server
+const IDLE = 3 * 60_000;   // offline too: not moving for three minutes loses the game
+const AI_LIMIT = 10 * 60_000; // a game against Dede lasts at most this long
 const PAUSE = 6000;       // offline: the result stays on the board this long
 const DEDE = { id: 'dede', name: 'İsmail Dede', ai: true };
 const COLOR = { w: 'beyaz', b: 'siyah' };
@@ -20,7 +21,7 @@ function dedeMove(g) {
 /**
  * The giant chess board on the village square, run by İsmail Dede. Online the village
  * server owns the table (server/src/ChessTable.js): you ask Dede for a colour, he seats
- * the players and starts the game when both colours are there, keeps the clocks and the
+ * the players and starts the game when both colours are there, watches that nobody sits on the
  * score board, and plays you himself when the board is free. Offline nobody else is
  * around, so Dede plays the other colour. Two ways to move: on the 2D board on screen, or
  * on the square itself — on your turn step next to your piece, take it (action key), carry
@@ -42,7 +43,7 @@ export class ChessGame {
 
   constructor({ host, mf, square, net, vocab, toasts, player, world, onSay = () => {}, onAskDede = () => {} }) {
     Object.assign(this, { mf, square, net, vocab, toasts, player, world, onSay, onAskDede });
-    // while you play: your colour, the clocks and whose turn it is (nothing else on the screen)
+    // while you play: your colour, whose turn it is (and Dede's 10 minutes) — nothing else on the screen
     this.bar = el('div', { class: 'pill chess-bar', attrs: { 'aria-live': 'polite' } });
     this.bar.hidden = true;
     host.append(this.bar);
@@ -100,18 +101,39 @@ export class ChessGame {
 
   /** Seated or waiting in line: where I stand (for İsmail Dede's dialogue). */
   get me() {
-    const st = this.state ?? {};
-    return { color: this.myColor, phase: st.phase, inLine: (st.queue ?? []).find((q) => q.id === this.myId)?.color ?? null, players: [st.seats?.w?.name, st.seats?.b?.name] };
+    const st = this.state ?? {}, mine = this.myColor, theirs = mine === 'w' ? 'b' : 'w';
+    return {
+      color: mine, phase: st.phase, inLine: (st.queue ?? []).find((q) => q.id === this.myId)?.color ?? null, players: [st.seats?.w?.name, st.seats?.b?.name],
+      drawOfferedToMe: !!mine && st.draw?.offer === theirs, drawOfferedByMe: !!mine && st.draw?.offer === mine,
+    };
   }
+
+  /** Through Dede: offer a draw / answer the opponent's offer. */
+  offerDraw() {
+    if (this.online) { this.net.send({ type: 'chess-draw' }); return; }
+    const L = this.#local;
+    if (L.phase !== 'playing') return;
+    // Dede: material from his side; about even (within a pawn) → he accepts
+    let edge = 0;
+    for (const p of L.game.board().flat()) if (p) edge += (p.color === L.mine ? -1 : 1) * { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 }[p.type];
+    if (edge <= 100) this.#localFinish(null, 'agreed');
+    else { L.draw = { offer: null, declined: L.mine }; this.#apply(this.#localState()); }
+  }
+  answerDraw(accept) { if (this.online) this.net.send({ type: accept ? 'chess-draw-accept' : 'chess-draw-decline' }); }
 
   #paintBar() {
     const st = this.state, mine = this.myColor;
     const show = !!mine && (st?.phase === 'playing' || st?.phase === 'waiting') && this.world?.current?.id === 'village';
     this.bar.hidden = !show;
     if (!show) return;
-    const g = this.game, clock = (c) => { const ms = Math.max(0, (st.clocks?.[c] ?? 0) - (st.running === c ? Date.now() - st.at : 0)); return `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}`; };
-    const turn = st.phase === 'waiting' ? 'rakip bekleniyor' : g.turn() === mine ? (g.isCheck() ? 'Şah! Sıra sende' : 'Sıra sende') : 'Rakibin oynuyor';
-    this.bar.textContent = `♟ Sen ${COLOR[mine]} · ⏱ ${clock(mine)} · ${turn}`;
+    const g = this.game, since = Date.now() - st.at;
+    const mmss = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}`;
+    const myTurn = st.phase === 'playing' && g.turn() === mine;
+    let turn = st.phase === 'waiting' ? 'rakip bekleniyor' : myTurn ? (g.isCheck() ? 'Şah! Sıra sende' : 'Sıra sende') : 'Rakibin oynuyor';
+    const idle = st.idleLeft != null ? st.idleLeft - since : null;
+    if (myTurn && idle != null && idle < 60_000) turn += ` · ⏳ ${mmss(Math.max(0, idle))} içinde oyna!`;
+    const limit = st.limit != null ? ` · ⏱ ${mmss(Math.max(0, st.limit - since))}` : ''; // a game against Dede: 10 minutes
+    this.bar.textContent = `♟ Sen ${COLOR[mine]}${limit} · ${turn}`;
   }
 
   #move(from, to) {
@@ -140,14 +162,21 @@ export class ChessGame {
       const w = winner && name(winner);
       if (reason === 'mate') return `Şah mat! ${w} kazandı. Tebrikler!`;
       if (reason === 'time') return `Süre bitti! Oyunu ${w} kazandı.`;
+      if (reason === 'idle') return `${name(winner === 'w' ? 'b' : 'w')} üç dakikadır oynamadı. Oyunu ${w} kazandı.`;
+      if (reason === 'agreed') return 'Beraberlik kabul edildi. İkiniz de iyi oynadınız!';
       if (reason === 'resign') return `${name(winner === 'w' ? 'b' : 'w')} pes etti. ${w} kazandı.`;
       if (reason === 'left') return `${name(winner === 'w' ? 'b' : 'w')} gitti, geri gelmedi. ${w} kazandı.`;
       if (reason === 'limit') return 'Vakit doldu, bu oyun burada biter. Sırada bekleyenler var!';
       return 'Berabere! İkiniz de iyi oynadınız.';
     }
     if (b.phase === 'playing' && a?.phase !== 'playing') {
-      if (b.seats.w?.ai || b.seats.b?.ai) return `Haydi bakalım! Ben ${b.seats.w?.ai ? 'beyazım' : 'siyahım'}, sen ${b.seats.w?.ai ? 'siyahsın' : 'beyazsın'}. Herkese beş dakika.`;
-      return `Beyaz ${name('w')}, siyah ${name('b')}. Herkese beşer dakika. Başlayın!`;
+      if (b.seats.w?.ai || b.seats.b?.ai) return `Haydi bakalım! Ben ${b.seats.w?.ai ? 'beyazım' : 'siyahım'}, sen ${b.seats.w?.ai ? 'siyahsın' : 'beyazsın'}. On dakikamız var.`;
+      return `Beyaz ${name('w')}, siyah ${name('b')}. Başlayın!`;
+    }
+    if (b.draw?.offer && b.draw.offer !== a?.draw?.offer) return `${name(b.draw.offer)} beraberlik teklif ediyor. ${name(b.draw.offer === 'w' ? 'b' : 'w')}, kabul edersen bana söyle.`;
+    if (b.draw?.declined && b.draw.declined !== a?.draw?.declined) {
+      const ai = b.seats[b.draw.declined === 'w' ? 'b' : 'w']?.ai;
+      return ai ? 'Yok evlat, beraberlik yok! Oyuna devam.' : 'Beraberlik kabul edilmedi. Oyun devam ediyor.';
     }
     if (b.phase === 'waiting' && (a?.phase !== 'waiting' || a.seats?.w?.id !== b.seats?.w?.id || a.seats?.b?.id !== b.seats?.b?.id)) {
       const c = b.seats.w ? 'w' : 'b', other = c === 'w' ? 'b' : 'w';
@@ -160,20 +189,23 @@ export class ChessGame {
 
   // --- offline: you and Dede --------------------------------------------------------
 
-  #resetLocal() { this.#local = { game: new Chess(), phase: 'idle', mine: null, last: null, result: null, clocks: { w: CLOCK, b: CLOCK }, turnAt: 0 }; }
+  #resetLocal() { this.#local = { game: new Chess(), phase: 'idle', mine: null, last: null, result: null, turnAt: 0, startedAt: 0, draw: { offer: null, declined: null } }; }
 
   #localState() {
     const L = this.#local, me = { id: 'me', name: 'Sen' };
     const seats = L.mine ? { [L.mine]: me, [L.mine === 'w' ? 'b' : 'w']: DEDE } : { w: null, b: null };
-    const clocks = { ...L.clocks };
-    if (L.phase === 'playing') clocks[L.game.turn()] = Math.max(0, clocks[L.game.turn()] - (Date.now() - L.turnAt));
-    return { phase: L.phase, fen: L.game.fen(), turn: L.game.turn(), last: L.last, result: L.result, seats, queue: [], clocks, running: L.phase === 'playing' ? L.game.turn() : null, scores: [] };
+    const now = Date.now(), playing = L.phase === 'playing';
+    return {
+      phase: L.phase, fen: L.game.fen(), turn: L.game.turn(), last: L.last, result: L.result, seats, queue: [], scores: [], draw: { ...L.draw },
+      idleLeft: playing && L.game.turn() === L.mine ? Math.max(0, IDLE - (now - L.turnAt)) : null,
+      limit: playing ? Math.max(0, AI_LIMIT - (now - L.startedAt)) : null,
+    };
   }
 
   #localStart(color) {
     if (this.#local.phase === 'playing' || this.#local.phase === 'over') return;
     this.#resetLocal();
-    Object.assign(this.#local, { phase: 'playing', mine: color === 'b' ? 'b' : 'w', turnAt: Date.now() });
+    Object.assign(this.#local, { phase: 'playing', mine: color === 'b' ? 'b' : 'w', turnAt: Date.now(), startedAt: Date.now() });
     this.#apply(this.#localState());
     clearInterval(this.#timer);
     this.#timer = setInterval(() => this.#localTick(), 500);
@@ -183,8 +215,8 @@ export class ChessGame {
   #localMove(m) {
     const L = this.#local, turn = L.game.turn();
     const made = L.game.move(m);
-    L.clocks[turn] = Math.max(0, L.clocks[turn] - (Date.now() - L.turnAt));
     L.turnAt = Date.now();
+    L.draw = { offer: null, declined: null };
     L.last = { from: made.from, to: made.to, san: made.san };
     if (L.game.isCheckmate()) this.#localFinish(turn, 'mate');
     else if (L.game.isGameOver()) this.#localFinish(null, 'draw');
@@ -200,8 +232,9 @@ export class ChessGame {
   #localTick() {
     const L = this.#local;
     if (this.online || L.phase !== 'playing') return;
-    const turn = L.game.turn();
-    if (L.clocks[turn] - (Date.now() - L.turnAt) <= 0) { L.clocks[turn] = 0; this.#localFinish(turn === 'w' ? 'b' : 'w', 'time'); }
+    const now = Date.now();
+    if (L.game.turn() === L.mine && now - L.turnAt > IDLE) this.#localFinish(L.mine === 'w' ? 'b' : 'w', 'idle');
+    else if (now - L.startedAt > AI_LIMIT) this.#localFinish(null, 'limit');
   }
 
   #localFinish(winner, reason) {

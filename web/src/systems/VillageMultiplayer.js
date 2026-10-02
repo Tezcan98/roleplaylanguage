@@ -269,6 +269,7 @@ export class VillageMultiplayer {
   /** Interaction provider: offer "voice chat with X" next to another player. */
   find(pos) {
     if (!this.net.connected || this.voice.inCall || this.world.current.id !== this.joinedAt) return null;
+    if (this.chess?.myColor || this.chess?.squareAt(pos)) return null; // at the chess board the action key is for the pieces
     let best = null;
     for (const id of this.remotes.ids()) {
       const c = this.remotes.get(id);

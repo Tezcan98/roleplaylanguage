@@ -40,7 +40,7 @@ export const HOTSPOTS = {
   // the open-air kahvehane and the open library (VillageSquare)
   ...Object.fromEntries([1, 2, 3, 4].map((n) => [`village.kahve${n}`, { label: 'Kahvehanede otur', use: [`sit:kahve${n}`, 'free:village_coffee'], available: (c) => !c.seated }])),
   ...Object.fromEntries([1, 2, 3, 4].map((n) => [`village.kitap${n}`, { label: 'Otur, kitap oku', use: [`sit:kitap${n}`, 'free:village_read'], available: (c) => !c.seated }])),
-  'village.libShelf': { label: (c) => (c.state?.heldBook ? 'Kitabı rafa koy' : 'Kitap al'), use: ['library'] }, // systems/Library.js
+  ...Object.fromEntries(['libShelf', 'libShelf2', 'libShelf3', 'libShelf4'].map((id) => [`village.${id}`, { label: (c) => (c.state?.heldBook ? 'Kitabı rafa koy' : 'Kitap al'), use: ['library'] }])), // systems/Library.js
   // garden gate = the street: choose school or the village square (see the 'street' effect)
   'yard.gate': { label: 'Sokağa çık', use: ['street'], link: ['schoolyard', 'village'] },
   'house.sofra': { label: 'Sofraya otur', use: ['sit:sofraS'], available: (c) => !c.seated },
