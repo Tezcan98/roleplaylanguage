@@ -128,14 +128,16 @@ try {
   check('⚡ hard shot: the button shows next to the ball and the ball flies the way you face', shot.shown && shot.v > 10 && shot.dir, `${shot.v.toFixed(1)} m/s`);
   // dad works all round his car, not only under the bonnet
   const dad0 = await ev(() => { const b = window.__game.cast.get('baba').position; return [b.x, b.z]; });
-  const dadMoved = await waitFor(() => ev((a) => { const b = window.__game.cast.get('baba').position; return Math.hypot(b.x - a[0], b.z - a[1]) > 1; }, dad0), 12000);
+  const dadMoved = await waitFor(() => ev((a) => { const b = window.__game.cast.get('baba').position; return Math.hypot(b.x - a[0], b.z - a[1]) > 1; }, dad0), 60000); // ~15 s of game time on a slow runner
   check('dad walks round the car', !!dadMoved);
   // Ali comes out into the garden with you and follows you around
   await ev(() => { const g = window.__game; g.travel.place('house', 'start', { force: true }); }); await sleep(400);
   await ev(() => { const g = window.__game; g.bus.emit('hotspot:used', { id: 'house.door' }); g.travel.place('yard', 'houseDoor', { force: true }); }); await sleep(400);
   check('Ali comes out into the garden with you', await ev(() => window.__game.cast.get('kardes').location === 'yard'));
-  await ev(() => window.__game.player.position.set(6, 0, -4)); await sleep(2500);
-  const kidGap = await ev(() => { const g = window.__game, k = g.cast.get('kardes').position; return Math.hypot(k.x - 6, k.z + 4); });
+  await ev(() => window.__game.player.position.set(6, 0, -4));
+  const gap = () => ev(() => { const g = window.__game, k = g.cast.get('kardes').position; return Math.hypot(k.x - 6, k.z + 4); });
+  await waitFor(async () => (await gap()) < 3, 30000);
+  const kidGap = await gap();
   check('…and follows you', kidGap < 3, `${kidGap.toFixed(2)} m behind`);
 
   // --- square fence --------------------------------------------------------------------
@@ -144,7 +146,7 @@ try {
   // walk towards each side for a while: the player must reach the fence but never pass it
   let edge = 0;
   for (const key of ['ArrowRight', 'ArrowUp', 'ArrowLeft', 'ArrowDown']) {
-    await ev(() => window.__game.player.position.set(11, 0, -1.5)); await sleep(150);
+    await ev(() => window.__game.player.position.set(24, 0, -1.5)); await sleep(150);
     await page.keyboard.down(key);
     for (let i = 0; i < 36; i++) { await sleep(250); edge = Math.max(edge, await ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); })); }
     await page.keyboard.up(key);

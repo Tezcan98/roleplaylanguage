@@ -235,6 +235,22 @@ const GENERATORS = {
     g.font = `bold ${s * 0.26}px Fredoka, sans-serif`;
     g.fillText('ÇAY OCAĞI', s / 2, s / 2, s * 0.95);
   },
+  /** Four rows of book spines on a dark shelf (one texture for a whole bookcase). */
+  bookshelf(g, s) {
+    g.fillStyle = '#3B2418'; g.fillRect(0, 0, s, s);
+    const colors = ['#8E2B1E', '#2F6FDB', '#3E8E4A', '#E0B04A', '#6B4F3A', '#7A3552', '#16A085', '#D35400'];
+    for (let r = 0; r < 4; r++) {
+      const y0 = r * s / 4 + s * 0.03, h = s / 4 - s * 0.06;
+      for (let x = s * 0.01, i = 0; x < s * 0.98; i++) {
+        const w = s * (0.025 + ((i * 7 + r * 3) % 4) * 0.008), bh = h * (0.72 + ((i * 5 + r) % 3) * 0.12);
+        g.fillStyle = colors[(i * 3 + r) % colors.length];
+        g.fillRect(x, y0 + h - bh, w - 1, bh);
+        g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(x, y0 + h - bh * 0.7, w - 1, 2);
+        x += w + 1;
+      }
+      g.fillStyle = '#5B3A29'; g.fillRect(0, y0 + h, s, s * 0.03);
+    }
+  },
   myGardenSign(g, s) {
     g.fillStyle = '#C99B63'; g.fillRect(0, 0, s, s);
     g.fillStyle = '#3B2418'; g.textAlign = 'center'; g.textBaseline = 'middle';

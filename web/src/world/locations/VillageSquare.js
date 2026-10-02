@@ -360,17 +360,11 @@ export class VillageSquare extends Location {
     this.#openRoom(mf, C, L, { tex: 'whiteWall', repeat: [3, 1] });
     this.#sign('KÜTÜPHANE', L.x, 3.55, L.z + L.d / 2 + 0.02);
     const colors = [0x8E2B1E, 0x2F6FDB, 0x3E8E4A, 0xE0B04A, 0x6B4F3A, 0x7A3552, 0x16A085];
+    // a shelf is one box with rows of books painted on (hundreds of book meshes would cost phones their frame rate)
     const shelf = (x, z, w, rot) => {
       const g = new THREE.Group();
       g.add(mf.at(mf.box(w, 2.2, 0.45, WOOD), 0, 1.1, 0));
-      for (let r = 0; r < 4; r++) {
-        let bx = -w / 2 + 0.12;
-        for (let i = 0; bx < w / 2 - 0.15; i++) {
-          const bw = 0.08 + ((i * 7 + r * 3) % 4) * 0.025, bh = 0.32 + ((i * 5 + r) % 3) * 0.05;
-          g.add(mf.at(mf.box(bw, bh, 0.3, colors[(i + r * 2) % colors.length]), bx + bw / 2, 0.28 + r * 0.5 + bh / 2, 0.1));
-          bx += bw + 0.015;
-        }
-      }
+      g.add(mf.at(mf.box(w - 0.16, 2.0, 0.02, { tex: 'bookshelf', repeat: [Math.max(1, Math.round(w / 1.2)), 1] }), 0, 1.1, 0.23));
       g.position.set(x, 0, z); g.rotation.y = rot;
       return add(g);
     };
