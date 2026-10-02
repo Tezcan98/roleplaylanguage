@@ -5,7 +5,7 @@ import { buildPitch } from '../Pitch.js';
 const WOOD = { tex: 'darkWood' };
 const LIGHT_WOOD = { tex: 'lightWood' };
 const STONE = { tex: 'stone' };
-const HALF = 26; // the fence runs at ±26 m
+const HALF = 32; // expanded village square; the fence runs at ±32 m
 
 /** Chess board in the square: square size, centre and which way the ranks run. */
 export const CHESS = { cx: -15, cz: 15, size: 1.1 };
@@ -117,6 +117,41 @@ export class VillageSquare extends Location {
       mf.at(mf.cyl(0.06, 0.06, 1.8, WOOD, 8), 0, 1.1, 0)));
     C.addCircle(-1, 9, 1.5);
     this.hotspot('village.well', -1, 7.2, 1.8);
+
+    // open-air village coffeehouse: low walls and a pergola frame, no ceiling
+    add(mf.at(mf.box(8, 1.8, 0.3, { tex: 'plaster' }), -18, 0.9, -8));
+    add(mf.at(mf.box(8, 0.18, 4.8, { tex: 'darkWood' }), -18, 2.55, -6));
+    [-21.6, -18, -14.4].forEach((x) => {
+      add(mf.at(mf.cyl(0.14, 0.18, 3.1, WOOD, 8), x, 1.55, -3.8));
+      C.addCircle(x, -3.8, 0.28);
+    });
+    // open front, small tables and chairs
+    [[-20.2, -2.2], [-16.0, -2.2], [-18.1, -0.3]].forEach(([x, z]) => {
+      add(mf.at(mf.cyl(0.58, 0.58, 0.16, LIGHT_WOOD, 16), x, 0.8, z));
+      [[-0.72, 0], [0.72, 0]].forEach(([dx]) => add(mf.at(mf.box(0.35, 0.7, 0.35, WOOD), x + dx, 0.35, z)));
+    });
+    this.hotspot('village.coffee', -18, -1.4, 2.0);
+    this.anchor('huseyin', -20.2, -2.0, 0.2);
+    this.anchor('kemal', -16.0, -2.0, -0.2);
+    this.anchor('osman', -18.1, -0.3, Math.PI);
+    this.anchor('aliAmca', -21.2, -0.3, Math.PI / 2);
+
+    // open village library / reading room: shelves under a wide awning, open on all sides
+    add(mf.at(mf.box(8, 0.3, 0.45, { tex: 'darkWood' }), -17.5, 3.0, 13.5));
+    [[-21, 15], [-17.5, 15], [-14, 15]].forEach(([x, z]) => {
+      add(mf.at(mf.box(2.6, 2.0, 0.28, LIGHT_WOOD), x, 1.0, z));
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 5; col++) add(mf.at(mf.box(0.16, 0.75, 0.22, [0xA85A44, 0x3D6B8C, 0x6B7A45, 0x8E6A3D, 0x7A4C8A][(row + col) % 5]), x - 0.9 + col * 0.45, 0.58 + row * 0.55, z - 0.25));
+      }
+    });
+    add(mf.at(mf.box(8.8, 0.16, 0.18, LIGHT_WOOD), -17.5, 3.15, 13.5));
+    add(mf.at(mf.box(0.12, 3.0, 0.12, WOOD), -21.8, 1.5, 13.5));
+    add(mf.at(mf.box(0.12, 3.0, 0.12, WOOD), -13.2, 1.5, 13.5));
+    add(mf.at(mf.box(4.5, 0.12, 2.2, LIGHT_WOOD), -17.5, 0.85, 10.8));
+    add(mf.at(mf.box(0.18, 0.7, 0.18, WOOD), -19.4, 0.42, 10.3));
+    add(mf.at(mf.box(0.18, 0.7, 0.18, WOOD), -15.6, 0.42, 10.3));
+    this.hotspot('village.library', -17.5, 11.8, 2.2);
+    this.anchor('aslanBey', -17.5, 11.7, Math.PI);
 
     this.#teaGarden(kit, mf, C);
     this.#chessBoard(mf);
