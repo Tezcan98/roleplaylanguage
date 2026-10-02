@@ -4,6 +4,27 @@
  * Short, everyday A1–A2 Turkish: greetings, weather, family, prices, tea, backgammon, chess.
  */
 export const TALKS = {
+  coffee: [
+    [
+      { who: 'huseyin', tr: 'Dün gece ayın etrafında halka vardı.', en: 'There was a ring around the moon last night.' },
+      { who: 'kemal', tr: 'Ben gördüm. Bu, yağmurdan önce olur derler.', en: 'I saw it. They say it happens before rain.' },
+      { who: 'aliAmca', tr: 'Ben size başka bir şey söyleyeyim: eski çeşmenin altında bir oda var.', en: 'Let me tell you something else: there is a room under the old fountain.' },
+      { who: 'osman', tr: 'Ali, sen yine başladın.', en: 'Ali, you started again.' },
+      { who: 'huseyin', tr: 'Şşşt! Çocuk duyuyor.', en: 'Shh! The kid can hear us.' },
+    ],
+    [
+      { who: 'kemal', tr: 'Köy meydanındaki taşın yerini kim değiştirdi?', en: 'Who moved the stone in the village square?' },
+      { who: 'huseyin', tr: 'Ben değiştirmedim. Ama gece orada bir ışık gördüm.', en: 'I did not move it. But I saw a light there at night.' },
+      { who: 'aliAmca', tr: 'Demek siz de gördünüz.', en: 'So you saw it too.' },
+      { who: 'osman', tr: 'Çayınızı için, komplo teorisini sonra kurarsınız.', en: 'Drink your tea; you can build your conspiracy theory later.' },
+    ],
+    [
+      { who: 'huseyin', tr: 'Aslan Bey yine kitapların arasında ne arıyor?', en: 'What is Aslan Bey looking for among the books again?' },
+      { who: 'kemal', tr: 'Bilmiyorum. Ama bazı kitapların sayfaları çevrilmemiş.', en: 'I do not know. But some books have not had their pages turned.' },
+      { who: 'aliAmca', tr: 'Belki de kitapları değil, birini bekliyor.', en: 'Maybe he is not waiting for books, but for someone.' },
+      { who: 'osman', tr: 'Yeter artık, çay soğuyor.', en: 'Enough now, the tea is getting cold.' },
+    ],
+  ],
   cay: [
     [
       { who: 'huseyin', tr: 'Günaydın Kemal! Nasılsın?', en: 'Good morning Kemal! How are you?' },
