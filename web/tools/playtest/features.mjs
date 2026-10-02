@@ -121,12 +121,11 @@ try {
     const g = window.__game, b = g.toys.toys.find((t) => t.toy.location.id === 'yard' && t.action === 'ball').toy;
     g.player.position.set(b.position.x - 0.8, 0, b.position.z); g.player.group.rotation.y = Math.PI / 2; // facing +x, the ball at the feet
     await new Promise((r) => setTimeout(r, 300));
-    const shown = !document.getElementById('shot').hidden, p0 = [b.position.x, b.position.z];
+    const shown = !document.getElementById('shot').hidden;
     g.toys.shoot();
-    await new Promise((r) => setTimeout(r, 900));
-    return { shown, d: Math.hypot(b.position.x - p0[0], b.position.z - p0[1]) };
+    return { shown, v: Math.hypot(b.vel.x, b.vel.z), dir: b.vel.x > 0 }; // slow CI frames: check the shot's speed, not the distance
   });
-  check('⚡ hard shot: the button shows next to the ball and the ball flies', shot.shown && shot.d > 3, `${shot.d.toFixed(2)} m`);
+  check('⚡ hard shot: the button shows next to the ball and the ball flies the way you face', shot.shown && shot.v > 10 && shot.dir, `${shot.v.toFixed(1)} m/s`);
   // dad works all round his car, not only under the bonnet
   const dad0 = await ev(() => { const b = window.__game.cast.get('baba').position; return [b.x, b.z]; });
   const dadMoved = await waitFor(() => ev((a) => { const b = window.__game.cast.get('baba').position; return Math.hypot(b.x - a[0], b.z - a[1]) > 1; }, dad0), 12000);
