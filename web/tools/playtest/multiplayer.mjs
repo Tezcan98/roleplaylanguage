@@ -74,13 +74,18 @@ try {
   // the square's pitch has a second ball, synced on its own
   const ballsAt = (p) => p.evaluate(() => window.__game.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball').map((t) => [t.toy.position.x, t.toy.position.z]));
   await waitFor(() => A.evaluate(() => window.__game.squareFootball.balls.every((b) => !b.moving)), 8000); await sleep(500); // let the first one stop
-  const [, second0] = await ballsAt(A), first0 = (await ballsAt(A))[0];
+  const [, second0] = await ballsAt(A);
   await B.evaluate(async () => {
     const g = window.__game, b = g.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball')[1].toy.position;
     const [bx, bz] = [b.x, b.z];
     for (let i = 0; i < 30; i++) { g.player.position.set(bx, 0, bz - 1.4 + i * 0.06); await new Promise((r) => requestAnimationFrame(r)); }
   });
-  const moved2 = await waitFor(async () => { const [f, s2] = await ballsAt(A); return Math.hypot(s2[0] - second0[0], s2[1] - second0[1]) > 0.5 && Math.hypot(f[0] - first0[0], f[1] - first0[1]) < 0.3; }, 5000);
+  // both screens agree on both balls (each synced on its own) and the second one really moved
+  const moved2 = await waitFor(async () => {
+    const [a, b] = [await ballsAt(A), await ballsAt(B)];
+    const same = a.every((p, i) => Math.hypot(p[0] - b[i][0], p[1] - b[i][1]) < 0.5);
+    return same && Math.hypot(a[1][0] - second0[0], a[1][1] - second0[1]) > 0.5;
+  }, 12000, 400);
   check('square pitch: the second ball is shared on its own', !!moved2, JSON.stringify(await ballsAt(A)));
   // sitting at a tea table shows as sitting on the other screen
   await A.evaluate(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('cay3')); g.player.sit(true); });
@@ -96,6 +101,9 @@ try {
   {
     const C = await browser.newPage();
     await C.goto(`${server.url}/?nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
+    const home = await waitFor(() => C.evaluate(() => document.querySelector('.menu-where')?.textContent.includes('2 kişi') && document.querySelector('.menu-where').textContent), 45000);
+    check('menu: the square button says how many people are there', !!home, home);
+    await C.click('text=Şehir değiştir');
     const opt = await waitFor(() => C.evaluate(() => document.querySelector('.server-card[data-server="ankara"]')?.textContent.includes('👥 2') && document.querySelector('.server-card[data-server="ankara"]').textContent), 45000); // a third page next to two running games loads slowly on CI
     check('menu shows live player counts per room', !!opt, opt);
     await C.close();
@@ -121,8 +129,10 @@ try {
 
   await A.keyboard.press('e'); await waitFor(() => B.$('text=Kabul et')); await B.click('text=Kabul et');
   await waitFor(() => inCall(A));
-  await at(A, -10, 10);
-  check('walking away ends the call', !!(await waitFor(async () => !(await inCall(A)) && !(await inCall(B)))));
+  await at(A, -10, 20); await sleep(2500);
+  check('walking across the square keeps the call', (await inCall(A)) && (await inCall(B)));
+  await A.click('.callbar .danger');
+  await waitFor(async () => !(await inCall(A)) && !(await inCall(B)), 6000);
 
   await at(A, 2, 4); await at(B, 3.5, 4); await sleep(500);
   await A.keyboard.press('e'); await waitFor(() => B.$('text=Engelle')); await B.click('text=Engelle'); await sleep(800);
@@ -176,6 +186,7 @@ try {
     await C.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
     await C.waitForFunction(() => window.__game, null, { timeout: 30000 });
     await C.evaluate(() => { window.__game.settings.set('username', 'Yalnız'); window.__game.settings.set('villageIntroSeen', true); });
+    await C.click('text=Şehir değiştir');
     await C.click('.server-card[data-server="izmir"]');
     await C.click('.main-menu.open button:has-text("Meydana gir")');
     await waitFor(() => C.evaluate(() => window.__game.village.net.connected), 15000, 400);

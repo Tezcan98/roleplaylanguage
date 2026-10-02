@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 /**
  * Composition root: builds every object and wires dependencies. Nothing else in the
  * codebase calls `new` on a system — swapping an implementation happens here only.
@@ -98,6 +99,9 @@ import { WordDrill } from './systems/WordDrill.js';
 import { ChessGame } from './systems/ChessGame.js';
 import { Football } from './systems/Football.js';
 import { TalkAreas } from './systems/TalkAreas.js';
+import { Library } from './systems/Library.js';
+import { NeyMusic } from './systems/NeyMusic.js';
+import { BookReader } from './ui/BookReader.js';
 import { ChessView } from './ui/ChessView.js';
 import { AmbientTalk } from './systems/AmbientTalk.js';
 import { KAHVEHANE } from './world/locations/VillageSquare.js';
@@ -114,7 +118,7 @@ import { NpcChatClient } from './services/ai/NpcChatClient.js';
 import { CharacterSetup } from './ui/CharacterSetup.js';
 import {
   STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, TEACHER_MAN, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
-  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS, KAHVE_TALKS,
+  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS, KAHVE_TALKS, BOOKS,
 } from './content/index.js';
 
 async function loadManifest() {
@@ -342,12 +346,12 @@ const village = new VillageMultiplayer({
 // --- giant chess on the square: online the server's board (İsmail Dede runs it), offline Dede plays you ---
 const chess = new ChessGame({
   mf, square: world.get('village'), view: new ChessView(host, { modes }), net: villageNet, vocab, toasts, player, world,
-  // İsmail Dede announces the games: a bubble for everyone in the square, his voice when you are near the board
+  // İsmail Dede announces the games: a bubble for everyone in the square, his voice only for players at the board
   onSay: (line) => {
     const dede = cast.get('ismail');
     if (!dede || dede.location !== 'village' || world.current.id !== 'village') return;
     labels.bubble(dede, line, null, 5);
-    if (chess.view.isOpen || dede.position.distanceTo(player.position) < 14) tts.speak(line, { speaker: 'ismail' });
+    if (chess.view.isOpen) tts.speak(line, { speaker: 'ismail' }); // aloud only for whoever has the board open
   },
 });
 village.chess = chess;
@@ -359,16 +363,30 @@ village.onGoal = (place, side) => matches[place]?.scored(side, false);
 world.get('schoolyard').animated.push((dt) => football.update(dt));
 world.get('village').animated.push((dt) => squareFootball.update(dt));
 // the tea garden and the chess benches: villagers chat, sit down to listen in
-const talk = new TalkAreas({ host, world, player, cast, labels, tts, vocab, modes, dialogue });
-village.onSay = (c, text) => talk.heard(c, text);
+const talk = new TalkAreas({ world, player, cast, labels });
+village.ptt.onType = (text) => village.say(text); // typed instead of spoken (no speech-to-text on this device)
+// the open library: borrow a book, read it sitting on a bench
+const library = new Library({
+  books: BOOKS, state, player, choice: new ChoiceCard(host, modes), toasts, vocab, wallet, world,
+  reader: new BookReader(host, { modes, onSpeak: (t) => tts.speak(t, { speaker: 'aslanBey' }), onClose: (b, page) => library.closed(b, page), onFinish: (b) => library.finished(b) }),
+});
+effects.register('library', () => library.atShelf());
+// Ömer Baba's ney: heard as you come closer; and the ney in his hands
+const ney = new NeyMusic({ world, player, cast, dialogue, modes });
+{
+  const baba = cast.get('omerBaba');
+  if (baba) {
+    const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.03, 0.72, 8), new THREE.MeshStandardMaterial({ color: 0xB08850, roughness: 0.6 }));
+    // held at the mouth, going down to his right hand, the way a neyzen holds it
+    const geo = reed.geometry; geo.translate(0, -0.36, 0); // pivot at the mouth end
+    reed.position.set(0.05, -0.1, 0.18); reed.rotation.set(-1.0, 0, 0.45);
+    (baba.rig?.head ?? baba.group).add(reed);
+  }
+}
 chess.onMove = (m) => talk.chessMoved(m);
 effects.register('chess', () => chess.open());
 // the uncles in the kahvehane talk among themselves; come close and you hear them
-const kahveTalk = new AmbientTalk({
-  host, world, player, cast, labels, tts, modes, dialogue,
-  place: { location: 'village', x: KAHVEHANE.x, z: KAHVEHANE.z }, talks: KAHVE_TALKS,
-  title: ['Kahvehane sohbeti', gloss('Listening to the coffeehouse')],
-});
+const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { location: 'village', x: KAHVEHANE.x, z: KAHVEHANE.z }, talks: KAHVE_TALKS });
 
 // your own garden bed: planting comes later — grandpa says you are still a bit young
 effects.register('my-garden', () => {
@@ -379,6 +397,7 @@ effects.register('my-garden', () => {
 
 // --- interaction ---
 const interactions = new InteractionSystem([
+  library, // sitting with a book in hand: read it
   chess, // on the giant board: take a piece, put it down
   village, // "voice chat with X" next to another player in the square
   toys,
@@ -558,7 +577,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ ambient: [kahveTalk, talk], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, talk, ney], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -571,7 +590,7 @@ setInterval(() => coverable.forEach((c) => {
   c.setCovered(at !== 'house' || !!prayer.active);
 }), 300);
 
-// Ali comes out into the garden with you (and back in); he stays home when you go further
+// Ali sometimes comes out into the garden with you (and plays there on his own); he stays home when you go further
 {
   let goingOut = false;
   bus.on(EV.HOTSPOT, ({ id }) => { goingOut = id === 'house.door'; });
@@ -579,7 +598,7 @@ setInterval(() => coverable.forEach((c) => {
     const kid = cast.get('kardes'), out = goingOut;
     goingOut = false;
     if (!kid || gameCtx.online) return;
-    if (id === 'yard' && out && kid.location === 'house' && !time.isNight) {
+    if (id === 'yard' && out && kid.location === 'house' && !time.isNight && (params.has('kidout') || Math.random() < 0.5)) { // ?kidout: always (tests)
       cast.move('kardes', 'yard', 'houseDoor', 'follow');
       kid.position.x += 1.2; kid.position.z += 0.6;
     } else if (kid.location === 'yard' && kid.behavior.follow && id !== 'yard') {
@@ -589,7 +608,7 @@ setInterval(() => coverable.forEach((c) => {
 }
 
 // the little brother: mom tells him off for jumping on the bed; now and then he calls you over to ask what something is
-let kidScoldAt = -99, kidAskAt = 40;
+let kidScoldAt = -99, kidAskAt = 120;
 setInterval(() => {
   const kid = cast.get('kardes');
   if (!kid || kid.location !== 'house' || world.current.id !== 'house' || dialogue.talking || modes.top !== 'play') return;
@@ -600,7 +619,7 @@ setInterval(() => {
     tts.speak('Ali, yatakta zıplama!', { speaker: 'anne' });
     setTimeout(() => { labels.bubble(kid, 'Tamam anne!', null, 2.5); tts.speak('Tamam anne!', { speaker: 'kardes' }); }, 1800);
   } else if (t > kidAskAt && kid.position.distanceTo(player.position) < 4.5) {
-    kidAskAt = t + 90;
+    kidAskAt = t + 240; // not too often: he is a child, not a teacher
     const call = `${playerGender() === 'girl' ? 'Abla' : 'Abi'}, bu ne? Gel bak!`;
     labels.bubble(kid, call, null, 4);
     tts.speak(call, { speaker: 'kardes' });
@@ -608,4 +627,4 @@ setInterval(() => {
 }, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

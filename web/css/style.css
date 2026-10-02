@@ -343,16 +343,6 @@ html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
 .main-menu .card{position:relative}
 body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesson #toasts{display:none!important}
 @media (orientation:landscape) and (max-height:520px){.classroom .cls-q{font-size:17px}.classroom .cls-main{padding:8px;gap:5px}}
-/* listening to the uncles in the kahvehane (AmbientTalk) */
-.talk-panel{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 130px);width:min(520px,calc(100vw - 300px));min-width:240px;background:rgba(42,30,21,.88);color:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:8px 12px;display:none;pointer-events:none;font-size:14px}
-.talk-panel.open{display:block}
-.talk-title{display:block;font:700 15px Fredoka,sans-serif;margin-bottom:2px}
-.talk-title small{font:700 12px Nunito,var(--gloss-font,sans-serif);color:#D9C7A3}
-.talk-line{margin:4px 0 0;font-weight:800;line-height:1.3}
-.talk-line b{color:var(--gold)}
-.talk-line small{display:block;color:#D9C7A3;font-weight:700;font-size:12px;font-family:Nunito,var(--gloss-font,sans-serif)}
-body.gloss-rtl .talk-line small{direction:rtl;text-align:right}
-@media (orientation:landscape) and (max-height:520px){.talk-panel{bottom:12px;width:min(440px,calc(100vw - 340px));font-size:13px;padding:6px 10px}}
 .pill.clock:empty{display:none} /* no clock online (the story is paused) */
 /* phone held sideways: the conversation in two columns (what they say | your answers) so it fits without scrolling */
 @media (orientation:landscape) and (max-height:520px){
@@ -378,3 +368,32 @@ body.gloss-rtl .talk-line small{direction:rtl;text-align:right}
   #dlg .en{font-size:13px}
   #dlg .choice{min-height:34px;padding:3px 8px;font-size:14px}
 }
+/* main menu: one simple screen (play / square), city and settings on their own pages */
+.main-menu .card{width:min(460px,100%);text-align:center;align-items:stretch}
+.main-menu .card.menu-city{width:min(620px,100%)}
+.menu-top{display:flex;justify-content:flex-end;gap:6px;margin:-8px -8px -14px 0}
+.iconbtn.light{background:#fff;color:var(--ink);border-color:var(--wood)}
+.menu-main{width:100%;min-height:58px;font-size:21px}
+.menu-where{margin:-2px 0 0;font:700 14px Nunito,sans-serif;color:var(--muted)}
+.linkbtn{background:none;border:0;padding:4px 2px;font:800 14px Nunito,sans-serif;color:#8A5A12;text-decoration:underline;cursor:pointer}
+.menu-back{align-self:flex-start}
+.main-menu .profile-line{margin:4px 0 0}
+.main-menu .menu-settings .toggle{justify-content:center}
+@media (orientation:landscape) and (max-height:520px){.main-menu .card{width:min(460px,100%)}.main-menu .card.menu-city{width:min(680px,100%)}.menu-main{min-height:48px;font-size:19px}}
+.ptt{-webkit-touch-callout:none}
+.ptt-type{display:flex;gap:6px;pointer-events:auto;background:var(--wood);border:2px solid var(--gold);border-radius:14px;padding:6px}
+.ptt-type[hidden]{display:none}
+.ptt-input{min-height:44px;border-radius:10px;border:2px solid var(--wood);padding:0 10px;font:700 16px Nunito,sans-serif;width:min(320px,52vw);-webkit-user-select:text;user-select:text}
+.ios-steps{margin:0;padding-left:22px;text-align:left;display:flex;flex-direction:column;gap:8px;font-size:16px}
+.ios-steps small{display:block;color:var(--muted);font-weight:700}
+.hud-fs svg{display:block}
+/* reading a library book */
+.book .card{width:min(620px,100%);gap:10px}
+.book-head{display:flex;align-items:flex-start;gap:8px}
+.book-head > div{flex-grow:1}
+.book-author{margin:2px 0 0;font:700 14px Nunito,sans-serif;color:var(--muted)}
+.book-text{font:700 21px Nunito,sans-serif;line-height:1.5;margin:0}
+.book-en{font-size:15px;color:var(--muted);font-style:italic;margin:0}
+.book-nav{justify-content:space-between;align-items:center}
+.book-page{font:800 15px Nunito,sans-serif;color:var(--muted)}
+@media (orientation:landscape) and (max-height:520px){.book .card{width:min(820px,100%)}.book-text{font-size:18px}}

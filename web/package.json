@@ -16,6 +16,7 @@
     "playtest:offline": "npm run build && node tools/playtest/offline.mjs",
     "test": "npm run check && npm run playtest:smoke && npm run playtest:features && npm run playtest:multiplayer && npm run playtest:standalone && npm run playtest:offline",
     "playtest:standalone": "node tools/playtest/multiplayer.mjs --standalone",
+    "playtest:square": "node tools/playtest/square.mjs",
     "playtest:features": "node tools/playtest/features.mjs",
     "i18n": "node tools/extract-glosses.mjs",
     "playtest:turn": "TURN_PUBLIC_IP=127.0.0.1 TURN_ALLOW_PRIVATE=1 node tools/playtest/multiplayer.mjs --standalone --relayonly"

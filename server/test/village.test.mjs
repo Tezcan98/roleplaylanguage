@@ -112,7 +112,7 @@ test('positions are broadcast; public speech is filtered and rate-limited', asyn
   await a.close(); await b.close();
 });
 
-test('voice: request needs consent, signalling only between partners, distance ends the call', async () => {
+test('voice: request needs consent, signalling only between partners, only a huge distance ends the call', async () => {
   const a = await join('Can', 'call');
   const b = await join('Zehra', 'call');
   const c = await join('Mert', 'call');
@@ -138,7 +138,10 @@ test('voice: request needs consent, signalling only between partners, distance e
   await silence();
   assert.equal(b.inbox.some((m) => m.type === 'rtc'), false, 'a third player cannot inject signalling');
 
-  a.send({ type: 'state', x: 30, z: 0, rot: 0, moving: true });
+  a.send({ type: 'state', x: 30, z: 0, rot: 0, moving: true }); // across the square: the call goes on
+  await silence();
+  assert.equal(a.inbox.some((m) => m.type === 'call-end'), false, 'walking across the square keeps the call');
+  a.send({ type: 'state', x: 250, z: 0, rot: 0, moving: true });
   assert.equal((await a.next('call-end', 3000)).reason, 'far');
   assert.equal((await b.next('call-end')).reason, 'far');
 

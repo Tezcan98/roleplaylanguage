@@ -48,6 +48,9 @@ export class ServerPicker {
   }
 
   get value() { return this.#value; }
+  /** Players in a room right now (last poll). */
+  count(id = this.#value) { return this.#counts[id] ?? 0; }
+  get label() { return SERVERS.find(([id]) => id === this.#value)?.[1] ?? this.#value; }
   set value(v) { if (SERVERS.some(([id]) => id === v)) { this.#value = v; this.#render(); } }
 
   #render() {
@@ -68,6 +71,7 @@ export class ServerPicker {
     }));
     const total = Object.values(this.#counts).reduce((a, b) => a + b, 0);
     this.status.textContent = `Çevrimiçi: ${total} · ${gloss('Pick an emptier square if you want it quiet.')}`;
+    this.onUpdate?.();
   }
 
   async refresh() {

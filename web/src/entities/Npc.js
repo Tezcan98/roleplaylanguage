@@ -73,24 +73,46 @@ export class Npc extends Character {
     if (st.wait <= 0) { st.leg++; st.wait = route[st.leg % route.length].wait ?? 1 + Math.random() * 2; }
   }
 
-  /** Stay near the player: catch up when they walk off, hop about while they stand still. */
+  /**
+   * A child out in the garden with you, but free: he plays on his own (runs to a spot, hops,
+   * looks around, runs somewhere else) and only now and then comes over to you for a moment.
+   */
   #follow(dt, t, player) {
-    const dx = player.position.x - this.position.x, dz = player.position.z - this.position.z, d = Math.hypot(dx, dz);
     const st = this.roam;
-    if (d > 2.2) {
-      const step = Math.min(d - 1.8, Math.min(6, 1.5 + d) * dt);
-      this.position.x += (dx / d) * step; this.position.z += (dz / d) * step;
-      this.loc?.collision?.resolve(this.position, 0.25, [[player.position.x, player.position.z, 0.6]]);
-      this.turnTo(Math.atan2(dx, dz), 0.2);
-      this.walk(t, 1);
-      this.position.y = 0;
-      st.wait = 2 + Math.random() * 3;
-      return;
+    st.visitIn = (st.visitIn ?? 25 + Math.random() * 25) - dt;
+    if (st.visitIn < 0) { st.visit = 6 + Math.random() * 4; st.visitIn = 35 + Math.random() * 30; st.target = null; }
+    if (st.visit > 0) { st.visit -= dt; this.#goTo(player.position, 1.8, dt, t, player) || this.#idle(dt, t, player.position); return; }
+    if (!st.target) { // somewhere to play in this place
+      const b = this.loc?.collision?.bounds ?? { x: [-6, 6], z: [-6, 6] };
+      st.target = { x: b.x[0] + 1 + Math.random() * (b.x[1] - b.x[0] - 2), z: b.z[0] + 1 + Math.random() * (b.z[1] - b.z[0] - 2) };
+      st.wait = 3 + Math.random() * 4;
     }
-    this.faceTowards(player.position, 0.08);
+    if (this.#goTo(st.target, 0.4, dt, t, player)) return;
     st.wait -= dt;
-    if (st.wait < 0 && st.wait > -1.2) { this.position.y = Math.abs(Math.sin(t * 6)) * 0.3; this.behavior.jump(this.rig, t); return; } // a happy hop
-    if (st.wait <= -1.2) st.wait = 2 + Math.random() * 3;
+    this.#idle(dt, t, null);
+    if (st.wait <= 0) st.target = null;
+  }
+
+  /** Run towards `p` until `near` metres away; true while still running. */
+  #goTo(p, near, dt, t, player) {
+    const dx = p.x - this.position.x, dz = p.z - this.position.z, d = Math.hypot(dx, dz);
+    if (d <= near) return false;
+    const step = Math.min(d - near, Math.min(5, 1.5 + d) * dt);
+    const before = { x: this.position.x, z: this.position.z };
+    this.position.x += (dx / d) * step; this.position.z += (dz / d) * step;
+    this.loc?.collision?.resolve(this.position, 0.25, [[player.position.x, player.position.z, 0.6]]);
+    if (Math.hypot(this.position.x - before.x, this.position.z - before.z) < step * 0.2 && this.roam.target) this.roam.target = null; // stuck on something: play elsewhere
+    this.turnTo(Math.atan2(dx, dz), 0.2);
+    this.walk(t, 1);
+    this.position.y = 0;
+    return true;
+  }
+
+  /** Standing about: a happy hop now and then, looking at `look` if given. */
+  #idle(dt, t, look) {
+    if (look) this.faceTowards(look, 0.08);
+    const hop = Math.sin(t * 0.9 + this.position.x) > 0.93;
+    if (hop) { this.position.y = Math.abs(Math.sin(t * 6)) * 0.3; this.behavior.jump(this.rig, t); return; }
     this.position.y = 0;
     this.walk(t, 0);
   }

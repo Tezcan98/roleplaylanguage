@@ -19,11 +19,13 @@ export class GameState {
     this.taken = [];
     this.words = {};
     this.credits = START_CREDITS;
+    this.heldBook = null; // the library book in the player's hand
+    this.bookPage = {};   // book id → the page you stopped at
   }
 
   snapshot() {
-    const { day, minutes, chapter, quest, location, flags, inventory, taken, words, credits } = this;
-    return structuredClone({ v: 1, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits });
+    const { day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage } = this;
+    return structuredClone({ v: 1, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage });
   }
 
   restore(data) {

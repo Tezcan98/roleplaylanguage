@@ -6,8 +6,8 @@ import { ChessTable } from './ChessTable.js';
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 const SHIRTS = [0xE4574A, 0x2F6FDB, 0x3E8E4A, 0xE0B04A, 0x7A3552, 0x16A085, 0xD35400, 0x8E44AD];
 const MAX_PER_ROOM = 24;
-const CALL_RANGE = 4;   // metres: how close you must be to ask someone for a voice chat
-const CALL_DROP = 12;   // metres: a call ends when the two walk this far apart
+const CALL_RANGE = 6;   // metres: how close you must be to ask someone for a voice chat
+const CALL_DROP = 200;  // metres: practically never — a call ends when someone hangs up or leaves the square
 const REQUEST_TTL = 20000;
 const ROOM = /^[a-z0-9-]{1,24}$/;
 /** Only known looks get through: boy modest / strong, girl covered / open. */
@@ -18,6 +18,7 @@ const RATE = { burst: 60, perSecond: 30 }; // messages per client (10/s states +
 const MAX_BALLS = 4;                        // shared balls per room (the square's pitch has two)
 const SAY_GAP = 1200;                       // ms between two public speech bubbles
 const HEARTBEAT = 30000;                    // ms; silent connections are dropped
+const IDLE = 45000;                         // ms without any message from a page that promised a keep-alive (`ka`): its game is frozen (phone locked) — drop it
 
 
 /**
@@ -92,6 +93,7 @@ export class VillageServer {
     this.timer = setInterval(() => { this.#tickChess(); this.#broadcastStates(); this.#dropFarCalls(); }, 100);
     this.heartbeat = setInterval(() => this.wss.clients.forEach((ws) => {
       if (!ws.alive) return ws.terminate();
+      if (ws.keepalive && Date.now() - ws.lastMsg > IDLE) return ws.terminate(); // the socket answers pings, but the game stands still
       ws.alive = false;
       ws.ping();
     }), HEARTBEAT);
@@ -123,7 +125,9 @@ export class VillageServer {
     this.#perIp.set(ip, (this.#perIp.get(ip) ?? 0) + 1);
     ws.alive = true;
     ws.on('pong', () => { ws.alive = true; });
+    ws.lastMsg = Date.now();
     ws.on('message', (raw) => {
+      ws.lastMsg = Date.now();
       if (!this.#allow(client)) return;
       let msg;
       try { msg = JSON.parse(raw); } catch { return; }
@@ -162,6 +166,7 @@ export class VillageServer {
     const members = this.#room(c.room);
     switch (msg.type) {
       case 'state':
+        if (msg.ka) c.ws.keepalive = true; // this page sends its state at least every 10 s
         if ([msg.x, msg.z, msg.rot].every(Number.isFinite)) Object.assign(c, { x: msg.x, z: msg.z, rot: msg.rot, moving: !!msg.moving, sit: !!msg.sit, dirty: true });
         break;
       case 'talk':

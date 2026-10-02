@@ -10,6 +10,8 @@ const HALF = 34; // the fence runs at ±34 m
 /** Open-air coffeehouse (north-east) and open library (north-west): walls, no roof. */
 export const KAHVEHANE = { x: 22, z: -24, w: 12, d: 9 };
 export const LIBRARY = { x: -22, z: -24, w: 12, d: 9 };
+/** Ömer Baba's open pavilion, where he plays the ney. */
+export const MUSIKI = { x: 0, z: -22, r: 3.4 };
 
 /** Chess board in the square: square size, centre and which way the ranks run. */
 export const CHESS = { cx: -15, cz: 15, size: 1.1 };
@@ -33,6 +35,14 @@ export const TEA_SEATS = TEA_TABLES.length * 2 - 2;
 /** Benches to watch the chess from: [x, z, facing], two seats each (north: Dede's score board, east: his own bench). */
 const CHESS_BENCHES = [[-17.5, 21.4, Math.PI], [-12.5, 21.4, Math.PI], [-21.4, 13, Math.PI / 2], [-21.4, 17, Math.PI / 2]];
 export const CHESS_SEATS = CHESS_BENCHES.length * 2;
+
+/** Benches round the square: [x, z, facing, seat kept for a story character]. */
+const SQUARE_BENCHES = [
+  [-5.8, 5, Math.PI, 'benchWest'], [5.8, 5, Math.PI, 'benchEast'], // facing the fountain
+  [-25.5, -16.6, Math.PI], [-18.5, -16.6, Math.PI], // in front of the library
+  [-18, -4, Math.PI / 2], [-18, 4, Math.PI / 2], // west side, facing the fountain
+];
+export const BENCH_SEATS = 10;
 
 /** Places where people sit and talk; sitting in one lets you listen in (TalkAreas). */
 export const TALK_SPOTS = {
@@ -105,17 +115,11 @@ export class VillageSquare extends Location {
     C.addBox(-2.2, 2.2, -10.0, -8.4);
     this.anchor('manav', 0, -7.8, 0);
 
-    // benches facing the fountain
-    [-5.8, 5.8].forEach((x) => {
-      add(mf.at(mf.box(3.8, 0.25, 0.8, LIGHT_WOOD), x, 0.85, 5));
-      [-1.5, 1.5].forEach((dx) => add(mf.at(mf.box(0.12, 0.8, 0.12, WOOD), x + dx, 0.4, 5)));
-      C.addBox(x - 1.9, x + 1.9, 4.6, 5.4);
-    });
-    this.anchor('benchWest', -5.8, 4.2, 0);
-    this.anchor('benchEast', 5.8, 4.2, Math.PI);
+    // benches to sit on (two seats each): by the fountain (Elif and Can keep one seat each in the
+    // story), in front of the library (read a borrowed book there) and on the west side
+    let seat = 0;
+    SQUARE_BENCHES.forEach(([x, z, rot, keep]) => this.#bench(mf, C, x, z, rot, keep ? [keep, `bench${++seat}`] : [`bench${++seat}`, `bench${++seat}`], 'bench'));
     this.anchor('zehra', 2.8, 3.6, -0.6); // friends hang out by the fountain
-    this.hotspot('village.benchWest', -5.8, 6.15, 1.8);
-    this.hotspot('village.benchEast', 5.8, 6.15, 1.8);
 
     // well
     this.prop(kit, 'prop.well', -1, 0, 9, 0, () => mf.group(
@@ -132,6 +136,7 @@ export class VillageSquare extends Location {
     this.#chessBenches(mf, C);
     this.#kahvehane(mf, C);
     this.#library(mf, C);
+    this.#musiki(mf, C);
 
     this.writeScore = buildPitch(this, mf, { ...SQUARE_PITCH, board: { x: (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, z: 13.3, rot: Math.PI } });
     add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.02))
@@ -277,23 +282,48 @@ export class VillageSquare extends Location {
   /** Low benches round the chess board, facing it: sit down to watch (and listen in). */
   #chessBenches(mf, C) {
     let seat = 0;
-    CHESS_BENCHES.forEach(([x, z, rot]) => {
-      const g = mf.group(
-        mf.at(mf.box(2.4, 0.08, 0.5, LIGHT_WOOD), 0, 0.44, 0),
-        mf.at(mf.box(2.4, 0.4, 0.06, LIGHT_WOOD), 0, 0.78, -0.24),
-        ...[-1, 1].map((sx) => mf.at(mf.box(0.08, 0.44, 0.44, WOOD), sx * 1.05, 0.22, 0)),
-      );
-      g.position.set(x, 0, z); g.rotation.y = rot;
-      this.add(g);
-      const along = { x: Math.cos(rot), z: -Math.sin(rot) }, front = { x: Math.sin(rot), z: Math.cos(rot) };
-      const hw = Math.abs(along.x) * 1.2 + Math.abs(along.z) * 0.25, hd = Math.abs(along.z) * 1.2 + Math.abs(along.x) * 0.25;
-      C.addBox(x - hw, x + hw, z - hd, z + hd);
-      [-0.6, 0.6].forEach((o) => {
-        const sx = x + along.x * o, sz = z + along.z * o;
-        const id = `chessBench${++seat}`;
-        this.anchor(id, sx, sz, rot);
-        this.hotspot(`village.${id}`, sx + front.x * 0.75, sz + front.z * 0.75, 0.6);
-      });
+    CHESS_BENCHES.forEach(([x, z, rot]) => this.#bench(mf, C, x, z, rot, [`chessBench${++seat}`, `chessBench${++seat}`]));
+  }
+
+  /** A low wooden bench facing `rot`, two seats: each seat id gets an anchor; player seats (`seatPrefix…`) also a hotspot in front. */
+  #bench(mf, C, x, z, rot, seats) {
+    const g = mf.group(
+      mf.at(mf.box(2.4, 0.08, 0.5, LIGHT_WOOD), 0, 0.44, 0),
+      mf.at(mf.box(2.4, 0.4, 0.06, LIGHT_WOOD), 0, 0.78, -0.24),
+      ...[-1, 1].map((sx) => mf.at(mf.box(0.08, 0.44, 0.44, WOOD), sx * 1.05, 0.22, 0)),
+    );
+    g.position.set(x, 0, z); g.rotation.y = rot;
+    this.add(g);
+    const along = { x: Math.cos(rot), z: -Math.sin(rot) }, front = { x: Math.sin(rot), z: Math.cos(rot) };
+    const hw = Math.abs(along.x) * 1.2 + Math.abs(along.z) * 0.25, hd = Math.abs(along.z) * 1.2 + Math.abs(along.x) * 0.25;
+    C.addBox(x - hw, x + hw, z - hd, z + hd);
+    [-0.6, 0.6].forEach((o, i) => {
+      const sx = x + along.x * o, sz = z + along.z * o, id = seats[i];
+      this.anchor(id, sx, sz, rot);
+      if (/^(chessBench|bench)\d/.test(id)) this.hotspot(`village.${id}`, sx + front.x * 0.75, sz + front.z * 0.75, 0.6);
+    });
+  }
+
+  /** An open wooden pavilion (no roof: seen from above), a carpet, Ömer Baba's cushion and four for listeners. */
+  #musiki(mf, C) {
+    const M = MUSIKI, add = (m) => this.add(m);
+    add(mf.at(mf.cyl(M.r, M.r, 0.06, LIGHT_WOOD, 8), M.x, 0.03, M.z));
+    add(mf.at(mf.cyl(M.r - 0.6, M.r - 0.6, 0.02, 0x8E2B1E, 8), M.x, 0.07, M.z)); // carpet
+    add(mf.at(mf.cyl(M.r - 0.9, M.r - 0.9, 0.022, 0xC8A15B, 8), M.x, 0.075, M.z));
+    for (let i = 0; i < 8; i++) {
+      const a = (i + 0.5) * Math.PI / 4, x = M.x + Math.sin(a) * (M.r - 0.15), z = M.z + Math.cos(a) * (M.r - 0.15);
+      if (i === 0 || i === 7) continue; // the way in, from the fountain (south)
+      add(mf.at(mf.box(0.14, 2.6, 0.14, WOOD), x, 1.3, z)); C.addCircle(x, z, 0.12);
+    }
+    const ring = mf.torus(M.r - 0.15, 0.07, WOOD, 8); ring.rotation.x = Math.PI / 2; ring.rotation.z = Math.PI / 8; ring.position.set(M.x, 2.6, M.z); add(ring);
+    // Ömer Baba's cushion at the back, facing the square
+    add(mf.at(mf.box(0.9, 0.12, 0.9, 0x2E5E4E), M.x, 0.12, M.z - 1.2));
+    this.anchor('omerBaba', M.x, M.z - 1.2, 0);
+    [[-1.4, 0.4], [-0.5, 1.2], [0.5, 1.2], [1.4, 0.4]].forEach(([dx, dz], i) => {
+      const x = M.x + dx, z = M.z + dz, rot = Math.atan2(-dx, -1.2 - dz); // facing him
+      add(mf.at(mf.box(0.6, 0.14, 0.6, [0x8E2B1E, 0x2F6FDB, 0x3E8E4A, 0xE0B04A][i]), x, 0.13, z));
+      this.anchor(`minder${i + 1}`, x, z, rot);
+      this.hotspot(`village.minder${i + 1}`, x + Math.sin(rot) * -0.6, z + Math.cos(rot) * -0.6, 0.6);
     });
   }
 

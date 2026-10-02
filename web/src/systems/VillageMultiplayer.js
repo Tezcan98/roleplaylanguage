@@ -1,7 +1,9 @@
 import { EV } from '../core/events.js';
 
 const SEND_EVERY = 0.1; // seconds
-const ASK_RANGE = 2.5;  // metres: "voice chat with X" appears this close
+const KEEPALIVE = 10;   // seconds: my state goes out at least this often, even standing still (the server drops frozen pages)
+const AWAY_AFTER = 20000; // ms in the background before leaving the square
+const ASK_RANGE = 4;    // metres: "voice chat with X" appears this close
 
 const DECLINE_TEXT = {
   declined: ['isteğini reddetti', 'declined'],
@@ -19,8 +21,10 @@ const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı t
 export class VillageMultiplayer {
   #since = 0;
   #last = '';
-  #warnedStt = false;
   #retryTimer = null;
+  #talkTimer = null;
+  #awayTimer = null;
+  #sentAt = 0; // when my state last went out (wall clock: slow phones have few frames)
   #retryDelay = 0;
   #rolling = new Set(); // balls we kicked last: report where they stop, for players who join later
 
@@ -36,7 +40,14 @@ export class VillageMultiplayer {
     this.chosenRoom = false; // true when the player picked the square on the main menu
     // phones drop the connection when the screen locks or the app goes to the background:
     // come back → reconnect, and keep retrying (with back-off) while still in the square
-    document.addEventListener('visibilitychange', () => { if (!document.hidden && this.#inSquare() && !this.net.connected) this.join(); });
+    // In the background for a while → leave the square (the others don't see a statue); a chess seat
+    // waits 45 s for us by name. The page also sends its state every 10 s, so a frozen page that the
+    // server still hears pinging is dropped there too.
+    document.addEventListener('visibilitychange', () => {
+      clearTimeout(this.#awayTimer);
+      if (document.hidden) { this.#awayTimer = setTimeout(() => { if (document.hidden && this.net.connected && !this.voice.inCall) this.leave(); }, AWAY_AFTER); return; } // a voice call keeps going
+      if (this.#inSquare() && !this.net.connected) this.join();
+    });
     bus.on(EV.LOCATION, ({ id }) => {
       if (!this.places[id]) { this.leave(); return; }
       if (this.joinedAt && this.joinedAt !== id) this.leave(); // square ↔ schoolyard: another room
@@ -54,7 +65,7 @@ export class VillageMultiplayer {
     net.on('ball', (b) => this.balls[b.n ?? 0]?.setState(b)); // someone else kicked a shared ball
     net.on('goal', ({ side }) => this.onGoal?.(this.joinedAt, side, false)); // someone scored in a match
     net.on('chess', (st) => { if (this.joinedAt === 'village') this.chess?.applyServer(st); }); // the square's giant chess board
-    net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) { this.labels.bubble(c, text, null, 6); this.onSay?.(c, text); } });
+    net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
     net.on('call-request', async ({ from, name }) => {
       if (this.isBlocked(from, name)) { this.net.send({ type: 'call-answer', to: from, accept: false }); return; }
       const answer = await this.calls.ask(name);
@@ -69,7 +80,7 @@ export class VillageMultiplayer {
     net.on('call-end', ({ reason }) => this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup));
     net.on('disconnected', () => {
       this.#reset();
-      if (!this.#inSquare()) return;
+      if (!this.#inSquare() || document.hidden) return; // in the background: we come back when the page does
       this.toasts.show('Bağlantı koptu, yeniden bağlanılıyor…', 'Disconnected — reconnecting…');
       this.#retryLater();
     });
@@ -178,6 +189,7 @@ export class VillageMultiplayer {
       const room = `${this.settings.get('serverRegion', 'ankara')}${this.places[here].suffix}`;
       const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''));
       this.joinedAt = here;
+      this.#last = null; // tell the others where I am right away (not the spawn point)
       welcome.peers.forEach((p) => this.remotes.add(this.#loc(), p));
       (welcome.balls ?? [welcome.ball]).forEach((b, i) => b && this.balls[i]?.setState(b));
       if (welcome.chess && here === 'village') this.chess?.applyServer(welcome.chess);
@@ -223,20 +235,32 @@ export class VillageMultiplayer {
 
   /** Public push-to-talk: speech becomes a text bubble for everyone (no open voice). */
   talk(on) {
-    if (!this.net.connected) return;
-    this.net.send({ type: 'talk', on });
-    this.player.voice = on;
-    if (!this.recognizer?.supported) {
-      if (on && !this.#warnedStt) { this.#warnedStt = true; this.toasts.show('Bu cihazda konuşma yazıya çevrilemiyor', 'Speech-to-text is not available on this device'); }
+    if (!this.net.connected) { if (on) { this.ptt.set(false); this.toasts.show('Meydana bağlı değilsin', 'Not connected to the square'); } return; }
+    if (!this.recognizer?.supported) { // no speech-to-text in this browser: type it
+      if (on) { this.ptt.set(false); this.ptt.typeInstead(); }
       return;
     }
-    if (on) {
-      this.recognizer.listen({ expected: ['Merhaba! Nasılsın?'] }).then(({ transcript }) => {
-        if (!transcript) return;
-        this.net.send({ type: 'say', text: transcript });
-        this.labels.bubble(this.player, transcript, null, 6);
-      }).catch(() => {});
-    } else this.recognizer.stop?.();
+    this.net.send({ type: 'talk', on });
+    this.player.voice = on;
+    if (!on) { this.recognizer.stop?.(); return; }
+    clearTimeout(this.#talkTimer);
+    this.#talkTimer = setTimeout(() => this.ptt.set(false), 8000); // tapped and forgot: stop after 8 s
+    this.recognizer.listen({ expected: ['Merhaba! Nasılsın?'] }).then(({ transcript }) => {
+      if (!transcript) { this.toasts.show('Seni duyamadım, bir daha dene', "Didn't catch that — try again"); return; }
+      this.say(transcript);
+    }).catch((e) => {
+      const msg = String(e?.message ?? e);
+      if (/not-allowed|service-not-allowed|Permission/i.test(msg)) this.toasts.show('Mikrofon izni yok', 'Allow the microphone for this site in the browser settings');
+      else if (/no-speech/.test(msg)) this.toasts.show('Seni duyamadım, bir daha dene', "Didn't catch that — try again");
+      else if (!/aborted/.test(msg)) { this.toasts.show('Konuşma yazıya çevrilemedi, yazarak gönder', 'Speech-to-text failed — type it instead'); this.ptt.typeInstead(); }
+    }).finally(() => { clearTimeout(this.#talkTimer); this.ptt.set(false); this.player.voice = false; this.net.send({ type: 'talk', on: false }); });
+  }
+
+  /** A sentence for everyone here (spoken and turned into text, or typed). */
+  say(text) {
+    if (!this.net.connected || !text) return;
+    this.net.send({ type: 'say', text });
+    this.labels.bubble(this.player, text, null, 6);
   }
 
   // --- one-to-one voice ---------------------------------------------------------------
@@ -300,8 +324,10 @@ export class VillageMultiplayer {
     const P = this.player.position;
     const s = { x: +P.x.toFixed(2), z: +P.z.toFixed(2), rot: +this.player.group.rotation.y.toFixed(2), moving: !!this.player.moving, sit: !!this.player.seated };
     const key = JSON.stringify(s);
-    if (key === this.#last) return;
+    const now = performance.now();
+    if (key === this.#last && now - this.#sentAt < KEEPALIVE * 1000) return;
     this.#last = key;
-    this.net.send({ type: 'state', ...s });
+    this.#sentAt = now;
+    this.net.send({ type: 'state', ...s, ka: 1 });
   }
 }
