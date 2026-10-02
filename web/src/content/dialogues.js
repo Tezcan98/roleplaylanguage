@@ -184,7 +184,7 @@ export const DIALOGUES = {
       hw2: { say: 'Aferin sana! Çok çalışkansın. Bir ricam var: bakkaldan bir ekmek ve bir süt alır mısın? Al, otuz lira.', en: "Well done! You're so hard-working. I have a favour to ask: will you buy a bread and a milk at the grocer? Here, thirty lira.",
         words: [['rica', 'favour / request'], ['bakkal', 'grocer'], ['otuz', 'thirty'], ['para', 'money']],
         options: [{ tr: 'Tamam anne, hemen giderim!', en: "Okay mom, I'll go right away!", do: ['give:para:30', 'quest', 'credits:2'] }] },
-      shRemind: { say: 'Bakkal köy meydanında. Avludan doğuya, sağa doğru yürü. Ekmek ve süt, unutma!', en: "The grocer is in the village square. Walk east from the yard, to the right. Bread and milk, don't forget!",
+      shRemind: { say: 'Bakkal köy meydanında. Bahçe kapısından çık, meydana git. Ekmek ve süt, unutma!', en: "The grocer is in the village square. Go out of the garden gate to the square. Bread and milk, don't forget!",
         words: [['doğu', 'east'], ['sağ', 'right']], options: [{ tr: 'Unutmam!', en: "I won't forget!" }] },
       shBack: { say: 'Ekmeği ve sütü aldın mı? Aferin! Paranın üstü ne kadar?', en: 'Did you get the bread and milk? Great! How much change is there?', hint: '30 − 25 = 5',
         options: [

@@ -279,6 +279,16 @@ try {
   check('after the lesson the classroom door opens to talk to the teacher', doorLabel.includes('Sınıfa gir'), doorLabel);
   await page.keyboard.press('e');
   check('…and leads into the classroom', !!(await waitFor(() => ev(() => window.__game.world.current.id === 'classroom'), 6000)));
+
+  // --- a phone held sideways (with the browser bar): a conversation fits without scrolling ---
+  await page.setViewportSize({ width: 740, height: 300 }); await sleep(400);
+  const fits = [];
+  for (const who of ['anne', 'nine', 'kardes']) {
+    await ev((w) => { const g = window.__game; g.dialogue.close?.(); g.travel.place('house', 'start', { force: true }); g.dialogue.open(w); }, who); await sleep(700);
+    fits.push(await ev(() => { const d = document.getElementById('dlg'), sh = d.querySelector('.sheet'); return sh.scrollHeight - sh.clientHeight <= 2 && d.getBoundingClientRect().top >= 0; }));
+  }
+  check('phone sideways: the conversation fits on screen, no scrolling', fits.every(Boolean), JSON.stringify(fits));
+  await page.setViewportSize({ width: 1100, height: 700 });
 } catch (e) {
   failed = true;
   log('FAIL ', e.stack ?? e.message);
