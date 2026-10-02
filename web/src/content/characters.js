@@ -8,6 +8,31 @@ export const VOICES = {
   // women and girls speak with the female Turkish voice (dfki); men with fahrettin / fettah
   default: { id: 'tr_TR-fahrettin-medium', pitch: 1 },
   ahmet: { id: 'tr_TR-fettah-medium', pitch: 1.18 },
+  huseyin: {
+    name: 'Hüseyin Amca', short: 'Hüseyin Amca', role: 'kahvehane müdavimi · regular',
+    look: { shirt: 0x6B7A45, pants: 0x555B66, skin: 0xE9B98F, hair: 0xC9CED6, mustache: 0x4A352A, cap: 0x3B3F46, scale: 0.98 },
+    face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#D8C49A"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M15 28q17-12 34 0v-5q-17-10-34 0z" fill="#3B3F46"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M23 43q9-6 18 0q-9 4-18 0z" fill="#4A352A"/></svg>',
+  },
+  kemal: {
+    name: 'Kemal Amca', short: 'Kemal Amca', role: 'kahvehane müdavimi · regular',
+    look: { shirt: 0x9B59B6, vest: 0x34495E, pants: 0x4B4F58, skin: 0xC98E68, hair: 0x3A2A22, mustache: 0x3A2A22, scale: 0.98 },
+    face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#C7D9E8"/><circle cx="32" cy="36" r="16" fill="#C98E68"/><path d="M16 31q3-13 16-13t16 13q-5-5-16-5t-16 5z" fill="#3A2A22"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M24 43q8-6 16 0q-8 3-16 0z" fill="#3A2A22"/></svg>',
+  },
+  osman: {
+    name: 'Osman Amca', short: 'Osman Amca', role: 'kahveci · coffeehouse keeper',
+    look: { shirt: 0xD08A42, pants: 0x3E536B, skin: 0xF0C09A, hair: 0x2E2926, mustache: 0x382A22, apron: true, scale: 0.98 },
+    face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#F0D2A6"/><circle cx="32" cy="36" r="16" fill="#F0C09A"/><path d="M16 30q4-13 16-13t16 13q-5-4-16-4t-16 4z" fill="#2E2926"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M24 43q8-5 16 0q-8 3-16 0z" fill="#382A22"/></svg>',
+  },
+  aliAmca: {
+    name: 'Ali Amca', short: 'Ali Amca', role: 'kahvehane müdavimi · regular',
+    look: { shirt: 0x34495E, pants: 0x555B66, skin: 0xE9B98F, hair: 0x5A4638, mustache: 0x4A352A, scale: 0.98 },
+    face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#E8D6A8"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M16 31q3-13 16-13t16 13q-5-5-16-5t-16 5z" fill="#5A4638"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M24 43q8-5 16 0q-8 3-16 0z" fill="#4A352A"/></svg>',
+  },
+  aslanBey: {
+    name: 'Aslan Bey', short: 'Aslan Bey', role: 'kütüphaneci · librarian',
+    look: { shirt: 0x2F4050, vest: 0x6B4F3A, pants: 0x2A2F3A, skin: 0xE9B98F, hair: 0x222222, mustache: 0x222222, glasses: true, scale: 1.0 },
+    face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#B7C9D6"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M15 31q2-15 17-15t17 15q-6-6-17-6t-17 6z" fill="#222"/><circle cx="26" cy="36" r="4.5" fill="none" stroke="#1B2440" stroke-width="1.8"/><circle cx="38" cy="36" r="4.5" fill="none" stroke="#1B2440" stroke-width="1.8"/><path d="M30.5 36h3" stroke="#1B2440" stroke-width="1.8"/><path d="M24 43q8-5 16 0q-8 3-16 0z" fill="#222"/></svg>',
+  },
   anne: { id: 'tr_TR-dfki-medium', pitch: 1.0 },
   baba: { id: 'tr_TR-fahrettin-medium', pitch: 0.98 },
   dede: { id: 'tr_TR-fahrettin-medium', pitch: 0.88 },
