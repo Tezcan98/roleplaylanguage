@@ -283,8 +283,8 @@ effects.register('free', (id) => free.perform(id));
 const toys = new ToySystem({ world, player, free, tts });
 const yard = world.get('yard');
 // balls are kicked by running into them; the square's two (on its pitch) and the school's are shared online
-toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true });
-const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) });
+toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true, learnOnKick: false });
+const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, learnOnKick: false, onKick: (b) => village.ballKicked(b) });
 const villageBalls = [{ x: 13.5, z: SQUARE_PITCH.cz }, { x: 10, z: SQUARE_PITCH.cz - 2 }]
   .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) }));
 toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
@@ -356,7 +356,12 @@ const interactions = new InteractionSystem([
   new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts, effects, bus, ctx: gameCtx }),
 ], modes);
 const actionButton = new ActionButton(host, () => interactions.trigger());
-input.onKey((e) => { if (modes.is('play') && ['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); interactions.trigger(); } });
+input.onKey((e) => {
+  if (!modes.is('play')) return;
+  if (['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); interactions.trigger(); return; }
+  if (e.key.toLowerCase() === 'c') { e.preventDefault(); camera.cycleView(); return; }
+  if (e.key === 'Shift') { e.preventDefault(); toys.kickHard(); }
+});
 const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, player });
 
 // word notebook with "practice" (a quick quiz over the learned words)
@@ -366,6 +371,8 @@ const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en
 const hud = new Hud(host, {
   onBookOpen: () => textbook.open(),
   onBook: () => openWords(),
+  onCamera: () => camera.cycleView(),
+  onHardKick: () => { if (!toys.kickHard()) toasts.show('Topa yaklaş!', 'Move closer to the ball'); },
   onBag: () => list.open('Çanta', inventory.entries().map(([kind, n]) => {
     const i = items.info(kind);
     return n > 1 ? [`${n} ${i.tr}`, `${n} ${gloss(i.en)}`] : [i.tr, gloss(i.en)];
@@ -494,7 +501,7 @@ effects.register('street', async () => {
   const match = { label: '⚽ Okul bahçesinde maç yap', en: 'Play football in the schoolyard', value: 'match' };
   const toSquare = gameCtx.targetNpcLoc === 'village' || story.target()?.hotspot?.startsWith('village.');
   const pick = await streetChoice.pick({ title: 'Nereye gidiyorsun?', en: 'Where are you going?', options: toSquare ? [square, school, match] : [school, square, match] });
-  if (pick === 'school') effects.run(['chapter']);
+  if (pick === 'school') travel.go('schoolyard', 'gate', () => effects.run(['chapter']));
   else if (pick === 'practice') schoolPractice();
   else if (pick === 'square') travel.go('village', 'yardRoad');
   else if (pick === 'match') travel.go('schoolyard', 'gate');
