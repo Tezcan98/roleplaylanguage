@@ -8,7 +8,9 @@ After=network.target
 [Service]
 WorkingDirectory=/opt/yilmaz/server
 ExecStart=/usr/bin/env node src/index.mjs
-Environment=PORT=8090 HOST=127.0.0.1 TRUST_PROXY=1 MAX_PER_IP=8
+Environment=PORT=8090 HOST=127.0.0.1 TRUST_PROXY=1 MAX_PER_IP=8 CHESS_SCORES=/var/lib/yilmaz-village/chess-scores.json
+# İsmail Dede's chess score board survives restarts here
+StateDirectory=yilmaz-village
 Restart=always
 RestartSec=3
 User=www-data

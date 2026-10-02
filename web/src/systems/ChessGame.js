@@ -5,108 +5,200 @@ import { chessSquare, CHESS } from '../world/locations/VillageSquare.js';
 /** Turkish piece names (taught while playing). */
 export const PIECE_WORDS = { k: ['şah', 'king'], q: ['vezir', 'queen'], r: ['kale', 'rook'], b: ['fil', 'bishop'], n: ['at', 'knight'], p: ['piyon', 'pawn'] };
 
+const CLOCK = 5 * 60_000; // offline: the same five minutes as on the server
+const PAUSE = 6000;       // offline: the result stays on the board this long
+const DEDE = { id: 'dede', name: 'İsmail Dede', ai: true };
+const COLOR = { w: 'beyaz', b: 'siyah' };
+
+/** Dede's offline move: mate if he can, otherwise captures and checks first. */
+function dedeMove(g) {
+  const score = (m) => (m.san.includes('#') ? 100 : 0) + (m.captured ? { q: 9, r: 5, b: 3, n: 3, p: 1 }[m.captured] * 3 : 0) + (m.san.includes('+') ? 2 : 0) + Math.random() * 2;
+  return g.moves({ verbose: true }).sort((a, b) => score(b) - score(a))[0];
+}
+
 /**
- * The giant chess board on the village square. Online, the village server owns the game
- * (two seats, everyone in the square sees the pieces move); offline you play white against
- * a simple computer. Two ways to play:
- *  - on the square itself: step next to a piece and press the action key — the first one to
- *    touch a colour plays it; on your turn you take the piece, carry it to a lit square and
- *    put it down there (only moves the piece is allowed). Walking off the board warns you,
- *    then gives your seat up;
- *  - on the 2D board on screen (the "Satranç oyna" spot).
- * The 3D pieces follow every move, so people walking by can watch.
+ * The giant chess board on the village square, run by İsmail Dede. Online the village
+ * server owns the table (server/src/ChessTable.js): you ask Dede for a colour, he seats
+ * the players and starts the game when both colours are there, keeps the clocks and the
+ * score board, and plays you himself when the board is free. Offline nobody else is
+ * around, so Dede plays the other colour. Two ways to move: on the 2D board on screen, or
+ * on the square itself — on your turn step next to your piece, take it (action key), carry
+ * it to a lit square and put it down. Touching a piece while not seated asks Dede for that
+ * colour. Walking away never costs you your seat. The 3D pieces follow every move, so
+ * people walking by can watch. Dede announces what happens
+ * (`onSay`) and the score board behind the board is kept up to date.
  */
 export class ChessGame {
   #meshes = [];
+  #anim = null;
+  #local = null;
+  #timer = null;
   #bySquare = new Map();
   #fen = null;
-  #anim = null;
-  #carry = null;  // { from, mesh, legal }
-  #warned = false;
-  #walking = false; // seated and has stepped on the board (playing on foot, not on the 2D screen)
+  #carry = null;  // the piece in my hands: { from, mesh, legal }
   #lights = [];
 
-  constructor({ mf, square, view, net, vocab, toasts, player, world }) {
-    Object.assign(this, { mf, square, view, net, vocab, toasts, player, world });
+  constructor({ mf, square, view, net, vocab, toasts, player, world, onSay = () => {} }) {
+    Object.assign(this, { mf, square, view, net, vocab, toasts, player, world, onSay });
     this.online = false;
     this.state = null;
-    this.local = new Chess();
-    square.animated.push((dt) => { this.#animate(dt); this.#onBoard(); });
-    this.#render3D(this.local.fen(), null);
+    this.#resetLocal();
+    square.animated.push((dt) => { this.#animate(dt); this.#follow(); });
+    this.#apply(this.#localState(), true);
   }
 
-  get myId() { return this.net?.id ?? 'me'; }
-  get game() { return this.online && this.state ? new Chess(this.state.fen) : this.local; }
-  /** My colour: online the seat I took, offline always white. */
+  get myId() { return this.online ? this.net?.id : 'me'; }
+  /** My colour while seated (online: the seat Dede gave me). */
   get myColor() {
-    if (!this.online) return 'w';
     const s = this.state?.seats ?? {};
     return s.w?.id === this.myId ? 'w' : s.b?.id === this.myId ? 'b' : null;
   }
+  get game() { return new Chess(this.state.fen); }
 
-  /** The server's board (welcome, after every change). */
-  applyServer(state) {
-    const before = this.state?.fen;
+  // --- online ---------------------------------------------------------------------
+
+  /** The server's board (welcome, after every change). Old servers (no `v`) still work. */
+  applyServer(st) {
     this.online = true;
-    this.state = state;
-    if (state.fen !== before) this.#render3D(state.fen, state.last);
-    if (this.view.isOpen) this.#show();
+    if (!st.v) st = { ...st, phase: st.over ? 'over' : st.seats?.w && st.seats?.b ? 'playing' : st.seats?.w || st.seats?.b ? 'waiting' : 'idle', queue: [], clocks: null, scores: [], legacy: true };
+    this.#apply(st);
   }
 
-  /** Left the square / lost the connection: back to a local game against the computer. */
+  /** Left the square / lost the connection: back to the board with Dede alone. */
   goOffline() {
+    if (!this.online) return;
     this.online = false;
-    this.state = null;
-    this.#render3D(this.local.fen(), null);
-    if (this.view.isOpen) this.#show();
+    this.#resetLocal();
+    this.#apply(this.#localState(), true);
+  }
+
+  // --- actions (from the on-screen board) ----------------------------------------
+
+  ask(color) {
+    if (this.online) { this.net.send({ type: this.state.legacy ? 'chess-sit' : 'chess-ask', color }); return; }
+    // nobody else here: Dede takes the other colour
+    this.#localStart(color);
+  }
+  playDede(color = 'w') { if (this.online) this.net.send({ type: 'chess-dede', color }); else this.#localStart(color); }
+  leave() { if (this.online) this.net.send({ type: this.state.legacy ? 'chess-stand' : 'chess-leave' }); }
+  resign() {
+    if (this.online) { this.net.send({ type: 'chess-resign' }); return; }
+    if (this.#local.phase === 'playing') this.#localFinish(this.#local.mine === 'w' ? 'b' : 'w', 'resign');
   }
 
   open() {
     Object.values(PIECE_WORDS).forEach(([tr, en]) => this.vocab.learn(tr, en));
     this.view.open({
       onMove: (from, to) => this.#move(from, to),
-      onSit: (color) => this.net.send({ type: 'chess-sit', color }),
-      onStand: () => this.net.send({ type: 'chess-stand' }),
-      onNew: () => (this.online ? this.net.send({ type: 'chess-new' }) : this.#newLocal()),
+      onAsk: (c) => this.ask(c),
+      onDede: (c) => this.playDede(c),
+      onLeave: () => this.leave(),
+      onResign: () => this.resign(),
     });
     this.#show();
   }
 
-  #show() {
-    const g = this.game;
-    const s = this.online ? this.state : { seats: { w: { id: 'me', name: 'Sen' }, b: { id: 'cpu', name: 'Bilgisayar' } }, last: null };
-    this.view.render({
-      game: g, online: this.online, myColor: this.myColor, seats: s.seats, last: s.last ?? this.localLast ?? null,
-      over: g.isCheckmate() ? 'checkmate' : g.isDraw() ? 'draw' : null,
-    });
-  }
+  #show() { if (this.view.isOpen) this.view.render({ ...this.state, online: this.online, myId: this.myId, myColor: this.myColor }); }
 
   #move(from, to) {
     const g = this.game;
-    if (g.turn() !== this.myColor) return;
-    const legal = g.moves({ square: from, verbose: true }).find((m) => m.to === to);
-    if (!legal) return;
+    if (this.state.phase !== 'playing' || g.turn() !== this.myColor) return;
+    if (!g.moves({ square: from, verbose: true }).some((m) => m.to === to)) return;
     if (this.online) { this.net.send({ type: 'chess-move', from, to, promotion: 'q' }); return; }
-    const m = this.local.move({ from, to, promotion: 'q' });
-    this.localLast = { from: m.from, to: m.to, san: m.san };
-    this.#render3D(this.local.fen(), this.localLast);
+    this.#localMove({ from, to, promotion: 'q' });
+  }
+
+  /** New state: Dede's announcement, the 3D pieces, the score board, the on-screen board. */
+  #apply(st, quiet = false) {
+    const before = this.state;
+    this.state = { ...st, at: Date.now() };
+    if (!quiet) { const line = this.#announce(before, this.state); if (line) this.onSay(line); }
+    if (st.fen !== before?.fen) this.#render3D(st.fen, st.last);
+    if (JSON.stringify(st.scores ?? []) !== JSON.stringify(before?.scores ?? [])) this.square.writeChessScores?.(st.scores ?? []);
     this.#show();
-    if (!this.local.isGameOver()) setTimeout(() => this.#cpuMove(), 700);
   }
 
-  /** A simple opponent: checkmate if it can, otherwise captures and checks first. */
-  #cpuMove() {
-    if (this.online || this.local.turn() !== 'b' || this.local.isGameOver()) return;
-    const moves = this.local.moves({ verbose: true });
-    const score = (m) => (m.san.includes('#') ? 100 : 0) + (m.captured ? { q: 9, r: 5, b: 3, n: 3, p: 1 }[m.captured] * 3 : 0) + (m.san.includes('+') ? 2 : 0) + Math.random() * 2;
-    const best = moves.sort((a, b) => score(b) - score(a))[0];
-    const m = this.local.move(best);
-    this.localLast = { from: m.from, to: m.to, san: m.san };
-    this.#render3D(this.local.fen(), this.localLast);
-    if (this.view.isOpen) this.#show();
+  /** What İsmail Dede says about a change on the board (Turkish; null = nothing). */
+  #announce(a, b) {
+    const name = (c) => b.seats?.[c]?.name ?? '?';
+    if (b.phase === 'over' && a?.phase !== 'over') {
+      const { winner, reason } = b.result ?? {};
+      const w = winner && name(winner);
+      if (reason === 'mate') return `Şah mat! ${w} kazandı. Tebrikler!`;
+      if (reason === 'time') return `Süre bitti! Oyunu ${w} kazandı.`;
+      if (reason === 'resign') return `${name(winner === 'w' ? 'b' : 'w')} pes etti. ${w} kazandı.`;
+      if (reason === 'left') return `${name(winner === 'w' ? 'b' : 'w')} gitti, geri gelmedi. ${w} kazandı.`;
+      if (reason === 'limit') return 'Vakit doldu, bu oyun burada biter. Sırada bekleyenler var!';
+      return 'Berabere! İkiniz de iyi oynadınız.';
+    }
+    if (b.phase === 'playing' && a?.phase !== 'playing') {
+      if (b.seats.w?.ai || b.seats.b?.ai) return `Haydi bakalım! Ben ${b.seats.w?.ai ? 'beyazım' : 'siyahım'}, sen ${b.seats.w?.ai ? 'siyahsın' : 'beyazsın'}. Herkese beş dakika.`;
+      return `Beyaz ${name('w')}, siyah ${name('b')}. Herkese beşer dakika. Başlayın!`;
+    }
+    if (b.phase === 'waiting' && (a?.phase !== 'waiting' || a.seats?.w?.id !== b.seats?.w?.id || a.seats?.b?.id !== b.seats?.b?.id)) {
+      const c = b.seats.w ? 'w' : 'b', other = c === 'w' ? 'b' : 'w';
+      return `${name(c)} ${COLOR[c]} olacak. ${COLOR[other][0].toLocaleUpperCase('tr')}${COLOR[other].slice(1)} olacak kim var?`;
+    }
+    const added = (b.queue ?? []).find((q) => !(a?.queue ?? []).some((x) => x.id === q.id));
+    if (added && b.phase !== 'idle') return `${added.name}, sen sıradaki oyunda ${COLOR[added.color]} olursun.`;
+    return null;
   }
 
-  // --- playing on the square itself -------------------------------------------------------
+  // --- offline: you and Dede --------------------------------------------------------
+
+  #resetLocal() { this.#local = { game: new Chess(), phase: 'idle', mine: null, last: null, result: null, clocks: { w: CLOCK, b: CLOCK }, turnAt: 0 }; }
+
+  #localState() {
+    const L = this.#local, me = { id: 'me', name: 'Sen' };
+    const seats = L.mine ? { [L.mine]: me, [L.mine === 'w' ? 'b' : 'w']: DEDE } : { w: null, b: null };
+    const clocks = { ...L.clocks };
+    if (L.phase === 'playing') clocks[L.game.turn()] = Math.max(0, clocks[L.game.turn()] - (Date.now() - L.turnAt));
+    return { phase: L.phase, fen: L.game.fen(), turn: L.game.turn(), last: L.last, result: L.result, seats, queue: [], clocks, running: L.phase === 'playing' ? L.game.turn() : null, scores: [] };
+  }
+
+  #localStart(color) {
+    if (this.#local.phase === 'playing' || this.#local.phase === 'over') return;
+    this.#resetLocal();
+    Object.assign(this.#local, { phase: 'playing', mine: color === 'b' ? 'b' : 'w', turnAt: Date.now() });
+    this.#apply(this.#localState());
+    clearInterval(this.#timer);
+    this.#timer = setInterval(() => this.#localTick(), 500);
+    if (this.#local.mine === 'b') setTimeout(() => this.#localDede(), 1200);
+  }
+
+  #localMove(m) {
+    const L = this.#local, turn = L.game.turn();
+    const made = L.game.move(m);
+    L.clocks[turn] = Math.max(0, L.clocks[turn] - (Date.now() - L.turnAt));
+    L.turnAt = Date.now();
+    L.last = { from: made.from, to: made.to, san: made.san };
+    if (L.game.isCheckmate()) this.#localFinish(turn, 'mate');
+    else if (L.game.isGameOver()) this.#localFinish(null, 'draw');
+    else { this.#apply(this.#localState()); if (L.game.turn() !== L.mine) setTimeout(() => this.#localDede(), 1200); }
+  }
+
+  #localDede() {
+    const L = this.#local;
+    if (this.online || L.phase !== 'playing' || L.game.turn() === L.mine) return;
+    this.#localMove(dedeMove(L.game));
+  }
+
+  #localTick() {
+    const L = this.#local;
+    if (this.online || L.phase !== 'playing') return;
+    const turn = L.game.turn();
+    if (L.clocks[turn] - (Date.now() - L.turnAt) <= 0) { L.clocks[turn] = 0; this.#localFinish(turn === 'w' ? 'b' : 'w', 'time'); }
+  }
+
+  #localFinish(winner, reason) {
+    const L = this.#local;
+    clearInterval(this.#timer);
+    Object.assign(L, { phase: 'over', result: { winner, reason } });
+    this.#apply(this.#localState());
+    setTimeout(() => { if (!this.online && this.#local === L) { this.#resetLocal(); this.#apply(this.#localState(), true); } }, PAUSE);
+  }
+
+  // --- playing on foot, on the board itself -------------------------------------------
 
   /** Board square under a world position (null when off the board). */
   squareAt(pos) {
@@ -116,25 +208,27 @@ export class ChessGame {
 
   /** Interaction provider: what the action key does on the board right now. */
   find(pos) {
-    if (this.world?.current?.id !== 'village') return null;
+    if (this.world?.current?.id !== 'village' || !this.state) return null;
     const sq = this.squareAt(pos);
     if (!sq) return null;
-    const g = this.game, piece = g.get(sq), mine = this.myColor;
-    const name = (p) => PIECE_WORDS[p.type][0];
+    const g = this.game, piece = g.get(sq), mine = this.myColor, phase = this.state.phase;
     const act = (label, run) => ({ label, run, dist: 0.1, priority: 3 });
-    if (this.online && !mine) {
-      if (piece && !this.state?.seats?.[piece.color]) return act(`${piece.color === 'w' ? 'Beyaz' : 'Siyah'} taşlarla oyna`, () => { this.net.send({ type: 'chess-sit', color: piece.color }); this.toasts.show(`${piece.color === 'w' ? 'Beyaz' : 'Siyah'} taşlar senin!`, 'You play this colour'); });
-      return null;
-    }
     const c = this.#carry;
     if (c) {
       if (sq === c.from) return act('Taşı yerine bırak', () => this.#dropCarry());
-      if (c.legal.includes(sq)) return act(`${name(g.get(c.from))}: ${sq} karesine oyna`, () => this.#move(c.from, sq));
+      if (c.legal.includes(sq)) return act(`${PIECE_WORDS[g.get(c.from).type][0]}: ${sq} karesine oyna`, () => this.#move(c.from, sq));
       return act('Bu taş oraya gidemez', () => this.toasts.show('Bu taş oraya gidemez', 'This piece can’t go there'));
     }
-    if (mine && g.turn() === mine && piece?.color === mine && !g.isGameOver()) {
-      const legal = g.moves({ square: sq, verbose: true }).map((m) => m.to);
-      if (legal.length) return act(`${name(piece)} taşını al`, () => this.#pick(sq, legal));
+    if (mine) {
+      if (phase === 'playing' && g.turn() === mine && piece?.color === mine) {
+        const legal = g.moves({ square: sq, verbose: true }).map((m) => m.to);
+        if (legal.length) return act(`${PIECE_WORDS[piece.type][0]} taşını al`, () => this.#pick(sq, legal));
+      }
+      return null;
+    }
+    // not playing: touching a piece asks Dede for its colour (he decides who plays)
+    if (piece && phase !== 'playing' && phase !== 'over' && !this.state.seats?.[piece.color]) {
+      return act(`Dede, ben ${COLOR[piece.color]} olayım`, () => { this.open(); this.ask(piece.color); });
     }
     return null;
   }
@@ -171,28 +265,16 @@ export class ChessGame {
     });
   }
 
-  /** Every frame on the square: carry the picked piece; leaving the board warns, then gives the seat up. */
-  #onBoard() {
-    if (this.world?.current?.id !== 'village' || !this.player) return;
+  /** The piece in my hands follows me; off the board it goes back to its square (the seat stays mine). */
+  #follow() {
+    const c = this.#carry;
+    if (!c || !this.player) return;
     const p = this.player.position;
-    if (this.#carry) { this.#carry.mesh.position.set(p.x + 0.5, 0.35, p.z); }
-    const half = CHESS.size * 4;
-    const out = Math.max(Math.abs(p.x - CHESS.cx) - half, Math.abs(p.z - CHESS.cz) - half);
-    if (!this.myColor || this.view.isOpen) this.#walking = false;
-    else if (out <= 0) this.#walking = true;
-    if (!this.#carry && !(this.online && this.#walking)) { this.#warned = false; return; }
-    if (out <= 0.4) { this.#warned = false; return; }
-    if (!this.#warned) { this.#warned = true; this.toasts.show('Oyundan çıkıyorsunuz! Tahtaya dönersen devam edersin.', 'You are leaving the game! Step back on the board to keep playing.'); return; }
-    if (out > 2.5) {
-      this.#dropCarry();
-      if (this.online && this.myColor) this.net.send({ type: 'chess-stand' });
-      this.#warned = false;
-      this.#walking = false;
-      this.toasts.show('Oyundan çıktın. Yerin boşaldı.', 'You left the game; your seat is free.');
-    }
+    if (this.world?.current?.id !== 'village' || !this.squareAt(p) || this.state?.phase !== 'playing') { this.#dropCarry(); return; }
+    c.mesh.position.set(p.x + 0.5, 0.35, p.z);
   }
 
-  #newLocal() { this.local = new Chess(); this.localLast = null; this.#render3D(this.local.fen(), null); this.#show(); }
+  // --- the giant pieces on the square ------------------------------------------------
 
   /** Rebuild the giant pieces from a FEN; the piece that just moved slides into place. */
   #render3D(fen, last) {
@@ -221,7 +303,7 @@ export class ChessGame {
       const from = chessSquare(last.from);
       this.#anim = { mesh: moved, from: new THREE.Vector3(from.x, 0.12, from.z), to: moved.position.clone(), t: 0 };
       moved.position.copy(this.#anim.from);
-      // tell the onlookers what happened (İsmail Dede on the benches comments)
+      // the onlookers on the benches hear what happened (TalkAreas)
       const taken = before ? new Chess(before).get(last.to) : null;
       this.onMove?.({ piece: game.get(last.to)?.type, captured: taken?.type ?? null, check: game.isCheck() && !game.isCheckmate(), mate: game.isCheckmate() });
     }

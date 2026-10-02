@@ -12,7 +12,7 @@ export class Game {
   tick() {
     const dt = Math.min(this.#clock.getDelta(), 0.05);
     const t = (this.t += dt);
-    const { help, prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
+    const { ambient = [], shotButton, help, prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
     const playing = modes.base === 'play';
 
     time.update(dt);
@@ -24,10 +24,11 @@ export class Game {
     toys.update(dt, t);
     village.update(dt, t);
     prayer.update(dt, t);
-    this.talk?.update(dt, t); // villagers chatting in the square's sitting places
+    ambient.forEach((a) => a.update(dt, t)); // villagers chatting among themselves
     world.current.update(dt, t);
 
     actionButton.show(interactions.update(player.position));
+    shotButton?.show(modes.is('play') && !!toys.shotBall());
     joystick.visible = modes.is('play');
     help.visible = modes.is('play');
     marker.update(dt, t, playing && !dialogue.talking);

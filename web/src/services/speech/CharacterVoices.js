@@ -12,10 +12,13 @@ export class CharacterVoices {
 
   voiceOf(speaker) { return this.voices[speaker] ?? this.voices.default; }
 
+  /** The browser's voice: a woman's one for the women and girls, and their pitch. */
+  #say(text, voice, rate) { this.fallback.speak(text, { rate: 0.9 * rate, pitch: voice.pitch, female: voice.id.includes('dfki') }); }
+
   speak(text, { speaker, rate = 1 } = {}) {
     if (!text) return;
     const voice = this.voiceOf(speaker);
-    if (this.server?.supported) {
+    if (this.server?.has?.(voice) ?? this.server?.supported) {
       this.neural?.cancel(); this.fallback.cancel();
       this.server.speak(text, { voice, rate }).catch(() => this.#local(text, voice, rate));
       return;
@@ -29,19 +32,20 @@ export class CharacterVoices {
       this.fallback.cancel();
       this.neural.speak(text, { voice, rate }).catch((e) => {
         console.warn('[tts] piper failed, using browser voice:', e.message);
-        this.fallback.speak(text, { rate: 0.9 * rate, pitch: voice.pitch });
+        this.#say(text, voice, rate);
       });
       return;
     }
-    this.fallback.speak(text, { rate: 0.9 * rate, pitch: voice.pitch });
+    this.#say(text, voice, rate);
     if (useNeural) this.neural.prepare(voice.id).catch((e) => console.warn('[tts] voice download failed:', e.message));
   }
 
   /** Pre-synthesise a line the player is likely to play, so the speaker button is instant. */
   warm(text, speaker) {
     if (!text) return;
-    if (this.server?.supported) { this.server.warm(text, this.voiceOf(speaker)); return; }
-    if (this.enabled() && this.neural?.supported) this.neural.warm(text, this.voiceOf(speaker));
+    const voice = this.voiceOf(speaker);
+    if (this.server?.has?.(voice) ?? this.server?.supported) { this.server.warm(text, voice); return; }
+    if (this.enabled() && this.neural?.supported) this.neural.warm(text, voice);
   }
 
   /** Start downloading every character voice (called when the game starts). */

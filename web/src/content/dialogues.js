@@ -250,7 +250,7 @@ export const DIALOGUES = {
       }
     },
     nodes: {
-      d1: { say: 'Ahmet! Hoş geldin evladım. Montun çok güzel!', en: 'Ahmet! Welcome my child. Your jacket is lovely!', words: [['hoş geldin', 'welcome'], ['evladım', 'my child']],
+      d1: { say: 'Ahmet! Hoş geldin evladım. Bak, fideler ne güzel büyümüş!', en: 'Ahmet! Welcome my child. Look how nicely the seedlings have grown!', words: [['hoş geldin', 'welcome'], ['evladım', 'my child'], ['fide', 'seedling']],
         options: [{ tr: 'Teşekkürler dede! Ne yapıyorsun?', en: 'Thanks grandpa! What are you doing?', next: 'd2' }] },
       d2: { say: 'Domates ekiyorum. Ama su lazım. Kovayı getirir misin?', en: 'I am planting tomatoes. But I need water. Will you bring the bucket?', words: [['domates', 'tomato'], ['su', 'water'], ['kova', 'bucket'], ['lazım', 'needed']],
         options: [{ tr: 'Tabii dede! Kova nerede?', en: 'Sure! Where is the bucket?', next: 'd3' }] },

@@ -46,9 +46,26 @@ export const Behaviors = {
     pose(r, t) { const s = (Math.sin(t * 2.4) + 1) / 2; r.armR.rotation.x = r.armL.rotation.x = -0.3 - 1.2 * s; r.body.rotation.x = 0.15 * s; },
     talk(r) { r.armR.rotation.x = r.armL.rotation.x = -0.3; r.body.rotation.x = 0; },
   },
+  /**
+   * Dad and his old car: walks round it along `def.carRoute` and at each stop works on
+   * another part — under the bonnet, the flat tyre, lying under the car, the boot, a window.
+   */
   repair: {
-    pose(r, t) { r.body.rotation.x = 0.45; r.armR.rotation.x = -1.1 + Math.sin(t * 6) * 0.3; r.armL.rotation.x = -0.9; },
-    talk(r) { r.body.rotation.x *= 0.85; r.armR.rotation.x = r.armL.rotation.x = 0; },
+    roam: true,
+    routeKey: 'carRoute',
+    pose(r) { r.body.rotation.x = 0; r.body.position.set(0, 0, 0); },
+    poses: {
+      hood(r, t) { lean(r, 0.6); r.armR.rotation.x = -1.3 + Math.sin(t * 6) * 0.25; r.armL.rotation.x = -1.1; },
+      wheel(r, t) { lean(r, 0.35, 0.55, 1.57); r.armR.rotation.x = -1.3 + Math.sin(t * 7) * 0.35; r.armL.rotation.x = -1.0; },
+      // on his back under the car, feet sticking out, a hand working up at the engine
+      under(r, t) {
+        r.body.rotation.x = -Math.PI / 2; r.body.position.set(0, 0.2, 0);
+        r.legL.rotation.x = 0.5; r.legR.rotation.x = 0;
+        r.armR.rotation.x = -1.5 + Math.sin(t * 5) * 0.2; r.armL.rotation.x = -1.2;
+      },
+      wipe(r, t) { lean(r, 0); r.armR.rotation.x = -1.7; r.armR.rotation.z = Math.sin(t * 4) * 0.4; r.armL.rotation.x = 0; },
+    },
+    talk(r) { r.body.rotation.x = 0; r.body.position.set(0, 0, 0); r.armR.rotation.x = r.armL.rotation.x = 0; r.armR.rotation.z = 0; r.legL.rotation.x = r.legR.rotation.x = 0; },
   },
   cook: {
     pose(r, t) { r.armR.rotation.x = -0.8 + Math.sin(t * 3) * 0.25; r.armL.rotation.x = -0.6 + Math.sin(t * 3 + 1) * 0.2; r.body.rotation.x = 0; },
@@ -78,6 +95,16 @@ export const Behaviors = {
     roam: true,
     pose(r) { r.body.rotation.x = 0; },
     jump(r, t) { const s = Math.abs(Math.sin(t * 6)); r.armL.rotation.x = r.armR.rotation.x = -2.6 + s * 0.5; r.legL.rotation.x = r.legR.rotation.x = s * 0.25; },
+    talk(r) { r.armL.rotation.x = r.armR.rotation.x = 0; r.legL.rotation.x = r.legR.rotation.x = 0; },
+  },
+  /**
+   * A child who comes along: keeps a couple of metres from the player, runs to catch up and
+   * hops about when the player stands still (Npc moves the body).
+   */
+  follow: {
+    follow: true,
+    pose(r) { r.body.rotation.x = 0; },
+    jump(r, t) { const s = Math.abs(Math.sin(t * 6)); r.armL.rotation.x = r.armR.rotation.x = -2.6 + s * 0.5; },
     talk(r) { r.armL.rotation.x = r.armR.rotation.x = 0; r.legL.rotation.x = r.legR.rotation.x = 0; },
   },
   /** On a floor cushion at the sofra: lower, and talks with the people around. */

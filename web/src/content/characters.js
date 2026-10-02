@@ -1,20 +1,23 @@
 /** Who's who: looks (for the procedural rig), portrait SVG, labels and voices. */
 
 /**
- * Piper voices (CC0: fahrettin, fettah). `pitch` shifts them per character.
- * dfki is CC BY-NC-SA, so it is not used in a paid product.
+ * Piper voices (CC0: fahrettin, fettah; dfki for women and girls). `pitch` shifts them per
+ * character so nobody sounds like anybody else. When the browser has to speak instead, a
+ * dfki character gets a woman's voice there too (services/speech/TextToSpeech.js).
  */
+const F = 'tr_TR-dfki-medium', M1 = 'tr_TR-fahrettin-medium', M2 = 'tr_TR-fettah-medium';
 export const VOICES = {
-  // women and girls speak with the female Turkish voice (dfki); men with fahrettin / fettah
-  default: { id: 'tr_TR-fahrettin-medium', pitch: 1 },
-  ahmet: { id: 'tr_TR-fettah-medium', pitch: 1.18 },
-  anne: { id: 'tr_TR-dfki-medium', pitch: 1.0 },
-  baba: { id: 'tr_TR-fahrettin-medium', pitch: 0.98 },
-  dede: { id: 'tr_TR-fahrettin-medium', pitch: 0.88 },
-  ogretmen: { id: 'tr_TR-dfki-medium', pitch: 1.06 },
-  elif: { id: 'tr_TR-dfki-medium', pitch: 1.2 },
-  can: { id: 'tr_TR-fettah-medium', pitch: 1.25 },
-  zehra: { id: 'tr_TR-dfki-medium', pitch: 1.25 },
+  default: { id: M1, pitch: 1 },
+  ahmet: { id: M2, pitch: 1.18 },
+  anne: { id: F, pitch: 1.0 },
+  baba: { id: M2, pitch: 0.9 },
+  dede: { id: M1, pitch: 0.84 },
+  ogretmen: { id: F, pitch: 1.07 },
+  elif: { id: F, pitch: 1.2 },
+  can: { id: M2, pitch: 1.28 },
+  zehra: { id: F, pitch: 1.3 },
+  muhtar: { id: M1, pitch: 0.94 },
+  bakkal: { id: M2, pitch: 1.04 },
 };
 
 const kidFace = (bg, skin, hair, extra = '') => `<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${bg}"/>${extra}<circle cx="32" cy="36" r="14" fill="${skin}"/><path d="M18 33c1-9 7-13 14-13s13 4 14 13c-4-4-9-5-14-5s-10 1-14 5z" fill="${hair}"/><circle cx="27" cy="37" r="2" fill="#1B2440"/><circle cx="37" cy="37" r="2" fill="#1B2440"/><path d="M28 43q4 3 8 0" stroke="#B83A5A" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
@@ -62,6 +65,19 @@ export const NPCS = {
   baba: {
     name: 'Mehmet Baba', short: 'Baba', role: 'baba · dad',
     look: { shirt: 0x2F6FDB, pants: 0x2A2F3A, skin: 0xE9B98F, hair: 0x1F1A17, mustache: 0x1F1A17 },
+    // round his old car in the yard (car body x -13.1…-8.9, z 6.05…7.95, bonnet towards +x);
+    // stops without `pose` are corners he walks round
+    carRoute: [
+      { x: -8.2, z: 7.0, rot: -Math.PI / 2, pose: 'hood', wait: 6 },
+      { x: -8.3, z: 8.8, wait: 0 },
+      { x: -9.65, z: 8.75, rot: Math.PI, pose: 'wheel', wait: 5 },
+      { x: -10.8, z: 9.4, rot: 0, pose: 'under', wait: 8 },
+      { x: -13.9, z: 9.0, wait: 0 },
+      { x: -13.8, z: 7.0, rot: Math.PI / 2, pose: 'hood', wait: 4 },
+      { x: -13.9, z: 5.3, wait: 0 },
+      { x: -11, z: 5.3, rot: 0, pose: 'wipe', wait: 4 },
+      { x: -8.3, z: 5.4, wait: 0 },
+    ],
     face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#8EC5FF"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M17 32c0-10 7-14 15-14s15 4 15 14c-3-3-9-5-15-5s-12 2-15 5z" fill="#1F1A17"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M24 43q8-5 16 0q-8 3-16 0z" fill="#1F1A17"/></svg>',
   },
   ogretmen: {

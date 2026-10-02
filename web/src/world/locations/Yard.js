@@ -91,6 +91,14 @@ export class Yard extends Location {
     this.anchor('garden', 9, 0.2, Math.PI);
     this.hotspot('yard.garden', 12.4, -3, 1.4);
 
+    // the player's own little garden bed (empty for now: planting comes when you are older)
+    add(mf.at(mf.box(2.6, 0.1, 1.8, { tex: 'dirt', color: 0x8A5E40 }), 12.4, 0.05, 2.8));
+    [[12.4, 1.85, 2.8, 0.1], [12.4, 3.75, 2.8, 0.1]].forEach(([x, z, w, d]) => add(mf.at(mf.box(w, 0.18, d, DARK), x, 0.09, z)));
+    [[11.05, 2.8], [13.75, 2.8]].forEach(([x, z]) => add(mf.at(mf.box(0.1, 0.18, 2, DARK), x, 0.09, z)));
+    add(mf.at(mf.box(0.08, 0.9, 0.08, DARK), 11.2, 0.45, 3.9));
+    add(mf.at(mf.box(0.9, 0.45, 0.05, { tex: 'myGardenSign' }), 11.2, 0.95, 3.94));
+    this.hotspot('yard.myGarden', 12.4, 4.4, 1.3);
+
     // old car with a flat tyre
     this.prop(kit, 'prop.car', -11, 0, 7, 0, () => {
       const g = new THREE.Group();
@@ -125,7 +133,7 @@ export class Yard extends Location {
     // meadow: grass tufts and flowers everywhere nothing else is
     const C2 = this.collision;
     const clear = [
-      [-1.8, 1.8, -11, 24], [6, 12, -5.8, -0.2], [-10.8, -5.2, -6.3, -1.7], [-13.6, -8.4, 5.5, 8.5], [-5.2, -1.2, -8.2, -7.0],
+      [-1.8, 1.8, -11, 24], [6, 12, -5.8, -0.2], [10.8, 14, 1.6, 4.2], [-10.8, -5.2, -6.3, -1.7], [-13.6, -8.4, 5.5, 8.5], [-5.2, -1.2, -8.2, -7.0],
     ];
     const blocked = (x, z) => (x + 3) ** 2 + (z + 5) ** 2 < 27
       || clear.some(([x0, x1, z0, z1]) => x > x0 && x < x1 && z > z0 && z < z1)

@@ -90,7 +90,7 @@ import { QuestPanel } from './ui/QuestPanel.js';
 import { Toasts } from './ui/Toasts.js';
 import { LabelLayer } from './ui/LabelLayer.js';
 import { Joystick } from './ui/Joystick.js';
-import { ActionButton } from './ui/ActionButton.js';
+import { ActionButton, ShotButton } from './ui/ActionButton.js';
 import { Fader } from './ui/Fader.js';
 import { CardOverlay } from './ui/CardOverlay.js';
 import { MainMenu } from './ui/MainMenu.js';
@@ -99,6 +99,8 @@ import { ChessGame } from './systems/ChessGame.js';
 import { Football } from './systems/Football.js';
 import { TalkAreas } from './systems/TalkAreas.js';
 import { ChessView } from './ui/ChessView.js';
+import { AmbientTalk } from './systems/AmbientTalk.js';
+import { KAHVEHANE } from './world/locations/VillageSquare.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
@@ -106,12 +108,13 @@ import { ListModal } from './ui/ListModal.js';
 import { DialogueView } from './ui/DialogueView.js';
 
 import { gloss, wordNote, loadGlossLang, glossLang } from './i18n/Gloss.js';
+import { schoolDay } from './content/hotspots.js';
 import { setPlayerGender, setPlayerLook, playerGender, playerName, personalizeContent, setTeacher, teacherInfo } from './i18n/Persona.js';
 import { NpcChatClient } from './services/ai/NpcChatClient.js';
 import { CharacterSetup } from './ui/CharacterSetup.js';
 import {
   STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, TEACHER_MAN, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
-  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS,
+  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS, KAHVE_TALKS,
 } from './content/index.js';
 
 async function loadManifest() {
@@ -129,7 +132,7 @@ const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
 await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
-setupLandscape(host); // phones: played sideways
+const fullscreenBtn = setupLandscape(); // ⛶ in the HUD
 // boy (Ahmet) or girl (Sare): the content is rewritten once, before any system reads it
 setPlayerGender(params.get('gender') ?? settings.get('gender', 'boy'));
 const playerLook = lookKey(playerGender(), params.get('look') ?? settings.get('look', ''));
@@ -193,7 +196,7 @@ const story = new StoryDirector({ story: STORY, state, bus, time, cast, travel, 
 const items = new ItemSystem({ defs: ITEMS, names: KIND_NAMES, world, kit, state, inventory, vocab, bus, story });
 const gameCtx = new GameContext({ state, inventory, story, world, time, vocab, player, cast });
 story.setContext(gameCtx);
-const controller = new PlayerController({ player, input, world, modes, cast });
+const controller = new PlayerController({ player, input, world, modes, cast, camera });
 
 // --- dialogue ---
 const progressShown = new Set();
@@ -284,9 +287,15 @@ const toys = new ToySystem({ world, player, free, tts });
 const yard = world.get('yard');
 // balls are kicked by running into them; the square's two (on its pitch) and the school's are shared online
 toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true });
-const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) });
-const villageBalls = [{ x: 13.5, z: SQUARE_PITCH.cz }, { x: 10, z: SQUARE_PITCH.cz - 2 }]
-  .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) }));
+const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, quiet: true, onKick: (b) => village.ballKicked(b) });
+const pitchMid = (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2;
+const villageBalls = [{ x: pitchMid, z: SQUARE_PITCH.cz }, { x: pitchMid - 4, z: SQUARE_PITCH.cz - 2 }]
+  .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, quiet: true, onKick: (b) => village.ballKicked(b) }));
+// ⚡ hard shot next to a ball: button (see the action button below) or key F
+input.onKey((e) => { if (modes.is('play') && (e.key === 'f' || e.key === 'F')) toys.shoot(); });
+// C: another camera view (normal, close, far, from above)
+const VIEW_NAMES = [['Normal görünüm', gloss('Normal view')], ['Yakın görünüm', gloss('Close view')], ['Uzak görünüm', gloss('Far view')], ['Yukarıdan görünüm', gloss('View from above')]];
+input.onKey((e) => { if (modes.is('play') && (e.key === 'c' || e.key === 'C')) { const [tr, en] = VIEW_NAMES[camera.cycleView()]; toasts.show(`🎥 ${tr}`, en); } });
 toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
 
 // --- school: credits, ads, multiplayer lesson ---
@@ -330,8 +339,17 @@ const village = new VillageMultiplayer({
   recognizer: chatRecognizer,
 });
 
-// --- giant chess on the square: online the server's board, offline against the computer ---
-const chess = new ChessGame({ mf, square: world.get('village'), view: new ChessView(host, { modes }), net: villageNet, vocab, toasts, player, world });
+// --- giant chess on the square: online the server's board (İsmail Dede runs it), offline Dede plays you ---
+const chess = new ChessGame({
+  mf, square: world.get('village'), view: new ChessView(host, { modes }), net: villageNet, vocab, toasts, player, world,
+  // İsmail Dede announces the games: a bubble for everyone in the square, his voice when you are near the board
+  onSay: (line) => {
+    const dede = cast.get('ismail');
+    if (!dede || dede.location !== 'village' || world.current.id !== 'village') return;
+    labels.bubble(dede, line, null, 5);
+    if (chess.view.isOpen || dede.position.distanceTo(player.position) < 14) tts.speak(line, { speaker: 'ismail' });
+  },
+});
 village.chess = chess;
 // football: the schoolyard's pitch and the fenced one in the square, each with its score board
 const football = new Football({ place: 'schoolyard', pitch: PITCH, balls: [schoolBall], writeScore: (a, b) => world.get('schoolyard').writeScore(a, b), world, village, toasts, tts });
@@ -341,10 +359,23 @@ village.onGoal = (place, side) => matches[place]?.scored(side, false);
 world.get('schoolyard').animated.push((dt) => football.update(dt));
 world.get('village').animated.push((dt) => squareFootball.update(dt));
 // the tea garden and the chess benches: villagers chat, sit down to listen in
-const talk = new TalkAreas({ host, world, player, cast, labels, tts, vocab });
+const talk = new TalkAreas({ host, world, player, cast, labels, tts, vocab, modes, dialogue });
 village.onSay = (c, text) => talk.heard(c, text);
 chess.onMove = (m) => talk.chessMoved(m);
 effects.register('chess', () => chess.open());
+// the uncles in the kahvehane talk among themselves; come close and you hear them
+const kahveTalk = new AmbientTalk({
+  host, world, player, cast, labels, tts, modes, dialogue,
+  place: { location: 'village', x: KAHVEHANE.x, z: KAHVEHANE.z }, talks: KAHVE_TALKS,
+  title: ['Kahvehane sohbeti', gloss('Listening to the coffeehouse')],
+});
+
+// your own garden bed: planting comes later — grandpa says you are still a bit young
+effects.register('my-garden', () => {
+  if (cast.where('dede') === world.current.id) { dialogue.open('dede', 'myGarden'); return; }
+  labels.think('Burası benim bahçem olacak!', 3.5, game.t);
+  toasts.show('Dede: “Biraz büyü, sonra birlikte ekeriz.”', gloss('Grandpa: “Grow a little, then we will plant it together.”'));
+});
 
 // --- interaction ---
 const interactions = new InteractionSystem([
@@ -356,6 +387,7 @@ const interactions = new InteractionSystem([
   new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts, effects, bus, ctx: gameCtx }),
 ], modes);
 const actionButton = new ActionButton(host, () => interactions.trigger());
+const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root);
 input.onKey((e) => { if (modes.is('play') && ['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); interactions.trigger(); } });
 const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, player });
 
@@ -364,6 +396,7 @@ const drill = new WordDrill(host, { modes, vocab, activities, tts, state, effect
 const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!',
   drill.available ? { label: '🧠 Kelime pratiği yap', run: () => drill.open() } : null);
 const hud = new Hud(host, {
+  extra: [fullscreenBtn],
   onBookOpen: () => textbook.open(),
   onBook: () => openWords(),
   onBag: () => list.open('Çanta', inventory.entries().map(([kind, n]) => {
@@ -446,6 +479,7 @@ if (!setup.done && !params.has('nointro')) { menu.hide(); editProfile({ cancella
 /** Online square straight from the menu: no story (paused), no autosave; leaving returns here. */
 function playOnline(server) {
   settings.set('serverRegion', server);
+  village.chosenRoom = true; // picked on the menu: that room, not the busiest one
   gameCtx.online = true;
   story.pause();
   autosaveOn = false;
@@ -459,6 +493,7 @@ function playOnline(server) {
 function backToMenu() {
   fader.run(() => {
     gameCtx.online = false;
+    village.chosenRoom = false;
     travel.place('yard', 'houseDoor', { force: true }); // leaving the square disconnects
     story.resumeStory();
     autosaveOn = false;
@@ -470,34 +505,30 @@ function backToMenu() {
 }
 effects.register('main-menu', () => backToMenu());
 
-/** Outside school days: practise at school for 1 credit; home life waits until you are back. */
+/** Outside school days: practise in the classroom for 1 credit; home life waits until you are back in the yard. */
 async function schoolPractice() {
   story.pause();
   const paid = await lessons.practice({
-    onDone: () => travel.go('yard', 'gate', () => { cast.apply(story.chapter.cast); story.resumeStory(); toasts.show('Eve döndün', gloss('Back home — your day continues where you left it')); }),
+    onDone: () => travel.go('schoolyard', 'door', () => { cast.apply(story.chapter.cast); story.resumeStory(); toasts.show('Ders bitti, bahçeye çıktın', gloss('Lesson over — your day continues where you left it')); }),
   });
   if (!paid) story.resumeStory();
 }
+// the classroom door: the day's lesson on school days, otherwise practice
+effects.register('school-door', () => (schoolDay(gameCtx) ? effects.run(['lesson']) : schoolPractice()));
 
-// the garden gate is the street: school or the village square (the one the quest needs comes first)
+// the garden gate is the street: school or the village square (the one the quest needs comes first);
+// "school" always leads to the schoolyard first — the lesson starts at the classroom door
 const streetChoice = new ChoiceCard(host, modes);
 effects.register('street', async () => {
-  const schoolDay = gameCtx.targetHotspot === 'yard.gate';
-  const night = time.isNight;
-  const SCHOOL = {
-    day: { label: '🏫 Okula git', en: 'Go to school', value: 'school' },
-    practice: { label: '🏫 Okula git: pratik (1 kredi)', en: 'Practise at school for 1 credit', value: 'practice' },
-    closed: { label: '🏫 Okul (gece kapalı)', en: 'The school is closed at night.', value: null, disabled: true },
-  };
-  const school = schoolDay ? SCHOOL.day : night ? SCHOOL.closed : SCHOOL.practice;
+  const schoolTrip = gameCtx.targetHotspot === 'yard.gate';
+  const school = time.isNight && !schoolTrip
+    ? { label: '🏫 Okul (gece kapalı)', en: 'The school is closed at night.', value: null, disabled: true }
+    : { label: '🏫 Okula git', en: 'Go to school', value: 'school' };
   const square = { label: '🏘️ Köy meydanına git', en: 'Go to the village square', value: 'square' };
-  const match = { label: '⚽ Okul bahçesinde maç yap', en: 'Play football in the schoolyard', value: 'match' };
   const toSquare = gameCtx.targetNpcLoc === 'village' || story.target()?.hotspot?.startsWith('village.');
-  const pick = await streetChoice.pick({ title: 'Nereye gidiyorsun?', en: 'Where are you going?', options: toSquare ? [square, school, match] : [school, square, match] });
-  if (pick === 'school') effects.run(['chapter']);
-  else if (pick === 'practice') schoolPractice();
+  const pick = await streetChoice.pick({ title: 'Nereye gidiyorsun?', en: 'Where are you going?', options: toSquare ? [square, school] : [school, square] });
+  if (pick === 'school') { if (schoolTrip) effects.run(['chapter']); else travel.go('schoolyard', 'gate'); }
   else if (pick === 'square') travel.go('village', 'yardRoad');
-  else if (pick === 'match') travel.go('schoolyard', 'gate');
 });
 
 function startNew(then) {
@@ -527,7 +558,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ talk, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, talk], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -539,6 +570,23 @@ setInterval(() => coverable.forEach((c) => {
   const at = c === player ? world.current?.id : c.location;
   c.setCovered(at !== 'house' || !!prayer.active);
 }), 300);
+
+// Ali comes out into the garden with you (and back in); he stays home when you go further
+{
+  let goingOut = false;
+  bus.on(EV.HOTSPOT, ({ id }) => { goingOut = id === 'house.door'; });
+  bus.on(EV.LOCATION, ({ id }) => {
+    const kid = cast.get('kardes'), out = goingOut;
+    goingOut = false;
+    if (!kid || gameCtx.online) return;
+    if (id === 'yard' && out && kid.location === 'house' && !time.isNight) {
+      cast.move('kardes', 'yard', 'houseDoor', 'follow');
+      kid.position.x += 1.2; kid.position.z += 0.6;
+    } else if (kid.location === 'yard' && kid.behavior.follow && id !== 'yard') {
+      cast.move('kardes', 'house', 'start', 'roam'); // home with you, or back in when you go out of the gate
+    }
+  });
+}
 
 // the little brother: mom tells him off for jumping on the bed; now and then he calls you over to ask what something is
 let kidScoldAt = -99, kidAskAt = 40;
@@ -560,4 +608,4 @@ setInterval(() => {
 }, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

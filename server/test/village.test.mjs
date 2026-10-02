@@ -234,26 +234,49 @@ test('TURN relay refuses private, loopback and link-local peers', async () => {
   for (const ip of ['31.58.245.116', '8.8.8.8', '178.240.232.77', '172.32.0.1']) assert.equal(blockedPeer(ip), false, ip);
 });
 
-test('giant chess: seats, only the side to move may move, everyone sees the board, leaving frees the seat', async () => {
+test('giant chess: İsmail Dede seats who asks for a colour, the game starts with both, only the side to move may move', async () => {
   const w = await join('Beyaz', 'chess');
   const b = await join('Siyah', 'chess');
   const v = await join('İzleyen', 'chess');
   assert.equal(v.welcome.chess.fen.split(' ')[0], 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
-  w.send({ type: 'chess-sit', color: 'w' });
-  await v.next('chess');
-  b.send({ type: 'chess-sit', color: 'w' }); // taken
-  assert.equal((await b.next('chess')).seats.w.name, 'Beyaz');
-  b.send({ type: 'chess-sit', color: 'b' });
-  assert.equal((await v.next('chess')).seats.b.name, 'Siyah');
+  w.send({ type: 'chess-ask', color: 'w' });
+  let s = await v.next('chess');
+  assert.deepEqual([s.phase, s.seats.w.name, s.seats.b], ['waiting', 'Beyaz', null]);
+  v.send({ type: 'chess-move', from: 'e2', to: 'e4' }); // a watcher can't move
+  assert.equal((await v.next('chess')).last, null);
+  b.send({ type: 'chess-ask', color: 'b' }); // black arrives: the game starts
+  s = await v.next('chess');
+  assert.deepEqual([s.phase, s.seats.b.name, s.running], ['playing', 'Siyah', 'w']);
   b.send({ type: 'chess-move', from: 'e7', to: 'e5' }); // not black's turn
   assert.equal((await b.next('chess')).turn, 'w');
   w.send({ type: 'chess-move', from: 'e2', to: 'e5' }); // illegal
   assert.equal((await w.next('chess')).last, null);
   w.send({ type: 'chess-move', from: 'e2', to: 'e4' });
-  const s = await v.next('chess');
+  s = await v.next('chess');
   assert.deepEqual([s.last.from, s.last.to, s.turn], ['e2', 'e4', 'b']);
-  v.inbox.length = 0;
+  v.send({ type: 'chess-ask', color: 'w' }); // during a game: in line for the next one
+  assert.deepEqual((await v.next('chess')).queue.map((q) => q.name), ['İzleyen']);
+  b.send({ type: 'chess-resign' });
+  s = await v.next('chess');
+  assert.deepEqual([s.phase, s.result.winner, s.result.reason], ['over', 'w', 'resign']);
+  assert.ok(s.scores.some((r) => r.name === 'Beyaz' && r.games === 1 && r.wins === 1));
+  await w.close(); await b.close(); await v.close();
+});
+
+test('giant chess: walking off or dropping out keeps the seat for a while (same name comes back to it)', async () => {
+  const w = await join('Ayten', 'chess2');
+  const b = await join('Burak', 'chess2');
+  w.send({ type: 'chess-ask', color: 'w' }); await b.next('chess');
+  b.send({ type: 'chess-ask', color: 'b' }); await b.next('chess');
+  b.inbox.length = 0;
   await w.close();
-  assert.equal((await v.next('chess')).seats.w, null);
-  await b.close(); await v.close();
+  let s = await b.next('chess');
+  assert.deepEqual([s.phase, s.seats.w.name, s.seats.w.gone], ['playing', 'Ayten', true]);
+  const back = await join('Ayten', 'chess2');
+  s = await back.next('chess');
+  assert.equal(s.seats.w.id, back.welcome.id);
+  back.send({ type: 'chess-move', from: 'd2', to: 'd4' });
+  for (let i = 0; i < 5 && s.last?.to !== 'd4'; i++) s = await b.next('chess'); // the rejoin broadcast may come first
+  assert.equal(s.last.to, 'd4');
+  await back.close(); await b.close();
 });

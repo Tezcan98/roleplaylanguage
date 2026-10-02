@@ -30,7 +30,7 @@ export default {
     },
   },
   voices: {
-    cayci: { id: 'tr_TR-fahrettin-medium', pitch: 0.95 },
+    cayci: { id: 'tr_TR-fahrettin-medium', pitch: 1.06 },
     huseyin: { id: 'tr_TR-fahrettin-medium', pitch: 0.85 },
     kemal: { id: 'tr_TR-fettah-medium', pitch: 0.9 },
     ismail: { id: 'tr_TR-fahrettin-medium', pitch: 0.78 },

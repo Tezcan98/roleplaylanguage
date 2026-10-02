@@ -5,7 +5,11 @@ import { buildPitch } from '../Pitch.js';
 const WOOD = { tex: 'darkWood' };
 const LIGHT_WOOD = { tex: 'lightWood' };
 const STONE = { tex: 'stone' };
-const HALF = 26; // the fence runs at ±26 m
+const HALF = 34; // the fence runs at ±34 m
+
+/** Open-air coffeehouse (north-east) and open library (north-west): walls, no roof. */
+export const KAHVEHANE = { x: 22, z: -24, w: 12, d: 9 };
+export const LIBRARY = { x: -22, z: -24, w: 12, d: 9 };
 
 /** Chess board in the square: square size, centre and which way the ranks run. */
 export const CHESS = { cx: -15, cz: 15, size: 1.1 };
@@ -17,8 +21,8 @@ export function chessSquare(sq) {
 
 /** Football pitch in the south of the square, fenced with wire (doors on the north side). */
 export const SQUARE_PITCH = {
-  x0: 4.5, x1: 22.5, z0: 15, z1: 24, goalHalf: 1.5, cz: 19.5,
-  fence: { x0: 3.2, x1: 23.8, z0: 14, z1: 25, gaps: [[7.4, 9.2], [16.8, 18.6]] },
+  x0: 4.5, x1: 26.5, z0: 15, z1: 27, goalHalf: 1.5, cz: 21,
+  fence: { x0: 3.2, x1: 27.8, z0: 14, z1: 28, gaps: [[7.4, 9.2], [21.8, 23.6]] },
 };
 
 /** Tea garden tables (3 columns × 4 rows) and how many free chairs they have (the regulars keep two). */
@@ -26,9 +30,9 @@ const TEA_TABLES = [9.2, 12, 14.8].flatMap((x) => [1.5, 4.5, 7.5, 10.5].map((z) 
 const REGULARS_TABLE = 5; // (12, 4.5): Hüseyin and Kemal play tavla here
 export const TEA_SEATS = TEA_TABLES.length * 2 - 2;
 
-/** Benches round the chess board: [x, z, facing]; two seats each (İsmail Dede keeps the first). */
-const CHESS_BENCHES = [[-17.5, 8.6, 0], [-12.5, 8.6, 0], [-17.5, 21.4, Math.PI], [-12.5, 21.4, Math.PI], [-21.4, 13, Math.PI / 2], [-21.4, 17, Math.PI / 2]];
-export const CHESS_SEATS = CHESS_BENCHES.length * 2 - 1;
+/** Benches to watch the chess from: [x, z, facing], two seats each (north: Dede's score board, east: his own bench). */
+const CHESS_BENCHES = [[-17.5, 21.4, Math.PI], [-12.5, 21.4, Math.PI], [-21.4, 13, Math.PI / 2], [-21.4, 17, Math.PI / 2]];
+export const CHESS_SEATS = CHESS_BENCHES.length * 2;
 
 /** Places where people sit and talk; sitting in one lets you listen in (TalkAreas). */
 export const TALK_SPOTS = {
@@ -39,7 +43,10 @@ export const TALK_SPOTS = {
 /**
  * Village square east of the yard: a working fountain in the middle, the grocer, the
  * muhtar's office, the greengrocer's stall, a tea garden (çay ocağı) with tables, a giant
- * chess board with benches round it, a fenced football pitch, the well, benches and trees in stone rings.
+ * chess board with İsmail Dede's bench, his score board and benches to watch from, a fenced
+ * football pitch, an open-air coffeehouse (kahvehane) where the uncles chat, an open library
+ * with Aslan Bey, the well, benches and trees in stone rings. Nothing that people sit under
+ * has a roof, so the camera (from above) always sees who is inside.
  */
 export class VillageSquare extends Location {
   constructor() {
@@ -119,18 +126,21 @@ export class VillageSquare extends Location {
     this.hotspot('village.well', -1, 7.2, 1.8);
 
     this.#teaGarden(kit, mf, C);
-    this.#chessBoard(mf);
+    this.#chessBoard(mf, C);
     this.hotspot('village.chess', CHESS.cx + 5.2, CHESS.cz, 1.8);
     this.anchor('chessWatch', CHESS.cx + 5.6, CHESS.cz, -Math.PI / 2);
     this.#chessBenches(mf, C);
+    this.#kahvehane(mf, C);
+    this.#library(mf, C);
 
     this.writeScore = buildPitch(this, mf, { ...SQUARE_PITCH, board: { x: (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, z: 13.3, rot: Math.PI } });
     add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.02))
       .position.set((SQUARE_PITCH.fence.x0 + SQUARE_PITCH.fence.x1) / 2, 0.02, (SQUARE_PITCH.fence.z0 + SQUARE_PITCH.fence.z1) / 2);
     this.anchor('kickoff', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, SQUARE_PITCH.cz - 2.5, 0);
 
-    // trees, each in a ring of stones with soil inside
-    [[-5, 12], [6, 12], [14, -14], [-4, -14], [-21, -6], [-21, 6], [21, -20], [-20, -20], [-6, 22], [-3.5, 23.6], [24.4, 11], [-23, 23.5], [22, -6]].forEach(([x, z]) => {
+    // trees, each in a ring of stones with soil inside (none on the pitch)
+    [[-5, 12], [6, 12], [14, -14], [-4, -14], [-21, -6], [-21, 6], [30, -12], [-30, -12], [-6, 22], [-3.5, 25], [-22, 25], [22, -6],
+      [-30, 30], [30, 30], [12, 31], [-10, 29], [31, 12], [-30, 2], [8, -30], [-8, -30], [31, -31], [-31, -31]].forEach(([x, z]) => {
       this.prop(kit, 'prop.tree', x, 0, z, Math.random() * 6, () => mf.group(
         mf.at(mf.cyl(0.22, 0.3, 1.8, { tex: 'bark' }), 0, 0.9, 0),
         mf.at(mf.ico(1.55, { tex: 'leaves', repeat: [2, 2] }), 0, 2.7, 0)));
@@ -248,8 +258,9 @@ export class VillageSquare extends Location {
     // pergola over the tables
     const [px0, px1, pz0, pz1] = [7.9, 16.1, 0.2, 11.8];
     [[px0, pz0], [px1, pz0], [px0, pz1], [px1, pz1]].forEach(([x, z]) => { add(mf.at(mf.box(0.15, 2.6, 0.15, WOOD), x, 1.3, z)); C.addCircle(x, z, 0.12); });
-    for (let z = pz0; z <= pz1 + 0.01; z += (pz1 - pz0) / 7) add(mf.at(mf.box(px1 - px0 + 0.3, 0.08, 0.1, WOOD), (px0 + px1) / 2, 2.62, z));
-    for (let i = 0; i < 24; i++) add(mf.at(mf.box(1.7, 0.06, 1.5, { tex: 'leaves' }), px0 + 1 + (i % 4) * 2.05, 2.7, pz0 + 1 + Math.floor(i / 4) * 1.95)).rotation.y = ((i * 7) % 5 - 2) * 0.06;
+    for (let z = pz0; z <= pz1 + 0.01; z += (pz1 - pz0) / 4) add(mf.at(mf.box(px1 - px0 + 0.3, 0.08, 0.1, WOOD), (px0 + px1) / 2, 2.62, z));
+    // a few vine leaves on the beams only: open above, the camera sees who sits underneath
+    for (let i = 0; i < 8; i++) add(mf.at(mf.box(0.7, 0.05, 0.5, { tex: 'leaves' }), i % 2 ? px0 + 0.3 : px1 - 0.3, 2.7, pz0 + 0.6 + i * 1.4)).rotation.y = i;
   }
 
   /** A wooden chair facing `rot` (the back on the far side). */
@@ -266,7 +277,7 @@ export class VillageSquare extends Location {
   /** Low benches round the chess board, facing it: sit down to watch (and listen in). */
   #chessBenches(mf, C) {
     let seat = 0;
-    CHESS_BENCHES.forEach(([x, z, rot], bi) => {
+    CHESS_BENCHES.forEach(([x, z, rot]) => {
       const g = mf.group(
         mf.at(mf.box(2.4, 0.08, 0.5, LIGHT_WOOD), 0, 0.44, 0),
         mf.at(mf.box(2.4, 0.4, 0.06, LIGHT_WOOD), 0, 0.78, -0.24),
@@ -277,9 +288,8 @@ export class VillageSquare extends Location {
       const along = { x: Math.cos(rot), z: -Math.sin(rot) }, front = { x: Math.sin(rot), z: Math.cos(rot) };
       const hw = Math.abs(along.x) * 1.2 + Math.abs(along.z) * 0.25, hd = Math.abs(along.z) * 1.2 + Math.abs(along.x) * 0.25;
       C.addBox(x - hw, x + hw, z - hd, z + hd);
-      [-0.6, 0.6].forEach((o, si) => {
+      [-0.6, 0.6].forEach((o) => {
         const sx = x + along.x * o, sz = z + along.z * o;
-        if (bi === 0 && si === 0) { this.anchor('chessFan', sx, sz, rot); return; }
         const id = `chessBench${++seat}`;
         this.anchor(id, sx, sz, rot);
         this.hotspot(`village.${id}`, sx + front.x * 0.75, sz + front.z * 0.75, 0.6);
@@ -287,9 +297,46 @@ export class VillageSquare extends Location {
     });
   }
 
+  /** İsmail Dede's score board behind the chess board: who has played the most games. */
+  writeChessScores(rows) {
+    const c = this.scoreCanvas;
+    if (!c) return;
+    const g = c.getContext('2d');
+    g.fillStyle = '#23402C'; g.fillRect(0, 0, c.width, c.height);
+    g.strokeStyle = '#C8A15B'; g.lineWidth = 10; g.strokeRect(5, 5, c.width - 10, c.height - 10);
+    g.fillStyle = '#F4EFE6'; g.textBaseline = 'middle';
+    g.font = 'bold 34px Fredoka, sans-serif'; g.textAlign = 'center';
+    g.fillText('♟ SATRANÇ · SKOR TABLOSU', c.width / 2, 40);
+    g.font = 'bold 22px Fredoka, sans-serif'; g.fillStyle = '#D9C7A3';
+    g.fillText('İsmail Dede tutar · maç / galibiyet', c.width / 2, 74);
+    g.font = 'bold 28px Fredoka, sans-serif';
+    (rows.length ? rows.slice(0, 6) : [{ name: 'Henüz maç yok', games: '', wins: '' }]).forEach((r, i) => {
+      const y = 116 + i * 38;
+      g.textAlign = 'left'; g.fillStyle = '#F4EFE6';
+      g.fillText(`${r.games === '' ? '' : `${i + 1}. `}${r.name}`, 34, y);
+      g.textAlign = 'right'; g.fillStyle = '#E0B04A';
+      if (r.games !== '') g.fillText(`${r.games} / ${r.wins}`, c.width - 34, y);
+    });
+    this.scoreTex.needsUpdate = true;
+  }
+
   /** The giant chess board: 8 × 8 stone squares with a wooden edge; pieces come from ChessGame. */
-  #chessBoard(mf) {
+  #chessBoard(mf, C) {
     const add = (m) => this.add(m);
+    // İsmail Dede's bench on the east side, facing the board
+    add(mf.at(mf.box(0.8, 0.25, 3.2, LIGHT_WOOD), CHESS.cx + 6.4, 0.5, CHESS.cz + 2.6));
+    [-1.3, 1.3].forEach((dz) => add(mf.at(mf.box(0.12, 0.45, 0.12, WOOD), CHESS.cx + 6.4, 0.23, CHESS.cz + 2.6 + dz)));
+    C.addBox(CHESS.cx + 6.0, CHESS.cx + 6.8, CHESS.cz + 1.0, CHESS.cz + 4.2);
+    this.anchor('chessDede', CHESS.cx + 6.4, CHESS.cz + 2.2, -Math.PI / 2);
+    // score board on two posts behind (north of) the board, facing the square
+    this.scoreCanvas = document.createElement('canvas'); this.scoreCanvas.width = 512; this.scoreCanvas.height = 340;
+    this.scoreTex = new THREE.CanvasTexture(this.scoreCanvas); this.scoreTex.colorSpace = THREE.SRGBColorSpace;
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 2.4), new THREE.MeshBasicMaterial({ map: this.scoreTex }));
+    board.position.set(CHESS.cx, 2.5, CHESS.cz - 5.4); add(board);
+    add(mf.at(mf.box(3.8, 2.6, 0.08, WOOD), CHESS.cx, 2.5, CHESS.cz - 5.47));
+    [-1.7, 1.7].forEach((dx) => add(mf.at(mf.box(0.14, 2.6, 0.14, WOOD), CHESS.cx + dx, 1.3, CHESS.cz - 5.5)));
+    C.addBox(CHESS.cx - 1.9, CHESS.cx + 1.9, CHESS.cz - 5.7, CHESS.cz - 5.3);
+    this.writeChessScores([]);
     const s = CHESS.size, w = s * 8;
     add(mf.at(mf.box(w + 0.6, 0.08, w + 0.6, WOOD), CHESS.cx, 0.04, CHESS.cz));
     const light = mf.mat(0xEDE3CF), dark = mf.mat(0x6B4F3A);
@@ -301,5 +348,113 @@ export class VillageSquare extends Location {
     }
     this.chessPieces = new THREE.Group();
     add(this.chessPieces);
+  }
+  /** Walls on three sides and a low wall in front with a doorway — no roof. */
+  #openRoom(mf, C, { x, z, w, d }, wall) {
+    const add = (m) => this.add(m), H = 2.6, T = 0.25;
+    const x0 = x - w / 2, x1 = x + w / 2, z0 = z - d / 2, z1 = z + d / 2;
+    add(mf.at(mf.box(w, H, T, wall), x, H / 2, z0)); C.addBox(x0, x1, z0 - T / 2, z0 + T / 2);
+    [x0, x1].forEach((wx) => { add(mf.at(mf.box(T, H, d, wall), wx, H / 2, z)); C.addBox(wx - T / 2, wx + T / 2, z0, z1); });
+    // front: knee-high wall either side of a 3 m doorway
+    const side = (w - 3) / 2;
+    [x0 + side / 2, x1 - side / 2].forEach((fx) => { add(mf.at(mf.box(side, 0.9, T, wall), fx, 0.45, z1)); C.addBox(fx - side / 2, fx + side / 2, z1 - T / 2, z1 + T / 2); });
+    // a beam over the doorway for the sign (high up, nothing to bump into)
+    [x - 1.6, x + 1.6].forEach((px) => { add(mf.at(mf.box(0.16, 3.1, 0.16, WOOD), px, 1.55, z1)); C.addCircle(px, z1, 0.15); });
+    add(mf.at(mf.box(3.6, 0.18, 0.2, WOOD), x, 3.1, z1));
+    const floor = add(mf.ground(w - 0.3, d - 0.3, { tex: 'floorWood', repeat: [3, 2] }, 0.03));
+    floor.position.x = x; floor.position.z = z;
+  }
+
+  /** A sign with big letters (canvas). */
+  #sign(text, x, y, z, w = 3.2) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+    const g = c.getContext('2d');
+    g.fillStyle = '#5B3A29'; g.fillRect(0, 0, c.width, c.height);
+    g.fillStyle = '#F4D58D'; g.font = 'bold 60px Fredoka, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, c.width / 2, c.height / 2 + 3);
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 96 / 512), new THREE.MeshBasicMaterial({ map: tex }));
+    m.position.set(x, y, z);
+    return this.add(m);
+  }
+
+  /** Stool (+ anchor and hotspot when someone may sit there). */
+  #stool(mf, id, x, z, rot, hotspot = true) {
+    this.add(mf.at(mf.cyl(0.2, 0.18, 0.42, LIGHT_WOOD, 10), x, 0.21, z));
+    this.anchor(id, x, z, rot);
+    if (hotspot) this.hotspot(`village.${id}`, x + Math.sin(rot + Math.PI) * 0.55, z + Math.cos(rot + Math.PI) * 0.55, 0.8);
+  }
+
+  /**
+   * Kahvehane: open to the sky, a counter with the tea stove, tables with a tavla board.
+   * The three uncles (Hüsnü, Kemal, Rıfat) sit at the middle table and talk among
+   * themselves (systems/AmbientTalk.js); the player can sit at the other tables and listen.
+   */
+  #kahvehane(mf, C) {
+    const K = KAHVEHANE, add = (m) => this.add(m);
+    this.#openRoom(mf, C, K, { tex: 'plaster', repeat: [3, 1] });
+    this.#sign('KAHVEHANE', K.x, 3.55, K.z + K.d / 2 + 0.02);
+    // counter and stove against the back wall
+    add(mf.at(mf.box(4, 1.0, 0.8, WOOD), K.x - 2.5, 0.5, K.z - K.d / 2 + 0.7));
+    add(mf.at(mf.cyl(0.25, 0.3, 0.55, 0xB87333, 12), K.x - 3.6, 1.28, K.z - K.d / 2 + 0.7)); // çaydanlık on the stove
+    [-2.6, -2.2, -1.8].forEach((dx) => add(mf.at(mf.cyl(0.04, 0.03, 0.1, 0xC8451F, 8), K.x + dx, 1.06, K.z - K.d / 2 + 0.6)));
+    C.addBox(K.x - 4.5, K.x - 0.5, K.z - K.d / 2 + 0.2, K.z - K.d / 2 + 1.2);
+    // the uncles' table (tavla on it) and two tables for guests
+    const table = (x, z) => {
+      add(mf.at(mf.box(1.1, 0.06, 1.1, LIGHT_WOOD), x, 0.74, z));
+      add(mf.at(mf.cyl(0.06, 0.08, 0.72, WOOD, 8), x, 0.36, z));
+      C.addCircle(x, z, 0.55);
+    };
+    const tx = K.x - 1.5, tz = K.z + 0.5;
+    table(tx, tz);
+    add(mf.at(mf.box(0.6, 0.05, 0.42, 0x8B5A2B), tx, 0.8, tz)); // tavla
+    add(mf.at(mf.cyl(0.04, 0.03, 0.1, 0xC8451F, 8), tx + 0.4, 0.82, tz + 0.35));
+    this.#stool(mf, 'amca1', tx - 0.9, tz, Math.PI / 2, false);
+    this.#stool(mf, 'amca2', tx + 0.9, tz, -Math.PI / 2, false);
+    this.#stool(mf, 'amca3', tx, tz - 0.9, 0, false);
+    [[K.x + 3, K.z - 1.6, 1], [K.x + 3, K.z + 2, 3]].forEach(([x, z, n]) => {
+      table(x, z);
+      add(mf.at(mf.cyl(0.04, 0.03, 0.1, 0xC8451F, 8), x + 0.2, 0.82, z));
+      this.#stool(mf, `kahve${n}`, x - 0.9, z, Math.PI / 2);
+      this.#stool(mf, `kahve${n + 1}`, x + 0.9, z, -Math.PI / 2);
+    });
+    this.anchor('kahveci', K.x - 2.5, K.z - K.d / 2 + 1.6, 0);
+  }
+
+  /** Açık kütüphane: shelves full of books along the walls, Aslan Bey's desk, reading tables. */
+  #library(mf, C) {
+    const L = LIBRARY, add = (m) => this.add(m);
+    this.#openRoom(mf, C, L, { tex: 'whiteWall', repeat: [3, 1] });
+    this.#sign('KÜTÜPHANE', L.x, 3.55, L.z + L.d / 2 + 0.02);
+    const colors = [0x8E2B1E, 0x2F6FDB, 0x3E8E4A, 0xE0B04A, 0x6B4F3A, 0x7A3552, 0x16A085];
+    // a shelf is one box with rows of books painted on (hundreds of book meshes would cost phones their frame rate)
+    const shelf = (x, z, w, rot) => {
+      const g = new THREE.Group();
+      g.add(mf.at(mf.box(w, 2.2, 0.45, WOOD), 0, 1.1, 0));
+      g.add(mf.at(mf.box(w - 0.16, 2.0, 0.02, { tex: 'bookshelf', repeat: [Math.max(1, Math.round(w / 1.2)), 1] }), 0, 1.1, 0.23));
+      g.position.set(x, 0, z); g.rotation.y = rot;
+      return add(g);
+    };
+    shelf(L.x - 3, L.z - L.d / 2 + 0.4, 4.6, 0); shelf(L.x + 3, L.z - L.d / 2 + 0.4, 4.6, 0);
+    C.addBox(L.x - 5.4, L.x + 5.4, L.z - L.d / 2, L.z - L.d / 2 + 0.7);
+    shelf(L.x - L.w / 2 + 0.4, L.z + 0.2, 5, Math.PI / 2); C.addBox(L.x - L.w / 2, L.x - L.w / 2 + 0.7, L.z - 2.4, L.z + 2.8);
+    shelf(L.x + L.w / 2 - 0.4, L.z + 0.2, 5, -Math.PI / 2); C.addBox(L.x + L.w / 2 - 0.7, L.x + L.w / 2, L.z - 2.4, L.z + 2.8);
+    this.hotspot('village.libShelf', L.x + 3, L.z - L.d / 2 + 1.5, 1.2);
+    // Aslan Bey's desk with an old lamp and a pile of books
+    add(mf.at(mf.box(2.2, 0.85, 0.9, WOOD), L.x, 0.43, L.z - 1.6));
+    add(mf.at(mf.cyl(0.12, 0.16, 0.45, 0xC8A15B, 10), L.x - 0.7, 1.08, L.z - 1.6));
+    add(mf.at(mf.sphere(0.13, 0xFFE08A, 10), L.x - 0.7, 1.36, L.z - 1.6));
+    [0, 1, 2].forEach((i) => add(mf.at(mf.box(0.42, 0.09, 0.3, colors[i * 2]), L.x + 0.5, 0.9 + i * 0.09, L.z - 1.6)).rotation.y = i * 0.3);
+    C.addBox(L.x - 1.1, L.x + 1.1, L.z - 2.05, L.z - 1.15);
+    this.anchor('aslanBey', L.x, L.z - 2.5, 0);
+    // two reading tables
+    [[L.x - 3, L.z + 1.8, 1], [L.x + 3, L.z + 1.8, 3]].forEach(([x, z, n]) => {
+      add(mf.at(mf.box(1.6, 0.06, 0.9, LIGHT_WOOD), x, 0.74, z));
+      add(mf.at(mf.box(0.1, 0.72, 0.1, WOOD), x, 0.36, z));
+      add(mf.at(mf.box(0.4, 0.05, 0.3, colors[n]), x - 0.2, 0.79, z)).rotation.y = 0.4; // an open book
+      C.addBox(x - 0.8, x + 0.8, z - 0.45, z + 0.45);
+      this.#stool(mf, `kitap${n}`, x - 0.4, z - 0.85, 0);
+      this.#stool(mf, `kitap${n + 1}`, x + 0.4, z - 0.85, 0);
+    });
   }
 }

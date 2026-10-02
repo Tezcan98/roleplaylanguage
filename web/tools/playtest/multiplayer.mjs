@@ -96,7 +96,7 @@ try {
   {
     const C = await browser.newPage();
     await C.goto(`${server.url}/?nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
-    const opt = await waitFor(() => C.evaluate(() => document.querySelector('.server-card[data-server="ankara"]')?.textContent.includes('👥 2') && document.querySelector('.server-card[data-server="ankara"]').textContent), 15000);
+    const opt = await waitFor(() => C.evaluate(() => document.querySelector('.server-card[data-server="ankara"]')?.textContent.includes('👥 2') && document.querySelector('.server-card[data-server="ankara"]').textContent), 45000); // a third page next to two running games loads slowly on CI
     check('menu shows live player counts per room', !!opt, opt);
     await C.close();
   }
@@ -138,6 +138,9 @@ try {
   await A.click('.chess-board [data-sq="e2"]'); await A.click('.chess-board [data-sq="e4"]');
   const seen = await waitFor(() => B.evaluate(() => window.__game.village.chess.state?.last?.to === 'e4' && document.querySelector('.chess-board [data-sq="e4"]')?.textContent === '♟'), 6000);
   check('chess: a move on one screen shows on the other player’s board', !!seen);
+  await B.click('.chess button:has-text("Pes et")');
+  const scored = await waitFor(() => A.evaluate(() => { const s = window.__game.village.chess.state; return s.phase === 'over' && s.scores.some((r) => r.games === 1) ? s.scores.map((r) => r.name).join(', ') : null; }), 6000);
+  check('chess: resigning ends the game, Dede keeps the score board', !!scored, scored);
   await A.evaluate(() => window.__game.village.chess.view.close()); await B.evaluate(() => window.__game.village.chess.view.close());
 
   // the schoolyard is a public place too: both go there, A scores, both scoreboards say 1-0
@@ -158,16 +161,33 @@ try {
   await B.evaluate(() => window.__game.village.net.dropForTest());
   check('after a dropped connection the player comes back by itself', !!(await waitFor(async () => (await B.evaluate(() => window.__game.village.net.connected)) && (await A.evaluate(() => window.__game.village.remotes.count)) === 1, 15000)));
 
-  // someone alone in an empty room is offered the room where the others are
-  const C = await player('C', 'Yalnız', { room: 'izmir' });
-  const offer = await waitFor(() => C.$('.overlay.open button:has-text("Ankara meydanına geç")'), 8000);
-  check('alone in an empty square: offered the busier one', !!offer);
-  if (offer) await offer.click();
-  check('…and switching joins the others', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 10000)));
-  await C.close();
+  // walking in from the story: the room where the others are, whatever city was picked before
+  {
+    const C = await player('C', 'Gezgin', { room: 'izmir' });
+    check('from the story: joins the square where the others are', !!(await waitFor(async () => (await C.evaluate(() => window.__game.village.net.room)) === 'ankara' && (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 10000)));
+    await C.close();
+    await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 1, 8000);
+  }
+  // someone who picked an empty room on the menu is offered the room where the others are
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1000, height: 620 } });
+    const C = await ctx.newPage();
+    errors.push(...watchErrors(C, 'C '));
+    await C.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
+    await C.waitForFunction(() => window.__game, null, { timeout: 30000 });
+    await C.evaluate(() => { window.__game.settings.set('username', 'Yalnız'); window.__game.settings.set('villageIntroSeen', true); });
+    await C.click('.server-card[data-server="izmir"]');
+    await C.click('.main-menu.open button:has-text("Meydana gir")');
+    await waitFor(() => C.evaluate(() => window.__game.village.net.connected), 15000, 400);
+    const offer = await waitFor(() => C.$('.overlay.open button:has-text("Ankara meydanına geç")'), 8000);
+    check('alone in a square picked on the menu: offered the busier one', !!offer);
+    if (offer) await offer.click();
+    check('…and switching joins the others', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 10000)));
+    await C.close();
+  }
 
   // online from the menu: the square's exit leads back to the main menu, not home
-  const exitLabel = await A.evaluate(() => { const g = window.__game; g.player.position.set(-24.6, 0, 0); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });
+  const exitLabel = await A.evaluate(() => { const g = window.__game; g.player.position.set(-32.6, 0, 0); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });
   check('online exit says "Ana menüye dön"', exitLabel.includes('Ana menüye dön'), exitLabel);
   await A.keyboard.press('e');
   check('…and returns to the main menu', !!(await waitFor(() => A.$('.main-menu.open'), 8000)) && (await A.evaluate(() => window.__game.world.current.id)) === 'yard');

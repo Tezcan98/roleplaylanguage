@@ -33,6 +33,7 @@ export class VillageMultiplayer {
     Object.assign(this, { net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice });
     this.locationId = 'village'; // the main square (chess, menu entry)
     this.joinedAt = null;
+    this.chosenRoom = false; // true when the player picked the square on the main menu
     // phones drop the connection when the screen locks or the app goes to the background:
     // come back → reconnect, and keep retrying (with back-off) while still in the square
     document.addEventListener('visibilitychange', () => { if (!document.hidden && this.#inSquare() && !this.net.connected) this.join(); });
@@ -88,6 +89,25 @@ export class VillageMultiplayer {
     clearTimeout(this.#retryTimer);
     this.#retryDelay = Math.min(15000, (this.#retryDelay || 1000) * 2);
     this.#retryTimer = setTimeout(() => { if (this.#inSquare() && !this.net.connected && !document.hidden) this.join(); }, this.#retryDelay);
+  }
+
+  /**
+   * Walking in from the story (no square picked on the menu): go where the people are.
+   * Two friends who meet "in the square" must end up in the same room, whatever city
+   * each of them picked some other day.
+   */
+  async #joinFriends(suffix) {
+    if (!this.healthUrl) return;
+    let rooms;
+    try {
+      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 2500);
+      rooms = (await (await fetch(this.healthUrl, { cache: 'no-store', signal: ctl.signal })).json()).rooms ?? {};
+      clearTimeout(t);
+    } catch { return; }
+    const count = (id) => Number(rooms[`${id}${suffix}`] ?? 0);
+    const mine = this.settings.get('serverRegion', 'ankara');
+    const [best] = this.rooms.map(([id]) => id).sort((a, b) => count(b) - count(a));
+    if (best && count(best) > count(mine)) this.settings.set('serverRegion', best);
   }
 
   /** Alone in this room while another room has players: offer to go there. */
@@ -153,6 +173,8 @@ export class VillageMultiplayer {
       }
       const here = this.world.current.id;
       if (!this.places[here]) return;
+      if (!this.chosenRoom) await this.#joinFriends(this.places[here].suffix);
+      if (this.world.current.id !== here) return;
       const room = `${this.settings.get('serverRegion', 'ankara')}${this.places[here].suffix}`;
       const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''));
       this.joinedAt = here;

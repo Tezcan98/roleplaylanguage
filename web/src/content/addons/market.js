@@ -15,7 +15,7 @@ export default {
       face,
     },
   },
-  voices: { manav: { id: 'tr_TR-fahrettin-medium', pitch: 0.95 } },
+  voices: { manav: { id: 'tr_TR-fettah-medium', pitch: 0.97 } },
   castAll: { manav: ['village', 'manav', 'stand'] },
   kindNames: {
     elma: { tr: 'kilo elma', en: 'kg of apples' },
@@ -70,7 +70,7 @@ export default {
           options: [{ tr: 'Teşekkürler, kolay gelsin!', en: 'Thanks, take it easy!', do: ['take:para:40', 'give:elma', 'give:patates:2'] }] },
         idle: { say: 'Taze meyve, taze sebze! Elma, armut, portakal, domates, patates…', en: 'Fresh fruit, fresh vegetables! Apples, pears, oranges, tomatoes, potatoes…',
           words: [['meyve', 'fruit'], ['sebze', 'vegetable'], ['armut', 'pear'], ['portakal', 'orange']],
-          options: [{ tr: 'Kolay gelsin!', en: 'Take it easy!' }] },
+          options: [{ tr: 'Kolay gelsin!', en: 'Take it easy!' }, { tr: 'Domates tohumu var mı?', en: 'Do you have tomato seeds?', next: 'seeds' }] },
       },
     },
   },

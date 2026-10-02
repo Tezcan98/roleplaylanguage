@@ -1,7 +1,8 @@
 /**
  * Ali, the little brother (6). He runs around the house, jumps on the bed now and then
  * (mom tells him off) and keeps asking "Abi, bu ne?" — each talk is a picture quiz on a
- * thing in the house, so the house words come back again and again.
+ * thing in the house, so the house words come back again and again. When you go out into
+ * the garden he comes along and plays near you (`follow`, see main.js).
  */
 const THINGS = [
   { tr: 'yatak', en: 'bed', icon: '🛏️', wrong: ['masa', 'kapı'] },
@@ -38,9 +39,10 @@ function nodes() {
       options: [{ tr: 'Aferin sana, Ali!', en: 'Well done, Ali!', do: [`flag:kardes-${t.tr}`] }],
     };
   });
+  // he is family: no introductions, he just wants to play
   out.hello = {
-    say: 'Abi! Benim adım Ali. Ben altı yaşındayım. Oyun oynayalım mı?', en: 'Big brother! My name is Ali. I am six years old. Shall we play?',
-    words: [['kardeş', 'little brother / sister'], ['oyun oynamak', 'to play a game']],
+    say: 'Abi! Abi! Çok sıkıldım. Oyun oynayalım mı?', en: 'Big brother! Big brother! I am so bored. Shall we play?',
+    words: [['sıkılmak', 'to be bored'], ['oyun oynamak', 'to play a game']],
     options: [{ tr: 'Tamam Ali, oynayalım!', en: 'All right Ali, let’s play!', next: 'q0', do: ['flag:met-kardes'] }],
   };
   return out;

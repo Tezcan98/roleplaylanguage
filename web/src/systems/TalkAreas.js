@@ -20,8 +20,8 @@ export class TalkAreas {
   #order = {};
   #listening = null;
 
-  constructor({ host, world, player, cast, labels, tts, vocab }) {
-    Object.assign(this, { world, player, cast, labels, tts, vocab });
+  constructor({ host, world, player, cast, labels, tts, vocab, modes = null, dialogue = null }) {
+    Object.assign(this, { world, player, cast, labels, tts, vocab, modes, dialogue });
     this.title = el('b', { class: 'talk-title' });
     this.lines = el('div', { class: 'talk-lines' });
     this.root = el('div', { class: 'talk-panel', attrs: { 'aria-live': 'polite' } }, [this.title, this.lines]);
@@ -67,7 +67,7 @@ export class TalkAreas {
     if (!c?.visible || c.location !== 'village') return 0;
     if (Math.hypot(c.position.x - this.player.position.x, c.position.z - this.player.position.z) < NEAR) this.labels.bubble(c, tr, null, secs);
     if (spot === this.#listening) {
-      this.tts.speak(tr, { speaker: who });
+      if ((this.modes?.is('play') ?? true) && !this.dialogue?.talking) this.tts.speak(tr, { speaker: who });
       this.#add(c.def?.short ?? who, tr, gloss(en));
     }
     return secs;
