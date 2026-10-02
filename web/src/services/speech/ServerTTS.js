@@ -3,7 +3,7 @@
  * cached WAV, so playback starts quickly and nothing big is downloaded on the phone.
  * Characters keep their own voice; `pitch` speeds the clip up / down a little.
  */
-const SHORT = { 'tr_TR-dfki-medium': 'dfki', 'tr_TR-fahrettin-medium': 'fahrettin', 'tr_TR-fettah-medium': 'fettah' };
+const SHORT = { 'tr-kadin': 'kadin', 'tr-kiz': 'kiz', 'tr-nine': 'nine', 'tr_TR-fahrettin-medium': 'fahrettin', 'tr_TR-fettah-medium': 'fettah' };
 
 export class ServerTTS {
   #audio = null;

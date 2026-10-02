@@ -37,7 +37,7 @@ export const FREE_ACTIONS = {
     words: [['top', 'ball'], ['vurmak', 'to kick / hit'], ['gol', 'goal']],
   },
   cat: {
-    label: 'Kediyi sev', think: 'Miyav! Kedi mutlu.', say: 'Kediyi sevdim.', minutes: 3,
+    label: 'Kediyi sev', think: 'Kedi mırlıyor. Çok mutlu.', say: 'Kediyi sevdim.', minutes: 3,
     words: [['kedi', 'cat'], ['sevmek', 'to love / to pet'], ['mutlu', 'happy']],
   },
   make_tea: {

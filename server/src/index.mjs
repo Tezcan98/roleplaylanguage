@@ -16,7 +16,8 @@
  *   PIPER_DIR, TTS_CACHE  Turkish speech: Piper binary + voices folder, and where generated lines are kept
  *                     (voices: tr_TR-fahrettin-medium, tr_TR-fettah-medium and tr_TR-dfki-medium — women speak with dfki)
  *   CHESS_SCORES      file for İsmail Dede's chess score board, default /tmp/yilmaz-chess-scores.json
- *   GEMINI_API_KEY    enables free conversation with village characters (POST /api/npc-chat)
+ *   GEMINI_API_KEY    enables free conversation with village characters (POST /api/npc-chat) and the women's voices
+ *   TTS_GEMINI_PER_DAY, GEMINI_TTS_MODEL  new women's lines per day (default 1500); TTS model (default gemini-3.8-flash-tts, then 2.5)
  *   GEMINI_MODEL      default gemini-flash-latest
  *   NPC_CHAT_PER_MINUTE / NPC_CHAT_PER_DAY (per IP, default 8 / 150), NPC_CHAT_GLOBAL_PER_DAY (default 1200)
  *
@@ -37,7 +38,11 @@ const host = env.HOST ?? '0.0.0.0';
 const origins = parseOrigins(env.ALLOWED_ORIGINS ?? DEFAULT_ORIGINS);
 const clientIp = (req) => (env.TRUST_PROXY === '1' && String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim()) || req.socket.remoteAddress;
 const started = Date.now();
-const tts = new Tts({ piperDir: env.PIPER_DIR, cacheDir: env.TTS_CACHE ?? '/tmp/yilmaz-tts' });
+const tts = new Tts({
+  piperDir: env.PIPER_DIR, cacheDir: env.TTS_CACHE ?? '/tmp/yilmaz-tts',
+  // women and girls speak with Gemini's voices (Piper has no Turkish woman's voice)
+  gemini: env.GEMINI_API_KEY ? { key: env.GEMINI_API_KEY, perDay: Number(env.TTS_GEMINI_PER_DAY ?? 1500), ...(env.GEMINI_TTS_MODEL ? { models: [env.GEMINI_TTS_MODEL] } : {}) } : null,
+});
 const chat = new NpcChat({
   apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL || undefined,
   perMinute: Number(env.NPC_CHAT_PER_MINUTE ?? 8), perDay: Number(env.NPC_CHAT_PER_DAY ?? 150), globalPerDay: Number(env.NPC_CHAT_GLOBAL_PER_DAY ?? 1200),

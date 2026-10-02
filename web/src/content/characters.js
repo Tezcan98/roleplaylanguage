@@ -1,21 +1,24 @@
 /** Who's who: looks (for the procedural rig), portrait SVG, labels and voices. */
 
 /**
- * Piper voices (CC0: fahrettin, fettah; dfki for women and girls). `pitch` shifts them per
- * character so nobody sounds like anybody else. When the browser has to speak instead, a
- * dfki character gets a woman's voice there too (services/speech/TextToSpeech.js).
+ * Voices. Men and boys: Piper (CC0: fahrettin, fettah), `pitch` shifts them per character so
+ * nobody sounds like anybody else. Women and girls (`female`): the server makes their lines
+ * with Gemini's Turkish women's voices (woman / girl / grandmother — Piper has no Turkish
+ * woman's voice; its "dfki" is a man). Without the server, the browser's Turkish woman's
+ * voice speaks for them — never a man's (services/speech/CharacterVoices.js).
  */
-const F = 'tr_TR-dfki-medium', M1 = 'tr_TR-fahrettin-medium', M2 = 'tr_TR-fettah-medium';
+const M1 = 'tr_TR-fahrettin-medium', M2 = 'tr_TR-fettah-medium';
+export const WOMAN = { id: 'tr-kadin', female: true, pitch: 1 }, GIRL = { id: 'tr-kiz', female: true, pitch: 1 }, GRANDMA = { id: 'tr-nine', female: true, pitch: 1 };
 export const VOICES = {
   default: { id: M1, pitch: 1 },
   ahmet: { id: M2, pitch: 1.18 },
-  anne: { id: F, pitch: 1.0 },
+  anne: WOMAN,
   baba: { id: M2, pitch: 0.9 },
   dede: { id: M1, pitch: 0.84 },
-  ogretmen: { id: F, pitch: 1.07 },
-  elif: { id: F, pitch: 1.2 },
+  ogretmen: WOMAN,
+  elif: GIRL,
   can: { id: M2, pitch: 1.28 },
-  zehra: { id: F, pitch: 1.3 },
+  zehra: GIRL,
   muhtar: { id: M1, pitch: 0.94 },
   bakkal: { id: M2, pitch: 1.04 },
 };

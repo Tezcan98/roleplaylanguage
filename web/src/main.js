@@ -145,7 +145,7 @@ settings.set('teacher', setTeacher(params.get('teacher') ?? settings.get('teache
   if (t.gender === 'm') { Object.assign(NPCS.ogretmen, TEACHER_MAN); VOICES.ogretmen = { id: 'tr_TR-fahrettin-medium', pitch: 1.0 }; }
 }
 personalizeContent(STORY, DIALOGUES, FREE_ACTIONS, HOUSE_RULES, LESSONS, CLASSMATE_BOTS, TEXTBOOK, ITEMS);
-if (playerGender() === 'girl') VOICES.ahmet = { id: 'tr_TR-dfki-medium', pitch: 1.15 }; // the player's own voice
+if (playerGender() === 'girl') VOICES.ahmet = { id: 'tr-kiz', female: true, pitch: 1 }; // the player's own voice
 // the village server (localhost: the dev server's own) — multiplayer, free chat and Turkish speech
 const villageServer = VillageNetwork.resolveUrl({ manifestUrl: manifest.villageServer, override: params.get('mp'), native });
 const bus = new EventBus();
@@ -296,7 +296,7 @@ input.onKey((e) => { if (modes.is('play') && (e.key === 'f' || e.key === 'F')) t
 // C: another camera view (normal, close, far, from above)
 const VIEW_NAMES = [['Normal görünüm', gloss('Normal view')], ['Yakın görünüm', gloss('Close view')], ['Uzak görünüm', gloss('Far view')], ['Yukarıdan görünüm', gloss('View from above')]];
 input.onKey((e) => { if (modes.is('play') && (e.key === 'c' || e.key === 'C')) { const [tr, en] = VIEW_NAMES[camera.cycleView()]; toasts.show(`🎥 ${tr}`, en); } });
-toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
+toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => c.pet() }); // no spoken "miyav": a person's voice meowing sounds silly
 
 // --- school: credits, ads, multiplayer lesson ---
 const lessons = new LessonController({
