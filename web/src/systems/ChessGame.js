@@ -19,6 +19,7 @@ export const PIECE_WORDS = { k: ['şah', 'king'], q: ['vezir', 'queen'], r: ['ka
 export class ChessGame {
   #meshes = [];
   #bySquare = new Map();
+  #fen = null;
   #anim = null;
   #carry = null;  // { from, mesh, legal }
   #warned = false;
@@ -201,7 +202,9 @@ export class ChessGame {
     this.#meshes = [];
     this.#bySquare.clear();
     this.#dropCarry();
-    const board = new Chess(fen).board();
+    const before = this.#fen, game = new Chess(fen);
+    this.#fen = fen;
+    const board = game.board();
     let moved = null;
     board.forEach((row) => row.forEach((p) => {
       if (!p) return;
@@ -218,6 +221,9 @@ export class ChessGame {
       const from = chessSquare(last.from);
       this.#anim = { mesh: moved, from: new THREE.Vector3(from.x, 0.12, from.z), to: moved.position.clone(), t: 0 };
       moved.position.copy(this.#anim.from);
+      // tell the onlookers what happened (İsmail Dede on the benches comments)
+      const taken = before ? new Chess(before).get(last.to) : null;
+      this.onMove?.({ piece: game.get(last.to)?.type, captured: taken?.type ?? null, check: game.isCheck() && !game.isCheckmate(), mate: game.isCheckmate() });
     }
   }
 

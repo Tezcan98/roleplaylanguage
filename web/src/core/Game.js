@@ -24,6 +24,7 @@ export class Game {
     toys.update(dt, t);
     village.update(dt, t);
     prayer.update(dt, t);
+    this.talk?.update(dt, t); // villagers chatting in the square's sitting places
     world.current.update(dt, t);
 
     actionButton.show(interactions.update(player.position));

@@ -15,6 +15,7 @@ const lookOf = (gender, style) => (gender === 'girl'
   ? { gender: 'girl', style: style === 'open' ? 'open' : 'covered' }
   : { gender: 'boy', style: style === 'strong' ? 'strong' : 'modest' });
 const RATE = { burst: 60, perSecond: 30 }; // messages per client (10/s states + WebRTC ICE bursts)
+const MAX_BALLS = 4;                        // shared balls per room (the square's pitch has two)
 const SAY_GAP = 1200;                       // ms between two public speech bubbles
 const HEARTBEAT = 30000;                    // ms; silent connections are dropped
 
@@ -28,13 +29,13 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *
  * client → server
  *   { type: 'hello', name, room?, gender?, style? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open')
- *   { type: 'state', x, z, rot, moving }  own position (~10/s)
+ *   { type: 'state', x, z, rot, moving, sit? }  own position (~10/s); sit = on a chair or bench
  *   { type: 'talk', on }                  push-to-talk pressed / released (🎙️ marker)
  *   { type: 'say', text }                 recognised speech (public text bubble)
  *   { type: 'call-request', to }          ask a nearby player for a voice chat
  *   { type: 'call-answer', to, accept }   answer a request
  *   { type: 'call-end' }                  hang up
- *   { type: 'ball', x, z, vx, vz }        kicked the shared ball (relayed, last state kept for newcomers)
+ *   { type: 'ball', n?, x, z, vx, vz }    kicked shared ball n (0 when left out; relayed, last state kept for newcomers)
  *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to your call partner
  *   { type: 'call-diag', state, detail? } how the voice connection went (logged, for support)
  *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
@@ -44,7 +45,7 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
  *   { type: 'welcome', id, name, look, peers, ball?, ice } | { type: 'error', message }
  *     ice: WebRTC ICE servers for voice calls (STUN + TURN with short-lived credentials)
  *   { type: 'join', peer } | { type: 'leave', id } | { type: 'states', players }
- *   { type: 'talk', id, on } | { type: 'say', id, text } | { type: 'ball', id, x, z, vx, vz }
+ *   { type: 'talk', id, on } | { type: 'say', id, text } | { type: 'ball', id, n, x, z, vx, vz }
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
  *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
  *   { type: 'rtc', from, data }
@@ -56,7 +57,7 @@ export class VillageServer {
 
   #perIp = new Map();
   #chess = new Map(); // room → ChessTable
-  #balls = new Map(); // room → last ball state reported (the kicker also reports where it stops)
+  #balls = new Map(); // room → [last state of each ball] (the kicker also reports where it stops)
 
   /**
    * @param {object} o
@@ -111,7 +112,7 @@ export class VillageServer {
   }
 
   #connect(ws, ip) {
-    const client = { ws, ip, id: null, name: null, room: null, x: -14.8, z: 0, rot: Math.PI / 2, moving: false, talking: false, dirty: false, partner: null, requests: new Map(), tokens: RATE.burst, refilled: Date.now(), lastSay: 0 };
+    const client = { ws, ip, id: null, name: null, room: null, x: -14.8, z: 0, rot: Math.PI / 2, moving: false, sit: false, talking: false, dirty: false, partner: null, requests: new Map(), tokens: RATE.burst, refilled: Date.now(), lastSay: 0 };
     this.#perIp.set(ip, (this.#perIp.get(ip) ?? 0) + 1);
     ws.alive = true;
     ws.on('pong', () => { ws.alive = true; });
@@ -140,13 +141,21 @@ export class VillageServer {
     return false;
   }
 
+  /** Welcome: where the room's balls stopped (`ball` = ball 0, for older clients). */
+  #ballsFor(room) {
+    const list = this.#balls.get(room);
+    if (!list) return {};
+    const balls = Array.from({ length: list.length }, (_, i) => (list[i] ? { ...list[i], vx: 0, vz: 0 } : null));
+    return { ball: balls[0] ?? undefined, balls };
+  }
+
   #handle(c, msg) {
     if (msg.type === 'hello') return this.#hello(c, msg);
     if (!c.id) return;
     const members = this.#room(c.room);
     switch (msg.type) {
       case 'state':
-        if ([msg.x, msg.z, msg.rot].every(Number.isFinite)) Object.assign(c, { x: msg.x, z: msg.z, rot: msg.rot, moving: !!msg.moving, dirty: true });
+        if ([msg.x, msg.z, msg.rot].every(Number.isFinite)) Object.assign(c, { x: msg.x, z: msg.z, rot: msg.rot, moving: !!msg.moving, sit: !!msg.sit, dirty: true });
         break;
       case 'talk':
         c.talking = !!msg.on;
@@ -160,9 +169,12 @@ export class VillageServer {
       case 'ball': {
         const n = [msg.x, msg.z, msg.vx, msg.vz];
         if (!n.every(Number.isFinite) || Math.abs(msg.x) > 40 || Math.abs(msg.z) > 40 || Math.hypot(msg.vx, msg.vz) > 15) return;
+        const i = msg.n ?? 0;
+        if (!Number.isInteger(i) || i < 0 || i >= MAX_BALLS) return;
         const ball = { x: msg.x, z: msg.z, vx: msg.vx, vz: msg.vz };
-        this.#balls.set(c.room, ball);
-        this.#toRoom(c, { type: 'ball', id: c.id, ...ball });
+        if (!this.#balls.has(c.room)) this.#balls.set(c.room, []);
+        this.#balls.get(c.room)[i] = ball;
+        this.#toRoom(c, { type: 'ball', id: c.id, n: i, ...ball });
         break;
       }
       case 'call-request': {
@@ -227,7 +239,7 @@ export class VillageServer {
     let unique = clean, n = 2;
     while (taken.has(unique.toLocaleLowerCase('tr'))) unique = `${clean}${n++}`;
     Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], ...lookOf(gender, style) } });
-    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ball: this.#balls.has(room) ? { ...this.#balls.get(room), vx: 0, vz: 0 } : undefined, chess: this.#table(room).state(), ice: this.iceFor(c.id) });
+    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ...this.#ballsFor(room), chess: this.#table(room).state(), ice: this.iceFor(c.id) });
     this.#toRoom(c, { type: 'join', peer: this.#public(c) });
     members.set(c.id, c);
     this.log(`[village] ${c.name} joined ${room} (${members.size})`);
@@ -264,7 +276,7 @@ export class VillageServer {
 
   #broadcastStates() {
     for (const members of this.#rooms.values()) {
-      const players = [...members.values()].filter((m) => m.dirty).map(({ id, x, z, rot, moving }) => ({ id, x, z, rot, moving }));
+      const players = [...members.values()].filter((m) => m.dirty).map(({ id, x, z, rot, moving, sit }) => ({ id, x, z, rot, moving, sit }));
       if (!players.length) continue;
       members.forEach((m) => { m.dirty = false; });
       const msg = JSON.stringify({ type: 'states', players });
@@ -273,7 +285,7 @@ export class VillageServer {
   }
 
   #dist(a, b) { return Math.hypot(a.x - b.x, a.z - b.z); }
-  #public({ id, name, look, x, z, rot, talking }) { return { id, name, look, x, z, rot, talking }; }
+  #public({ id, name, look, x, z, rot, talking, sit }) { return { id, name, look, x, z, rot, talking, sit }; }
   #table(room) { if (!this.#chess.has(room)) this.#chess.set(room, new ChessTable()); return this.#chess.get(room); }
   /** Everyone in the room (optionally except one). */
   #toAll(room, msg, except = null) {

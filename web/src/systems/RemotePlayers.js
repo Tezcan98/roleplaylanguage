@@ -14,13 +14,14 @@ export class RemotePlayers {
   get count() { return this.#players.size; }
   get(id) { return this.#players.get(id)?.char; }
 
-  add(location, { id, name, look, x = -14.8, z = 0, rot = 0, talking = false }) {
+  add(location, { id, name, look, x = -14.8, z = 0, rot = 0, talking = false, sit = false }) {
     if (this.#players.has(id)) return;
     const char = new Character(`remote-${id}`, { ...(this.looks[`${look?.gender}-${look?.style}`] ?? this.baseLook), shirt: look?.shirt ?? this.baseLook.shirt, props: [] }, { mf: this.mf });
     char.name = name;
     char.voice = talking;
     char.place({ x, z, rot });
     location.group.add(char.group);
+    if (sit) char.sit(true);
     this.#players.set(id, { char, target: { x, z, rot }, moving: false });
   }
 
@@ -34,9 +35,11 @@ export class RemotePlayers {
   clear() { [...this.#players.keys()].forEach((id) => this.remove(id)); }
 
   setStates(players) {
-    players.forEach(({ id, x, z, rot, moving }) => {
+    players.forEach(({ id, x, z, rot, moving, sit = false }) => {
       const p = this.#players.get(id);
-      if (p) { p.target = { x, z, rot }; p.moving = moving; }
+      if (!p) return;
+      p.target = { x, z, rot }; p.moving = moving;
+      if (p.char.seated !== sit) p.char.sit(sit); // at a tea table or on a bench
     });
   }
 

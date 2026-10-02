@@ -22,9 +22,9 @@ import { Foliage } from './engine/Foliage.js';
 import { LocationManager } from './world/LocationManager.js';
 import { HouseInterior } from './world/locations/HouseInterior.js';
 import { Yard } from './world/locations/Yard.js';
-import { SchoolYard } from './world/locations/SchoolYard.js';
+import { SchoolYard, PITCH } from './world/locations/SchoolYard.js';
 import { Classroom } from './world/locations/Classroom.js';
-import { VillageSquare } from './world/locations/VillageSquare.js';
+import { VillageSquare, SQUARE_PITCH } from './world/locations/VillageSquare.js';
 
 import { Player } from './entities/Player.js';
 import { Npc } from './entities/Npc.js';
@@ -97,6 +97,7 @@ import { MainMenu } from './ui/MainMenu.js';
 import { WordDrill } from './systems/WordDrill.js';
 import { ChessGame } from './systems/ChessGame.js';
 import { Football } from './systems/Football.js';
+import { TalkAreas } from './systems/TalkAreas.js';
 import { ChessView } from './ui/ChessView.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
@@ -281,10 +282,11 @@ const free = new FreeActionSystem({
 effects.register('free', (id) => free.perform(id));
 const toys = new ToySystem({ world, player, free, tts });
 const yard = world.get('yard');
-// balls are kicked by running into them; the square's ball is shared by everyone online
+// balls are kicked by running into them; the square's two (on its pitch) and the school's are shared online
 toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true });
 const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) });
-const villageBall = toys.add(new Ball(mf, world.get('village'), { x: 4, z: 3 }), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) });
+const villageBalls = [{ x: 13.5, z: SQUARE_PITCH.cz }, { x: 10, z: SQUARE_PITCH.cz - 2 }]
+  .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, onKick: (b) => village.ballKicked(b) }));
 toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => { c.pet(); tts.speak('Miyav!', { speaker: 'default' }); } });
 
 // --- school: credits, ads, multiplayer lesson ---
@@ -313,7 +315,7 @@ const village = new VillageMultiplayer({
   remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS }),
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   // public places: the square, and the schoolyard for football (its own room: <city>-okul)
-  places: { village: { suffix: '', ball: villageBall, label: '' }, schoolyard: { suffix: '-okul', ball: schoolBall, label: 'Okul bahçesi' } },
+  places: { village: { suffix: '', balls: villageBalls, label: '' }, schoolyard: { suffix: '-okul', balls: [schoolBall], label: 'Okul bahçesi' } },
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
   calls: new CallUI(host, modes),
@@ -331,9 +333,17 @@ const village = new VillageMultiplayer({
 // --- giant chess on the square: online the server's board, offline against the computer ---
 const chess = new ChessGame({ mf, square: world.get('village'), view: new ChessView(host, { modes }), net: villageNet, vocab, toasts, player, world });
 village.chess = chess;
-const football = new Football({ world, ball: schoolBall, village, toasts, tts });
-village.onGoal = (place, side) => { if (place === 'schoolyard') football.scored(side, false); };
+// football: the schoolyard's pitch and the fenced one in the square, each with its score board
+const football = new Football({ place: 'schoolyard', pitch: PITCH, balls: [schoolBall], writeScore: (a, b) => world.get('schoolyard').writeScore(a, b), world, village, toasts, tts });
+const squareFootball = new Football({ place: 'village', pitch: SQUARE_PITCH, balls: villageBalls, writeScore: (a, b) => world.get('village').writeScore(a, b), world, village, toasts, tts });
+const matches = { schoolyard: football, village: squareFootball };
+village.onGoal = (place, side) => matches[place]?.scored(side, false);
 world.get('schoolyard').animated.push((dt) => football.update(dt));
+world.get('village').animated.push((dt) => squareFootball.update(dt));
+// the tea garden and the chess benches: villagers chat, sit down to listen in
+const talk = new TalkAreas({ host, world, player, cast, labels, tts, vocab });
+village.onSay = (c, text) => talk.heard(c, text);
+chess.onMove = (m) => talk.chessMoved(m);
 effects.register('chess', () => chess.open());
 
 // --- interaction ---
@@ -517,7 +527,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ talk, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -550,4 +560,4 @@ setInterval(() => {
 }, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { football, chess, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

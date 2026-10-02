@@ -71,6 +71,22 @@ try {
   const moved = await waitFor(async () => { const [x, z] = await ballAt(B); const d = Math.hypot(x - ball0[0], z - ball0[1]); return d > 0.5 ? d : 0; }, 5000);
   check('kicking the ball by running into it, seen by the other player', !!moved, `${(moved || 0).toFixed(2)} m`);
   check('no voice links in public', (await peers(A)) === 0 && (await peers(B)) === 0);
+  // the square's pitch has a second ball, synced on its own
+  const ballsAt = (p) => p.evaluate(() => window.__game.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball').map((t) => [t.toy.position.x, t.toy.position.z]));
+  await waitFor(() => A.evaluate(() => window.__game.squareFootball.balls.every((b) => !b.moving)), 8000); await sleep(500); // let the first one stop
+  const [, second0] = await ballsAt(A), first0 = (await ballsAt(A))[0];
+  await B.evaluate(async () => {
+    const g = window.__game, b = g.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball')[1].toy.position;
+    const [bx, bz] = [b.x, b.z];
+    for (let i = 0; i < 30; i++) { g.player.position.set(bx, 0, bz - 1.4 + i * 0.06); await new Promise((r) => requestAnimationFrame(r)); }
+  });
+  const moved2 = await waitFor(async () => { const [f, s2] = await ballsAt(A); return Math.hypot(s2[0] - second0[0], s2[1] - second0[1]) > 0.5 && Math.hypot(f[0] - first0[0], f[1] - first0[1]) < 0.3; }, 5000);
+  check('square pitch: the second ball is shared on its own', !!moved2, JSON.stringify(await ballsAt(A)));
+  // sitting at a tea table shows as sitting on the other screen
+  await A.evaluate(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('cay3')); g.player.sit(true); });
+  const seenSitting = await waitFor(() => B.evaluate(() => window.__game.village.remotes.list().some((c) => c.seated)), 4000);
+  check('a player sitting at the tea garden is seen sitting', !!seenSitting);
+  await A.evaluate(() => window.__game.player.sit(false));
 
   await A.dispatchEvent('.ptt', 'pointerdown'); await sleep(1200); await A.dispatchEvent('.ptt', 'pointerup'); await sleep(800);
   const bubbles = await B.evaluate(() => [...document.querySelectorAll('.bubble')].filter((b) => b.style.display !== 'none').map((b) => b.textContent));

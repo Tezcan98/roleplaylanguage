@@ -101,7 +101,9 @@ test('positions are broadcast; public speech is filtered and rate-limited', asyn
   const b = await join('Veli', 'say');
   a.send({ type: 'state', x: 1, z: 2, rot: 0, moving: true });
   const s = await b.next('states');
-  assert.deepEqual(s.players[0], { id: a.welcome.id, x: 1, z: 2, rot: 0, moving: true });
+  assert.deepEqual(s.players[0], { id: a.welcome.id, x: 1, z: 2, rot: 0, moving: true, sit: false });
+  a.send({ type: 'state', x: 1, z: 2, rot: 0, moving: false, sit: true }); // sat down at a tea table
+  assert.equal((await b.next('states')).players[0].sit, true);
   a.send({ type: 'say', text: '  Merhaba amk  ' });
   a.send({ type: 'say', text: 'too soon' });
   assert.equal((await b.next('say')).text, 'Merhaba ***');
@@ -183,15 +185,21 @@ test('shared ball: kicks are relayed, newcomers get where it stopped; nonsense i
   const a = await join('Topçu', 'ball');
   const b = await join('Kaleci', 'ball');
   a.send({ type: 'ball', x: 1, z: 2, vx: 5, vz: 0 });
-  assert.deepEqual(await b.next('ball'), { type: 'ball', id: a.welcome.id, x: 1, z: 2, vx: 5, vz: 0 });
+  assert.deepEqual(await b.next('ball'), { type: 'ball', id: a.welcome.id, n: 0, x: 1, z: 2, vx: 5, vz: 0 });
   a.send({ type: 'ball', x: 4, z: 2, vx: 0, vz: 0 }); // came to rest
   await b.next('ball');
   a.send({ type: 'ball', x: 1e9, z: 0, vx: 0, vz: 0 });
   a.send({ type: 'ball', x: 0, z: 0, vx: 99, vz: 0 });
+  a.send({ type: 'ball', n: 9, x: 0, z: 0, vx: 0, vz: 0 });
   await silence();
   assert.equal(b.inbox.some((m) => m.type === 'ball'), false);
   const c = await join('Yeni', 'ball');
   assert.deepEqual(c.welcome.ball, { x: 4, z: 2, vx: 0, vz: 0 });
+  // a second ball in the same room is kept apart
+  a.send({ type: 'ball', n: 1, x: 7, z: 3, vx: 2, vz: 0 });
+  assert.deepEqual(await b.next('ball'), { type: 'ball', id: a.welcome.id, n: 1, x: 7, z: 3, vx: 2, vz: 0 });
+  const d = await join('Dördüncü', 'ball');
+  assert.deepEqual(d.welcome.balls, [{ x: 4, z: 2, vx: 0, vz: 0 }, { x: 7, z: 3, vx: 0, vz: 0 }]);
   await Promise.all([a, b, c].map((p) => p.close()));
 });
 

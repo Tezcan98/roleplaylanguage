@@ -22,12 +22,12 @@ export class VillageMultiplayer {
   #warnedStt = false;
   #retryTimer = null;
   #retryDelay = 0;
-  #ballRolling = false; // we kicked it last: report where it stops, for players who join later
+  #rolling = new Set(); // balls we kicked last: report where they stop, for players who join later
 
   /**
    * @param {object} o
-   * @param {Object<string, { suffix: string, ball?: object, label: string }>} o.places
-   *   public places: location id → room suffix (the city server + suffix is the room), its shared ball
+   * @param {Object<string, { suffix: string, balls?: object[], label: string }>} o.places
+   *   public places: location id → room suffix (the city server + suffix is the room), its shared balls
    */
   constructor({ bus, net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null }) {
     Object.assign(this, { net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice });
@@ -50,10 +50,10 @@ export class VillageMultiplayer {
     });
     net.on('states', ({ players }) => this.remotes.setStates(players));
     net.on('talk', ({ id, on }) => this.remotes.setTalking(id, on));
-    net.on('ball', (b) => this.ball?.setState(b)); // someone else kicked the shared ball
+    net.on('ball', (b) => this.balls[b.n ?? 0]?.setState(b)); // someone else kicked a shared ball
     net.on('goal', ({ side }) => this.onGoal?.(this.joinedAt, side, false)); // someone scored in a match
     net.on('chess', (st) => { if (this.joinedAt === 'village') this.chess?.applyServer(st); }); // the square's giant chess board
-    net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
+    net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) { this.labels.bubble(c, text, null, 6); this.onSay?.(c, text); } });
     net.on('call-request', async ({ from, name }) => {
       if (this.isBlocked(from, name)) { this.net.send({ type: 'call-answer', to: from, accept: false }); return; }
       const answer = await this.calls.ask(name);
@@ -76,8 +76,8 @@ export class VillageMultiplayer {
 
   #loc() { return this.world.get(this.joinedAt ?? this.world.current?.id); }
   #inSquare() { return !!this.places[this.world.current?.id]; }
-  /** The shared ball of the place I am in. */
-  get ball() { return this.places[this.joinedAt ?? this.world.current?.id]?.ball ?? null; }
+  /** The shared balls of the place I am in. */
+  get balls() { return this.places[this.joinedAt ?? this.world.current?.id]?.balls ?? []; }
   #roomLabel(id = this.settings.get('serverRegion', 'ankara')) {
     const city = this.rooms.find(([r]) => r === id)?.[1] ?? id;
     const place = this.places[this.joinedAt ?? this.world.current?.id];
@@ -157,7 +157,7 @@ export class VillageMultiplayer {
       const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''));
       this.joinedAt = here;
       welcome.peers.forEach((p) => this.remotes.add(this.#loc(), p));
-      if (welcome.ball) this.ball?.setState(welcome.ball);
+      (welcome.balls ?? [welcome.ball]).forEach((b, i) => b && this.balls[i]?.setState(b));
       if (welcome.chess && here === 'village') this.chess?.applyServer(welcome.chess);
       this.ptt.show(true);
       this.#count();
@@ -172,7 +172,13 @@ export class VillageMultiplayer {
   }
 
   /** The local player kicked the shared ball: everyone else gets its new position and speed. */
-  ballKicked(ball) { if (this.net.connected && ball === this.ball) { this.net.send({ type: 'ball', ...ball.state() }); this.#ballRolling = true; this.lastKick = Date.now(); } }
+  ballKicked(ball) {
+    const n = this.balls.indexOf(ball);
+    if (!this.net.connected || n < 0) return;
+    this.net.send({ type: 'ball', n, ...ball.state() });
+    this.#rolling.add(ball);
+    this.lastKick = Date.now();
+  }
   /** I scored (my kick): tell the others in this place. */
   goal(side) { if (this.net.connected) this.net.send({ type: 'goal', side }); }
 
@@ -268,9 +274,9 @@ export class VillageMultiplayer {
     this.#since += dt;
     if (this.#since < SEND_EVERY) return;
     this.#since = 0;
-    if (this.#ballRolling && this.ball && !this.ball.moving) { this.#ballRolling = false; this.net.send({ type: 'ball', ...this.ball.state() }); }
+    this.#rolling.forEach((b) => { if (!b.moving) { this.#rolling.delete(b); const n = this.balls.indexOf(b); if (n >= 0) this.net.send({ type: 'ball', n, ...b.state() }); } });
     const P = this.player.position;
-    const s = { x: +P.x.toFixed(2), z: +P.z.toFixed(2), rot: +this.player.group.rotation.y.toFixed(2), moving: !!this.player.moving };
+    const s = { x: +P.x.toFixed(2), z: +P.z.toFixed(2), rot: +this.player.group.rotation.y.toFixed(2), moving: !!this.player.moving, sit: !!this.player.seated };
     const key = JSON.stringify(s);
     if (key === this.#last) return;
     this.#last = key;

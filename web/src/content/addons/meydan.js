@@ -1,7 +1,10 @@
 /**
  * The village square's tea garden: Osman the tea maker (çaycı) at the çay ocağı. Ordering tea
  * practises polite requests and numbers (how many sugars); free chat with him on Gemini.
+ * Regulars: Hüseyin and Kemal at their tavla table, İsmail Dede on the chess benches — they
+ * chat among themselves (content/talks.js), which you hear when you sit down near them.
  */
+const face = (hair, beard) => `<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#E6D8C4"/><circle cx="32" cy="36" r="16" fill="#E2B48C"/><path d="M16 31q4-13 16-13t16 13q-5-5-16-5t-16 5z" fill="${hair}"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/>${beard ? `<path d="M20 40q12 18 24 0q-4 6-12 6t-12-6z" fill="${hair}"/>` : `<path d="M23 43q9-6 18 0q-9 3-18 0z" fill="${hair}"/>`}</svg>`;
 export default {
   id: 'meydan',
   npcs: {
@@ -10,10 +13,50 @@ export default {
       look: { shirt: 0xFFFFFF, vest: 0x8E2B1E, pants: 0x2A2F3A, skin: 0xE9B98F, hair: 0x2E2926, mustache: 0x2E2926, apron: true },
       face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#F2C9A0"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M16 31q4-13 16-13t16 13q-5-5-16-5t-16 5z" fill="#2E2926"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M23 43q9-6 18 0q-9 3-18 0z" fill="#2E2926"/></svg>',
     },
+    huseyin: {
+      name: 'Hüseyin Amca', short: 'Hüseyin', role: 'çay bahçesinin müdavimi · tea garden regular',
+      look: { shirt: 0x6E7B5A, vest: 0x3A3F4A, pants: 0x2A2F3A, skin: 0xE2B48C, hair: 0xD8D8D8, mustache: 0xD8D8D8 },
+      face: face('#D8D8D8', false),
+    },
+    kemal: {
+      name: 'Kemal Amca', short: 'Kemal', role: 'tavlacı · backgammon player',
+      look: { shirt: 0x8A6E4B, pants: 0x3A3326, skin: 0xD9A77E, hair: 0x5A5048, mustache: 0x5A5048 },
+      face: face('#5A5048', false),
+    },
+    ismail: {
+      name: 'İsmail Dede', short: 'İsmail', role: 'satranç meraklısı · chess lover',
+      look: { shirt: 0xE8E2D0, vest: 0x5B4636, pants: 0x3A3326, skin: 0xE2B48C, hair: 0xEEEEEE, mustache: 0xEEEEEE },
+      face: face('#EEEEEE', true),
+    },
   },
-  voices: { cayci: { id: 'tr_TR-fahrettin-medium', pitch: 0.95 } },
-  castAll: { cayci: ['village', 'cayci', 'stand'] },
+  voices: {
+    cayci: { id: 'tr_TR-fahrettin-medium', pitch: 0.95 },
+    huseyin: { id: 'tr_TR-fahrettin-medium', pitch: 0.85 },
+    kemal: { id: 'tr_TR-fettah-medium', pitch: 0.9 },
+    ismail: { id: 'tr_TR-fahrettin-medium', pitch: 0.78 },
+  },
+  castAll: {
+    cayci: ['village', 'cayci', 'stand'],
+    huseyin: ['village', 'regular1', 'sitBench'],
+    kemal: ['village', 'regular2', 'sitBench'],
+    ismail: ['village', 'chessFan', 'sitBench'],
+  },
   dialogues: {
+    huseyin: { start: () => 'h1', nodes: {
+      h1: { say: 'Selamünaleyküm evlat! Bir sandalyeye otur, bir çay iç. Biz burada sohbet ediyoruz.', en: 'Peace be upon you, child! Sit on a chair and have a tea. We are chatting here.',
+        words: [['sohbet etmek', 'to chat'], ['sandalye', 'chair']],
+        options: [{ tr: 'Aleykümselam! Teşekkür ederim.', en: 'And peace be upon you! Thank you.' }] },
+    } },
+    kemal: { start: () => 'k1', nodes: {
+      k1: { say: 'Tavla biliyor musun? Zarı atarsın, pulları oynarsın.', en: 'Do you know backgammon? You throw the dice and move the pieces.',
+        words: [['tavla', 'backgammon'], ['zar', 'dice']],
+        options: [{ tr: 'Biraz biliyorum.', en: 'I know a little.' }, { tr: 'Hayır, bilmiyorum.', en: 'No, I don’t know it.' }] },
+    } },
+    ismail: { start: () => 'i1', nodes: {
+      i1: { say: 'Satranç oynamak ister misin? Tahtaya çık, bir taşın yanına git ve dokun.', en: 'Would you like to play chess? Step onto the board, go next to a piece and touch it.',
+        words: [['satranç', 'chess'], ['taş', 'piece / stone'], ['dokunmak', 'to touch']],
+        options: [{ tr: 'Tamam, deneyeceğim!', en: 'Okay, I will try!' }] },
+    } },
     cayci: {
       start: () => 'c1',
       nodes: {

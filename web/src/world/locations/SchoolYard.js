@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { Foliage } from '../../engine/Foliage.js';
+import { buildPitch } from '../Pitch.js';
 
 const DARK = { tex: 'darkWood' };
 
@@ -11,47 +12,12 @@ PITCH.cz = (PITCH.z0 + PITCH.z1) / 2;
 
 export class SchoolYard extends Location {
   /** Score on the board by the pitch. */
-  writeScore(a, b) {
-    const c = this.scoreCanvas;
-    if (!c) return;
-    const g = c.getContext('2d');
-    g.fillStyle = '#1B2440'; g.fillRect(0, 0, c.width, c.height);
-    g.fillStyle = '#FFFFFF'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.font = 'bold 30px Fredoka, sans-serif'; g.fillText('MAVİ  –  KIRMIZI', c.width / 2, 34);
-    g.font = 'bold 72px Fredoka, sans-serif';
-    g.fillStyle = '#5DADE2'; g.fillText(String(a), c.width * 0.3, 100);
-    g.fillStyle = '#FFFFFF'; g.fillText('-', c.width / 2, 100);
-    g.fillStyle = '#EC7063'; g.fillText(String(b), c.width * 0.7, 100);
-    this.scoreTex.needsUpdate = true;
-  }
+  writeScore(a, b) { this.scoreWriter?.(a, b); }
 
   /** White lines, two goals with nets, a score board. */
-  #pitch(mf, C) {
-    const add = (m) => this.add(m);
-    const { x0, x1, z0, z1, cz, goalHalf } = PITCH;
-    const white = 0xF4F6F7, line = (x, z, w, d) => add(mf.at(mf.box(w, 0.01, d, white), x, 0.035, z));
-    line((x0 + x1) / 2, z0, x1 - x0, 0.12); line((x0 + x1) / 2, z1, x1 - x0, 0.12);
-    line(x0, cz, 0.12, z1 - z0); line(x1, cz, 0.12, z1 - z0); line(0, cz, 0.12, z1 - z0);
-    const ring = mf.torus(1.8, 0.05, white, 40); ring.rotation.x = Math.PI / 2; ring.position.set(0, 0.035, cz); add(ring);
-    [x0, x1].forEach((gx, i) => {
-      const dir = i ? 1 : -1;
-      line(gx - dir * 1.5, cz, 0.12, 5); line(gx - dir * 0.75, cz - 2.5, 1.5, 0.12); line(gx - dir * 0.75, cz + 2.5, 1.5, 0.12); // goal area
-      const post = (z) => { add(mf.at(mf.cyl(0.06, 0.06, 1.6, white, 8), gx, 0.8, z)); C.addCircle(gx, z, 0.12); };
-      post(cz - goalHalf); post(cz + goalHalf);
-      add(mf.at(mf.cyl(0.06, 0.06, goalHalf * 2, white, 8), gx, 1.6, cz)).rotation.x = Math.PI / 2;
-      const net = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.6, goalHalf * 2), new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true, transparent: true, opacity: 0.35 }));
-      net.position.set(gx + dir * 0.45, 0.8, cz); add(net);
-      C.addBox(gx + dir * 0.9 - 0.05, gx + dir * 0.9 + 0.05, cz - goalHalf, cz + goalHalf); // back of the net
-    });
-    // score board on a post beside the pitch
-    this.scoreCanvas = document.createElement('canvas'); this.scoreCanvas.width = 320; this.scoreCanvas.height = 140;
-    this.scoreTex = new THREE.CanvasTexture(this.scoreCanvas); this.scoreTex.colorSpace = THREE.SRGBColorSpace;
-    const board = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 1.05), new THREE.MeshBasicMaterial({ map: this.scoreTex }));
-    board.position.set(-12.6, 2.6, cz); board.rotation.y = Math.PI / 2; add(board);
-    add(mf.at(mf.cyl(0.07, 0.07, 2.2, { tex: 'metal' }, 8), -12.7, 1.1, cz));
-    C.addCircle(-12.7, cz, 0.2);
-    this.writeScore(0, 0);
-    this.anchor('kickoff', 0, cz + 2.5, Math.PI);
+  #pitch(mf) {
+    this.scoreWriter = buildPitch(this, mf, { ...PITCH, board: { x: -12.6, z: PITCH.cz, rot: Math.PI / 2 } });
+    this.anchor('kickoff', 0, PITCH.cz + 2.5, Math.PI);
   }
 
   constructor() {

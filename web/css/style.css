@@ -332,3 +332,13 @@ html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
 .main-menu .card{position:relative}
 body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesson #toasts{display:none!important}
 @media (orientation:landscape) and (max-height:520px){.classroom .cls-q{font-size:17px}.classroom .cls-main{padding:8px;gap:5px}}
+/* listening in at the tea garden / chess benches (TalkAreas) */
+.talk-panel{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 24px + var(--hud-h,46px));max-width:min(360px,46vw);background:rgba(42,30,21,.88);color:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:8px 12px;display:none;pointer-events:none;font-size:14px}
+.talk-panel.open{display:block}
+.talk-title{display:block;font:700 15px Fredoka,sans-serif;margin-bottom:4px}
+.talk-title small{font:700 12px Nunito,sans-serif;color:#D9C7A3}
+.talk-line{margin:4px 0 0;font-weight:800;line-height:1.3;animation:tin .3s ease-out}
+.talk-line b{color:var(--gold)}
+.talk-line small{display:block;color:#D9C7A3;font-weight:700;font-size:12px}
+body.gloss-rtl .talk-line small{direction:rtl;text-align:right}
+.pill.clock:empty{display:none} /* no clock online (the story is paused) */

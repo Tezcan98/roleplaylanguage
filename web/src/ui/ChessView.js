@@ -54,8 +54,8 @@ export class ChessView {
     else if (over === 'draw') { tr = 'Berabere.'; en = gloss('Draw.'); }
     else if (myColor && turn === myColor) { tr = game.isCheck() ? 'Şah! Sıra sende.' : 'Sıra sende.'; en = game.isCheck() ? gloss('Check! Your move.') : gloss('Your move.'); }
     else if (myColor) { tr = 'Rakibin düşünüyor…'; en = gloss('Your opponent is thinking…'); }
-    else { tr = online ? 'İzliyorsun. Boş bir yere oturabilirsin.' : 'Oyun'; en = online ? gloss('You are watching. You can take a free seat.') : ''; }
-    this.status.replaceChildren(el('span', { text: tr }), en && el('small', { class: 'en-t', text: ` · ${en}` }));
+    this.status.replaceChildren(...(tr ? [el('span', { text: tr }), el('small', { class: 'en-t', text: ` · ${en}` })] : []));
+    this.status.hidden = !tr; // watching: the seat buttons above say it all
     // board (black at the bottom when I play black)
     const flip = myColor === 'b';
     const legal = this.#sel ? game.moves({ square: this.#sel, verbose: true }).map((m) => m.to) : [];
@@ -69,11 +69,11 @@ export class ChessView {
     }
     this.board.replaceChildren(...cells);
     this.words.textContent = `şah = ${gloss('king')} · vezir = ${gloss('queen')} · kale = ${gloss('rook')} · fil = ${gloss('bishop')} · at = ${gloss('knight')} · piyon = ${gloss('pawn')}`;
-    this.actions.replaceChildren(
+    this.actions.replaceChildren(...[
       online && myColor ? el('button', { class: 'btn alt sm', text: 'Kalk', attrs: { type: 'button' }, on: { click: () => this.h.onStand() } }) : null,
       over || !online ? el('button', { class: 'btn alt sm', text: 'Yeni oyun', attrs: { type: 'button' }, on: { click: () => this.h.onNew() } }) : null,
       el('button', { class: 'btn sm', text: 'Kapat', attrs: { type: 'button' }, on: { click: () => this.close() } }),
-    );
+    ].filter(Boolean)); // (a bare null would be printed as "null")
   }
 
   #tap(sq, game, myColor) {

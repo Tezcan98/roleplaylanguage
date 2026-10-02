@@ -153,6 +153,28 @@ try {
   check('chess: walking off the board warns “Oyundan çıkıyorsunuz”', await ev(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('Oyundan çıkıyorsunuz'))));
   await ev(() => window.__game.player.position.set(-15 + 9, 0, 15)); await sleep(500);
   check('chess: further away the piece goes back and the seat is free', (await ev(() => window.__game.chess.game.get('d2')?.type)) === 'p' && (await ev(() => window.__game.chess.myColor)) === (online ? null : 'w'));
+  await ev(() => window.__game.chess.open()); await sleep(400);
+  check('chess screen: no stray “null” text, no “watching” line', !(await ev(() => document.querySelector('.chess .card').innerText)).includes('null') && !(await ev(() => document.querySelector('.chess .card').innerText)).includes('İzliyorsun'));
+  await ev(() => window.__game.chess.view.close());
+
+  // --- the square's fenced pitch, the tea garden and the chess benches ------------------
+  const sqBalls = () => ev(() => window.__game.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball').map((t) => t.toy));
+  check('square pitch: two balls', (await ev(() => window.__game.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball').length)) === 2);
+  await ev(() => { const b = window.__game.squareFootball.balls[0]; b.setState({ x: 8.3, z: 15, vx: 0, vz: -8 }); }); // straight at the door in the fence
+  await sleep(1500);
+  const bz = await ev(() => window.__game.squareFootball.balls[0].position.z);
+  check('square pitch: the wire fence keeps the ball in (even at the door)', bz > 14, `z = ${bz.toFixed(2)}`);
+  await ev(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('cay1')); g.player.sit(true); });
+  const heard = await waitFor(() => ev(() => document.querySelectorAll('.talk-panel.open .talk-line').length), 16000);
+  check('tea garden: sitting down, you hear the regulars talk (with meanings)', !!heard, await ev(() => document.querySelector('.talk-panel')?.innerText.replace(/\n+/g, ' | ')));
+  await ev(() => window.__game.player.sit(false)); await sleep(300);
+  check('…standing up closes the panel', !(await ev(() => document.querySelector('.talk-panel.open'))));
+  await ev(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('chessBench1')); g.player.sit(true); }); await sleep(300);
+  check('chess benches: sitting down to watch', (await ev(() => window.__game.talk.listening)) === 'chess');
+  await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, fen: 'rnbqkbnr/pppppppp/8/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 1', last: { from: 'g1', to: 'f3', san: 'Nf3' } }); });
+  const comment = await waitFor(() => ev(() => [...document.querySelectorAll('.talk-panel .talk-line')].map((l) => l.innerText).find((t) => t.includes('At oynadı'))), 6000);
+  check('…İsmail Dede comments on the moves', !!comment, comment || '');
+  await ev(() => window.__game.player.sit(false));
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(600);
   await drainUi(page);
 

@@ -34,7 +34,9 @@ export const HOTSPOTS = {
   'village.bakkalCounter': free('village_shop'),
   // giant chess on the square (ChessGame), and the stools of the tea garden
   'village.chess': { label: 'Satranç oyna', use: ['chess'] },
-  ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`village.cay${i + 1}`, { label: 'Çay bahçesinde otur', use: [`sit:cay${i + 1}`, 'free:village_tea'] }])),
+  // seats in the tea garden and on the benches round the chess board (counts: TEA_SEATS / CHESS_SEATS in VillageSquare)
+  ...Object.fromEntries(Array.from({ length: 22 }, (_, i) => [`village.cay${i + 1}`, { label: 'Çay bahçesinde otur', use: [`sit:cay${i + 1}`, 'free:village_tea'], available: (c) => !c.seated }])),
+  ...Object.fromEntries(Array.from({ length: 11 }, (_, i) => [`village.chessBench${i + 1}`, { label: 'Banka otur, maçı izle', use: [`sit:chessBench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])),
   // garden gate = the street: choose school or the village square (see the 'street' effect)
   'yard.gate': { label: 'Sokağa çık', use: ['street'], link: ['schoolyard', 'village'] },
   'house.sofra': { label: 'Sofraya otur', use: ['sit:sofraS'], available: (c) => !c.seated },
