@@ -34,14 +34,12 @@ export const HOTSPOTS = {
   ...Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`village.bench${i + 1}`, { label: 'Banka otur', use: [`sit:bench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])), // BENCH_SEATS in VillageSquare
   'village.bakkalCounter': free('village_shop'),
   // giant chess on the square (ChessGame), and the stools of the tea garden
-  'village.chess': { label: 'Satranç oyna', use: ['chess'] },
   // seats in the tea garden and on the benches round the chess board (counts: TEA_SEATS / CHESS_SEATS in VillageSquare)
   ...Object.fromEntries(Array.from({ length: 22 }, (_, i) => [`village.cay${i + 1}`, { label: 'Çay bahçesinde otur', use: [`sit:cay${i + 1}`, 'free:village_tea'], available: (c) => !c.seated }])),
   ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`village.chessBench${i + 1}`, { label: 'Banka otur, maçı izle', use: [`sit:chessBench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])),
   // the open-air kahvehane and the open library (VillageSquare)
   ...Object.fromEntries([1, 2, 3, 4].map((n) => [`village.kahve${n}`, { label: 'Kahvehanede otur', use: [`sit:kahve${n}`, 'free:village_coffee'], available: (c) => !c.seated }])),
   ...Object.fromEntries([1, 2, 3, 4].map((n) => [`village.kitap${n}`, { label: 'Otur, kitap oku', use: [`sit:kitap${n}`, 'free:village_read'], available: (c) => !c.seated }])),
-  ...Object.fromEntries([1, 2, 3, 4].map((n) => [`village.minder${n}`, { label: 'Otur, ney dinle', use: [`sit:minder${n}`, 'free:village_ney'], available: (c) => !c.seated }])), // Ömer Baba's corner
   'village.libShelf': { label: (c) => (c.state?.heldBook ? 'Kitabı rafa koy' : 'Kitap al'), use: ['library'] }, // systems/Library.js
   // garden gate = the street: choose school or the village square (see the 'street' effect)
   'yard.gate': { label: 'Sokağa çık', use: ['street'], link: ['schoolyard', 'village'] },

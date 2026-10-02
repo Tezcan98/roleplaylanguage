@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Chess } from 'chess.js';
 import { chessSquare, CHESS } from '../world/locations/VillageSquare.js';
+import { el } from '../ui/dom.js';
 
 /** Turkish piece names (taught while playing). */
 export const PIECE_WORDS = { k: ['şah', 'king'], q: ['vezir', 'queen'], r: ['kale', 'rook'], b: ['fil', 'bishop'], n: ['at', 'knight'], p: ['piyon', 'pawn'] };
@@ -35,11 +36,17 @@ export class ChessGame {
   #timer = null;
   #bySquare = new Map();
   #fen = null;
+  #glow = null; // red light on a king in check
   #carry = null;  // the piece in my hands: { from, mesh, legal }
   #lights = [];
 
-  constructor({ mf, square, view, net, vocab, toasts, player, world, onSay = () => {} }) {
-    Object.assign(this, { mf, square, view, net, vocab, toasts, player, world, onSay });
+  constructor({ host, mf, square, net, vocab, toasts, player, world, onSay = () => {}, onAskDede = () => {} }) {
+    Object.assign(this, { mf, square, net, vocab, toasts, player, world, onSay, onAskDede });
+    // while you play: your colour, the clocks and whose turn it is (nothing else on the screen)
+    this.bar = el('div', { class: 'pill chess-bar', attrs: { 'aria-live': 'polite' } });
+    this.bar.hidden = true;
+    host.append(this.bar);
+    setInterval(() => this.#paintBar(), 500);
     this.online = false;
     this.state = null;
     this.#resetLocal();
@@ -75,30 +82,37 @@ export class ChessGame {
   // --- actions (from the on-screen board) ----------------------------------------
 
   ask(color) {
+    this.#learnWords();
+    if (color === 'free') color = this.state?.seats?.w ? 'b' : 'w'; // the empty seat opposite the waiting player
     if (this.online) { this.net.send({ type: this.state.legacy ? 'chess-sit' : 'chess-ask', color }); return; }
     // nobody else here: Dede takes the other colour
     this.#localStart(color);
   }
-  playDede(color = 'w') { if (this.online) this.net.send({ type: 'chess-dede', color }); else this.#localStart(color); }
+  playDede(color = 'w') { this.#learnWords(); if (this.online) this.net.send({ type: 'chess-dede', color }); else this.#localStart(color); }
   leave() { if (this.online) this.net.send({ type: this.state.legacy ? 'chess-stand' : 'chess-leave' }); }
   resign() {
     if (this.online) { this.net.send({ type: 'chess-resign' }); return; }
     if (this.#local.phase === 'playing') this.#localFinish(this.#local.mine === 'w' ? 'b' : 'w', 'resign');
   }
 
-  open() {
-    Object.values(PIECE_WORDS).forEach(([tr, en]) => this.vocab.learn(tr, en));
-    this.view.open({
-      onMove: (from, to) => this.#move(from, to),
-      onAsk: (c) => this.ask(c),
-      onDede: (c) => this.playDede(c),
-      onLeave: () => this.leave(),
-      onResign: () => this.resign(),
-    });
-    this.#show();
+  /** Words for the pieces into the notebook (when Dede seats you). */
+  #learnWords() { Object.values(PIECE_WORDS).forEach(([tr, en]) => this.vocab.learn(tr, en)); }
+
+  /** Seated or waiting in line: where I stand (for İsmail Dede's dialogue). */
+  get me() {
+    const st = this.state ?? {};
+    return { color: this.myColor, phase: st.phase, inLine: (st.queue ?? []).find((q) => q.id === this.myId)?.color ?? null, players: [st.seats?.w?.name, st.seats?.b?.name] };
   }
 
-  #show() { if (this.view.isOpen) this.view.render({ ...this.state, online: this.online, myId: this.myId, myColor: this.myColor }); }
+  #paintBar() {
+    const st = this.state, mine = this.myColor;
+    const show = !!mine && (st?.phase === 'playing' || st?.phase === 'waiting') && this.world?.current?.id === 'village';
+    this.bar.hidden = !show;
+    if (!show) return;
+    const g = this.game, clock = (c) => { const ms = Math.max(0, (st.clocks?.[c] ?? 0) - (st.running === c ? Date.now() - st.at : 0)); return `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}`; };
+    const turn = st.phase === 'waiting' ? 'rakip bekleniyor' : g.turn() === mine ? (g.isCheck() ? 'Şah! Sıra sende' : 'Sıra sende') : 'Rakibin oynuyor';
+    this.bar.textContent = `♟ Sen ${COLOR[mine]} · ⏱ ${clock(mine)} · ${turn}`;
+  }
 
   #move(from, to) {
     const g = this.game;
@@ -115,7 +129,7 @@ export class ChessGame {
     if (!quiet) { const line = this.#announce(before, this.state); if (line) this.onSay(line); }
     if (st.fen !== before?.fen) this.#render3D(st.fen, st.last);
     if (JSON.stringify(st.scores ?? []) !== JSON.stringify(before?.scores ?? [])) this.square.writeChessScores?.(st.scores ?? []);
-    this.#show();
+    this.#paintBar();
   }
 
   /** What İsmail Dede says about a change on the board (Turkish; null = nothing). */
@@ -226,10 +240,8 @@ export class ChessGame {
       }
       return null;
     }
-    // not playing: touching a piece asks Dede for its colour (he decides who plays)
-    if (piece && phase !== 'playing' && phase !== 'over' && !this.state.seats?.[piece.color]) {
-      return act(`Dede, ben ${COLOR[piece.color]} olayım`, () => { this.open(); this.ask(piece.color); });
-    }
+    // not playing: İsmail Dede decides who plays — talk to him
+    if (piece) return act('İsmail Dede’ye sor', () => this.onAskDede());
     return null;
   }
 
@@ -299,6 +311,21 @@ export class ChessGame {
       this.#bySquare.set(p.square, mesh);
       if (last && p.square === last.to) moved = mesh;
     }));
+    // check: the king's square glows red (and a red light over it), pulsing until the king is safe
+    this.#glow = null;
+    if (game.isCheck()) {
+      const king = board.flat().find((p) => p?.type === 'k' && p.color === game.turn());
+      if (king) {
+        const { x, z } = chessSquare(king.square);
+        const tile = new THREE.Mesh(new THREE.BoxGeometry(CHESS.size * 0.98, 0.03, CHESS.size * 0.98), new THREE.MeshBasicMaterial({ color: 0xFF2A2A, transparent: true, opacity: 0.7 }));
+        tile.position.set(x, 0.135, z);
+        const light = new THREE.PointLight(0xFF3030, 3, 4.5);
+        light.position.set(x, 1.2, z);
+        group.add(tile, light);
+        this.#meshes.push(tile, light);
+        this.#glow = { tile, light };
+      }
+    }
     if (moved) {
       const from = chessSquare(last.from);
       this.#anim = { mesh: moved, from: new THREE.Vector3(from.x, 0.12, from.z), to: moved.position.clone(), t: 0 };
@@ -310,6 +337,7 @@ export class ChessGame {
   }
 
   #animate(dt) {
+    if (this.#glow) { const k = 0.55 + 0.45 * Math.sin(performance.now() / 180); this.#glow.tile.material.opacity = 0.35 + 0.45 * k; this.#glow.light.intensity = 1 + 3 * k; }
     const a = this.#anim;
     if (!a) return;
     a.t = Math.min(1, a.t + dt * 1.6);

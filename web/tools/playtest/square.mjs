@@ -128,7 +128,6 @@ try {
   await ev(A, () => window.__game.chess.ask('w')); await sleep(400);
   await ev(C, () => window.__game.chess.ask('b'));
   await waitFor(() => ev(A, () => window.__game.chess.state.phase === 'playing'), 5000);
-  await ev(A, () => window.__game.chess.view.close?.());
   await ev(A, () => window.__game.village.net.send({ type: 'chess-move', from: 'e2', to: 'e4', promotion: 'q' }));
   const fenSame = await waitFor(async () => { const f = await Promise.all(all.map((p) => ev(p, () => window.__game.chess.state.fen))); return f.every((x) => x === f[0] && x.includes('4P3')) ? f[0] : null; }, 5000);
   check('chess: a game between two players, the same board on all four screens', !!fenSame, fenSame || '');

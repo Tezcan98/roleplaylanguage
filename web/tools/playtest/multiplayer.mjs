@@ -140,18 +140,16 @@ try {
   check('a blocked player cannot ask again', !(await B.$('text=Kabul et')) && !(await inCall(A)) && !(await inCall(B)));
 
   // giant chess: A takes white, B black, A moves; B (and the board on the square) follow
-  await A.evaluate(() => window.__game.village.chess.open()); await B.evaluate(() => window.__game.village.chess.open());
-  await A.click('.chess button:has-text("Beyaz ol")');
-  await waitFor(() => B.$('.chess button:has-text("Siyah ol")'));
-  await B.click('.chess button:has-text("Siyah ol")');
-  await waitFor(() => A.evaluate(() => window.__game.village.chess.myColor === 'w' && window.__game.village.chess.state?.seats?.b));
-  await A.click('.chess-board [data-sq="e2"]'); await A.click('.chess-board [data-sq="e4"]');
-  const seen = await waitFor(() => B.evaluate(() => window.__game.village.chess.state?.last?.to === 'e4' && document.querySelector('.chess-board [data-sq="e4"]')?.textContent === '♟'), 6000);
+  // (through İsmail Dede: “Beyaz olmak istiyorum” / “Siyah …”)
+  await A.evaluate(() => window.__game.village.chess.ask('w')); await sleep(300);
+  await B.evaluate(() => window.__game.village.chess.ask('b'));
+  await waitFor(() => A.evaluate(() => window.__game.village.chess.myColor === 'w' && window.__game.village.chess.state?.phase === 'playing'));
+  await A.evaluate(() => window.__game.village.net.send({ type: 'chess-move', from: 'e2', to: 'e4', promotion: 'q' }));
+  const seen = await waitFor(() => B.evaluate(() => window.__game.village.chess.state?.last?.to === 'e4' && window.__game.village.chess.game.get('e4')?.type === 'p'), 6000);
   check('chess: a move on one screen shows on the other player’s board', !!seen);
-  await B.click('.chess button:has-text("Pes et")');
+  await B.evaluate(() => window.__game.village.chess.resign());
   const scored = await waitFor(() => A.evaluate(() => { const s = window.__game.village.chess.state; return s.phase === 'over' && s.scores.some((r) => r.games === 1) ? s.scores.map((r) => r.name).join(', ') : null; }), 6000);
   check('chess: resigning ends the game, Dede keeps the score board', !!scored, scored);
-  await A.evaluate(() => window.__game.village.chess.view.close()); await B.evaluate(() => window.__game.village.chess.view.close());
 
   // the schoolyard is a public place too: both go there, A scores, both scoreboards say 1-0
   await A.evaluate(() => window.__game.travel.go('schoolyard', 'squareRoad')); await B.evaluate(() => window.__game.travel.go('schoolyard', 'squareRoad'));

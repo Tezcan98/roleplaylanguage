@@ -84,10 +84,6 @@ export const FREE_ACTIONS = {
     label: 'Raflara bak', think: 'Ne çok kitap var!', say: 'Kütüphanenin raflarına baktım.',
     words: [['raf', 'shelf'], ['kitap', 'book'], ['yazar', 'author']],
   },
-  village_ney: {
-    label: 'Otur, ney dinle', think: 'Neyin sesi ne kadar içli…', say: 'Ömer Baba’nın neyini dinledim.', minutes: 10,
-    words: [['ney', 'ney (reed flute)'], ['içli', 'soulful, moving'], ['dinlemek', 'to listen']],
-  },
   village_bench: {
     label: 'Bankta otur', think: 'Meydanda biraz dinleniyorum.', say: 'Bankta oturdum.', minutes: 5,
     words: [['bank', 'bench'], ['dinlenmek', 'to rest'], ['meydan', 'square']],

@@ -17,7 +17,7 @@ export const CHESS_RULES = {
   aiLimit: 10 * 60_000,  // a game against Dede ends after this…
   aiYield: 2 * 60_000,   // …or this long after someone starts waiting for the board
   aiDelay: 1200,         // ms Dede "thinks" before a move
-  rejoin: 45_000,        // ms a dropped player has to come back (same name)
+  rejoin: 180_000,       // ms a dropped player has to come back (same name) — phones drop out often
   pause: 6000,           // ms the result stays on the board before the next game
 };
 const VALUE = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };

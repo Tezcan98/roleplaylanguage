@@ -45,10 +45,10 @@ function client({ origin = 'https://tezcan98.github.io' } = {}) {
   };
   return c;
 }
-async function join(name, room = 'test') {
+async function join(name, room = 'test', extra = {}) {
   const c = client();
   await c.open();
-  c.send({ type: 'hello', name, room });
+  c.send({ type: 'hello', name, room, ...extra });
   c.welcome = await c.next('welcome');
   return c;
 }
@@ -282,4 +282,19 @@ test('giant chess: walking off or dropping out keeps the seat for a while (same 
   for (let i = 0; i < 5 && s.last?.to !== 'd4'; i++) s = await b.next('chess'); // the rejoin broadcast may come first
   assert.equal(s.last.to, 'd4');
   await back.close(); await b.close();
+});
+
+test('the same device back while its old connection still hangs: same name, same chess seat', async () => {
+  const w = await join('Selin', 'pid', { pid: 'device00selin' });
+  const b = await join('Bora', 'pid');
+  w.send({ type: 'chess-ask', color: 'w' }); await b.next('chess');
+  b.send({ type: 'chess-ask', color: 'b' }); await b.next('chess');
+  // the phone lost its signal: the old socket is not closed, the page connects again
+  const again = await join('Selin', 'pid', { pid: 'device00selin' });
+  assert.equal(again.welcome.name, 'Selin', 'not "Selin2"');
+  let s = again.welcome.chess;
+  for (let i = 0; i < 5 && s.seats.w?.id !== again.welcome.id; i++) s = await again.next('chess');
+  assert.equal(s.seats.w.id, again.welcome.id, 'the white seat is hers again');
+  assert.equal(s.phase, 'playing');
+  await again.close(); await b.close(); await w.close().catch(() => {});
 });

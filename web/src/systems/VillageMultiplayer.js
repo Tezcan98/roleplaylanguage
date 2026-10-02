@@ -79,7 +79,7 @@ export class VillageMultiplayer {
     net.on('call-start', ({ with: id, initiator }) => this.#startCall(id, initiator));
     net.on('call-end', ({ reason }) => this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup));
     net.on('disconnected', () => {
-      this.#reset();
+      this.#reset({ keepChess: true }); // the server keeps the game: show it as it was until we are back
       if (!this.#inSquare() || document.hidden) return; // in the background: we come back when the page does
       this.toasts.show('Bağlantı koptu, yeniden bağlanılıyor…', 'Disconnected — reconnecting…');
       this.#retryLater();
@@ -187,7 +187,8 @@ export class VillageMultiplayer {
       if (!this.chosenRoom) await this.#joinFriends(this.places[here].suffix);
       if (this.world.current.id !== here) return;
       const room = `${this.settings.get('serverRegion', 'ankara')}${this.places[here].suffix}`;
-      const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''));
+      if (!this.settings.get('deviceId')) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join(''));
+      const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''), this.settings.get('deviceId'));
       this.joinedAt = here;
       this.#last = null; // tell the others where I am right away (not the spawn point)
       welcome.peers.forEach((p) => this.remotes.add(this.#loc(), p));
@@ -225,8 +226,8 @@ export class VillageMultiplayer {
     this.#reset();
   }
 
-  #reset() {
-    this.chess?.goOffline();
+  #reset({ keepChess = false } = {}) {
+    if (!keepChess) this.chess?.goOffline();
     this.#endCall(null);
     this.remotes.clear();
     this.ptt.show(false);

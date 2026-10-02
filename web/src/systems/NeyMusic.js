@@ -1,15 +1,15 @@
 /**
- * Ömer Baba's ney, made in the browser (no recording needed): a soft sine tone with a little
- * of the second and third harmonic, a lot of breath (band-passed noise around the note),
- * vibrato that grows as a note is held, glides between notes and a room echo. He plays a slow
- * improvisation (taksim) in makam Hicaz on D. The closer you are, the louder; he stops while
- * he is telling a story, and nothing runs while nobody can hear it.
+ * A ney playing softly in the background of Aslan Bey's open library, made in the browser (no
+ * recording needed): a soft sine tone with a little of the second and third harmonic, a lot of
+ * breath (band-passed noise around the note), vibrato that grows as a note is held, glides
+ * between notes and a room echo — a slow improvisation (taksim) in makam Hicaz on D. Heard
+ * only near the library, louder inside; nothing runs while nobody can hear it.
  */
 const D = 293.66;
 // Hicaz on D: D Eb F# G A Bb C D' (+ the lower A and the upper Eb'), as ratios to D
 const SCALE = [0.75, 0.84, 1, 1.0595, 1.26, 1.3348, 1.4983, 1.5874, 1.7818, 2, 2.119];
 const TONIC = 2, DOMINANT = 6;
-const HEAR = 22; // metres
+const HEAR = 14; // metres from the library's middle
 
 export class NeyMusic {
   #ctx = null;
@@ -19,8 +19,9 @@ export class NeyMusic {
   #degree = TONIC;
   #phrase = 0;
 
-  constructor({ world, player, cast, dialogue, modes, who = 'omerBaba' }) {
-    Object.assign(this, { world, player, cast, dialogue, modes, who });
+  /** @param {{ place: { location: string, x: number, z: number } }} o */
+  constructor({ world, player, place }) {
+    Object.assign(this, { world, player, place });
     // browsers start sound only after a tap / key press
     const unlock = () => { this.#ensure(); this.#ctx?.resume(); };
     addEventListener('pointerdown', unlock, { passive: true });
@@ -31,12 +32,10 @@ export class NeyMusic {
   get level() { return this.#level(); }
 
   #level() {
-    if (this.world.current?.id !== 'village' || !this.modes.is('play') && !this.modes.is('dialogue')) return 0;
-    const baba = this.cast.get(this.who);
-    if (!baba?.visible || baba.location !== 'village') return 0;
-    if (this.dialogue.talking === this.who) return 0; // he puts the ney down to tell a story
-    const d = Math.hypot(baba.position.x - this.player.position.x, baba.position.z - this.player.position.z);
-    return d > HEAR ? 0 : Math.min(1, (1 - d / HEAR) ** 2 * 1.4);
+    const { place } = this, p = this.player.position;
+    if (this.world.current?.id !== place.location) return 0;
+    const d = Math.hypot(place.x - p.x, place.z - p.z);
+    return d > HEAR ? 0 : Math.min(1, (1 - d / HEAR) ** 2 * 1.6);
   }
 
   #ensure() {
@@ -96,7 +95,7 @@ export class NeyMusic {
     const level = this.#level();
     const ctx = this.#ctx;
     if (!ctx) return;
-    this.#out.gain.setTargetAtTime(level * 0.32, ctx.currentTime, 0.3);
+    this.#out.gain.setTargetAtTime(level * 0.16, ctx.currentTime, 0.3); // background: soft
     if (level === 0) { if (ctx.state === 'running' && this.#out.gain.value < 0.002) ctx.suspend(); return; }
     if (ctx.state !== 'running') { ctx.resume(); this.#next = Math.max(this.#next, ctx.currentTime + 0.1); }
     const v = this.#voice, t = ctx.currentTime;

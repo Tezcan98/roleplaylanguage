@@ -397,3 +397,6 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .book-nav{justify-content:space-between;align-items:center}
 .book-page{font:800 15px Nunito,sans-serif;color:var(--muted)}
 @media (orientation:landscape) and (max-height:520px){.book .card{width:min(820px,100%)}.book-text{font-size:18px}}
+/* while playing the giant chess: colour, clock, turn */
+.chess-bar{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 14px + var(--hud-h,46px));pointer-events:none;font-weight:800}
+.chess-bar[hidden]{display:none}

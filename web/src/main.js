@@ -102,9 +102,8 @@ import { TalkAreas } from './systems/TalkAreas.js';
 import { Library } from './systems/Library.js';
 import { NeyMusic } from './systems/NeyMusic.js';
 import { BookReader } from './ui/BookReader.js';
-import { ChessView } from './ui/ChessView.js';
 import { AmbientTalk } from './systems/AmbientTalk.js';
-import { KAHVEHANE } from './world/locations/VillageSquare.js';
+import { KAHVEHANE, LIBRARY } from './world/locations/VillageSquare.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
@@ -345,15 +344,15 @@ const village = new VillageMultiplayer({
 
 // --- giant chess on the square: online the server's board (İsmail Dede runs it), offline Dede plays you ---
 const chess = new ChessGame({
-  mf, square: world.get('village'), view: new ChessView(host, { modes }), net: villageNet, vocab, toasts, player, world,
-  // İsmail Dede announces the games: a bubble for everyone in the square, his voice only for players at the board
+  host, mf, square: world.get('village'), net: villageNet, vocab, toasts, player, world,
+  // İsmail Dede announces the games: a bubble over his head (no voice)
   onSay: (line) => {
     const dede = cast.get('ismail');
-    if (!dede || dede.location !== 'village' || world.current.id !== 'village') return;
-    labels.bubble(dede, line, null, 5);
-    if (chess.view.isOpen) tts.speak(line, { speaker: 'ismail' }); // aloud only for whoever has the board open
+    if (dede?.location === 'village' && world.current.id === 'village') labels.bubble(dede, line, null, 5);
   },
+  onAskDede: () => dialogue.open('ismail'), // touching a piece when not playing: Dede decides who plays
 });
+gameCtx.chess = chess; // İsmail Dede's dialogue asks the board who plays (content/addons/satranc.js)
 village.chess = chess;
 // football: the schoolyard's pitch and the fenced one in the square, each with its score board
 const football = new Football({ place: 'schoolyard', pitch: PITCH, balls: [schoolBall], writeScore: (a, b) => world.get('schoolyard').writeScore(a, b), world, village, toasts, tts });
@@ -371,20 +370,14 @@ const library = new Library({
   reader: new BookReader(host, { modes, onSpeak: (t) => tts.speak(t, { speaker: 'aslanBey' }), onClose: (b, page) => library.closed(b, page), onFinish: (b) => library.finished(b) }),
 });
 effects.register('library', () => library.atShelf());
-// Ömer Baba's ney: heard as you come closer; and the ney in his hands
-const ney = new NeyMusic({ world, player, cast, dialogue, modes });
-{
-  const baba = cast.get('omerBaba');
-  if (baba) {
-    const reed = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.03, 0.72, 8), new THREE.MeshStandardMaterial({ color: 0xB08850, roughness: 0.6 }));
-    // held at the mouth, going down to his right hand, the way a neyzen holds it
-    const geo = reed.geometry; geo.translate(0, -0.36, 0); // pivot at the mouth end
-    reed.position.set(0.05, -0.1, 0.18); reed.rotation.set(-1.0, 0, 0.45);
-    (baba.rig?.head ?? baba.group).add(reed);
-  }
-}
+// a ney plays quietly in the background in Aslan Bey's open library
+const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z } });
 chess.onMove = (m) => talk.chessMoved(m);
-effects.register('chess', () => chess.open());
+effects
+  .register('chess-ask', (color) => chess.ask(color))
+  .register('chess-dede', (color) => chess.playDede(color || 'w'))
+  .register('chess-leave', () => chess.leave())
+  .register('chess-resign', () => chess.resign());
 // the uncles in the kahvehane talk among themselves; come close and you hear them
 const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { location: 'village', x: KAHVEHANE.x, z: KAHVEHANE.z }, talks: KAHVE_TALKS });
 

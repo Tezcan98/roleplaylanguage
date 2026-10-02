@@ -155,14 +155,20 @@ try {
   const stand = (sq) => ev((sq) => { const g = window.__game, f = sq.charCodeAt(0) - 97, r = Number(sq[1]) - 1; g.player.position.set(-15 + (f - 3.5) * 1.1, 0, 15 - (r - 3.5) * 1.1); }, sq);
   const act = () => ev(() => document.getElementById('act').textContent);
   await stand('e2'); await sleep(400);
-  check('chess: touching a white piece asks Dede for white', (await act()).includes('ben beyaz olayım'), await act());
-  await page.keyboard.press('e');
-  check('…Dede gives you the white seat', !!(await waitFor(() => ev(() => window.__game.chess.myColor === 'w'), 5000)));
-  await ev(() => { const c = window.__game.chess; c.view.close(); c.leave(); });
+  check('chess: touching a piece sends you to İsmail Dede (no menu)', (await act()).includes('İsmail Dede'), await act());
+  await page.keyboard.press('e'); await sleep(500);
+  const dedeOpts = await ev(() => [...document.querySelectorAll('#dlg .choice')].map((c) => c.textContent));
+  check('…Dede asks: white, black, or play with him', dedeOpts.some((t) => t.includes('Beyaz')) && dedeOpts.some((t) => t.includes('Siyah')) && dedeOpts.some((t) => t.includes('Seninle oynamak')), JSON.stringify(dedeOpts));
+  await ev(() => [...document.querySelectorAll('#dlg .choice')].find((c) => c.textContent.includes('Beyaz'))?.click());
+  check('…“Beyaz olmak istiyorum”: Dede gives you the white seat', !!(await waitFor(() => ev(() => window.__game.chess.myColor === 'w'), 5000)));
+  await ev(() => window.__game.dialogue.close?.());
+  await ev(() => window.__game.chess.leave());
   await waitFor(() => ev(() => window.__game.chess.state.phase === 'idle'), 5000);
-  await ev(() => window.__game.chess.playDede('w'));
+  await ev(() => window.__game.dialogue.open('ismail')); await sleep(400);
+  await ev(() => [...document.querySelectorAll('#dlg .choice')].find((c) => c.textContent.includes('Seninle oynamak'))?.click());
   check('chess: Dede plays you on a free board', !!(await waitFor(() => ev(() => window.__game.chess.state.phase === 'playing' && window.__game.chess.myColor === 'w'), 5000)));
-  await ev(() => window.__game.chess.view.close()); await sleep(300);
+  check('…no chess menu on the screen, just your clock and turn', !(await page.$('.chess.open')) && (await ev(() => !document.querySelector('.chess-bar').hidden && document.querySelector('.chess-bar').textContent)).includes('Sen beyaz'));
+  await ev(() => window.__game.dialogue.close?.()); await sleep(300);
   await stand('e2'); await sleep(400);
   check('chess: on your turn, standing on a pawn offers to take it', (await act()).includes('piyon taşını al'), await act());
   await page.keyboard.press('e'); await sleep(300);
@@ -177,9 +183,7 @@ try {
   await stand(from); await sleep(300); await page.keyboard.press('e'); await sleep(300);
   await ev(() => window.__game.player.position.set(-15 + 7, 0, 15)); await sleep(600);
   check('chess: walking off the board puts the piece back, the game stays yours', (await ev((sq) => window.__game.chess.game.get(sq)?.color === 'w', from)) && (await ev(() => window.__game.chess.myColor)) === 'w' && (await ev(() => window.__game.chess.state.phase)) === 'playing');
-  await ev(() => window.__game.chess.open()); await sleep(400);
-  check('chess screen: no stray “null” text', !(await ev(() => document.querySelector('.chess .card').innerText)).includes('null'));
-  await ev(() => { const c = window.__game.chess; c.resign(); c.view.close(); });
+  await ev(() => window.__game.chess.resign());
 
   // --- the square's fenced pitch, the tea garden and the chess benches ------------------
   const sqBalls = () => ev(() => window.__game.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball').map((t) => t.toy));
@@ -199,9 +203,11 @@ try {
   await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/pppppppp/8/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 1', last: { from: 'g1', to: 'f3', san: 'Nf3' } }); });
   const comment = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].map((b) => b.textContent).find((t) => t.includes('At oynadı'))), 6000);
   check('…İsmail Dede comments on the moves', !!comment, comment || '');
+  await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/ppp2ppp/8/1B1pp3/4P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 3', last: { from: 'f1', to: 'b5', san: 'Bb5+' } }); });
+  check('check: the king’s square glows red', await ev(() => window.__game.world.get('village').chessPieces.children.some((m) => m.isPointLight && m.color.r > 0.9)));
   await ev(() => window.__game.player.sit(false));
 
-  // --- benches, the library, Ömer Baba's ney -------------------------------------------
+  // --- benches, the library (with a ney in the background) ----------------------------
   const goTo = (id) => ev((id) => { const g = window.__game, h = g.world.current.hotspots.get(id); g.player.position.set(h.pos.x, 0, h.pos.z); }, id);
   await goTo('village.bench1'); await sleep(500);
   await page.keyboard.press('e'); await sleep(600);
@@ -223,15 +229,9 @@ try {
   check('…and back on the shelf ("Kitabı rafa koy")', (await ev(() => document.getElementById('act').textContent)).includes('rafa koy'));
   await page.keyboard.press('e'); await sleep(400);
   check('…the hand is empty again', (await ev(() => window.__game.library.held)) === null);
-  await goTo('village.minder2'); await sleep(1500);
-  check('the ney is heard near Ömer Baba', (await ev(() => window.__game.ney.level)) > 0.3, String(await ev(() => window.__game.ney.level)));
-  check('Ömer Baba\'s corner: "Otur, ney dinle"', (await ev(() => document.getElementById('act').textContent)).includes('ney dinle'));
-  await ev(() => window.__game.dialogue.open('omerBaba')); await sleep(500);
-  check('…he puts it down to talk', (await ev(() => window.__game.ney.level)) === 0);
-  check('Ömer Baba offers a menkıbe', (await ev(() => document.querySelector('#dlg .line').textContent)).includes('menkıbe'));
-  await ev(() => document.querySelector('#dlg .choice')?.click()); await sleep(400);
-  check('…three menkıbe to choose from', (await ev(() => document.querySelectorAll('#dlg .choice').length)) === 3);
-  await ev(() => window.__game.dialogue.close?.());
+  check('a ney plays softly in the library', (await ev(() => window.__game.ney.level)) > 0.3, String(await ev(() => window.__game.ney.level)));
+  await ev(() => window.__game.player.position.set(4, 0, 4)); await sleep(300);
+  check('…and not by the fountain', (await ev(() => window.__game.ney.level)) === 0);
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(600);
   await drainUi(page);
 

@@ -240,13 +240,19 @@ export class VillageServer {
     }
   }
 
-  #hello(c, { name, room = 'village', gender, style }) {
+  #hello(c, { name, room = 'village', gender, style, pid }) {
     if (c.id) return;
     if (typeof room !== 'string' || !ROOM.test(room)) return this.#send(c, { type: 'error', message: 'Geçersiz oda.' });
     const clean = String(name ?? '').trim();
     if (!NAME.test(clean)) return this.#send(c, { type: 'error', message: 'Kullanıcı adı 2-16 harf/rakam olmalı.' });
     if (ChatFilter.blocks(clean)) return this.#send(c, { type: 'error', message: 'Bu kullanıcı adı kullanılamaz.' });
     const members = this.#room(room);
+    // the same device again (its old connection not closed yet, e.g. a phone that lost its signal):
+    // the new connection takes over — same name, so the chess seat is found again
+    if (typeof pid === 'string' && /^[a-z0-9]{8,40}$/.test(pid)) {
+      c.pid = pid;
+      for (const old of members.values()) if (old.pid === pid) { this.#leave(old); old.id = null; old.ws.terminate(); }
+    }
     if (members.size >= MAX_PER_ROOM) return this.#send(c, { type: 'error', message: 'Meydan dolu, biraz sonra tekrar dene.' });
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
     let unique = clean, n = 2;

@@ -10,8 +10,6 @@ const HALF = 34; // the fence runs at ±34 m
 /** Open-air coffeehouse (north-east) and open library (north-west): walls, no roof. */
 export const KAHVEHANE = { x: 22, z: -24, w: 12, d: 9 };
 export const LIBRARY = { x: -22, z: -24, w: 12, d: 9 };
-/** Ömer Baba's open pavilion, where he plays the ney. */
-export const MUSIKI = { x: 0, z: -22, r: 3.4 };
 
 /** Chess board in the square: square size, centre and which way the ranks run. */
 export const CHESS = { cx: -15, cz: 15, size: 1.1 };
@@ -131,12 +129,10 @@ export class VillageSquare extends Location {
 
     this.#teaGarden(kit, mf, C);
     this.#chessBoard(mf, C);
-    this.hotspot('village.chess', CHESS.cx + 5.2, CHESS.cz, 1.8);
     this.anchor('chessWatch', CHESS.cx + 5.6, CHESS.cz, -Math.PI / 2);
     this.#chessBenches(mf, C);
     this.#kahvehane(mf, C);
     this.#library(mf, C);
-    this.#musiki(mf, C);
 
     this.writeScore = buildPitch(this, mf, { ...SQUARE_PITCH, board: { x: (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, z: 13.3, rot: Math.PI } });
     add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.02))
@@ -301,29 +297,6 @@ export class VillageSquare extends Location {
       const sx = x + along.x * o, sz = z + along.z * o, id = seats[i];
       this.anchor(id, sx, sz, rot);
       if (/^(chessBench|bench)\d/.test(id)) this.hotspot(`village.${id}`, sx + front.x * 0.75, sz + front.z * 0.75, 0.6);
-    });
-  }
-
-  /** An open wooden pavilion (no roof: seen from above), a carpet, Ömer Baba's cushion and four for listeners. */
-  #musiki(mf, C) {
-    const M = MUSIKI, add = (m) => this.add(m);
-    add(mf.at(mf.cyl(M.r, M.r, 0.06, LIGHT_WOOD, 8), M.x, 0.03, M.z));
-    add(mf.at(mf.cyl(M.r - 0.6, M.r - 0.6, 0.02, 0x8E2B1E, 8), M.x, 0.07, M.z)); // carpet
-    add(mf.at(mf.cyl(M.r - 0.9, M.r - 0.9, 0.022, 0xC8A15B, 8), M.x, 0.075, M.z));
-    for (let i = 0; i < 8; i++) {
-      const a = (i + 0.5) * Math.PI / 4, x = M.x + Math.sin(a) * (M.r - 0.15), z = M.z + Math.cos(a) * (M.r - 0.15);
-      if (i === 0 || i === 7) continue; // the way in, from the fountain (south)
-      add(mf.at(mf.box(0.14, 2.6, 0.14, WOOD), x, 1.3, z)); C.addCircle(x, z, 0.12);
-    }
-    const ring = mf.torus(M.r - 0.15, 0.07, WOOD, 8); ring.rotation.x = Math.PI / 2; ring.rotation.z = Math.PI / 8; ring.position.set(M.x, 2.6, M.z); add(ring);
-    // Ömer Baba's cushion at the back, facing the square
-    add(mf.at(mf.box(0.9, 0.12, 0.9, 0x2E5E4E), M.x, 0.12, M.z - 1.2));
-    this.anchor('omerBaba', M.x, M.z - 1.2, 0);
-    [[-1.4, 0.4], [-0.5, 1.2], [0.5, 1.2], [1.4, 0.4]].forEach(([dx, dz], i) => {
-      const x = M.x + dx, z = M.z + dz, rot = Math.atan2(-dx, -1.2 - dz); // facing him
-      add(mf.at(mf.box(0.6, 0.14, 0.6, [0x8E2B1E, 0x2F6FDB, 0x3E8E4A, 0xE0B04A][i]), x, 0.13, z));
-      this.anchor(`minder${i + 1}`, x, z, rot);
-      this.hotspot(`village.minder${i + 1}`, x + Math.sin(rot) * -0.6, z + Math.cos(rot) * -0.6, 0.6);
     });
   }
 
