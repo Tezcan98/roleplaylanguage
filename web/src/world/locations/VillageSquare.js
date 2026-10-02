@@ -152,6 +152,7 @@ export class VillageSquare extends Location {
     add(mf.at(mf.box(0.18, 0.7, 0.18, WOOD), -15.6, 0.42, 10.3));
     this.hotspot('village.library', -17.5, 11.8, 2.2);
     this.anchor('aslanBey', -17.5, 11.7, Math.PI);
+    this.anchor('library', -17.5, 10.8, 0);
 
     this.#teaGarden(kit, mf, C);
     this.#chessBoard(mf);
