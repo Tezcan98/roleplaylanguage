@@ -34,14 +34,28 @@ function showIosGuide() {
   guide.classList.add('open');
 }
 
-/** Full screen now (a phone also turns sideways where the browser allows it); on iPhone, the home-screen guide. */
-export async function goFullscreen() {
-  if (!fsEnabled()) { if (iosBrowser()) showIosGuide(); return; }
+// The player chose full screen: if the browser drops out of it by itself (a microphone permission
+// prompt, the keyboard, another app), the next tap anywhere brings it back. Only ⛶ turns it off.
+let wanted = false;
+try { wanted = sessionStorage.getItem('fullscreen') === '1'; } catch { /* private mode */ }
+const want = (on) => { wanted = on; try { sessionStorage.setItem('fullscreen', on ? '1' : '0'); } catch { /* ignore */ } };
+const restore = () => { if (wanted && fsEnabled() && !fsElement()) enter(); };
+addEventListener('click', restore, true);
+addEventListener('touchend', restore, true); // a tap is what lets a page go full screen again
+
+async function enter() {
   try {
     const root = document.documentElement;
     await (root.requestFullscreen ? root.requestFullscreen({ navigationUI: 'hide' }) : root.webkitRequestFullscreen?.());
     if (matchMedia('(pointer: coarse)').matches) await screen.orientation?.lock?.('landscape').catch(() => {});
   } catch { /* the browser said no: stay as we are */ }
+}
+
+/** Full screen now (a phone also turns sideways where the browser allows it); on iPhone, the home-screen guide. */
+export async function goFullscreen() {
+  if (!fsEnabled()) { if (iosBrowser()) showIosGuide(); return; }
+  want(true);
+  await enter();
 }
 
 /**
@@ -55,6 +69,7 @@ export function setupLandscape() {
   btn.hidden = !(fsEnabled() || iosBrowser());
   btn.addEventListener('click', async () => {
     if (!fsElement()) { goFullscreen(); return; }
+    want(false); // the player turned it off
     try {
       screen.orientation?.unlock?.();
       await (document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document);
