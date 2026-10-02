@@ -34,6 +34,8 @@ export const HOTSPOTS = {
   'village.bakkalCounter': free('village_shop'),
   // giant chess on the square (ChessGame), and the stools of the tea garden
   'village.chess': { label: 'Satranç oyna', use: ['chess'] },
+  'village.coffee': { label: 'Kahvehaneye oturup sohbeti dinle', use: ['sit:coffee'] },
+  'village.library': { label: 'Açık kütüphaneye gir', use: ['sit:library'] },
   // seats in the tea garden and on the benches round the chess board (counts: TEA_SEATS / CHESS_SEATS in VillageSquare)
   ...Object.fromEntries(Array.from({ length: 22 }, (_, i) => [`village.cay${i + 1}`, { label: 'Çay bahçesinde otur', use: [`sit:cay${i + 1}`, 'free:village_tea'], available: (c) => !c.seated }])),
   ...Object.fromEntries(Array.from({ length: 11 }, (_, i) => [`village.chessBench${i + 1}`, { label: 'Banka otur, maçı izle', use: [`sit:chessBench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])),
