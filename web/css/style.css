@@ -37,8 +37,8 @@ body.hide-en .en-t{display:none!important}
 .think{position:absolute;transform:translate(-50%,-100%);background:#fff;border:2px solid var(--wood);border-radius:16px;padding:6px 12px;font:600 16px Fredoka,sans-serif;white-space:nowrap}
 
 /* ---------- controls ---------- */
-#joy{position:absolute;left:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);width:124px;height:124px;border-radius:50%;background:rgba(42,30,21,.35);border:2px solid rgba(244,230,200,.6);pointer-events:auto;touch-action:none}
-#knob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:var(--parch);border:3px solid var(--wood)}
+#joy{position:absolute;left:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);width:160px;height:160px;border-radius:50%;background:rgba(42,30,21,.35);border:2px solid rgba(244,230,200,.6);pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:68px;height:68px;margin:-34px 0 0 -34px;border-radius:50%;background:var(--parch);border:3px solid var(--wood)}
 #act{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 50px);pointer-events:auto;background:var(--gold);color:var(--ink);border:3px solid var(--wood);border-radius:18px;padding:0 20px;min-height:60px;font:700 18px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
 #act:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
 #act[hidden],#joy[hidden]{display:none}
@@ -208,7 +208,7 @@ body.gloss-rtl .word .en-t,body.gloss-rtl .choice .e{unicode-bidi:isolate;direct
 body.gloss-rtl .choice .e{text-align:left}
 
 /* ---------- help button & panel, intro ---------- */
-.help-btn{position:absolute;left:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 168px);pointer-events:auto;display:flex;align-items:center;gap:6px;min-height:48px;padding:0 14px 0 10px;border-radius:999px;border:3px solid var(--wood);background:var(--gold);color:var(--ink);font:800 22px var(--gloss-font,Fredoka,sans-serif);cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
+.help-btn{position:absolute;left:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 204px);pointer-events:auto;display:flex;align-items:center;gap:6px;min-height:48px;padding:0 14px 0 10px;border-radius:999px;border:3px solid var(--wood);background:var(--gold);color:var(--ink);font:800 22px var(--gloss-font,Fredoka,sans-serif);cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
 .help-btn span{font:700 15px var(--gloss-font,sans-serif)}
 .help-btn[hidden],body.menu .help-btn{display:none}
 .help-panel{width:min(520px,100%);max-height:80vh}
@@ -286,7 +286,7 @@ body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
   .server-card .sc-city{font-size:16px}
   .main-menu .sub,.main-menu .menu-square .cen{display:none}
   .btn{min-height:46px}
-  #joy{width:104px;height:104px;left:max(16px,env(safe-area-inset-left));bottom:14px}
+  #joy{width:140px;height:140px;left:max(16px,env(safe-area-inset-left));bottom:14px}
   #act{bottom:18px;right:max(14px,env(safe-area-inset-right));min-height:52px}
   .help-btn{left:auto;right:max(14px,env(safe-area-inset-right));bottom:84px;min-height:42px;font-size:18px}
   #shot{right:max(14px,env(safe-area-inset-right));bottom:18px;min-height:44px}

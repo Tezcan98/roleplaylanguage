@@ -67,8 +67,10 @@ try {
 
   // --- little brother -------------------------------------------------------------------
   const p0 = await ev(() => { const k = window.__game.cast.get('kardes').position; return [k.x, k.z]; });
-  await sleep(2500);
-  const moved = await ev((a) => { const k = window.__game.cast.get('kardes').position; return Math.hypot(k.x - a[0], k.z - a[1]); }, p0);
+  // he may be standing at a stop for a while (jumping on the bed…); slow runners also run game time slower
+  const kidDist = () => ev((a) => { const k = window.__game.cast.get('kardes').position; return Math.hypot(k.x - a[0], k.z - a[1]); }, p0);
+  await waitFor(async () => (await kidDist()) > 0.5, 30000, 300);
+  const moved = await kidDist();
   check('the little brother runs around the house', moved > 0.5, `${moved.toFixed(2)} m`);
   await talkTo('kardes');
   check('he calls you to play, no introducing himself (Abla for a girl)', (await nodeSay()).startsWith('Abla!') && !(await nodeSay()).includes('adım'), await nodeSay());

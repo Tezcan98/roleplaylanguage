@@ -2,7 +2,7 @@ import { el } from './dom.js';
 
 /** On-screen thumbstick. Reports a normalised vector through `onMove`. */
 export class Joystick {
-  constructor(host, radius = 48) {
+  constructor(host, radius = 62) {
     this.onMove = () => {};
     this.knob = el('div', { attrs: { id: 'knob' } });
     this.root = el('div', { attrs: { id: 'joy', 'aria-hidden': 'true' } }, [this.knob]);
