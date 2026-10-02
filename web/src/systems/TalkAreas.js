@@ -44,7 +44,7 @@ export class TalkAreas {
     this.#timer -= dt;
     if (this.#timer > 0) return;
     // talk goes on in both places; the one you sit in gets your attention first
-    const spot = this.#listening ?? (Math.random() < 0.5 ? 'cay' : 'chess');
+    const spot = this.#listening ?? (Math.random() < 0.33 ? 'coffee' : Math.random() < 0.5 ? 'cay' : 'chess');
     if (!this.#queue.length) {
       this.#queue = this.#nextTalk(spot).map((l) => ({ ...l, spot }));
       if (!this.#queue.length) { this.#timer = PAUSE; return; }
@@ -95,8 +95,8 @@ export class TalkAreas {
     this.root.classList.toggle('open', !!spot);
     if (!spot) return;
     this.title.replaceChildren(
-      `🎧 ${spot === 'cay' ? 'Çay bahçesi sohbeti' : 'Satranç köşesi'}`,
-      el('small', { class: 'en-t', text: ` · ${spot === 'cay' ? gloss('You are listening to the tea garden') : gloss('You are watching the chess game')}` }),
+      `🎧 ${spot === 'coffee' ? 'Kahvehane sohbeti' : spot === 'cay' ? 'Çay bahçesi sohbeti' : 'Satranç köşesi'}`,
+      el('small', { class: 'en-t', text: ` · ${spot === 'coffee' ? gloss('You are listening to the coffeehouse') : spot === 'cay' ? gloss('You are listening to the tea garden') : gloss('You are watching the chess game')}` }),
     );
     this.#queue = this.#queue.filter((l) => l.spot === spot);
     this.#timer = Math.min(this.#timer, 1.5);
