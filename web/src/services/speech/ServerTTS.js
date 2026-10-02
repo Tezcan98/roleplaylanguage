@@ -8,7 +8,8 @@ const SHORT = { 'tr-kadin': 'kadin', 'tr-kiz': 'kiz', 'tr-nine': 'nine', 'tr_TR-
 export class ServerTTS {
   #audio = null;
   #failures = 0;
-  #badVoices = new Set(); // voices this server can't make (e.g. no women's model installed)
+  #badVoices = new Set(); // voices this server can't make (e.g. no women's voice set up)
+  #voiceFails = new Map(); // voice → failures in a row
   #worked = new Set();
 
   constructor(url) { this.url = url; }
@@ -32,11 +33,14 @@ export class ServerTTS {
       a.onended = () => resolve();
       let played = false;
       a.onerror = () => {
-        if (this.#worked.size && !this.#worked.has(voice.id)) this.#badVoices.add(voice.id); // the server works, this voice doesn't
-        else this.#failures++;
+        // the server works but this voice keeps failing (3 in a row): skip it, her lines go to the fallback
+        const n = (this.#voiceFails.get(voice.id) ?? 0) + 1;
+        this.#voiceFails.set(voice.id, n);
+        if (!this.#worked.size) this.#failures++; // nothing has worked yet: the server may be unreachable
+        else if (n >= 3) this.#badVoices.add(voice.id);
         reject(new Error('server tts failed'));
       };
-      a.onplaying = () => { if (!played) { played = true; this.#failures = 0; this.#worked.add(voice.id); } };
+      a.onplaying = () => { if (!played) { played = true; this.#failures = 0; this.#voiceFails.delete(voice.id); this.#worked.add(voice.id); } };
       a.play().catch((e) => { if (e?.name !== 'AbortError') reject(e); });
     });
   }

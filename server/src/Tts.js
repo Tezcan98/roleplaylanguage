@@ -98,7 +98,7 @@ export class Tts {
       generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } },
     });
     let last = null;
-    for (const m of models) {
+    for (const m of [...models, ...models]) { // each model gets a second try: now and then one answers without audio
       try {
         const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
           method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body, signal: AbortSignal.timeout(25000),
