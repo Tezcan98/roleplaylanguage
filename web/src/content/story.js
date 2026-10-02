@@ -11,7 +11,12 @@
  * `chapter` moves the story on.
  */
 /** The muhtar and the grocer are always at the village square. */
-const VILLAGE_NPCS = { muhtar: ['village', 'muhtar', 'stand'], bakkal: ['village', 'bakkal', 'stand'] };
+const VILLAGE_NPCS = {
+  muhtar: ['village', 'muhtar', 'stand'], bakkal: ['village', 'bakkal', 'stand'],
+  huseyin: ['village', 'huseyin', 'sitBench'], kemal: ['village', 'kemal', 'sitBench'],
+  osman: ['village', 'osman', 'stand'], aliAmca: ['village', 'aliAmca', 'sitBench'],
+  aslanBey: ['village', 'aslanBey', 'stand'],
+};
 
 const FAMILY_AT_SOFRA = {
   dede: ['house', 'sofraN', 'sitFloor'],
