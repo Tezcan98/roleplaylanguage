@@ -348,7 +348,7 @@ try {
     const p2 = await (await browser.newContext({ viewport: { width: 1000, height: 620 } })).newPage();
     errors.push(...watchErrors(p2, 'shop '));
     const e2 = (fn, a) => p2.evaluate(fn, a);
-    await p2.goto(`${server.url}/?debug&fakemic&nointro&fresh&daily&mockads&fastads&quality=low`);
+    await p2.goto(`${server.url}/?debug&fakemic&nointro&fresh&daily&mockads&fastads&nobilling&quality=low`);
     await p2.waitForFunction(() => window.__game, null, { timeout: 30000 });
     const daily = await waitFor(() => p2.$('.overlay.open.daily'), 8000);
     check('daily reward on opening the game (day 1: +3)', !!daily && (await p2.textContent('.daily .btn')).includes('+3'));
@@ -365,6 +365,7 @@ try {
     check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 56 && (await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Video izle')).querySelector('button').disabled)));
     check('every gold pack listed with its price', ['14,90 TL', '24,90 TL', '48,90 TL'].every(async () => true) && (await p2.textContent('.shop.open')).includes('48,90 TL') && (await p2.textContent('.shop.open')).includes('14,90 TL'));
     await p2.click('.shop.open .shop-card:has-text("500") button'); await sleep(300);
+    check('test payments (until the Play products are live): a pack is bought at once', await page.evaluate(() => window.__game.billing.buy({ id: 'credits_50' })));
     check('…on the web a pack says it is sold in the Android app', await e2(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('Android uygulamasında'))));
     check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
     await p2.click('.shop.open .shop-card:has-text("Günlük kıyafet") button'); await sleep(300);
