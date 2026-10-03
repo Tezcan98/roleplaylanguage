@@ -5,7 +5,7 @@
  */
 export const ITEMS = [
   {
-    id: 'mont', kind: 'mont', tr: 'mont', en: 'jacket', verb: 'Montu al', location: 'house', pos: [-5.05, 1.35, 3.9],
+    id: 'mont', kind: 'mont', tr: 'mont', en: 'jacket', verb: 'Montu al', location: 'house', pos: [-12.25, 1.35, 3.9],
     activeIn: ['take-jacket'], chapters: ['d1-morning'], wearable: true, spin: false, onPick: ['wear:jacket'],
     build: (mf) => mf.group(mf.box(0.5, 0.6, 0.18, 0xB5482E), mf.at(mf.box(0.06, 0.5, 0.02, 0xE0B04A), 0, 0, 0.1)),
   },
@@ -28,7 +28,7 @@ export const ITEMS = [
     build: (mf) => mf.group(mf.sphere(0.17, 0xE0392B, 12), mf.at(mf.cyl(0.02, 0.06, 0.06, 0x3E7A2A, 6), 0, 0.17, 0)),
   })),
   {
-    id: 'ekmek', kind: 'ekmek', tr: 'ekmek', en: 'bread', verb: 'Ekmeği al', location: 'house', pos: [3.4, 1.02, -4.2],
+    id: 'ekmek', kind: 'ekmek', tr: 'ekmek', en: 'bread', verb: 'Ekmeği al', location: 'house', pos: [7.8, 1.02, -4.2],
     activeIn: ['bring-bread'], chapters: ['d1-breakfast'],
     build: (mf) => {
       const loaf = mf.sphere(0.2, 0xD9A05B, 12); loaf.scale.set(1.5, 0.7, 0.9);
@@ -48,7 +48,7 @@ export const ITEMS = [
     build: (mf) => mf.group(mf.box(0.08, 0.42, 0.32, 0xE4574A), mf.at(mf.box(0.085, 0.3, 0.2, 0xFFF9EC), 0, 0, 0)),
   },
   {
-    id: 'mont2', kind: 'mont', tr: 'mont', en: 'jacket', verb: 'Montu al', location: 'house', pos: [-5.05, 1.35, 3.9],
+    id: 'mont2', kind: 'mont', tr: 'mont', en: 'jacket', verb: 'Montu al', location: 'house', pos: [-12.25, 1.35, 3.9],
     activeIn: ['jacket2'], chapters: ['d2-morning'], wearable: true, spin: false, onPick: ['wear:jacket'],
     build: (mf) => mf.group(mf.box(0.5, 0.6, 0.18, 0xB5482E), mf.at(mf.box(0.06, 0.5, 0.02, 0xE0B04A), 0, 0, 0.1)),
   },

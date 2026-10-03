@@ -65,3 +65,16 @@ test('women and girls: Gemini voices, cached, capped per day; never a man’s vo
   const off = new Tts({ piperDir: dir, cacheDir: join(dir, 'cache2'), log: () => {} });
   assert.equal((await off.handle('nine', 'Gel kuzum', 'x')).status, 503, 'without Gemini: no voice (the page uses the browser’s woman’s voice)');
 });
+
+test('Gemini quota used up (429): no more asking until Google says, the page uses the device voice at once', async () => {
+  const dir = fakePiper();
+  let calls = 0;
+  const fetch = async () => { calls++; return { ok: false, status: 429, json: async () => ({ error: { details: [{ retryDelay: '3600s' }] } }) }; };
+  const tts = new Tts({ piperDir: dir, cacheDir: join(dir, 'cache'), gemini: { key: 'k', models: ['a'], fetch }, log: () => {} });
+  assert.equal((await tts.handle('kadin', 'Merhaba çocuklar', 'x')).status, 502);
+  const asked = calls;
+  assert.equal((await tts.handle('kadin', 'Hoş geldiniz', 'x')).status, 503, 'answered at once');
+  assert.equal(calls, asked, 'Google was not asked again');
+  assert.ok(tts.geminiPausedUntil - Date.now() > 3500_000, 'for the hour Google asked');
+  assert.equal((await tts.handle('fettah', 'Merhaba', 'x')).status, 200, 'men’s voices (Piper) still work');
+});

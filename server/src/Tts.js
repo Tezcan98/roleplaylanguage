@@ -38,6 +38,7 @@ export class Tts {
     Object.assign(this, { piperDir, cacheDir, concurrency, perMinute, log });
     this.gemini = gemini?.key ? { models: GEMINI_MODELS, perDay: 1500, fetch: globalThis.fetch, ...gemini } : null;
     this.geminiDay = { day: '', count: 0 };
+    this.geminiPausedUntil = 0; // Google said the quota is used up: no more asking until then
     this.hits = new Map();
     this.enabled = !!piperDir;
   }
@@ -60,6 +61,7 @@ export class Tts {
     const file = join(this.cacheDir, `${key}.wav`);
     if (await stat(file).then(() => true, () => false)) return { status: 200, body: await readFile(file) };
     if (!this.#allow(ip)) return { status: 429, error: 'slow down' };
+    if (female && !this.#inflight.has(key) && Date.now() < this.geminiPausedUntil) return { status: 503, error: 'women\'s voice: quota used up' }; // the page uses the device's voice at once
     if (female && !this.#inflight.has(key) && !this.#geminiBudget()) return { status: 503, error: 'women\'s voice: daily limit' };
     if (!this.#inflight.has(key)) {
       const job = female ? () => this.#gemini(female, t, file) : () => this.#synth(model, t, file);
@@ -97,12 +99,13 @@ export class Tts {
       contents: [{ parts: [{ text }] }],
       generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } },
     });
-    let last = null;
+    let last = null, wait = 0;
     for (const m of [...models, ...models]) { // each model gets a second try: now and then one answers without audio
       try {
         const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
           method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body, signal: AbortSignal.timeout(25000),
         });
+        if (r.status === 429) { wait = Math.max(wait, await retryAfter(r)); last = new Error(`gemini tts ${m}: HTTP 429 (quota)`); continue; }
         if (!r.ok) { last = new Error(`gemini tts ${m}: HTTP ${r.status}`); continue; }
         const part = (await r.json())?.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData;
         if (!part) { last = new Error(`gemini tts ${m}: no audio`); continue; }
@@ -115,6 +118,7 @@ export class Tts {
         return;
       } catch (e) { last = e; }
     }
+    if (wait) { this.geminiPausedUntil = Date.now() + wait; this.log(`[tts] gemini quota used up: women's lines from the device for ${Math.round(wait / 60000)} min`); }
     throw last ?? new Error('gemini tts failed');
   }
 
@@ -132,4 +136,12 @@ export class Tts {
     });
     await rename(tmp, file);
   }
+}
+
+/** How long Google wants us to wait after a 429 (its RetryInfo, else the Retry-After header; 15 min if neither, at most a day). */
+async function retryAfter(r) {
+  const body = await r.json().catch(() => null);
+  const info = body?.error?.details?.find((d) => d.retryDelay)?.retryDelay; // "32654s"
+  const s = Number(/^(\d+(?:\.\d+)?)s$/.exec(info ?? '')?.[1] ?? r.headers?.get?.('retry-after') ?? 900);
+  return Math.min(Math.max(s, 60), 86400) * 1000;
 }

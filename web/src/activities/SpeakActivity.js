@@ -45,7 +45,7 @@ export class SpeakActivity extends Activity {
             this.mic.classList.add('rec');
             fb.className = 'fb'; fb.textContent = 'Dinliyorum…'; heard.textContent = '';
             try {
-              const r = await speech.evaluate(spec);
+              const r = await speech.evaluate(spec.show ? { ...spec, expect: [...(spec.expect ?? []), spec.show] } : spec); // reading out what is shown always counts
               if (!this.root) return;
               heard.textContent = r.transcript ? `“${r.transcript}”` : '';
               lastHeard = r.transcript || lastHeard;
