@@ -67,6 +67,7 @@ export class ShopView {
       ? PACKS.map((p) => btn(`${p.credits} kredi · ${this.#prices[p.id] ?? p.price}`, 'btn alt shop-pack', async (e) => {
         e.target.disabled = true;
         if (await this.billing.buy(p)) { w.add(p.credits, 'purchase'); this.toasts.show(`+${p.credits} kredi. Teşekkürler!`, 'Thank you!'); }
+        else this.toasts.show('Satın alma tamamlanmadı', 'The purchase did not go through');
         this.render();
       }))
       : [el('p', { class: 'shop-note', text: `${PACKS.map((p) => `${p.credits} kredi ${p.price}`).join(' · ')} — Android uygulamasında satın alınır.` })]);

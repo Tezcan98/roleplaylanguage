@@ -2,7 +2,8 @@ import { el } from './dom.js';
 import { gloss } from '../i18n/Gloss.js';
 
 const fsElement = () => document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
-const fsEnabled = () => !!(document.fullscreenEnabled ?? document.webkitFullscreenEnabled);
+const inApp = () => window.Capacitor?.isNativePlatform?.() === true; // the Android app is full screen by itself
+const fsEnabled = () => !inApp() && !!(document.fullscreenEnabled ?? document.webkitFullscreenEnabled);
 /** iPhone / iPad in the browser: no full-screen API for pages — only "Add to Home Screen" opens the game full screen. */
 const iosBrowser = () => /iPhone|iPad|iPod/.test(navigator.userAgent) && !matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches && !navigator.standalone;
 const ICON = {

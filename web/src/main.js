@@ -450,7 +450,7 @@ const dailyView = new DailyRewardView(host, modes);
 function takeDaily() {
   const d = wallet.takeDaily();
   if (d) toasts.show(`🎁 +${d.amount} kredi`, 'Daily reward');
-  if (native) scheduleDailyReminder(nativeKit.LocalNotifications); // "Bugünkü ödülünü al!" tomorrow
+  if (native) scheduleDailyReminder(nativeKit.LocalNotifications, { ask: true }); // "Bugünkü ödülünü al!" tomorrow
 }
 async function offerDaily() {
   const d = wallet.daily();
@@ -478,6 +478,7 @@ bus.on(EV.TIME, () => hud.setTime(time.dayName, time.label, time.isNight));
 bus.on(EV.WORD, ({ size }) => hud.setWords(size));
 bus.on(EV.INVENTORY, () => { hud.setBag(inventory.size); hud.setTextbook(inventory.has('kitap')); refreshQuest(); });
 bus.on(EV.CREDITS, ({ balance }) => hud.setCredits(balance));
+hud.setCredits(wallet.balance); // from the start (online from the menu, too)
 bus.on(EV.QUEST, refreshQuest);
 bus.on(EV.CHAPTER, ({ chapter }) => {
   player.sit(false);

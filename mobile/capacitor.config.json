@@ -1,5 +1,14 @@
 {
   "appId": "com.anadoluailesi.app",
   "appName": "Anadolu Ailesi",
-  "webDir": "../web/dist"
+  "webDir": "../web/dist",
+  "plugins": {
+    "SystemBars": {
+      "hidden": true,
+      "style": "DARK"
+    }
+  },
+  "android": {
+    "backgroundColor": "#2A1E15"
+  }
 }

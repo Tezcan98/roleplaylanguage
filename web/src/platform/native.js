@@ -21,10 +21,11 @@ const DAILY_ID = 7001;
  * "Bugünkü ödülünü al!" — a local notification the next day at 10:00 (and one more the day
  * after, in case the first was missed). Rescheduled every time the daily reward is taken.
  */
-export async function scheduleDailyReminder(LocalNotifications) {
+export async function scheduleDailyReminder(LocalNotifications, { ask = false } = {}) {
   try {
     const perm = await LocalNotifications.checkPermissions();
-    if (perm.display !== 'granted' && (await LocalNotifications.requestPermissions()).display !== 'granted') return;
+    // asked once, right after the first daily reward (not over the character setup); afterwards only rescheduled
+    if (perm.display !== 'granted' && (!ask || (await LocalNotifications.requestPermissions()).display !== 'granted')) return;
     await LocalNotifications.cancel({ notifications: [{ id: DAILY_ID }, { id: DAILY_ID + 1 }] }).catch(() => {});
     const at = (days) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(10, 0, 0, 0); return d; };
     await LocalNotifications.schedule({
