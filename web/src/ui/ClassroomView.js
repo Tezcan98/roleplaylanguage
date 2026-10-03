@@ -68,11 +68,11 @@ export class ClassroomView {
   teachStep(step, i, n, { onNext, onSkip, onReplay }) {
     this.teacherLine(step.say, step.en, `Anlatım ${i + 1}/${n}`);
     this.words.replaceChildren(...(step.words ?? []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { class: 'en-t', text: `= ${gloss(en)}` })])));
-    this.nav.replaceChildren(
+    this.nav.replaceChildren(...[ // (a missing button is left out, not written as "null")
       el('button', { class: 'chipbtn', html: `${ICONS.speaker} Tekrar dinle`, attrs: { type: 'button' }, on: { click: onReplay } }),
       !step.repeat && el('button', { class: 'chipbtn primary cls-next', text: 'Anladım, devam ▶', attrs: { type: 'button' }, on: { click: onNext } }),
       onSkip && el('button', { class: 'linkbtn', text: 'Anlatımı geç', attrs: { type: 'button' }, on: { click: onSkip } }),
-    );
+    ].filter(Boolean));
   }
 
   practiceStep(p, i, n) {

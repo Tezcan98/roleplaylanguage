@@ -142,7 +142,9 @@ export class LessonController {
     q = { ...q, q: said, who: said !== q.q ? who : '' };
     this.view.question(q);
     this.current = q;
-    this.tts.speak(said, { speaker: 'ogretmen' });
+    // the player's own name would make the line new for every player (her voice is made once per sentence): she says the question only
+    this.spoken = q.turnStudentId === 'ahmet' && q.who ? said.slice(q.who.length + 2).replace(/^./, (c) => c.toLocaleUpperCase('tr-TR')) : said;
+    this.tts.speak(this.spoken, { speaker: 'ogretmen' });
     this.labels.bubble(this.cast.get('ogretmen'), said, null, 4);
     this.#activity?.destroy();
 
@@ -179,5 +181,5 @@ export class LessonController {
     this.effects.run([`flag:lesson-${lesson.id}`, ...(lesson.after ?? [])]);
   }
 
-  replay() { if (this.current) this.tts.speak(this.current.q, { speaker: 'ogretmen' }); }
+  replay() { if (this.current) this.tts.speak(this.spoken ?? this.current.q, { speaker: 'ogretmen' }); }
 }

@@ -1,0 +1,168 @@
+/**
+ * The promo's scenes, in order. Each: setup(kit) → a page ready to film (not recorded),
+ * act(kit, page) → what happens on camera during `seconds`.
+ */
+const story = async (kit, params = '') => {
+  const page = await kit.open(params);
+  await page.evaluate(() => document.querySelector('.menu-main')?.click());
+  await kit.sleep(2500); await kit.closeCards(page); await kit.sleep(400);
+  await kit.hideHud(page);
+  return page;
+};
+
+/** Into the village square from the menu ("Meydana gir"), with a name and (optionally) a bought outfit. */
+const square = async (kit, name, { params = '', outfit = null, aura = false, extra = false } = {}) => {
+  const page = await kit.open(params, { extra });
+  if (outfit || aura) await page.evaluate(([outfit, aura]) => {
+    const w = window.__game.wallet; w.add(100, 'promo');
+    for (const id of [outfit && `hd-${outfit}`, aura && 'aura'].filter(Boolean)) { const it = { id, slot: id === 'aura' ? 'aura' : 'body', price: 0 }; w.buy(it); w.equip(it); }
+  }, [outfit, aura]);
+  await page.evaluate((n) => window.__game.settings.set('username', n), name);
+  await page.click('.main-menu.open button:has-text("Meydana gir")');
+  await kit.sleep(1500);
+  const input = await page.$('.overlay.open input');
+  if (input) { await input.fill(name); await page.click('.overlay.open button:has-text("Meydana gir")'); }
+  await page.waitForFunction(() => window.__game.village.net.connected, null, { timeout: 15000 });
+  await kit.sleep(1500); await kit.closeCards(page); await kit.hideHud(page);
+  return page;
+};
+
+const friends = [];
+
+export const SCENES = [
+  {
+    name: 'title', seconds: 4,
+    setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2500); return page; },
+    act: async (kit, page) => {
+      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Anadolu Ailesi</h1><p>Türkçeyi köyde yaşayarak öğren</p><small>Learn Turkish by living it, in an Anatolian village</small>');
+    },
+  },
+  {
+    name: 'house', seconds: 6,
+    setup: async (kit) => {
+      const page = await story(kit);
+      await page.evaluate(() => { const g = window.__game; g.player.position.set(2.6, 0, -2.6); g.camera.snap(g.player.position, true); });
+      await kit.sleep(800);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Ailenle Türkçe konuş', 'Talk with your family, in everyday Turkish');
+      await kit.sleep(500);
+      await page.evaluate(() => window.__game.dialogue.open('anne'));
+      await kit.sleep(3200);
+      await page.click('#dlg .choice >> nth=0').catch(() => page.keyboard.press('1'));
+    },
+  },
+  {
+    name: 'village', seconds: 6,
+    setup: async (kit) => {
+      const page = await story(kit);
+      await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
+      await kit.sleep(3500); await kit.closeCards(page); await kit.hideHud(page);
+      await page.evaluate(() => { const g = window.__game; g.player.position.set(0, 0, 13.5); g.camera.snap(g.player.position, false); });
+      await kit.zoom(page, -3); await kit.sleep(1200);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Köyü keşfet', 'Explore the village: the square, the tea garden, the market');
+      await kit.walk(page, 'w', 2800); // towards the fountain
+      await kit.walk(page, 'a', 1700);
+      await kit.walk(page, 'w', 1000);
+    },
+  },
+  {
+    name: 'speak', seconds: 6,
+    setup: async (kit) => {
+      const page = await story(kit);
+      await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
+      await kit.sleep(3500); await kit.closeCards(page); await kit.hideHud(page);
+      await page.evaluate(() => { const g = window.__game, m = g.cast.get('muhtar'); g.player.position.set(m.position.x + 1.6, 0, m.position.z + 1.2); g.camera.snap(g.player.position, false); });
+      await kit.sleep(800);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Konuş, seni anlasın', 'Speak Turkish out loud, the game listens');
+      await page.evaluate(() => window.__game.dialogue.open('muhtar', 'm1'));
+      await kit.sleep(2600);
+      await page.click('#dlg .mic').catch(() => {});
+    },
+  },
+  {
+    name: 'school', seconds: 6,
+    setup: async (kit) => {
+      const page = await story(kit, '&fastclass');
+      page.evaluate(() => window.__game.lessons.enter('l1'));
+      await kit.sleep(800);
+      await page.click('.overlay.open button:has-text("Krediyle gir")');
+      await kit.sleep(3500); await kit.closeCards(page); await kit.hideHud(page);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Okulda dersler', 'Lessons step by step, from A1');
+    },
+  },
+  {
+    name: 'square', seconds: 8,
+    setup: async (kit) => {
+      friends.push(await square(kit, 'Leyla', { params: '&gender=girl&look=covered', outfit: 'dress', aura: true, extra: true }));
+      friends.push(await square(kit, 'Omar', { outfit: 'suit', extra: true }));
+      const page = await square(kit, 'Ahmet', { outfit: 'casual' });
+      // everyone together near the fountain, facing the camera
+      const spots = [[-1.3, 5.6], [1.3, 5.8], [0, 7.4]];
+      for (const [i, p] of [...friends, page].entries()) await p.evaluate(([x, z]) => { const g = window.__game; g.player.position.set(x, 0, z); }, spots[i]);
+      await page.evaluate(() => { const g = window.__game; g.camera.snap(g.player.position, false); });
+      await kit.zoom(page, -6); await kit.sleep(2500);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Dünyadan arkadaşlarla buluş', 'Meet Turkish learners from all over the world');
+      await kit.sleep(900);
+      await friends[0].evaluate(() => window.__game.village.say('Merhaba! Ben Leyla. Mısırlıyım.'));
+      await kit.sleep(2200);
+      await friends[1].evaluate(() => window.__game.village.say('Selam Leyla! Ben Omar, Pakistanlıyım.'));
+      await kit.sleep(2000);
+      await page.evaluate(() => window.__game.village.say('Hoş geldiniz! Çay içelim mi?'));
+    },
+    cleanup: async (kit, page) => { for (const p of [page, ...friends]) await p.context().close(); },
+  },
+  {
+    name: 'chess', seconds: 7,
+    setup: async (kit) => {
+      const page = await square(kit, 'Ahmet');
+      await page.evaluate(() => { const g = window.__game; g.player.position.set(-15, 0, 20.6); g.camera.snap(g.player.position, false); }); // white's side of the giant board
+      await kit.sleep(1000);
+      await page.evaluate(() => (window.__game.village.chess).playDede('w'));
+      await kit.sleep(3000);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Dev satranç, futbol, kütüphane', 'Giant chess with İsmail Dede, football, books and more');
+      for (const [from, to] of [['e2', 'e4'], ['g1', 'f3'], ['f1', 'c4']]) {
+        await page.evaluate(([from, to]) => window.__game.village.net.send({ type: 'chess-move', from, to, promotion: 'q' }), [from, to]);
+        await kit.sleep(2100);
+      }
+    },
+  },
+  {
+    name: 'shop', seconds: 5,
+    setup: async (kit) => {
+      const page = await story(kit, '&gender=girl&look=covered');
+      await page.evaluate(() => window.__game.wallet.add(150, 'promo'));
+      await page.evaluate(() => window.__game.shop.open());
+      await kit.sleep(1500);
+      await page.evaluate(() => document.querySelector('.shop-body')?.scrollTo(0, 99999));
+      await kit.sleep(500);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Karakterini giydir', 'Dress up your character, everyone in the square sees it', { side: true });
+    },
+  },
+  {
+    name: 'end', seconds: 4,
+    setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2500); return page; },
+    act: async (kit, page) => {
+      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Anadolu Ailesi</h1><p>Türkçe Öğren</p><span class="badge">Google Play’de ücretsiz</span><small>Free on Google Play</small>');
+    },
+  },
+];

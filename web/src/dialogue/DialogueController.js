@@ -94,12 +94,12 @@ export class DialogueController {
         const r = await this.chat.reply(npc, text);
         if (!live()) return;
         box.clear();
-        this.lastLine = r.reply;
+        this.lastLine = r.reply; this.lastFresh = true;
         this.view.setLine(r.reply, r.meaning);
         this.view.setWords(r.words);
         r.words.forEach(([tr, m]) => this.vocab.learn(tr, m));
         if (r.correction) this.view.setHint(`Doğrusu: ${r.correction}`);
-        this.tts.speak(r.reply, { speaker: npc });
+        this.tts.speak(r.reply, { speaker: npc, fresh: true }); // a new sentence each time: no Gemini voice for it
       } catch (e) {
         if (live()) { const m = e.code === 'limit' ? CHAT_BUSY.limit : CHAT_BUSY.down; this.view.setLine(m.tr, m.en); }
       }
@@ -115,7 +115,7 @@ export class DialogueController {
     const type = node.ask ?? 'choice';
     const hidden = type === 'listen';
     this.node = node;
-    this.lastLine = node.say;
+    this.lastLine = node.say; this.lastFresh = false;
     this.tts.warm?.(node.say, this.talking);
     if (hidden) this.view.setLine('🔊 …', 'Listen carefully', true);
     else this.view.setLine(node.say, node.en);
@@ -149,7 +149,7 @@ export class DialogueController {
 
   #learn(node) { (node.words || []).forEach(([tr, en]) => this.vocab.learn(tr, en)); }
 
-  speak() { if (this.lastLine && this.talking) this.tts.speak(this.lastLine, { speaker: this.talking }); }
+  speak() { if (this.lastLine && this.talking) this.tts.speak(this.lastLine, { speaker: this.talking, fresh: this.lastFresh }); }
 
   close() {
     if (!this.talking) return;

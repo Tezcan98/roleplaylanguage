@@ -16,10 +16,15 @@ export class CharacterVoices {
   /** The browser's voice: a woman's one for the women and girls, and their pitch. */
   #say(text, voice, rate) { this.fallback.speak(text, { rate: 0.9 * rate, pitch: voice.pitch, female: !!voice.female }); }
 
-  speak(text, { speaker, rate = 1 } = {}) {
+  /**
+   * `fresh`: a sentence made up on the spot (free chat with a character). Women's voices come from
+   * Gemini, made once per sentence and kept — a new sentence every time would use the daily quota
+   * up, so hers is spoken by the device. Men's voices (Piper on our own server) cost nothing.
+   */
+  speak(text, { speaker, rate = 1, fresh = false } = {}) {
     if (!text) return;
     const voice = this.voiceOf(speaker);
-    if (this.server?.has?.(voice) ?? this.server?.supported) {
+    if (!(fresh && voice.female) && (this.server?.has?.(voice) ?? this.server?.supported)) {
       this.neural?.cancel(); this.fallback.cancel();
       this.server.speak(text, { voice, rate }).catch(() => this.#local(text, voice, rate));
       return;
