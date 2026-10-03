@@ -2,11 +2,12 @@
   "name": "@yilmaz/mobile",
   "version": "0.5.0",
   "private": true,
-  "description": "Android uygulaması: web/dist'i Capacitor ile paketler.",
+  "description": "Android uygulaması (Anadolu Ailesi): web/dist'i Capacitor ile paketler.",
   "scripts": {
     "sync": "npm --prefix ../web run build && cap sync android",
     "open": "cap open android",
-    "apk": "npm run sync && cd android && ./gradlew assembleDebug"
+    "apk": "npm run sync && cd android && ./gradlew assembleDebug",
+    "release": "npm run sync && cd android && JAVA_HOME=${JAVA_HOME:-$(ls -d ~/.jdks/jdk-21* | head -1)} ./gradlew assembleRelease bundleRelease"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",

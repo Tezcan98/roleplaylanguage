@@ -30,7 +30,7 @@ export async function scheduleDailyReminder(LocalNotifications) {
     await LocalNotifications.schedule({
       notifications: [1, 2].map((days, i) => ({
         id: DAILY_ID + i, title: 'Anadolu Ailesi 🎁', body: 'Bugünkü ödülünü al! Her gün gelirsen ödül büyür.',
-        schedule: { at: at(days), allowWhileIdle: true },
+        schedule: { at: at(days) }, // not exact to the minute: no special alarm permission needed
       })),
     });
   } catch (e) { console.warn('[notifications]', e); }

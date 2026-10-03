@@ -62,7 +62,8 @@
   "iceServers": [],
   "villageServer": "wss://31-58-245-116.sslip.io/ws/village",
   "admob": {
-    "rewardedId": ""
+    "rewardedId": "",
+    "interstitialId": ""
   },
   "sttEndpoint": ""
 }
