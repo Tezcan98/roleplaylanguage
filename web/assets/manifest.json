@@ -1,5 +1,8 @@
 {
-  "models": {},
+  "models": {
+    "hd.boy": "assets/models/hd_boy.glb",
+    "hd.girl": "assets/models/hd_girl.glb"
+  },
   "textures": {
     "grass": {
       "map": "assets/textures/grass.webp",

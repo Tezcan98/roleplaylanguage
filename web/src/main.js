@@ -56,7 +56,7 @@ import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling } from './services/monetization/Billing.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
-import { outfitOf } from './content/shop.js';
+import { hdOn, hdModelFor } from './content/shop.js';
 import { LocalClassroomSession, WebSocketClassroomSession } from './services/multiplayer/ClassroomSession.js';
 import { ClassroomView } from './ui/ClassroomView.js';
 import { VillageNetwork } from './services/multiplayer/VillageNetwork.js';
@@ -195,7 +195,7 @@ const vocab = new Vocabulary(state, bus);
 const input = new InputSystem(joystick);
 // credits live on the device, apart from the story save (a new game keeps what you bought or earned)
 const wallet = new CreditWallet({ settings, bus, start: Math.max(START_CREDITS, new LocalSaveRepository().load()?.credits ?? 0) });
-const player = new Player('ahmet', { ...PLAYER_LOOKS[playerLook], ...outfitOf(wallet) }, { mf, models }); // + the outfit from the shop
+const player = new Player('ahmet', PLAYER_LOOKS[playerLook], { mf, models });
 ctx.scene.add(player.group);
 lighting.follow = player.position;
 const npcs = new Map(Object.entries(NPCS).map(([id, def]) => [id, new Npc(id, def, { mf, models })]));
@@ -332,7 +332,7 @@ effects
 const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st) => village.voiceState(st), relayOnly: params.has('relayonly') }),
-  remotes: new RemotePlayers({ mf, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS }),
+  remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS }),
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   // public places: the square, and the schoolyard for football (its own room: <city>-okul)
   places: { village: { suffix: '', balls: villageBalls, label: '' }, schoolyard: { suffix: '-okul', balls: [schoolBall], label: 'Okul bahçesi' } },
@@ -350,7 +350,10 @@ const village = new VillageMultiplayer({
   recognizer: chatRecognizer,
 });
 village.autoName = () => `${playerName()}${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question
-village.outfit = () => outfitOf(wallet); // others see the shop colours too
+village.outfit = () => ({ hd: hdOn(wallet) }); // others see the HD character too
+// the HD character from the shop: in the public places (square, schoolyard), the blocky one elsewhere
+const playerHd = () => player.setHd(models, hdModelFor(playerGender()), hdOn(wallet) && ['village', 'schoolyard'].includes(world.current?.id), { covered: !!PLAYER_LOOKS[playerLook].headscarf });
+bus.on(EV.LOCATION, playerHd);
 
 // --- giant chess on the square: online the server's board (İsmail Dede runs it), offline Dede plays you ---
 const chess = new ChessGame({
@@ -444,7 +447,7 @@ const shop = new ShopView(host, {
   modes, wallet, ads, billing, toasts, gender: playerGender(), look: settings.get('look', ''),
   onDaily: () => takeDaily(),
   // new colours: saved, then the game opens again with them (and goes on where it was)
-  onOutfit: () => { try { sessionStorage.setItem('autoContinue', '1'); } catch { /* ignore */ } toasts.show('Kıyafetin değişiyor…', 'Changing your outfit…'); setTimeout(() => location.reload(), 700); },
+  onOutfit: () => { playerHd(); shop.render(); if (village.net.connected) { village.leave(); village.join(); } }, // others see it after a quick reconnect
 });
 const dailyView = new DailyRewardView(host, modes);
 function takeDaily() {

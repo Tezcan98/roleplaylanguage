@@ -135,8 +135,8 @@ export class VillageSquare extends Location {
     this.#library(mf, C);
 
     this.writeScore = buildPitch(this, mf, { ...SQUARE_PITCH, board: { x: (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, z: 13.3, rot: Math.PI } });
-    add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.02))
-      .position.set((SQUARE_PITCH.fence.x0 + SQUARE_PITCH.fence.x1) / 2, 0.02, (SQUARE_PITCH.fence.z0 + SQUARE_PITCH.fence.z1) / 2);
+    add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.035))
+      .position.set((SQUARE_PITCH.fence.x0 + SQUARE_PITCH.fence.x1) / 2, 0.035, (SQUARE_PITCH.fence.z0 + SQUARE_PITCH.fence.z1) / 2);
     this.anchor('kickoff', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, SQUARE_PITCH.cz - 2.5, 0);
     this.hotspot('village.scoreReset', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, 12.7, 1.3); // under the score board
 
@@ -238,7 +238,7 @@ export class VillageSquare extends Location {
     C.addBox(kx - 1.85, kx + 1.35, kz - 1.85, kz + 1.85);
     this.anchor('cayci', kx - 2.2, kz, -Math.PI / 2);
 
-    // twelve tables with two chairs each, under a vine pergola; the regulars' table has a tavla board
+    // twelve tables with two chairs each, under the open sky; the regulars' table has a tavla board
     let seat = 0;
     TEA_TABLES.forEach(([x, z], ti) => {
       add(mf.at(mf.cyl(0.45, 0.45, 0.05, LIGHT_WOOD, 16), x, 0.72, z));
@@ -257,12 +257,7 @@ export class VillageSquare extends Location {
         this.hotspot(`village.${id}`, sx + side * 0.5, z, 0.7);
       });
     });
-    // pergola over the tables
-    const [px0, px1, pz0, pz1] = [7.9, 16.1, 0.2, 11.8];
-    [[px0, pz0], [px1, pz0], [px0, pz1], [px1, pz1]].forEach(([x, z]) => { add(mf.at(mf.box(0.15, 2.6, 0.15, WOOD), x, 1.3, z)); C.addCircle(x, z, 0.12); });
-    for (let z = pz0; z <= pz1 + 0.01; z += (pz1 - pz0) / 4) add(mf.at(mf.box(px1 - px0 + 0.3, 0.08, 0.1, WOOD), (px0 + px1) / 2, 2.62, z));
-    // a few vine leaves on the beams only: open above, the camera sees who sits underneath
-    for (let i = 0; i < 8; i++) add(mf.at(mf.box(0.7, 0.05, 0.5, { tex: 'leaves' }), i % 2 ? px0 + 0.3 : px1 - 0.3, 2.7, pz0 + 0.6 + i * 1.4)).rotation.y = i;
+    // open sky over the tables: no pergola at all
   }
 
   /** A wooden chair facing `rot` (the back on the far side). */

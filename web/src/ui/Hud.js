@@ -2,7 +2,7 @@ import { el } from './dom.js';
 
 /** Top bar: clock, word book and bag counters (and `extra` buttons on the right, e.g. full screen). */
 export class Hud {
-  constructor(host, { onBook, onBag, onBookOpen, extra = [] }) {
+  constructor(host, { onBook, onBag, onBookOpen, onShop, extra = [] }) {
     this.clock = el('div', { class: 'pill clock', attrs: { 'aria-live': 'off' } });
     this.words = el('b', { text: '0' });
     this.bag = el('b', { text: '0' });

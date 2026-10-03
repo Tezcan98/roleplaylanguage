@@ -103,8 +103,10 @@ try {
   check('a player sitting at the tea garden is seen sitting', !!seenSitting);
   await A.evaluate(() => window.__game.player.sit(false));
 
-  await A.dispatchEvent('.ptt', 'pointerdown'); await sleep(1200); await A.dispatchEvent('.ptt', 'pointerup'); await sleep(800);
-  const bubbles = await B.evaluate(() => [...document.querySelectorAll('.bubble')].filter((b) => b.style.display !== 'none').map((b) => b.textContent));
+  await A.dispatchEvent('.ptt', 'pointerdown'); await sleep(1200); await A.dispatchEvent('.ptt', 'pointerup');
+  const shown = () => B.evaluate(() => [...document.querySelectorAll('.bubble')].filter((b) => b.style.display !== 'none' && b.textContent).map((b) => b.textContent));
+  await waitFor(async () => (await shown()).length > 0, 5000);
+  const bubbles = await shown();
   check('push-to-talk shows a text bubble to others', bubbles.length > 0, JSON.stringify(bubbles));
   check('…and sends no audio', (await peers(B)) === 0);
 
@@ -182,7 +184,7 @@ try {
   // walking in from the story: the room where the others are, whatever city was picked before
   {
     const C = await player('C', 'Gezgin', { room: 'izmir' });
-    check('from the story: joins the square where the others are', !!(await waitFor(async () => (await C.evaluate(() => window.__game.village.net.room)) === 'ankara' && (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 10000)));
+    check('from the story: joins the square where the others are', !!(await waitFor(async () => (await C.evaluate(() => window.__game.village.net.room)) === 'ankara' && (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 10000)), `C in ${await C.evaluate(() => window.__game.village.net.room)}, A sees ${await A.evaluate(() => window.__game.village.remotes.count)}`);
     await C.close();
     await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 1, 8000);
   }
@@ -201,7 +203,7 @@ try {
     const offer = await waitFor(() => C.$('.overlay.open button:has-text("Ankara meydanına geç")'), 8000);
     check('alone in a square picked on the menu: offered the busier one', !!offer);
     if (offer) await offer.click();
-    check('…and switching joins the others', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 10000)));
+    check('…and switching joins the others', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 10000)), `C in ${await C.evaluate(() => window.__game.village.net.room)}, A sees ${await A.evaluate(() => window.__game.village.remotes.count)}`);
     await C.close();
   }
 

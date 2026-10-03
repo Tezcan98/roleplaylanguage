@@ -14,8 +14,8 @@ const ROOM = /^[a-z0-9-]{1,24}$/;
 const lookOf = (gender, style) => (gender === 'girl'
   ? { gender: 'girl', style: style === 'open' ? 'open' : 'covered' }
   : { gender: 'boy', style: style === 'strong' ? 'strong' : 'modest' });
-/** Colours bought in the shop (shirt, cap, headscarf): plain 24-bit colours only. */
-const outfitOf = (o) => Object.fromEntries(['shirt', 'cap', 'headscarf'].filter((k) => Number.isInteger(o?.[k]) && o[k] >= 0 && o[k] <= 0xFFFFFF).map((k) => [k, o[k]]));
+/** Bought in the shop: the HD character. */
+const outfitOf = (o) => (o?.hd === true ? { hd: true } : {});
 const RATE = { burst: 60, perSecond: 30 }; // messages per client (10/s states + WebRTC ICE bursts)
 const MAX_BALLS = 4;                        // shared balls per room (the square's pitch has two)
 const SAY_GAP = 1200;                       // ms between two public speech bubbles

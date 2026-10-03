@@ -18,7 +18,7 @@ export class RenderContext {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x9ED2F5);
     this.scene.fog = new THREE.Fog(0x9ED2F5, 35, 75);
-    this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 200);
+    this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.3, 200); // near 0.3: enough depth precision on phones (no flicker of lines on grass)
 
     this.hemi = new THREE.HemisphereLight(0xffffff, 0x6b8e3a, 2.3);
     this.sun = new THREE.DirectionalLight(0xfff4dc, 3);

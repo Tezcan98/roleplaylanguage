@@ -22,7 +22,7 @@ export class VillageMultiplayer {
   #since = 0;
   #last = '';
   #retryTimer = null;
-  #talkTimer = null;
+  #talking = false;
   #awayTimer = null;
   #sentAt = 0; // when my state last went out (wall clock: slow phones have few frames)
   #retryDelay = 0;
@@ -112,7 +112,7 @@ export class VillageMultiplayer {
     if (!this.healthUrl) return;
     let rooms;
     try {
-      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 2500);
+      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 5000); // slow phone connections too
       rooms = (await (await fetch(this.healthUrl, { cache: 'no-store', signal: ctl.signal })).json()).rooms ?? {};
       clearTimeout(t);
     } catch { return; }
@@ -246,21 +246,44 @@ export class VillageMultiplayer {
       if (on) { this.ptt.set(false); this.ptt.typeInstead(); }
       return;
     }
-    this.net.send({ type: 'talk', on });
-    this.player.voice = on;
-    if (!on) { this.recognizer.stop?.(); return; }
-    clearTimeout(this.#talkTimer);
-    this.#talkTimer = setTimeout(() => this.ptt.set(false), 8000); // tapped and forgot: stop after 8 s
-    this.recognizer.listen({ expected: ['Merhaba! Nasılsın?'] }).then(({ transcript }) => {
-      if (!transcript) { this.toasts.show('Seni duyamadım, bir daha dene', "Didn't catch that — try again"); return; }
-      this.say(transcript);
-    }).catch((e) => {
-      const msg = String(e?.message ?? e);
-      if (/not-allowed|service-not-allowed|Permission/i.test(msg)) this.toasts.show('Mikrofon izni yok', 'Allow the microphone for this site in the browser settings');
-      else if (/no-speech/.test(msg)) this.toasts.show('Seni duyamadım, bir daha dene', "Didn't catch that — try again");
-      else if (!/aborted/.test(msg)) { this.toasts.show('Konuşma yazıya çevrilemedi, yazarak gönder', 'Speech-to-text failed — type it instead'); this.ptt.typeInstead(); }
-    }).finally(() => { clearTimeout(this.#talkTimer); this.ptt.set(false); this.player.voice = false; this.net.send({ type: 'talk', on: false }); });
+    if (!on) { this.recognizer.stop?.(); return; } // let go: the listening loop below sends what was said
+    if (this.#talking) return;
+    this.#listenLoop();
   }
+
+  /**
+   * Listen while the button is held (or until the second tap). The phone's speech recognizer stops
+   * by itself after a short silence — then it simply starts again, and the pieces are joined.
+   */
+  async #listenLoop() {
+    this.#talking = true;
+    this.net.send({ type: 'talk', on: true });
+    this.player.voice = true;
+    const until = Date.now() + 20000; // tapped and forgot: 20 s at most
+    const parts = [];
+    let problem = null;
+    while (this.ptt.on && Date.now() < until) {
+      try {
+        const { transcript } = await this.recognizer.listen({ expected: ['Merhaba! Nasılsın?'] });
+        if (transcript) parts.push(transcript);
+      } catch (e) {
+        const msg = String(e?.message ?? e);
+        if (/not-allowed|service-not-allowed|Permission|denied/i.test(msg)) { problem = 'permission'; break; }
+        if (!/no-speech|aborted|No match|didn't understand|7|6/i.test(msg)) { problem = 'failed'; break; }
+        await new Promise((r) => setTimeout(r, 150)); // nothing heard yet: listen again
+      }
+    }
+    this.ptt.set(false);
+    this.#talking = false;
+    this.player.voice = false;
+    this.net.send({ type: 'talk', on: false });
+    const text = parts.join(' ').trim();
+    if (text) this.say(text);
+    else if (problem === 'permission') this.toasts.show('Mikrofon izni yok', 'Allow the microphone for this site in the browser settings');
+    else if (problem === 'failed') { this.toasts.show('Konuşma yazıya çevrilemedi, yazarak gönder', 'Speech-to-text failed — type it instead'); this.ptt.typeInstead(); }
+    else this.toasts.show('Seni duyamadım, bir daha dene', "Didn't catch that — try again");
+  }
+
 
   /** A sentence for everyone here (spoken and turned into text, or typed). */
   say(text) {

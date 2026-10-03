@@ -48,6 +48,9 @@ try {
   await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
   await page.click('text=Hikayeye başla'); await sleep(1200);
   await ev(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(500);
+  await page.click('.credits-btn'); await sleep(400);
+  check('the 🪙 credits in the HUD open the shop', !!(await page.$('.shop.open')));
+  await page.evaluate(() => window.__game.shop.close());
   check('a new game starts with 50 credits', (await ev(() => window.__game.wallet.balance)) === 50);
 
   const talkTo = async (id) => {
@@ -362,9 +365,10 @@ try {
     check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 56 && (await p2.textContent('.shop.open .shop-body')).includes('Sonraki video'));
     check('credit packs are sold in the Android app (not on the web)', (await p2.textContent('.shop.open')).includes('Android uygulamasında'));
     check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-item')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
-    await p2.click('.shop.open .shop-item:has-text("Kırmızı gömlek") button');
-    await p2.waitForNavigation({ timeout: 15000 }).catch(() => {}); await p2.waitForFunction(() => window.__game, null, { timeout: 30000 }); await sleep(500);
-    check('buying a red shirt: 20 credits, and the player wears it', (await e2(() => window.__game.wallet.balance)) === 36 && (await e2(() => window.__game.wallet.equipped('shirt'))) === 'shirt-red');
+    await e2(() => { window.__game.wallet.add(150); window.__game.shop.render(); });
+    await p2.click('.shop.open .shop-item:has-text("HD karakter") button'); await sleep(300);
+    check('buying the HD character (150 credits): switched on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd' && (await e2(() => window.__game.wallet.balance)) === 56);
+    await e2(() => window.__game.shop.close());
     // a full-screen ad between two story days (not within the same day)
     await e2(() => document.querySelector('.main-menu.open .btn')?.click()); await sleep(1500);
     await e2(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);

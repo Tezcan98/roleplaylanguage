@@ -78,9 +78,9 @@ export class ShopView {
       let action;
       if (i.id === 'adFree') action = owned ? el('span', { class: 'shop-owned', text: 'Alındı ✓' }) : btn(`${i.price} kredi`, 'chipbtn primary', () => this.#buy(i), w.balance < i.price);
       else if (!owned) action = btn(`${i.price} kredi`, 'chipbtn primary', () => this.#buy(i), w.balance < i.price);
-      else action = worn ? btn('Çıkar', 'chipbtn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Giy', 'chipbtn', () => { w.equip(i); this.onOutfit(); });
-      return el('div', { class: `shop-item${i.value != null ? '' : ' wide'}` }, [
-        el('span', { class: 'shop-icon', text: i.icon, style: i.value != null ? { color: `#${i.value.toString(16).padStart(6, '0')}` } : {} }),
+      else action = worn ? btn('Kapat', 'chipbtn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Aç', 'chipbtn', () => { w.equip(i); this.onOutfit(); });
+      return el('div', { class: 'shop-item wide' }, [
+        el('span', { class: 'shop-icon', text: i.icon }),
         el('span', { class: 'shop-name' }, [i.title, el('small', { class: 'en-t', text: gloss(i.en) })]),
         action,
       ]);

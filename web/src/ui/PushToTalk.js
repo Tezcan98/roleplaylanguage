@@ -3,9 +3,8 @@ import { el } from './dom.js';
 const MIC = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 
 /**
- * Talk button (also the T key, held): what you say appears as a text bubble. On a touch screen
- * it is tap to start, tap to stop (holding is unreliable on phones: a long press is taken over by
- * the system). Where the device can't turn speech into text, the button opens a box to type the
+ * Talk button (also the T key, held): what you say appears as a text bubble. Hold it while you
+ * speak and let go, or tap once to start and once more to stop. Where the device can't turn speech into text, the button opens a box to type the
  * sentence instead. Plus the online counter.
  */
 export class PushToTalk {
@@ -23,16 +22,23 @@ export class PushToTalk {
     this.root.append(this.typeBox);
     this.typeBox.addEventListener('submit', (e) => { e.preventDefault(); const t = this.input.value.trim(); this.input.value = ''; this.typeBox.hidden = true; if (t) this.onType?.(t); });
     this.input.addEventListener('blur', () => setTimeout(() => { if (!this.input.value.trim()) this.typeBox.hidden = true; }, 200));
-    let touch = false;
+    // hold to talk (let go = send), or a quick tap to start and another tap to stop
+    let downAt = 0, wasOn = false;
     this.btn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      touch = e.pointerType !== 'mouse';
-      if (touch) this.set(!this.on); // tap: start / stop
-      else this.set(true);
+      try { this.btn.setPointerCapture(e.pointerId); } catch { /* not a real pointer */ } // the finger may slide a little while holding
+      downAt = performance.now();
+      wasOn = this.on;
+      if (!this.on) this.set(true);
     });
-    const up = () => { if (!touch) this.set(false); };
+    const up = () => {
+      if (!downAt) return;
+      const held = performance.now() - downAt > 350;
+      downAt = 0;
+      if (held || wasOn) this.set(false); // held: let go = stop · tapped while on: stop
+    };
     this.btn.addEventListener('pointerup', up);
-    this.btn.addEventListener('pointerleave', up);
+    this.btn.addEventListener('pointercancel', up);
     this.btn.addEventListener('contextmenu', (e) => e.preventDefault());
     addEventListener('keydown', (e) => {
       if ((e.key === 't' || e.key === 'T') && !e.repeat && document.activeElement?.tagName !== 'INPUT') this.set(true);

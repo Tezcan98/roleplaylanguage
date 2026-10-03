@@ -11,11 +11,11 @@ export function buildPitch(loc, mf, p) {
   const add = (m) => loc.add(m), C = loc.collision;
   const { x0, x1, z0, z1, goalHalf } = p;
   const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-  const white = 0xF4F6F7, line = (x, z, w, d) => add(mf.at(mf.box(w, 0.01, d, white), x, 0.035, z));
+  const white = 0xF4F6F7, line = (x, z, w, d) => add(mf.at(mf.box(w, 0.01, d, white), x, 0.07, z)); // well above the grass (0.035): phones' depth buffers would flicker between them
   line(cx, z0, x1 - x0, 0.12); line(cx, z1, x1 - x0, 0.12);
   line(x0, cz, 0.12, z1 - z0); line(x1, cz, 0.12, z1 - z0); line(cx, cz, 0.12, z1 - z0);
-  const ring = mf.torus(Math.min(1.8, (z1 - z0) / 5), 0.05, white, 40); ring.rotation.x = Math.PI / 2; ring.position.set(cx, 0.035, cz); add(ring);
-  add(mf.at(mf.cyl(0.15, 0.15, 0.01, white, 12), cx, 0.036, cz)); // centre spot
+  const ring = mf.torus(Math.min(1.8, (z1 - z0) / 5), 0.05, white, 40); ring.rotation.x = Math.PI / 2; ring.position.set(cx, 0.07, cz); add(ring);
+  add(mf.at(mf.cyl(0.15, 0.15, 0.01, white, 12), cx, 0.071, cz)); // centre spot
   [x0, x1].forEach((gx, i) => {
     const dir = i ? 1 : -1;
     line(gx - dir * 1.5, cz, 0.12, 5); line(gx - dir * 0.75, cz - 2.5, 1.5, 0.12); line(gx - dir * 0.75, cz + 2.5, 1.5, 0.12); // goal area

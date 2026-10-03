@@ -7,7 +7,7 @@ import { Character } from '../entities/Character.js';
 export class RemotePlayers {
   #players = new Map();
 
-  constructor({ mf, baseLook, looks = {} }) { Object.assign(this, { mf, baseLook, looks }); }
+  constructor({ mf, models = null, baseLook, looks = {} }) { Object.assign(this, { mf, models, baseLook, looks }); }
 
   list() { return [...this.#players.values()].map((p) => p.char); }
   ids() { return [...this.#players.keys()]; }
@@ -22,6 +22,7 @@ export class RemotePlayers {
     char.place({ x, z, rot });
     location.group.add(char.group);
     if (sit) char.sit(true);
+    if (look?.hd) char.setHd(this.models, look.gender === 'girl' ? 'hd.girl' : 'hd.boy', true, { covered: look.style === 'covered' }); // bought in the shop
     this.#players.set(id, { char, target: { x, z, rot }, moving: false });
   }
 
