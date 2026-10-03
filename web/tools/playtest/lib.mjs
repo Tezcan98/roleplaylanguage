@@ -130,7 +130,7 @@ export async function drainUi(page, { pace = 1 } = {}) {
         if (f) return f.click();
         if (q('.cls-next')) return q('.cls-next').click();
         const step = window.__game.lessons.step;
-        if (step?.activity === 'order') { for (const w of step.answer.split(' ')) [...document.querySelectorAll('.classroom .tile:not([disabled])')].find((t) => t.textContent === w)?.click(); return; }
+        if (step?.activity === 'order') { let rest = step.answer; for (let k = 0; k < 20 && rest; k++) { const t = [...document.querySelectorAll('.classroom .tile:not([disabled])')].filter((x) => rest.startsWith(x.textContent)).sort((a, b) => b.textContent.length - a.textContent.length)[0]; if (!t) break; t.click(); rest = rest.slice(t.textContent.length).trimStart(); }  return; }
         if (step && (step.activity === 'choice' || step.activity === 'listen')) { const k = Math.max(0, step.options.findIndex((o) => !o.wrong)); document.querySelectorAll('.classroom .choice')[k]?.click(); return; }
         q('.mic:not(.rec)')?.click();
       });
@@ -142,7 +142,7 @@ export async function drainUi(page, { pace = 1 } = {}) {
         if (!tb.unit) { if (window.__game.story.state.flags['homework-u1']) tb.close(); else document.querySelector('.unit:not([disabled])').click(); return; }
         const p = tb.unit.pages[tb.page], next = document.querySelector('.tb-nav .chipbtn.primary');
         if (next && !next.disabled && !next.hidden) { next.click(); return; }
-        if (p.activity === 'order') { for (const w of p.answer.split(' ')) [...document.querySelectorAll('.tb-body .tile:not([disabled])')].find((t) => t.textContent === w)?.click(); return; }
+        if (p.activity === 'order') { let rest = p.answer; for (let k = 0; k < 20 && rest; k++) { const t = [...document.querySelectorAll('.tb-body .tile:not([disabled])')].filter((x) => rest.startsWith(x.textContent)).sort((a, b) => b.textContent.length - a.textContent.length)[0]; if (!t) break; t.click(); rest = rest.slice(t.textContent.length).trimStart(); }  return; }
         if (p.activity === 'speak') { document.querySelector('.tb-body .mic')?.click(); return; }
         const i = Math.max(0, (p.options ?? []).findIndex((o) => !o.wrong));
         document.querySelectorAll('.tb-body .choice')[i]?.click();
@@ -160,7 +160,7 @@ export async function drainUi(page, { pace = 1 } = {}) {
     const node = await ev(() => { const d = window.__game.dialogue; return d.talking ? { ask: d.node?.ask ?? 'choice', answer: d.node?.answer } : null; });
     if (!node) return undefined;
     if (node.ask === 'order') {
-      await ev((ws) => { for (const w of ws) [...document.querySelectorAll('#dlg .tiles .tile:not([disabled])')].find((t) => t.textContent === w)?.click(); }, node.answer.split(' '));
+      await ev((answer) => { let rest = answer; for (let k = 0; k < 20 && rest; k++) { const t = [...document.querySelectorAll('#dlg .tiles .tile:not([disabled])')].filter((x) => rest.startsWith(x.textContent)).sort((a, b) => b.textContent.length - a.textContent.length)[0]; if (!t) break; t.click(); rest = rest.slice(t.textContent.length).trimStart(); } }, node.answer);
       await wait(900);
     } else if (node.ask === 'speak') {
       await ev(() => document.querySelector('#dlg .mic')?.click());

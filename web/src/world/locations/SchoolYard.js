@@ -7,7 +7,7 @@ const DARK = { tex: 'darkWood' };
 
 /** The village primary school from outside: courtyard, flagpole, entrance. */
 /** The football pitch on the yard: goals at both ends (x), centre spot. */
-export const PITCH = { x0: -10, x1: 10, z0: -8.6, z1: 4.6, goalHalf: 1.5 };
+export const PITCH = { x0: -10, x1: 10, z0: -8.6, z1: 4.6, goalHalf: 2 }; // wide goals: easier to score
 PITCH.cz = (PITCH.z0 + PITCH.z1) / 2;
 
 export class SchoolYard extends Location {

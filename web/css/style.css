@@ -421,17 +421,6 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .shop-head .ctitle{flex-grow:1;margin:0}
 .shop-balance{font:700 18px Fredoka,sans-serif;background:var(--gold);border:2px solid var(--wood);border-radius:999px;padding:4px 12px}
 .shop-body{display:flex;flex-direction:column;gap:10px;overflow-y:auto}
-.shop-sec{background:#fff;border:2px solid rgba(58,42,30,.25);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
-.shop-sec h3{margin:0;font:700 17px Fredoka,sans-serif;color:#8A5A12}
-.shop-sec h3 small{font:700 12px Nunito,sans-serif;color:var(--muted)}
-.shop-note{margin:0;font-weight:700;font-size:14px;color:var(--muted)}
-.shop-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px}
-.shop-item{display:flex;align-items:center;gap:8px;border:2px solid rgba(58,42,30,.2);border-radius:10px;padding:6px 8px}
-.shop-item.wide{grid-column:1 / -1}
-.shop-icon{font-size:24px;width:30px;text-align:center}
-.shop-name{flex-grow:1;font-weight:800;font-size:15px;display:flex;flex-direction:column}
-.shop-name small{font-weight:700;font-size:12px;color:var(--muted)}
-.shop-owned{font-weight:800;color:#3E8E4A}
 .pill.credits-btn{cursor:pointer}
 /* daily reward */
 .daily-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
@@ -443,3 +432,33 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .overlay.ad.interstitial{background:#111;flex-direction:column;gap:12px}
 @media (orientation:landscape) and (max-height:520px){.shop .card{width:min(820px,100%)}.shop-sec{padding:8px 10px;gap:6px}}
 .overlay.shop,.overlay.daily,.overlay.ad,.overlay.ios-guide{z-index:70} /* above the main menu */
+body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.open) #shot{display:none!important} /* the talk button never covers a conversation or a card */
+.tile.nope{animation:nope .35s;border-color:#C0392B;background:#FADBD8}
+@keyframes nope{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.tile.hint-tile{background:#D5F5E3;border-color:#3E8E4A;box-shadow:0 0 0 3px rgba(62,142,74,.35)}
+
+/* store: cards in a grid, like in other games */
+.shop-title{margin:4px 0 0;font:700 18px Fredoka,sans-serif;color:#8A5A12}
+.shop-title small{font:700 12px Nunito,sans-serif;color:var(--muted)}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.shop-card{display:flex;flex-direction:column;align-items:center;gap:2px;background:#fff;border:2px solid rgba(58,42,30,.25);border-radius:14px;padding:8px 6px;text-align:center}
+.shop-card.free{background:#F2FBEF}
+.shop-card.pack{background:linear-gradient(#FFF6DA,#FFE9A8)}
+.shop-card.pack2{background:linear-gradient(#EAF4FF,#CFE3FF)}
+.shop-card.worn{border-color:#3E8E4A;box-shadow:0 0 0 2px rgba(62,142,74,.35)}
+.shop-card-top{font-size:30px;line-height:1.1}
+.shop-card-name{font:700 17px Fredoka,sans-serif;line-height:1.15}
+.shop-card small{font-size:11px;font-weight:700;color:var(--muted);line-height:1.2;min-height:14px}
+.shop-btn{margin-top:auto;width:100%;min-height:38px;border-radius:10px;border:2px solid var(--wood);background:#fff;font:700 15px Fredoka,sans-serif;color:var(--ink);cursor:pointer}
+.shop-btn.buy{background:var(--gold)}
+.shop-btn.go{background:#7BC67E}
+.shop-btn.worn{background:#E8F5E9}
+.shop-btn:disabled{opacity:.55;cursor:default}
+.shop-card .shop-sub,html[data-gloss-scale] .shop-card .shop-sub{font:700 11px Nunito,var(--gloss-font,sans-serif);color:var(--muted);line-height:1.25}
+.shop-card.pack .shop-card-name,.shop-card.free .shop-card-name{font-size:22px}
+.gift-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center}
+.gift-in{width:min(220px,60%);text-transform:uppercase}
+.gift-note{width:100%;font-weight:800;color:#3E8E4A}
+.shop-pic{width:84px;height:105px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+.shop-aura{width:84px;height:105px;background:radial-gradient(ellipse 42px 14px at 50% 82%,rgba(255,213,74,.95) 0 55%,rgba(255,233,160,.35) 70%,transparent 72%);animation:auraPulse 1.6s ease-in-out infinite}
+@keyframes auraPulse{50%{filter:brightness(1.35)}}

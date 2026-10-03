@@ -84,6 +84,7 @@ export const HOTSPOTS = {
   'school.leave': { label: 'Eve dön', travel: ['yard', 'gate'], available: (c) => !schoolDay(c) && !c.online },
   // the two public places are connected: schoolyard ↔ village square
   'school.square': { label: 'Köy meydanına git', travel: ['village', 'schoolRoad'] },
+  'village.terzi': { label: 'Kıyafet dükkânı (HD karakter)', use: ['shop'] }, // the tailor's stall opens the shop
   'village.school': { label: 'Okul bahçesine git ⚽', travel: ['schoolyard', 'squareRoad'] },
   'house.desk': {
     label: 'Ödev yap', use: ['textbook'],

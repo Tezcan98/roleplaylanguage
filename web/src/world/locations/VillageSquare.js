@@ -21,7 +21,7 @@ export function chessSquare(sq) {
 
 /** Football pitch in the south of the square, fenced with wire (doors on the north side). */
 export const SQUARE_PITCH = {
-  x0: 4.5, x1: 26.5, z0: 15, z1: 27, goalHalf: 1.5, cz: 21,
+  x0: 4.5, x1: 26.5, z0: 15, z1: 27, goalHalf: 2, cz: 21, // wide goals: easier to score
   fence: { x0: 3.2, x1: 27.8, z0: 14, z1: 28, gaps: [[7.4, 9.2], [21.8, 23.6]] },
 };
 
@@ -112,6 +112,18 @@ export class VillageSquare extends Location {
     });
     C.addBox(-2.2, 2.2, -10.0, -8.4);
     this.anchor('manav', 0, -7.8, 0);
+
+    // the tailor's stall (terzi): HD outfits on a mannequin (main.js puts the model on it); opens the shop
+    this.prop(kit, 'prop.terzi', -5, 0, -9.4, 0, () => mf.group(
+      mf.at(mf.box(3.4, 0.08, 1.4, LIGHT_WOOD), 0, 0.85, 0.2),
+      ...[[-1.6, -0.4], [1.6, -0.4], [-1.6, 0.8], [1.6, 0.8]].map(([x, z]) => mf.at(mf.box(0.1, 2.5, 0.1, WOOD), x, 1.25, z)),
+      mf.at(mf.box(3.7, 0.06, 1.8, 0xB03A48), 0, 2.52, 0.2), // a red awning
+      mf.at(mf.box(1.6, 0.4, 0.05, { tex: 'darkWood' }), 0, 2.15, 0.85),
+      ...[0x2C3E66, 0x7FAFD6, 0x3E8E4A, 0xE0B04A].map((c, i) => mf.at(mf.box(0.5, 0.06, 0.4, c), -1.1 + i * 0.55, 0.92, 0.25)), // folded cloth
+    ));
+    C.addBox(-6.8, -3.2, -10.0, -8.4);
+    this.anchor('mannequin', -3.1, -8.9, 0.4);
+    this.hotspot('village.terzi', -5, -7.6, 1.6);
 
     // benches to sit on (two seats each): by the fountain (Elif and Can keep one seat each in the
     // story), in front of the library (read a borrowed book there) and on the west side

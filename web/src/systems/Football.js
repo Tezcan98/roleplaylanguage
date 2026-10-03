@@ -48,6 +48,25 @@ export class Football {
     }
   }
 
+  /**
+   * Help for both teams: a kick that goes roughly towards a goal bends to its middle (and is never
+   * too weak to get there). Kicks the other way, or across the pitch, stay as they were.
+   */
+  assist(ball) {
+    if (!this.has(ball.position)) return;
+    const v = ball.vel, speed = Math.hypot(v.x, v.z);
+    if (speed < 0.5) return;
+    const p = ball.position, { x0, x1, cz } = this.pitch;
+    const gx = v.x > 0 ? x1 + 0.4 : x0 - 0.4;
+    let tx = gx - p.x, tz = cz - p.z;
+    const d = Math.hypot(tx, tz); tx /= d; tz /= d;
+    const ux = v.x / speed, uz = v.z / speed;
+    if (ux * tx + uz * tz < 0.35) return; // not towards that goal
+    const k = 0.65, nx = ux * (1 - k) + tx * k, nz = uz * (1 - k) + tz * k, n = Math.hypot(nx, nz);
+    const s = Math.max(speed, Math.min(9, 3 + d * 0.5)); // strong enough to arrive
+    v.x = nx / n * s; v.z = nz / n * s;
+  }
+
   /** Is the player on this pitch (inside its fence, or near its lines)? */
   has(pos) {
     if (this.world.current?.id !== this.place) return false;

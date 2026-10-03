@@ -22,7 +22,8 @@ export class RemotePlayers {
     char.place({ x, z, rot });
     location.group.add(char.group);
     if (sit) char.sit(true);
-    if (look?.hd) char.setHd(this.models, look.gender === 'girl' ? 'hd.girl' : 'hd.boy', true, { covered: look.style === 'covered' }); // bought in the shop
+    if (look?.aura) char.setAura(true);
+    if (look?.outfit) char.setHd(this.models, `hd.${look.outfit === 'dress' ? 'casual' : look.outfit}.${look.gender === 'girl' ? 'girl' : 'boy'}`, true, { covered: look.style === 'covered', dress: look.outfit === 'dress' }); // bought in the shop
     this.#players.set(id, { char, target: { x, z, rot }, moving: false });
   }
 

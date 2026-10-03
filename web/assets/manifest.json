@@ -1,7 +1,8 @@
 {
   "models": {
-    "hd.boy": "assets/models/hd_boy.glb",
-    "hd.girl": "assets/models/hd_girl.glb"
+    "hd.casual.boy": "assets/models/hd_casual_boy.glb",
+    "hd.casual.girl": "assets/models/hd_casual_girl.glb",
+    "hd.suit.boy": "assets/models/hd_suit_boy.glb"
   },
   "textures": {
     "grass": {

@@ -2,12 +2,15 @@ import * as THREE from 'three';
 import { buildRig, RIG_PROPS } from './CharacterRig.js';
 import { fitToBox } from '../engine/ModelLibrary.js';
 import { sitPose } from './Behaviors.js';
+import { addHeadscarf, addDress, paintOutfit } from './hdClothes.js';
 
 const wrapAngle = (d) => { while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
 /** Anything with a body in the world: the player and every NPC. */
 export class Character {
   #hd = null;
+  #aura = null;
+  #hdKey = null;
   #hdWanted = false;
   constructor(id, appearance, { mf, models }) {
     this.id = id;
@@ -63,7 +66,10 @@ export class Character {
     this.#playClip(amount > 0.05 ? 'walk' : 'idle');
   }
 
-  update(dt) { this.mixer?.update(dt); }
+  update(dt) {
+    this.mixer?.update(dt);
+    if (this.#aura?.visible) { const k = 0.5 + 0.5 * Math.sin(performance.now() / 260); this.#aura.children[1].material.opacity = 0.55 + 0.4 * k; this.#aura.rotation.z += dt * 0.8; }
+  }
 
   /** A GLB from Meshy (assets/manifest.json → "char.<id>") replaces the blocky body. */
   #swapModel(models) {
@@ -83,9 +89,13 @@ export class Character {
    * The HD character from the shop (assets/models/hd_*.glb, Quaternius CC0) instead of the blocky
    * body while `on`. Loaded once; `covered`: the hair goes, a headscarf goes on (Sare).
    */
-  async setHd(models, key, on, { covered = false } = {}) {
+  async setHd(models, key, on, { covered = false, dress = false } = {}) {
     this.#hdWanted = on;
+    if (on && this.#hd && this.#hd !== 'loading' && this.#hdKey !== key) { // another outfit: drop the old one
+      this.#hd.scene.removeFromParent(); this.#hd = null;
+    }
     if (on && !this.#hd && models?.has(key)) {
+      this.#hdKey = key;
       this.#hd = 'loading';
       try {
         const { scene, animations } = await models.load(key);
@@ -107,23 +117,11 @@ export class Character {
             if (covered && m.name === 'Hair') o.visible = false;
           }
         });
+        const [, outfit, gender] = key.split('.'); // hd.<outfit>.<boy|girl>
+        const scarf = paintOutfit(scene, dress ? 'dress' : outfit, gender);
         this.group.add(scene);
-        if (covered) {
-          // sized and placed in world units round the head, then fixed to the head bone (keeps that place)
-          const head = scene.getObjectByName('Head');
-          this.group.updateMatrixWorld(true);
-          const hb = new THREE.Box3();
-          scene.traverse((o) => { if (o.isMesh && o.material?.name === 'Skin') hb.expandByObject(o, true); });
-          const hp = head.getWorldPosition(new THREE.Vector3());
-          const h = hb.max.y - hp.y; // head bone (at the neck) → top of the head: the whole (big, child-like) head
-          const scarf = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.64), new THREE.MeshStandardMaterial({ color: this.appearance.headscarf ?? 0x9B59B6, roughness: 0.9, side: THREE.DoubleSide }));
-          const gs = this.group.getWorldScale(new THREE.Vector3()).x; // world → the group's units
-          scarf.scale.set(h * 0.6 / gs, h * 0.6 / gs, h * 0.62 / gs);
-          scarf.position.copy(this.group.worldToLocal(new THREE.Vector3(hp.x, hp.y + h * 0.48, hp.z - h * 0.04)));
-          scarf.rotation.x = -0.45; // the face stays open, the back of the head and the neck are covered
-          this.group.add(scarf);
-          head.attach(scarf);
-        }
+        if (covered) addHeadscarf(scene, this.group, scarf);
+        if (dress) addDress(scene, this.group);
         this.#hd = { scene, mixer, clips };
       } catch (e) { console.warn('[models] hd:', e.message); this.#hd = null; return; }
     }
@@ -136,6 +134,19 @@ export class Character {
     this.clips = on ? hd.clips : {};
     this.current = null;
     if (on) this.#playClip(this.seated ? 'sit' : 'idle');
+  }
+
+  /** A pulsing golden ring of light on the ground under the character (bought in the shop). */
+  setAura(on) {
+    if (on && !this.#aura) {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.62, 40), new THREE.MeshBasicMaterial({ color: 0xFFD54A, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      const glow = new THREE.Mesh(new THREE.CircleGeometry(0.62, 40), new THREE.MeshBasicMaterial({ color: 0xFFE9A0, transparent: true, opacity: 0.25, depthWrite: false, blending: THREE.AdditiveBlending }));
+      this.#aura = new THREE.Group(); this.#aura.add(glow, ring);
+      this.#aura.rotation.x = -Math.PI / 2; this.#aura.position.y = 0.06;
+      this.#aura.scale.setScalar(1 / (this.group.scale.x || 1)); // the same size for children and grown-ups
+      this.group.add(this.#aura);
+    }
+    if (this.#aura) this.#aura.visible = on;
   }
 
   #playClip(name) {

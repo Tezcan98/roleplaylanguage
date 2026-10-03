@@ -1,0 +1,30 @@
+<!doctype html><html><body style="margin:0">
+<!-- Renders the shop pictures of the outfits: node tools/models/render-previews.mjs -->
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; import { addHeadscarf, addDress, paintOutfit } from '../../src/entities/hdClothes.js';
+const W = 240, H = 300;
+const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setClearColor(0x000000, 0); r.outputColorSpace = THREE.SRGBColorSpace; document.body.append(r.domElement);
+const L = new GLTFLoader();
+window.render = async (file, covered, aura = false, dress = false) => {
+  const s = new THREE.Scene(); s.add(new THREE.HemisphereLight(0xffffff, 0x886644, 2.3)); const d = new THREE.DirectionalLight(0xffffff, 2.2); d.position.set(1.5, 3, 4); s.add(d);
+  const g = await L.loadAsync(file); const sc = g.scene;
+  const mx = new THREE.AnimationMixer(sc); mx.clipAction(g.animations.find((a) => a.name === 'idle')).play(); mx.update(0.4); sc.updateMatrixWorld(true);
+  sc.traverse((o) => { if (!o.isMesh) return; for (const m of [o.material].flat()) { m.metalness = 0; m.roughness = 0.85; if (m.name === 'Skin') m.color.setHex(0xE9B98F); if (covered && m.name === 'Hair') o.visible = false; } });
+  const b = new THREE.Box3().setFromObject(sc, true); sc.scale.multiplyScalar(2.0 / (b.max.y - b.min.y)); sc.updateMatrixWorld(true);
+  const [, outfit, gender] = file.match(/hd_(\w+)_(boy|girl)\.glb/);
+  const scarf = paintOutfit(sc, dress ? 'dress' : outfit, gender);
+  s.add(sc);
+  if (covered) addHeadscarf(sc, s, scarf);
+  if (dress) addDress(sc, s);
+  if (aura) { // the golden light under the feet
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.62, 48), new THREE.MeshBasicMaterial({ color: 0xFFD54A, side: THREE.DoubleSide }));
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(0.75, 48), new THREE.MeshBasicMaterial({ color: 0xFFE9A0, transparent: true, opacity: 0.55 }));
+    for (const m of [glow, ring]) { m.rotation.x = -Math.PI / 2; m.position.y = 0.01; s.add(m); }
+    ring.position.y = 0.02;
+  }
+  const c = new THREE.PerspectiveCamera(28, W / H, 0.1, 50); c.position.set(0.9, aura ? 1.9 : 1.25, 4.6); c.lookAt(0, aura ? 0.85 : 0.98, 0);
+  r.render(s, c); return r.domElement.toDataURL('image/png');
+};
+window.ready = true;
+</script></body></html>

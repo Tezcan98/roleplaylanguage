@@ -56,7 +56,7 @@ import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling } from './services/monetization/Billing.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
-import { hdOn, hdModelFor } from './content/shop.js';
+import { outfitOn, outfitModel, auraOn } from './content/shop.js';
 import { LocalClassroomSession, WebSocketClassroomSession } from './services/multiplayer/ClassroomSession.js';
 import { ClassroomView } from './ui/ClassroomView.js';
 import { VillageNetwork } from './services/multiplayer/VillageNetwork.js';
@@ -298,10 +298,10 @@ const toys = new ToySystem({ world, player, free, tts });
 const yard = world.get('yard');
 // balls are kicked by running into them; the square's two (on its pitch) and the school's are shared online
 toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true });
-const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, quiet: true, onKick: (b) => village.ballKicked(b) });
+const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, quiet: true, onKick: (b) => { football.assist(b); village.ballKicked(b); } }); // aim assist, then shared
 const pitchMid = (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2;
 const villageBalls = [{ x: pitchMid, z: SQUARE_PITCH.cz }, { x: pitchMid - 4, z: SQUARE_PITCH.cz - 2 }]
-  .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, quiet: true, onKick: (b) => village.ballKicked(b) }));
+  .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, quiet: true, onKick: (b) => { squareFootball.assist(b); village.ballKicked(b); } }));
 // ⚡ hard shot next to a ball: button (see the action button below) or key F
 input.onKey((e) => { if (modes.is('play') && (e.key === 'f' || e.key === 'F')) toys.shoot(); });
 // C: another camera view (normal, close, far, from above)
@@ -350,10 +350,11 @@ const village = new VillageMultiplayer({
   recognizer: chatRecognizer,
 });
 village.autoName = () => `${playerName()}${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question
-village.outfit = () => ({ hd: hdOn(wallet) }); // others see the HD character too
+village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // others see them too
 // the HD character from the shop: in the public places (square, schoolyard), the blocky one elsewhere
-const playerHd = () => player.setHd(models, hdModelFor(playerGender()), hdOn(wallet) && ['village', 'schoolyard'].includes(world.current?.id), { covered: !!PLAYER_LOOKS[playerLook].headscarf });
+const playerHd = () => { player.setAura(auraOn(wallet)); const o = outfitOn(wallet); player.setHd(models, outfitModel(o ?? 'casual', playerGender()), !!o && ['village', 'schoolyard'].includes(world.current?.id), { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: o === 'dress' }); };
 bus.on(EV.LOCATION, playerHd);
+playerHd();
 
 // --- giant chess on the square: online the server's board (İsmail Dede runs it), offline Dede plays you ---
 const chess = new ChessGame({
@@ -461,6 +462,21 @@ async function offerDaily() {
   await dailyView.show(d);
   takeDaily();
 }
+effects.register('shop', () => shop.open());
+// the tailor's mannequin in the square wears the HD suit (so people see what they can buy)
+models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animations }) => {
+  const a = world.get('village').anchors.get('mannequin');
+  const mixer = new THREE.AnimationMixer(scene);
+  const idle = animations.find((x) => x.name === 'idle');
+  if (idle) { mixer.clipAction(idle).play(); mixer.update(0.3); }
+  scene.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(scene, true);
+  scene.scale.multiplyScalar(1.7 / (b.max.y - b.min.y));
+  scene.traverse((o) => { if (o.isMesh) for (const m of [o.material].flat()) { m.metalness = 0; m.roughness = 0.85; if (m.name === 'Skin') m.color.setHex(0xE9B98F); } });
+  scene.position.set(a.x, 0, a.z); scene.rotation.y = a.rot;
+  world.get('village').group.add(scene);
+  world.get('village').animated.push((dt) => mixer.update(dt)); // breathes a little
+}).catch(() => {});
 // story mode: a full-screen ad between two days (not with ad-free mode)
 story.beforeNewDay = () => (wallet.adFree ? Promise.resolve() : ads.showInterstitial());
 
@@ -537,6 +553,15 @@ const menu = new MainMenu(host, {
   onSquare: (server) => playOnline(server),
   onProfile: () => { menu.hide(); editProfile(); },
   onShop: () => shop.open(),
+  // gift code (for testing the shop; to be removed or changed before the store release)
+  onGift: (code) => {
+    const c = String(code).trim().toUpperCase();
+    if (c !== 'ANADOLU100') return 'Bu kod geçerli değil.';
+    if (settings.get(`gift-${c}`)) return 'Bu kodu zaten kullandın.';
+    settings.set(`gift-${c}`, true);
+    wallet.add(100, 'gift');
+    return '+100 kredi! İyi eğlenceler.';
+  },
 });
 /** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
 async function editProfile({ cancellable = true } = {}) {

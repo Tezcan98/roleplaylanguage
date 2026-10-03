@@ -9,11 +9,23 @@ function shuffle(list) {
   return a;
 }
 
-/** Build the sentence: tap the word tiles in the right order. */
+/** Long sentences in phrase tiles (at most 4), so building them stays easy: "Bir kilo elma · ve iki kilo · patates, lütfen." */
+function chunks(words) {
+  if (words.length <= 5) return words;
+  const n = Math.min(4, Math.ceil(words.length / 3)), size = Math.ceil(words.length / n), out = [];
+  for (let i = 0; i < words.length; i += size) out.push(words.slice(i, i + size).join(' '));
+  return out;
+}
+
+/**
+ * Build the sentence: tap the tiles in the right order. A wrong tile is refused on the spot
+ * (no starting over); after two slips the right tile lights up.
+ */
 export class OrderActivity extends Activity {
   mount(container, spec) {
     return new Promise((resolve) => {
-      const words = spec.answer.split(' ');
+      const words = chunks(spec.answer.split(' '));
+      let slips = 0;
       const picked = [];
       const line = el('div', { class: 'answer-line', attrs: { 'aria-live': 'polite' } });
       const reset = el('button', { class: 'chipbtn', text: '↺ Baştan', attrs: { type: 'button' }, on: { click: () => clear() } });
@@ -26,12 +38,19 @@ export class OrderActivity extends Activity {
         const index = Number(selected.dataset.index);
         const at = picked.findIndex((p) => p.index === index);
         if (at < 0) return;
-        picked.splice(at, 1);
-        this.tiles[index].disabled = false;
-        selected.remove();
+        // taking a piece back also takes back the pieces after it (the order stays right)
+        picked.splice(at).forEach((p) => { this.tiles[p.index].disabled = false; });
+        [...line.children].slice(at).forEach((n) => n.remove());
         line.className = 'answer-line';
       };
       const add = (tile) => {
+        if (tile.textContent !== words[picked.length]) { // not the next piece: refused, nothing to undo
+          tile.classList.remove('nope'); void tile.offsetWidth; tile.classList.add('nope');
+          if (++slips >= 2) this.tiles.find((t) => !t.disabled && t.textContent === words[picked.length])?.classList.add('hint-tile');
+          return;
+        }
+        this.tiles.forEach((t) => t.classList.remove('hint-tile'));
+        slips = 0;
         tile.disabled = true;
         const index = this.tiles.indexOf(tile);
         picked.push({ text: tile.textContent, index });

@@ -6,8 +6,9 @@ import { el } from '../ui/dom.js';
 /** Turkish piece names (taught while playing). */
 export const PIECE_WORDS = { k: ['şah', 'king'], q: ['vezir', 'queen'], r: ['kale', 'rook'], b: ['fil', 'bishop'], n: ['at', 'knight'], p: ['piyon', 'pawn'] };
 
-const IDLE = 3 * 60_000;   // offline too: not moving for three minutes loses the game
-const AI_LIMIT = 10 * 60_000; // a game against Dede lasts at most this long
+const CLOCK = 10 * 60_000; // per player, as on the server
+const POINTS = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+const pointsOf = (g) => { const o = { w: 0, b: 0 }; for (const p of g.board().flat()) if (p) o[p.color] += POINTS[p.type]; return o; };
 const PAUSE = 6000;       // offline: the result stays on the board this long
 const DEDE = { id: 'dede', name: 'İsmail Dede', ai: true };
 const COLOR = { w: 'beyaz', b: 'siyah' };
@@ -38,6 +39,7 @@ export class ChessGame {
   #bySquare = new Map();
   #fen = null;
   #glow = null; // red light on a king in check
+  #cursor = null; // the square under you while you carry a piece
   #carry = null;  // the piece in my hands: { from, mesh, legal }
   #lights = [];
 
@@ -130,10 +132,9 @@ export class ChessGame {
     const mmss = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}`;
     const myTurn = st.phase === 'playing' && g.turn() === mine;
     let turn = st.phase === 'waiting' ? 'rakip bekleniyor' : myTurn ? (g.isCheck() ? 'Şah! Sıra sende' : 'Sıra sende') : 'Rakibin oynuyor';
-    const idle = st.idleLeft != null ? st.idleLeft - since : null;
-    if (myTurn && idle != null && idle < 60_000) turn += ` · ⏳ ${mmss(Math.max(0, idle))} içinde oyna!`;
-    const limit = st.limit != null ? ` · ⏱ ${mmss(Math.max(0, st.limit - since))}` : ''; // a game against Dede: 10 minutes
-    this.bar.textContent = `♟ Sen ${COLOR[mine]}${limit} · ${turn}`;
+    const clock = (c) => mmss(Math.max(0, (st.clocks?.[c] ?? CLOCK) - (st.running === c ? since : 0)));
+    const theirs = mine === 'w' ? 'b' : 'w';
+    this.bar.textContent = `♟ Sen ${COLOR[mine]} ⏱ ${clock(mine)} · Rakip ⏱ ${clock(theirs)} · ${turn}`;
   }
 
   #move(from, to) {
@@ -149,6 +150,13 @@ export class ChessGame {
     const before = this.state;
     this.state = { ...st, at: Date.now() };
     if (!quiet) { const line = this.#announce(before, this.state); if (line) this.onSay(line); }
+    // my own result, big and clear
+    const mine = (before?.seats?.w?.id === this.myId && 'w') || (before?.seats?.b?.id === this.myId && 'b');
+    if (!quiet && mine && st.phase === 'over' && before?.phase === 'playing') {
+      const win = st.result?.winner, pts = st.result?.points;
+      const tr = !win ? 'Berabere!' : win === mine ? '🏆 Kazandın!' : 'Kaybettin. Bir dahakine!';
+      this.toasts.show(pts ? `${tr} · ${pts[mine]} – ${pts[mine === 'w' ? 'b' : 'w']} puan` : tr, !win ? 'Draw!' : win === mine ? 'You won!' : 'You lost. Next time!');
+    }
     if (st.fen !== before?.fen) this.#render3D(st.fen, st.last);
     if (JSON.stringify(st.scores ?? []) !== JSON.stringify(before?.scores ?? [])) this.square.writeChessScores?.(st.scores ?? []);
     this.#paintBar();
@@ -162,7 +170,7 @@ export class ChessGame {
       const w = winner && name(winner);
       if (reason === 'mate') return `Şah mat! ${w} kazandı. Tebrikler!`;
       if (reason === 'time') return `Süre bitti! Oyunu ${w} kazandı.`;
-      if (reason === 'idle') return `${name(winner === 'w' ? 'b' : 'w')} üç dakikadır oynamadı. Oyunu ${w} kazandı.`;
+      if (reason === 'points') { const p = b.result.points ?? {}; return `Süre bitti! Puanlar: beyaz ${p.w}, siyah ${p.b}. ${w ? `${w} kazandı!` : 'Berabere!'}`; }
       if (reason === 'agreed') return 'Beraberlik kabul edildi. İkiniz de iyi oynadınız!';
       if (reason === 'resign') return `${name(winner === 'w' ? 'b' : 'w')} pes etti. ${w} kazandı.`;
       if (reason === 'left') return `${name(winner === 'w' ? 'b' : 'w')} gitti, geri gelmedi. ${w} kazandı.`;
@@ -170,8 +178,8 @@ export class ChessGame {
       return 'Berabere! İkiniz de iyi oynadınız.';
     }
     if (b.phase === 'playing' && a?.phase !== 'playing') {
-      if (b.seats.w?.ai || b.seats.b?.ai) return `Haydi bakalım! Ben ${b.seats.w?.ai ? 'beyazım' : 'siyahım'}, sen ${b.seats.w?.ai ? 'siyahsın' : 'beyazsın'}. On dakikamız var.`;
-      return `Beyaz ${name('w')}, siyah ${name('b')}. Başlayın!`;
+      if (b.seats.w?.ai || b.seats.b?.ai) return `Haydi bakalım! Ben ${b.seats.w?.ai ? 'beyazım' : 'siyahım'}, sen ${b.seats.w?.ai ? 'siyahsın' : 'beyazsın'}. Herkese on dakika.`;
+      return `Beyaz ${name('w')}, siyah ${name('b')}. Herkese on dakika. Başlayın!`;
     }
     if (b.draw?.offer && b.draw.offer !== a?.draw?.offer) return `${name(b.draw.offer)} beraberlik teklif ediyor. ${name(b.draw.offer === 'w' ? 'b' : 'w')}, kabul edersen bana söyle.`;
     if (b.draw?.declined && b.draw.declined !== a?.draw?.declined) {
@@ -189,7 +197,7 @@ export class ChessGame {
 
   // --- offline: you and Dede --------------------------------------------------------
 
-  #resetLocal() { this.#local = { game: new Chess(), phase: 'idle', mine: null, last: null, result: null, turnAt: 0, startedAt: 0, draw: { offer: null, declined: null } }; }
+  #resetLocal() { this.#local = { game: new Chess(), phase: 'idle', mine: null, last: null, result: null, turnAt: 0, startedAt: 0, clocks: { w: CLOCK, b: CLOCK }, draw: { offer: null, declined: null } }; }
 
   #localState() {
     const L = this.#local, me = { id: 'me', name: 'Sen' };
@@ -197,8 +205,8 @@ export class ChessGame {
     const now = Date.now(), playing = L.phase === 'playing';
     return {
       phase: L.phase, fen: L.game.fen(), turn: L.game.turn(), last: L.last, result: L.result, seats, queue: [], scores: [], draw: { ...L.draw },
-      idleLeft: playing && L.game.turn() === L.mine ? Math.max(0, IDLE - (now - L.turnAt)) : null,
-      limit: playing ? Math.max(0, AI_LIMIT - (now - L.startedAt)) : null,
+      clocks: { ...L.clocks, ...(playing ? { [L.game.turn()]: Math.max(0, L.clocks[L.game.turn()] - (now - L.turnAt)) } : {}) },
+      running: playing ? L.game.turn() : null,
     };
   }
 
@@ -215,6 +223,7 @@ export class ChessGame {
   #localMove(m) {
     const L = this.#local, turn = L.game.turn();
     const made = L.game.move(m);
+    L.clocks[turn] = Math.max(0, L.clocks[turn] - (Date.now() - L.turnAt));
     L.turnAt = Date.now();
     L.draw = { offer: null, declined: null };
     L.last = { from: made.from, to: made.to, san: made.san };
@@ -233,14 +242,18 @@ export class ChessGame {
     const L = this.#local;
     if (this.online || L.phase !== 'playing') return;
     const now = Date.now();
-    if (L.game.turn() === L.mine && now - L.turnAt > IDLE) this.#localFinish(L.mine === 'w' ? 'b' : 'w', 'idle');
-    else if (now - L.startedAt > AI_LIMIT) this.#localFinish(null, 'limit');
+    const turn = L.game.turn();
+    if (L.clocks[turn] - (now - L.turnAt) <= 0) { // time is up: the points decide
+      L.clocks[turn] = 0;
+      const pts = pointsOf(L.game);
+      this.#localFinish(pts.w > pts.b ? 'w' : pts.b > pts.w ? 'b' : null, 'points', pts);
+    }
   }
 
-  #localFinish(winner, reason) {
+  #localFinish(winner, reason, points = null) {
     const L = this.#local;
     clearInterval(this.#timer);
-    Object.assign(L, { phase: 'over', result: { winner, reason } });
+    Object.assign(L, { phase: 'over', result: { winner, reason, ...(points ? { points } : {}) } });
     this.#apply(this.#localState());
     setTimeout(() => { if (!this.online && this.#local === L) { this.#resetLocal(); this.#apply(this.#localState(), true); } }, PAUSE);
   }
@@ -290,6 +303,7 @@ export class ChessGame {
   }
 
   #dropCarry() {
+    if (this.#cursor) this.#cursor.visible = false;
     const c = this.#carry;
     if (!c) return;
     const { x, z } = chessSquare(c.from);
@@ -317,6 +331,16 @@ export class ChessGame {
     const p = this.player.position;
     if (this.world?.current?.id !== 'village' || !this.squareAt(p) || this.state?.phase !== 'playing') { this.#dropCarry(); return; }
     c.mesh.position.set(p.x + 0.5, 0.35, p.z);
+    // the square you stand on lights up: bright yellow if the piece can go there, red if not
+    const sq = this.squareAt(p);
+    if (!this.#cursor) {
+      this.#cursor = new THREE.Mesh(new THREE.BoxGeometry(CHESS.size * 0.96, 0.03, CHESS.size * 0.96), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.75 }));
+      this.square.chessPieces.add(this.#cursor);
+    }
+    const { x, z } = chessSquare(sq);
+    this.#cursor.position.set(x, 0.14, z);
+    this.#cursor.material.color.setHex(sq === c.from ? 0xFFFFFF : c.legal.includes(sq) ? 0xFFD21F : 0xE74C3C);
+    this.#cursor.visible = true;
   }
 
   // --- the giant pieces on the square ------------------------------------------------
@@ -358,6 +382,13 @@ export class ChessGame {
         this.#meshes.push(tile, light);
         this.#glow = { tile, light };
       }
+    }
+    // the last move: its two squares tinted, so everyone sees what just moved
+    if (last) for (const sq of [last.from, last.to]) {
+      const { x, z } = chessSquare(sq);
+      const t = new THREE.Mesh(new THREE.BoxGeometry(CHESS.size * 0.96, 0.025, CHESS.size * 0.96), new THREE.MeshBasicMaterial({ color: 0x5DADE2, transparent: true, opacity: 0.45 }));
+      t.position.set(x, 0.13, z);
+      group.add(t); this.#meshes.push(t);
     }
     if (moved) {
       const from = chessSquare(last.from);

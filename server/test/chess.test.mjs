@@ -28,15 +28,15 @@ test('asking for a taken colour waits for the next game; the line is seated afte
   assert.deepEqual([t.phase, t.seats.w?.name, t.seats.b], ['waiting', 'Can', null]);
 });
 
-test('no clock, but whoever does not move for three minutes loses', () => {
-  const { t, at } = table({ idle: 10_000 });
+test('10-minute clocks: when time runs out, the points on the board decide', () => {
+  const { t, at } = table({ clock: 10_000 });
   t.ask(A, 'w'); t.ask(B, 'b');
-  t.move('a', { from: 'e2', to: 'e4' });
+  t.move('a', { from: 'e2', to: 'e4' }); t.move('b', { from: 'd7', to: 'd5' });
+  t.move('a', { from: 'e4', to: 'd5' }); // white takes a pawn: 39 – 38
   at(9000);
-  assert.equal(t.state().idleLeft, 1000, 'black has a second left');
-  assert.equal(t.state().clocks, undefined);
+  assert.ok(t.state().clocks.b > 0 && t.state().clocks.b <= 1000, String(t.state().clocks.b));
   assert.equal(at(2000), true);
-  assert.deepEqual(t.result, { winner: 'w', reason: 'idle' });
+  assert.deepEqual(t.result, { winner: 'w', reason: 'points', points: { w: 39, b: 38 } });
   assert.equal(t.board()[0].games, 1);
 });
 

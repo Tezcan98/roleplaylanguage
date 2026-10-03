@@ -14,8 +14,9 @@ const ROOM = /^[a-z0-9-]{1,24}$/;
 const lookOf = (gender, style) => (gender === 'girl'
   ? { gender: 'girl', style: style === 'open' ? 'open' : 'covered' }
   : { gender: 'boy', style: style === 'strong' ? 'strong' : 'modest' });
-/** Bought in the shop: the HD character. */
-const outfitOf = (o) => (o?.hd === true ? { hd: true } : {});
+/** Bought in the shop: an outfit (HD character). */
+const OUTFITS = ['casual', 'suit', 'dress'];
+const outfitOf = (o) => ({ ...(OUTFITS.includes(o?.outfit) ? { outfit: o.outfit } : {}), ...(o?.aura === true ? { aura: true } : {}) });
 const RATE = { burst: 60, perSecond: 30 }; // messages per client (10/s states + WebRTC ICE bursts)
 const MAX_BALLS = 4;                        // shared balls per room (the square's pitch has two)
 const SAY_GAP = 1200;                       // ms between two public speech bubbles

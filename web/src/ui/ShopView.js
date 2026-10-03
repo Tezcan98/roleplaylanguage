@@ -1,6 +1,6 @@
 import { el, ICONS } from './dom.js';
 import { gloss } from '../i18n/Gloss.js';
-import { SHOP } from '../content/shop.js';
+import { SHOP, outfitPicture } from '../content/shop.js';
 import { PACKS } from '../services/monetization/Billing.js';
 import { AD_REWARD } from '../services/monetization/CreditWallet.js';
 
@@ -42,51 +42,49 @@ export class ShopView {
 
   render() {
     const w = this.wallet;
-    this.balance.textContent = `${w.balance} kredi`;
-    const btn = (text, cls, fn, disabled = false) => el('button', { class: cls, text, attrs: { type: 'button', ...(disabled ? { disabled: '' } : {}) }, on: { click: fn } });
-    const section = (tr, en, children) => el('section', { class: 'shop-sec' }, [el('h3', {}, [tr, el('small', { class: 'en-t', text: ` · ${en}` })]), ...children]);
+    this.balance.textContent = `🪙 ${w.balance}`;
+    const card = (cls, top, name, sub, action, subTr = false) => el('div', { class: `shop-card ${cls}` }, [
+      top instanceof Node ? top : el('span', { class: 'shop-card-top', text: top }), el('b', { class: 'shop-card-name', text: name }), sub ? el('small', { class: subTr ? 'shop-sub' : 'shop-sub en-t', text: sub }) : null, action,
+    ].filter(Boolean));
+    const btn = (text, cls, fn, disabled = false) => el('button', { class: `shop-btn ${cls}`, text, attrs: { type: 'button', ...(disabled ? { disabled: '' } : {}) }, on: { click: fn } });
+    const title = (tr, en) => el('h3', { class: 'shop-title' }, [tr, el('small', { class: 'en-t', text: ` · ${en}` })]);
 
-    // earn
-    const daily = w.daily();
-    const wait = w.adWait();
-    const earn = section('Kredi kazan', gloss('Earn credits'), [
-      daily
-        ? btn(`🎁 Günlük ödül: ${daily.day}. gün · +${daily.amount}`, 'btn', () => { this.onDaily(); this.render(); })
-        : el('p', { class: 'shop-note', text: `🎁 Bugünkü ödülü aldın (${w.data.streak}. gün). Yarın yine gel, ödül büyüsün!` }),
-      wait
-        ? el('p', { class: 'shop-note', text: `▶ Sonraki video: ${hm(wait)} sonra` })
-        : btn(`▶ Video izle · +${AD_REWARD} kredi`, 'btn alt', async (e) => {
+    // gold: free first (daily reward, a video), then every pack with its price
+    const daily = w.daily(), wait = w.adWait();
+    const gold = [
+      card('free', '🎁', daily ? `+${daily.amount}` : '✓', daily ? `Günlük ödül · ${daily.day}. gün` : 'Yarın yine gel',
+        daily ? btn('Al', 'go', () => { this.onDaily(); this.render(); }) : btn('Alındı', '', () => {}, true), true),
+      card('free', '▶', `+${AD_REWARD}`, 'Video izle',
+        wait ? btn(hm(wait), '', () => {}, true) : btn('İzle', 'go', async (e) => {
           e.target.disabled = true;
           if (await this.ads.showRewarded()) { w.adWatched(); this.toasts.show(`+${AD_REWARD} kredi`, 'Credits earned'); }
           this.render();
-        }),
-    ]);
+        }), true),
+      ...PACKS.map((p, i) => card(`pack pack${i}`, ['🪙', '💰', '💎'][i] ?? '🪙', `${p.credits}`, 'kredi',
+        btn(this.#prices[p.id] ?? p.price, 'buy', async (e) => {
+          if (!this.billing.available) { this.toasts.show('Altın paketleri Android uygulamasında satılır', 'Credit packs are sold in the Android app'); return; }
+          e.target.disabled = true;
+          if (await this.billing.buy(p)) { w.add(p.credits, 'purchase'); this.toasts.show(`+${p.credits} kredi. Teşekkürler!`, 'Thank you!'); }
+          else this.toasts.show('Satın alma tamamlanmadı', 'The purchase did not go through');
+          this.render();
+        }), true)),
+    ];
 
-    // buy packs
-    const packs = section('Kredi al', gloss('Buy credits'), this.billing.available
-      ? PACKS.map((p) => btn(`${p.credits} kredi · ${this.#prices[p.id] ?? p.price}`, 'btn alt shop-pack', async (e) => {
-        e.target.disabled = true;
-        if (await this.billing.buy(p)) { w.add(p.credits, 'purchase'); this.toasts.show(`+${p.credits} kredi. Teşekkürler!`, 'Thank you!'); }
-        else this.toasts.show('Satın alma tamamlanmadı', 'The purchase did not go through');
-        this.render();
-      }))
-      : [el('p', { class: 'shop-note', text: `${PACKS.map((p) => `${p.credits} kredi ${p.price}`).join(' · ')} — Android uygulamasında satın alınır.` })]);
-
-    // spend
+    // spend: outfits (one on at a time) and ad-free mode
     const items = SHOP.filter((i) => !i.for || i.for(this.gender, this.look)).map((i) => {
       const owned = w.owns(i.id), worn = i.slot && w.equipped(i.slot) === i.id;
       let action;
-      if (i.id === 'adFree') action = owned ? el('span', { class: 'shop-owned', text: 'Alındı ✓' }) : btn(`${i.price} kredi`, 'chipbtn primary', () => this.#buy(i), w.balance < i.price);
-      else if (!owned) action = btn(`${i.price} kredi`, 'chipbtn primary', () => this.#buy(i), w.balance < i.price);
-      else action = worn ? btn('Kapat', 'chipbtn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Aç', 'chipbtn', () => { w.equip(i); this.onOutfit(); });
-      return el('div', { class: 'shop-item wide' }, [
-        el('span', { class: 'shop-icon', text: i.icon }),
-        el('span', { class: 'shop-name' }, [i.title, el('small', { class: 'en-t', text: gloss(i.en) })]),
-        action,
-      ]);
+      if (!owned) action = btn(`🪙 ${i.price}`, 'buy', () => this.#buy(i), w.balance < i.price);
+      else if (!i.slot) action = btn('Alındı ✓', '', () => {}, true);
+      else action = worn ? btn('Çıkar', 'worn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Giy', 'go', () => { w.equip(i); this.onOutfit(); });
+      // what the character will look like (no icons): the outfit picture, a glowing ring
+      const pic = i.outfit || i.picture ? el('img', { class: 'shop-pic', attrs: { src: outfitPicture(i, this.gender, this.look), alt: i.title, loading: 'lazy' } }) : i.icon;
+      return card(worn ? 'item worn' : 'item', pic, i.title, gloss(i.en), action);
     });
-    const spend = section('Harca', gloss('Spend credits'), [el('div', { class: 'shop-items' }, items)]);
-    this.body.replaceChildren(earn, packs, spend);
+    this.body.replaceChildren(
+      title('Altın', gloss('Gold')), el('div', { class: 'shop-grid' }, gold),
+      title('Kıyafetler ve daha fazlası', gloss('Outfits and more')), el('div', { class: 'shop-grid' }, items),
+    );
   }
 
   #buy(item) {

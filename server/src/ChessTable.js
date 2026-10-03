@@ -5,9 +5,9 @@
  * whoever asks while a game is on waits in his line for the next one. Only the two
  * players move; walking away from the board changes nothing (a dropped connection gets a
  * grace period to come back under the same name, then the game is lost).
- * There is no clock between two players — but whoever does not move for three minutes loses
- * (nobody keeps the board for ever). A game against Dede himself has an overall 10-minute
- * limit and gives way to people who are waiting. Either player can offer a draw through
+ * Each player has a 10-minute clock. When someone's time runs out, Dede counts the pieces on
+ * the board (pawn 1, knight and bishop 3, rook 5, queen 9): more points wins, equal is a draw.
+ * A game against Dede himself gives way to people who are waiting. Either player can offer a draw through
  * Dede; the other accepts or declines (Dede himself accepts when the position is about even).
  * Dede keeps the score board: who has played the most games (shared by all squares).
  * Moves are validated with chess.js.
@@ -15,14 +15,16 @@
 import { Chess } from 'chess.js';
 
 export const CHESS_RULES = {
-  idle: 3 * 60_000,      // ms the side to move may think before the game is lost
-  aiLimit: 10 * 60_000,  // a game against Dede ends after this…
-  aiYield: 2 * 60_000,   // …or this long after someone starts waiting for the board
+  clock: 10 * 60_000,    // ms per player
+  aiYield: 2 * 60_000,   // a game against Dede ends this long after someone starts waiting for the board
   aiDelay: 1200,         // ms Dede "thinks" before a move
   rejoin: 180_000,       // ms a dropped player has to come back (same name) — phones drop out often
   pause: 6000,           // ms the result stays on the board before the next game
 };
 const VALUE = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
+const POINTS = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+/** Points of each side's pieces on the board (what Dede counts when time runs out). */
+export function points(game) { const out = { w: 0, b: 0 }; for (const p of game.board().flat()) if (p) out[p.color] += POINTS[p.type]; return out; }
 const DEDE = { id: 'dede', name: 'İsmail Dede', ai: true };
 const other = (c) => (c === 'w' ? 'b' : 'w');
 
@@ -59,6 +61,7 @@ export class ChessTable {
     this.last = null;
     this.phase = 'idle';   // idle → waiting (one seat taken) → playing → over → idle
     this.result = null;    // { winner: 'w' | 'b' | null, reason }
+    this.clocks = { w: this.rules.clock, b: this.rules.clock };
     this.turnAt = 0;       // when the side to move started thinking
     this.draw = { offer: null, declined: null }; // colour that offers a draw / whose offer was just declined
     this.startedAt = 0;
@@ -178,12 +181,17 @@ export class ChessTable {
     }
     if (!this.playing) return false;
     const turn = this.game.turn();
-    if (!this.seats[turn]?.ai && now - this.turnAt > this.rules.idle) { this.#finish(other(turn), 'idle'); return true; }
+    if (this.clocks[turn] - (now - this.turnAt) <= 0) { // time is up: the points on the board decide
+      this.clocks[turn] = 0;
+      const pts = points(this.game);
+      this.#finish(pts.w > pts.b ? 'w' : pts.b > pts.w ? 'b' : null, 'points', pts);
+      return true;
+    }
     for (const c of ['w', 'b']) {
       if (this.seats[c]?.gone && now - this.seats[c].gone > this.rules.rejoin) { this.#finish(other(c), 'left'); return true; }
     }
     if (this.seats.w?.ai || this.seats.b?.ai) {
-      if (now - this.startedAt > this.rules.aiLimit || (this.waitingSince && now - this.waitingSince > this.rules.aiYield)) { this.#finish(null, 'limit'); return true; }
+      if (this.waitingSince && now - this.waitingSince > this.rules.aiYield) { this.#finish(null, 'limit'); return true; }
     }
     if (this.seats[turn]?.ai && now >= this.aiAt) return this.#play(dedeMove(this.game));
     return false;
@@ -193,6 +201,7 @@ export class ChessTable {
     const now = this.now(), turn = this.game.turn();
     let made;
     try { made = this.game.move(m); } catch { return false; }
+    this.clocks[turn] = Math.max(0, this.clocks[turn] - (now - this.turnAt));
     this.turnAt = now;
     if (this.draw.offer !== turn) this.draw = { offer: null, declined: null }; // moving on answers an offer with no
     this.last = { from: made.from, to: made.to, san: made.san, piece: made.piece, captured: made.captured ?? null };
@@ -220,15 +229,16 @@ export class ChessTable {
     this.result = null;
     this.phase = 'playing';
     this.draw = { offer: null, declined: null };
+    this.clocks = { w: this.rules.clock, b: this.rules.clock };
     this.startedAt = this.turnAt = this.now();
     this.waitingSince = this.queue.length && (this.seats.w.ai || this.seats.b.ai) ? this.now() : 0;
     if (this.seats.w.ai) this.aiAt = this.now() + this.rules.aiDelay;
   }
 
-  #finish(winner, reason) {
+  #finish(winner, reason, pts = null) {
     this.phase = 'over';
     this.overAt = this.now();
-    this.result = { winner, reason };
+    this.result = { winner, reason, ...(pts ? { points: pts } : {}) };
     for (const c of ['w', 'b']) {
       const s = this.seats[c];
       if (!s || s.ai) continue;
@@ -250,6 +260,8 @@ export class ChessTable {
 
   state() {
     const g = this.game, now = this.now();
+    const clocks = { ...this.clocks };
+    if (this.playing) clocks[g.turn()] = Math.max(0, clocks[g.turn()] - (now - this.turnAt));
     const seat = (s) => (s ? { id: s.id, name: s.name, ...(s.ai ? { ai: true } : {}), ...(s.gone ? { gone: true } : {}) } : null);
     return {
       type: 'chess', v: 2, phase: this.phase, fen: g.fen(), turn: g.turn(), check: g.isCheck(), last: this.last,
@@ -257,10 +269,7 @@ export class ChessTable {
       over: this.phase === 'over' ? (this.result.reason === 'mate' ? 'checkmate' : this.result.winner ? 'won' : 'draw') : null,
       result: this.result, seats: { w: seat(this.seats.w), b: seat(this.seats.b) },
       queue: this.queue.map(({ id, name, color }) => ({ id, name, color })),
-      // time left for the side to move before the game is lost for not moving
-      idleLeft: this.playing && !this.seats[g.turn()]?.ai ? Math.max(0, this.rules.idle - (now - this.turnAt)) : null,
-      running: this.playing ? g.turn() : null, draw: { ...this.draw },
-      limit: this.playing && (this.seats.w?.ai || this.seats.b?.ai) ? Math.max(0, this.rules.aiLimit - (now - this.startedAt)) : null,
+      clocks, running: this.playing ? g.turn() : null, draw: { ...this.draw },
       scores: this.board(),
     };
   }

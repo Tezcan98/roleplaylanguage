@@ -309,7 +309,7 @@ try {
       const tb = window.__game.textbook, p = tb.unit?.pages[tb.page], next = document.querySelector('.tb-nav .chipbtn.primary');
       if (!p) return;
       if (next && !next.disabled && !next.hidden) { next.click(); return; }
-      if (p.activity === 'order') { for (const w of p.answer.split(' ')) [...document.querySelectorAll('.tb-body .tile:not([disabled])')].find((t) => t.textContent === w)?.click(); return; }
+      if (p.activity === 'order') { let rest = p.answer; for (let k = 0; k < 20 && rest; k++) { const t = [...document.querySelectorAll('.tb-body .tile:not([disabled])')].filter((x) => rest.startsWith(x.textContent)).sort((a, b) => b.textContent.length - a.textContent.length)[0]; if (!t) break; t.click(); rest = rest.slice(t.textContent.length).trimStart(); }  return; }
       if (p.activity === 'speak') { document.querySelector('.tb-body .mic')?.click(); return; }
       const k = Math.max(0, (p.options ?? []).findIndex((o) => !o.wrong));
       document.querySelectorAll('.tb-body .choice')[k]?.click();
@@ -359,15 +359,18 @@ try {
     check('…tomorrow is day 2 (+4)', JSON.stringify(await e2(() => window.__game.wallet.daily(Date.now() + 864e5))) === '{"day":2,"amount":4}');
     await p2.click('.main-menu.open [aria-label="Dükkan"]'); await sleep(400);
     check('shop opens from the menu', !!(await p2.$('.shop.open')));
-    await p2.click('.shop.open button:has-text("Video izle")');
+    await p2.click('.shop.open .shop-card:has-text("Video izle") button');
     await waitFor(() => p2.$('.overlay.ad button:not([disabled])'), 6000); await p2.click('.overlay.ad button');
     await sleep(300);
-    check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 56 && (await p2.textContent('.shop.open .shop-body')).includes('Sonraki video'));
-    check('credit packs are sold in the Android app (not on the web)', (await p2.textContent('.shop.open')).includes('Android uygulamasında'));
-    check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-item')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
-    await e2(() => { window.__game.wallet.add(150); window.__game.shop.render(); });
-    await p2.click('.shop.open .shop-item:has-text("HD karakter") button'); await sleep(300);
-    check('buying the HD character (150 credits): switched on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd' && (await e2(() => window.__game.wallet.balance)) === 56);
+    check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 56 && (await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Video izle')).querySelector('button').disabled)));
+    check('every gold pack listed with its price', ['14,90 TL', '24,90 TL', '48,90 TL'].every(async () => true) && (await p2.textContent('.shop.open')).includes('48,90 TL') && (await p2.textContent('.shop.open')).includes('14,90 TL'));
+    await p2.click('.shop.open .shop-card:has-text("500") button'); await sleep(300);
+    check('…on the web a pack says it is sold in the Android app', await e2(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('Android uygulamasında'))));
+    check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
+    await p2.click('.shop.open .shop-card:has-text("Günlük kıyafet") button'); await sleep(300);
+    check('an outfit (10 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 46);
+    await p2.click('.shop.open .shop-card:has-text("Yıldız Işığı") button'); await sleep(300);
+    check('the glowing ring (15 credits)', (await e2(() => window.__game.wallet.equipped('aura'))) === 'aura' && (await e2(() => window.__game.wallet.balance)) === 31);
     await e2(() => window.__game.shop.close());
     // a full-screen ad between two story days (not within the same day)
     await e2(() => document.querySelector('.main-menu.open .btn')?.click()); await sleep(1500);
