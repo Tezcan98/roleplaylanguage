@@ -2,14 +2,14 @@
 
 ## Türkçe
 
-**Uygulama adı:** Yılmaz Ailesi
+**Uygulama adı:** Anadolu Ailesi
 
 **Kısa açıklama (80 karakter içinde):**  
 3D köy hayatında yaşayarak Türkçe öğren; konuş, keşfet ve arkadaş edin.
 
 **Uzun açıklama:**
 
-Yılmaz Ailesi, Türkçeyi ders kitabından değil, günlük hayatın içinden öğrenmen için tasarlanmış hikâyeli bir 3D köy oyunudur.
+Anadolu Ailesi, Türkçeyi ders kitabından değil, günlük hayatın içinden öğrenmen için tasarlanmış hikâyeli bir 3D köy oyunudur.
 
 🏡 **Bir haftalık köy hayatını yaşa**  
 Ailenle kahvaltı yap, ev işlerine yardım et, okula git, ödevlerini yap ve hafta sonu arkadaşlarınla buluş.
@@ -38,14 +38,14 @@ Görevleri tamamla, hikâyeyi ilerlet ve Türkçeyi gerçek hayattaki durumlara 
 
 ## العربية
 
-**اسم التطبيق:** Yılmaz Ailesi
+**اسم التطبيق:** Anadolu Ailesi
 
 **الوصف القصير:**  
 تعلّم التركية من خلال حياة عائلية ثلاثية الأبعاد في قرية دافئة.
 
 **الوصف الكامل:**
 
-Yılmaz Ailesi هي لعبة ثلاثية الأبعاد تساعدك على تعلّم اللغة التركية من خلال الحياة اليومية والقصة، بدلاً من الاعتماد على الدروس التقليدية فقط.
+Anadolu Ailesi هي لعبة ثلاثية الأبعاد تساعدك على تعلّم اللغة التركية من خلال الحياة اليومية والقصة، بدلاً من الاعتماد على الدروس التقليدية فقط.
 
 🏡 عِش أسبوعاً كاملاً مع العائلة: تناول الفطور، ساعد في المنزل، اذهب إلى المدرسة، أنجز واجباتك والتقِ بأصدقائك في عطلة نهاية الأسبوع.
 
@@ -63,14 +63,14 @@ Yılmaz Ailesi هي لعبة ثلاثية الأبعاد تساعدك على ت�
 
 ## English
 
-**App name:** Yılmaz Ailesi
+**App name:** Anadolu Ailesi
 
 **Short description:**  
 Learn Turkish through warm 3D village life, stories, tasks and conversations.
 
 **Full description:**
 
-Yılmaz Ailesi is a story-driven 3D village game designed to help you learn Turkish through everyday situations.
+Anadolu Ailesi is a story-driven 3D village game designed to help you learn Turkish through everyday situations.
 
 🏡 **Live a full week with the family**  
 Have breakfast, help around the house, go to school, do homework and meet friends at the weekend.

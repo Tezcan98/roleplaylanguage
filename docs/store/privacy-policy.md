@@ -1,8 +1,8 @@
-# Yılmaz Ailesi — Gizlilik Politikası
+# Anadolu Ailesi — Gizlilik Politikası
 
 **Son güncelleme:** 1 Ekim 2026
 
-Yılmaz Ailesi, Türkçe öğrenmeyi hikâye ve 3D köy yaşamı üzerinden sunan bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
+Anadolu Ailesi, Türkçe öğrenmeyi hikâye ve 3D köy yaşamı üzerinden sunan bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
 
 ## 1. Mikrofon ve konuşma
 

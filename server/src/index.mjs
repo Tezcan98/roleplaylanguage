@@ -66,7 +66,7 @@ const http = createServer((req, res) => {
     return;
   }
   res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-  res.end('Yılmaz Ailesi köy meydanı sunucusu — WebSocket: /ws/village, durum: /health\n');
+  res.end('Anadolu Ailesi köy meydanı sunucusu — WebSocket: /ws/village, durum: /health\n');
 });
 
 const turnHost = env.TURN_HOST || env.TURN_PUBLIC_IP;

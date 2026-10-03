@@ -14,8 +14,8 @@ import { fullscreenPossible, goFullscreen, fullscreenIcon, canInstall, installAp
 export class MainMenu {
   #view = 'home'; // home | city | settings
 
-  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile }) {
-    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile });
+  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop }) {
+    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => settings.set('serverRegion', id) });
     this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
     this.root = el('div', { class: 'overlay main-menu' });
@@ -74,9 +74,10 @@ export class MainMenu {
       body = [
         el('div', { class: 'menu-top' }, [
           fullscreenPossible() && el('button', { class: 'iconbtn light', html: fullscreenIcon(), attrs: { type: 'button', 'aria-label': 'Tam ekran', title: 'Tam ekran' }, on: { click: () => goFullscreen().finally(() => this.show()) } }), // iPhone: the home-screen guide
+          btn('🪙', 'iconbtn light', () => this.onShop?.(), { 'aria-label': 'Dükkan', title: 'Dükkan · krediler' }),
           btn('⚙️', 'iconbtn light', () => this.show('settings'), { 'aria-label': 'Ayarlar', title: 'Ayarlar' }),
         ]),
-        el('h1', { class: 'big', text: 'Yılmaz Ailesi' }),
+        el('h1', { class: 'big', text: 'Anadolu Ailesi' }),
         el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
         btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(save ? this.onContinue : this.onStart)),
         btn('🏘️ Meydana gir', 'btn alt menu-main', go(() => this.onSquare(this.servers.value))),

@@ -5,13 +5,35 @@
 export const isNativeApp = () => window.Capacitor?.isNativePlatform?.() === true;
 
 export async function loadNativeAdapters() {
-  const [{ App }, { NativeTTS }, { NativeSpeechRecognizer }, { AdMobAdProvider }] = await Promise.all([
+  const [{ App }, { NativeTTS }, { NativeSpeechRecognizer }, { AdMobAdProvider }, { LocalNotifications }, { NativePurchases, PURCHASE_TYPE }] = await Promise.all([
     import('@capacitor/app'),
     import('../services/speech/NativeTTS.js'),
     import('../services/speech/NativeSpeechRecognizer.js'),
     import('../services/monetization/AdMobAdProvider.js'),
+    import('@capacitor/local-notifications'),
+    import('@capgo/native-purchases'),
   ]);
-  return { App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider };
+  return { App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider, LocalNotifications, NativePurchases, PURCHASE_TYPE };
+}
+
+const DAILY_ID = 7001;
+/**
+ * "Bugünkü ödülünü al!" — a local notification the next day at 10:00 (and one more the day
+ * after, in case the first was missed). Rescheduled every time the daily reward is taken.
+ */
+export async function scheduleDailyReminder(LocalNotifications) {
+  try {
+    const perm = await LocalNotifications.checkPermissions();
+    if (perm.display !== 'granted' && (await LocalNotifications.requestPermissions()).display !== 'granted') return;
+    await LocalNotifications.cancel({ notifications: [{ id: DAILY_ID }, { id: DAILY_ID + 1 }] }).catch(() => {});
+    const at = (days) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(10, 0, 0, 0); return d; };
+    await LocalNotifications.schedule({
+      notifications: [1, 2].map((days, i) => ({
+        id: DAILY_ID + i, title: 'Anadolu Ailesi 🎁', body: 'Bugünkü ödülünü al! Her gün gelirsen ödül büyür.',
+        schedule: { at: at(days), allowWhileIdle: true },
+      })),
+    });
+  } catch (e) { console.warn('[notifications]', e); }
 }
 
 /**

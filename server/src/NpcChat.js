@@ -14,7 +14,7 @@ const MAX_MESSAGE = 200;
 const MAX_TURNS = 10;
 
 const BASE_RULES = `
-Oyun: "Yılmaz Ailesi" adlı, bir Türk köyünde geçen ve Türkçe öğreten bir oyun. Karşındaki kişi Türkçe öğrenen bir oyuncu (çoğunlukla çocuk ya da genç, Türkçesi başlangıç seviyesinde).
+Oyun: "Anadolu Ailesi" adlı, bir Türk köyünde geçen ve Türkçe öğreten bir oyun. Karşındaki kişi Türkçe öğrenen bir oyuncu (çoğunlukla çocuk ya da genç, Türkçesi başlangıç seviyesinde).
 Kurallar:
 - Her zaman karakterinde kal, sadece TÜRKÇE konuş. Cümlelerin kısa ve basit olsun (A1-A2 seviyesi), en fazla 2 cümle.
 - Her cevabın sonunda oyuncuya konuyla ilgili kısa bir soru sor ki konuşma sürsün ve pratik yapsın.

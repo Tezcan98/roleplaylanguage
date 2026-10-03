@@ -41,8 +41,9 @@ async function player(tag, name, { viaMenu = false, room = null } = {}) {
   }
   await page.click('text=Hikayeye başla'); await sleep(1200);
   await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);
-  await page.evaluate(() => window.__game.travel.go('village', 'yardRoad')); await sleep(1500);
-  await page.fill('.overlay.open input', name); await page.click('.overlay.open button:has-text("Meydana gir")'); await sleep(1500);
+  if (name) await page.evaluate((n) => window.__game.settings.set('username', n), name); // set in the profile
+  await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
+  await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 15000, 300); await sleep(800);
   await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300); // first-visit card
   return page;
 }
@@ -59,6 +60,15 @@ try {
 
   const names = [await A.evaluate(() => window.__game.village.net.name), await B.evaluate(() => window.__game.village.net.name)];
   check('unique usernames', names[0] !== names[1], names.join(' / '));
+  {
+    // story mode with no username yet: straight into the square under the character's name, no question
+    const S = await player('S', '');
+    const sName = await S.evaluate(() => window.__game.village.net.connected && window.__game.village.net.name);
+    check('story mode: in the square straight away, no username question', !!sName && !(await S.$('.overlay.open input')), String(sName));
+    check('…talk button there as online', await S.evaluate(() => !document.querySelector('.ptt-wrap').hidden));
+    await S.context().close();
+    await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 1, 8000);
+  }
   check('players see each other', (await A.evaluate(() => window.__game.village.remotes.count)) === 1 && (await B.evaluate(() => window.__game.village.remotes.count)) === 1);
   // the square's ball: run into it on A, it moves on B too
   const ballAt = (p) => p.evaluate(() => { const b = window.__game.toys.toys.find((t) => t.toy.location.id === 'village').toy.position; return [b.x, b.z]; });

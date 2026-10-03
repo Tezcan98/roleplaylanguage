@@ -339,6 +339,47 @@ try {
   }
   check('phone sideways: the conversation fits on screen, no scrolling', fits.every(Boolean), JSON.stringify(fits));
   await page.setViewportSize({ width: 1100, height: 700 });
+
+  // --- credits: daily reward, shop, rewarded video, ad between story days ----------------
+  {
+    const p2 = await (await browser.newContext({ viewport: { width: 1000, height: 620 } })).newPage();
+    errors.push(...watchErrors(p2, 'shop '));
+    const e2 = (fn, a) => p2.evaluate(fn, a);
+    await p2.goto(`${server.url}/?debug&fakemic&nointro&fresh&daily&mockads&fastads&quality=low`);
+    await p2.waitForFunction(() => window.__game, null, { timeout: 30000 });
+    const daily = await waitFor(() => p2.$('.overlay.open.daily'), 8000);
+    check('daily reward on opening the game (day 1: +3)', !!daily && (await p2.textContent('.daily .btn')).includes('+3'));
+    await p2.click('.daily .btn'); await sleep(300);
+    check('…credits 50 → 53', (await e2(() => window.__game.wallet.balance)) === 53);
+    await p2.reload(); await p2.waitForFunction(() => window.__game, null, { timeout: 30000 }); await sleep(800);
+    check('…not twice the same day, and the credits are kept', !(await p2.$('.overlay.open.daily')) && (await e2(() => window.__game.wallet.balance)) === 53);
+    check('…tomorrow is day 2 (+4)', JSON.stringify(await e2(() => window.__game.wallet.daily(Date.now() + 864e5))) === '{"day":2,"amount":4}');
+    await p2.click('.main-menu.open [aria-label="Dükkan"]'); await sleep(400);
+    check('shop opens from the menu', !!(await p2.$('.shop.open')));
+    await p2.click('.shop.open button:has-text("Video izle")');
+    await waitFor(() => p2.$('.overlay.ad button:not([disabled])'), 6000); await p2.click('.overlay.ad button');
+    await sleep(300);
+    check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 56 && (await p2.textContent('.shop.open .shop-body')).includes('Sonraki video'));
+    check('credit packs are sold in the Android app (not on the web)', (await p2.textContent('.shop.open')).includes('Android uygulamasında'));
+    check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-item')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
+    await p2.click('.shop.open .shop-item:has-text("Kırmızı gömlek") button');
+    await p2.waitForNavigation({ timeout: 15000 }).catch(() => {}); await p2.waitForFunction(() => window.__game, null, { timeout: 30000 }); await sleep(500);
+    check('buying a red shirt: 20 credits, and the player wears it', (await e2(() => window.__game.wallet.balance)) === 36 && (await e2(() => window.__game.wallet.equipped('shirt'))) === 'shirt-red');
+    // a full-screen ad between two story days (not within the same day)
+    await e2(() => document.querySelector('.main-menu.open .btn')?.click()); await sleep(1500);
+    await e2(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);
+    const i = await e2(() => { const g = window.__game, ch = g.story.story.chapters; return ch.findIndex((c, k) => k > 0 && c.day !== ch[k - 1].day) - 1; });
+    await e2((i) => { const g = window.__game; g.story.state.chapter = i; g.story.state.day = g.story.story.chapters[i].day; g.story.nextChapter(); }, i);
+    check('story: a full-screen ad between two days', !!(await waitFor(() => p2.$('.overlay.ad.interstitial'), 4000)));
+    await waitFor(() => p2.$('.overlay.ad.interstitial button:not([disabled])'), 5000); await p2.click('.overlay.ad.interstitial button');
+    check('…and the new day starts after it', !!(await waitFor(() => e2((i) => window.__game.story.state.chapter === i + 1, i), 6000)));
+    await e2(() => { const w = window.__game.wallet; w.add(100); w.buy({ id: 'adFree', price: 100 }); });
+    const j = await e2((i) => window.__game.story.story.chapters.findIndex((c, k) => k > i + 1 && c.day !== window.__game.story.story.chapters[k - 1].day) - 1, i);
+    await e2((j) => { const g = window.__game; g.story.state.chapter = j; g.story.state.day = g.story.story.chapters[j].day; g.story.nextChapter(); }, j);
+    await sleep(1500);
+    check('ad-free mode: no ad between days', !(await p2.$('.overlay.ad.interstitial')) && (await e2((j) => window.__game.story.state.chapter === j + 1, j)));
+    await p2.close();
+  }
 } catch (e) {
   failed = true;
   log('FAIL ', e.stack ?? e.message);

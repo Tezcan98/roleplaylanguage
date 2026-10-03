@@ -91,7 +91,10 @@ export class StoryDirector {
       if (o) this.cards.show({ ...o, text: val(o.text, this.ctx) });
       return;
     }
-    this.fader.run(() => this.startChapter(i));
+    const go = () => this.fader.run(() => this.startChapter(i));
+    // a new day: first whatever comes between days (a full-screen ad, unless ad-free)
+    if (this.story.chapters[i].day > this.state.day && this.beforeNewDay) this.beforeNewDay().catch(() => {}).finally(go);
+    else go();
   }
 
   complete(id) {

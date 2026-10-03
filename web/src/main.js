@@ -5,7 +5,7 @@ import * as THREE from 'three';
  */
 import { EventBus } from './core/EventBus.js';
 import { EV } from './core/events.js';
-import { GameState } from './core/GameState.js';
+import { GameState, START_CREDITS } from './core/GameState.js';
 import { ModeStack } from './core/ModeStack.js';
 import { GameContext } from './core/GameContext.js';
 import { Game } from './core/Game.js';
@@ -51,8 +51,12 @@ import { LessonController } from './systems/LessonController.js';
 import { TextbookController } from './systems/TextbookController.js';
 import { CreditWallet } from './services/monetization/CreditWallet.js';
 import { MockAdProvider } from './services/monetization/AdProvider.js';
-import { isNativeApp, loadNativeAdapters, wireAppLifecycle } from './platform/native.js';
+import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder } from './platform/native.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
+import { PlayBilling, NoBilling } from './services/monetization/Billing.js';
+import { ShopView } from './ui/ShopView.js';
+import { DailyRewardView } from './ui/DailyRewardView.js';
+import { outfitOf } from './content/shop.js';
 import { LocalClassroomSession, WebSocketClassroomSession } from './services/multiplayer/ClassroomSession.js';
 import { ClassroomView } from './ui/ClassroomView.js';
 import { VillageNetwork } from './services/multiplayer/VillageNetwork.js';
@@ -189,7 +193,9 @@ const fader = new Fader(host);
 const inventory = new Inventory(state, bus);
 const vocab = new Vocabulary(state, bus);
 const input = new InputSystem(joystick);
-const player = new Player('ahmet', PLAYER_LOOKS[playerLook], { mf, models });
+// credits live on the device, apart from the story save (a new game keeps what you bought or earned)
+const wallet = new CreditWallet({ settings, bus, start: Math.max(START_CREDITS, new LocalSaveRepository().load()?.credits ?? 0) });
+const player = new Player('ahmet', { ...PLAYER_LOOKS[playerLook], ...outfitOf(wallet) }, { mf, models }); // + the outfit from the shop
 ctx.scene.add(player.group);
 lighting.follow = player.position;
 const npcs = new Map(Object.entries(NPCS).map(([id, def]) => [id, new Npc(id, def, { mf, models })]));
@@ -223,8 +229,10 @@ const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
   : native ? new nativeKit.NativeSpeechRecognizer('tr-TR')
   : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
-const wallet = new CreditWallet(state, bus);
-const gate = new ClassAccessGate({ host, modes, wallet, ads: native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId }) : new MockAdProvider(host, modes) });
+const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId })
+  : new MockAdProvider(host, modes, params.has('fastads') ? 1 : 5, { interstitials: params.has('mockads') });
+const billing = native ? new PlayBilling(nativeKit.NativePurchases, nativeKit.PURCHASE_TYPE) : new NoBilling();
+const gate = new ClassAccessGate({ host, modes, wallet, ads });
 const activities = new ActivityRegistry({ tts, speech, gate })
   .register('choice', ChoiceActivity)
   .register('listen', ListenActivity)
@@ -341,6 +349,8 @@ const village = new VillageMultiplayer({
   }),
   recognizer: chatRecognizer,
 });
+village.autoName = () => `${playerName()}${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question
+village.outfit = () => outfitOf(wallet); // others see the shop colours too
 
 // --- giant chess on the square: online the server's board (İsmail Dede runs it), offline Dede plays you ---
 const chess = new ChessGame({
@@ -429,8 +439,31 @@ const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, pl
 const drill = new WordDrill(host, { modes, vocab, activities, tts, state, effects, toasts });
 const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!',
   drill.available ? { label: '🧠 Kelime pratiği yap', run: () => drill.open() } : null);
+// --- shop, daily reward, ads between story days ---
+const shop = new ShopView(host, {
+  modes, wallet, ads, billing, toasts, gender: playerGender(), look: settings.get('look', ''),
+  onDaily: () => takeDaily(),
+  // new colours: saved, then the game opens again with them (and goes on where it was)
+  onOutfit: () => { try { sessionStorage.setItem('autoContinue', '1'); } catch { /* ignore */ } toasts.show('Kıyafetin değişiyor…', 'Changing your outfit…'); setTimeout(() => location.reload(), 700); },
+});
+const dailyView = new DailyRewardView(host, modes);
+function takeDaily() {
+  const d = wallet.takeDaily();
+  if (d) toasts.show(`🎁 +${d.amount} kredi`, 'Daily reward');
+  if (native) scheduleDailyReminder(nativeKit.LocalNotifications); // "Bugünkü ödülünü al!" tomorrow
+}
+async function offerDaily() {
+  const d = wallet.daily();
+  if (!d || (params.has('nointro') && !params.has('daily'))) return; // tests: only with ?daily
+  await dailyView.show(d);
+  takeDaily();
+}
+// story mode: a full-screen ad between two days (not with ad-free mode)
+story.beforeNewDay = () => (wallet.adFree ? Promise.resolve() : ads.showInterstitial());
+
 const hud = new Hud(host, {
   extra: [fullscreenBtn],
+  onShop: () => shop.open(),
   onBookOpen: () => textbook.open(),
   onBook: () => openWords(),
   onBag: () => list.open('Çanta', inventory.entries().map(([kind, n]) => {
@@ -499,6 +532,7 @@ const menu = new MainMenu(host, {
   onContinue: () => continueGame(),
   onSquare: (server) => playOnline(server),
   onProfile: () => { menu.hide(); editProfile(); },
+  onShop: () => shop.open(),
 });
 /** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
 async function editProfile({ cancellable = true } = {}) {
@@ -509,6 +543,13 @@ async function editProfile({ cancellable = true } = {}) {
 }
 // first launch: create the character before anything else (tests skip it with ?nointro)
 if (!setup.done && !params.has('nointro')) { menu.hide(); editProfile({ cancellable: false }); }
+else {
+  // back from changing the outfit: straight on where you were
+  let again = false;
+  try { again = sessionStorage.getItem('autoContinue') === '1'; sessionStorage.removeItem('autoContinue'); } catch { /* ignore */ }
+  if (again && saved) { menu.hide(); continueGame(); } else offerDaily();
+}
+if (native) scheduleDailyReminder(nativeKit.LocalNotifications); // keep tomorrow's reminder
 
 /** Online square straight from the menu: no story (paused), no autosave; leaving returns here. */
 function playOnline(server) {
@@ -642,4 +683,4 @@ setInterval(() => {
 }, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

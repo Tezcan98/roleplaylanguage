@@ -14,6 +14,8 @@ const ROOM = /^[a-z0-9-]{1,24}$/;
 const lookOf = (gender, style) => (gender === 'girl'
   ? { gender: 'girl', style: style === 'open' ? 'open' : 'covered' }
   : { gender: 'boy', style: style === 'strong' ? 'strong' : 'modest' });
+/** Colours bought in the shop (shirt, cap, headscarf): plain 24-bit colours only. */
+const outfitOf = (o) => Object.fromEntries(['shirt', 'cap', 'headscarf'].filter((k) => Number.isInteger(o?.[k]) && o[k] >= 0 && o[k] <= 0xFFFFFF).map((k) => [k, o[k]]));
 const RATE = { burst: 60, perSecond: 30 }; // messages per client (10/s states + WebRTC ICE bursts)
 const MAX_BALLS = 4;                        // shared balls per room (the square's pitch has two)
 const SAY_GAP = 1200;                       // ms between two public speech bubbles
@@ -249,7 +251,7 @@ export class VillageServer {
     }
   }
 
-  #hello(c, { name, room = 'village', gender, style, pid }) {
+  #hello(c, { name, room = 'village', gender, style, pid, outfit }) {
     if (c.id) return;
     if (typeof room !== 'string' || !ROOM.test(room)) return this.#send(c, { type: 'error', message: 'Geçersiz oda.' });
     const clean = String(name ?? '').trim();
@@ -266,7 +268,7 @@ export class VillageServer {
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
     let unique = clean, n = 2;
     while (taken.has(unique.toLocaleLowerCase('tr'))) unique = `${clean}${n++}`;
-    Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], ...lookOf(gender, style) } });
+    Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], ...lookOf(gender, style), ...outfitOf(outfit) } });
     this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ...this.#ballsFor(room), chess: this.#table(room).state(), ice: this.iceFor(c.id) });
     this.#toRoom(c, { type: 'join', peer: this.#public(c) });
     members.set(c.id, c);

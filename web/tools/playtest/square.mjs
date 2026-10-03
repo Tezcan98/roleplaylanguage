@@ -33,10 +33,12 @@ async function player(tag, name, { viaMenu = true } = {}) {
   } else {
     await page.click('text=Hikayeye başla'); await sleep(1200);
     await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);
+    await page.evaluate((n) => window.__game.settings.set('username', n), name);
     await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
+  } else {
+    await waitFor(() => page.$('.overlay.open input'), 15000);
+    await page.fill('.overlay.open input', name); await page.click('.overlay.open button:has-text("Meydana gir")');
   }
-  await waitFor(() => page.$('.overlay.open input'), 15000);
-  await page.fill('.overlay.open input', name); await page.click('.overlay.open button:has-text("Meydana gir")');
   await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 15000, 300);
   await sleep(600);
   await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);

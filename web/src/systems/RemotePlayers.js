@@ -16,7 +16,7 @@ export class RemotePlayers {
 
   add(location, { id, name, look, x = -14.8, z = 0, rot = 0, talking = false, sit = false }) {
     if (this.#players.has(id)) return;
-    const char = new Character(`remote-${id}`, { ...(this.looks[`${look?.gender}-${look?.style}`] ?? this.baseLook), shirt: look?.shirt ?? this.baseLook.shirt, props: [] }, { mf: this.mf });
+    const char = new Character(`remote-${id}`, { ...(this.looks[`${look?.gender}-${look?.style}`] ?? this.baseLook), shirt: look?.shirt ?? this.baseLook.shirt, ...(look?.cap ? { cap: look.cap } : {}), ...(look?.headscarf ? { headscarf: look.headscarf } : {}), props: [] }, { mf: this.mf });
     char.name = name;
     char.voice = talking;
     char.place({ x, z, rot });

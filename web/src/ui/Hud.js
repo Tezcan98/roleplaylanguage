@@ -13,7 +13,7 @@ export class Hud {
       el('div', { class: 'grp' }, [
         el('button', { class: 'pill', attrs: { type: 'button' }, on: { click: onBook } }, ['Defter ', this.words]),
         this.textbook,
-        el('div', { class: 'pill clock', attrs: { title: 'Ders kredisi' } }, ['🪙 ', this.credits]),
+        el('button', { class: 'pill credits-btn', attrs: { type: 'button', title: 'Dükkan · krediler' }, on: { click: () => onShop?.() } }, ['🪙 ', this.credits]), // the shop
       ]),
       el('div', { class: 'grp' }, [
         this.clock,
