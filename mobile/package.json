@@ -7,7 +7,7 @@
     "sync": "npm --prefix ../web run build && cap sync android",
     "open": "cap open android",
     "apk": "npm run sync && cd android && ./gradlew assembleDebug",
-    "release": "npm run sync && cd android && JAVA_HOME=${JAVA_HOME:-$(ls -d ~/.jdks/jdk-21* | head -1)} ./gradlew assembleRelease bundleRelease"
+    "release": "npm run sync && cd android && JAVA_HOME=$(ls -d ~/.jdks/jdk-21* 2>/dev/null | head -1 || echo $JAVA_HOME) ./gradlew assembleRelease bundleRelease"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",
