@@ -6,7 +6,7 @@
  * Needs a GPU for smooth 1080p (headless Chromium with ANGLE on OpenGL).
  */
 import { chromium } from 'playwright';
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { startServer, startVillageServer, sleep } from '../playtest/lib.mjs';
@@ -74,8 +74,8 @@ const kit = {
   closeCards: (page) => page.evaluate(() => document.querySelectorAll('.overlay.open .card .btn').forEach((b) => b.click())),
 };
 
-/** Record `seconds` of `page` while `act()` runs; returns the clip's path. */
-async function record(page, name, seconds, act) {
+/** Record `seconds` of `page` while `act()` runs; returns the clip's path. `still`: also a store screenshot that many seconds in. */
+async function record(page, name, seconds, act, still = null) {
   const dir = join(out, `frames-${name}`); rmSync(dir, { recursive: true, force: true }); mkdirSync(dir);
   const cdp = await page.context().newCDPSession(page);
   const frames = [];
@@ -86,7 +86,8 @@ async function record(page, name, seconds, act) {
   });
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: W * SCALE, maxHeight: H * SCALE, everyNthFrame: 1 });
   const t0 = Date.now();
-  await Promise.all([act(), sleep(seconds * 1000)]);
+  const shot = still == null ? null : sleep(still * 1000).then(() => page.screenshot({ path: join(out, 'screens', `${String(++shots).padStart(2, '0')}-${name}.png`) }));
+  await Promise.all([act(), sleep(seconds * 1000), shot]);
   while (Date.now() - t0 < seconds * 1000) await sleep(50);
   await cdp.send('Page.stopScreencast'); await sleep(200);
   // each frame lasts until the next one (the screencast only sends changed frames)
@@ -99,12 +100,43 @@ async function record(page, name, seconds, act) {
   return clip;
 }
 
+/** The 1024×500 feature graphic: the village screenshot behind the icon and the name (no prices, no "free"). */
+async function featureGraphic() {
+  // a clean picture of the square (no interface at all) for the background
+  const bg = join(out, 'feature-bg.png');
+  const game = await open();
+  await game.evaluate(() => document.querySelector('.menu-main')?.click()); await sleep(2500); await kit.closeCards(game);
+  await game.evaluate(() => window.__game.travel.go('village', 'yardRoad')); await sleep(3500); await kit.closeCards(game);
+  await game.evaluate(() => { const g = window.__game; g.player.position.set(-1, 0, 7); g.camera.snap(g.player.position, false); });
+  await kit.zoom(game, -1); await sleep(2000);
+  await game.addStyleTag({ content: 'body > div > *:not(canvas){visibility:hidden!important}' });
+  await sleep(300); await game.screenshot({ path: bg }); await game.context().close();
+  const page = await (await browser.newContext({ viewport: { width: 1024, height: 500 } })).newPage();
+  const img = (f) => `data:image/png;base64,${readFileSync(f).toString('base64')}`;
+  await page.setContent(`<body style="margin:0;width:1024px;height:500px;overflow:hidden;font-family:Fredoka,system-ui,sans-serif">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+    <div style="position:absolute;inset:0;background:url(${img(bg)}) center/cover"></div>
+    <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(27,36,64,.92) 0%,rgba(27,36,64,.75) 45%,rgba(27,36,64,.1) 75%)"></div>
+    <div style="position:absolute;left:56px;top:50%;transform:translateY(-50%);display:flex;gap:28px;align-items:center;color:#fff">
+      <img src="${img('assets/icons/icon-512.png')}" style="width:150px;height:150px;border-radius:34px;box-shadow:0 10px 40px rgba(0,0,0,.45)">
+      <div><div style="font-size:60px;font-weight:700;line-height:1">Anadolu Ailesi</div>
+      <div style="font-size:30px;margin-top:10px;color:#FFC845;font-weight:500">Türkçe Öğren</div>
+      <div style="font-size:20px;margin-top:6px;opacity:.9">Learn Turkish by living it</div></div></div></body>`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.evaluate(() => document.fonts.ready);
+  await sleep(1500);
+  await page.screenshot({ path: join(out, 'screens', 'feature-graphic-1024x500.png') });
+  await page.context().close();
+}
+
 const clips = [];
+let shots = 0;
+mkdirSync(join(out, 'screens'), { recursive: true });
 try {
   for (const s of SCENES) {
     if (only && !only.includes(s.name)) continue;
     const page = await s.setup(kit);
-    clips.push({ file: await record(page, s.name, s.seconds, () => s.act(kit, page)), seconds: s.seconds });
+    const file = await record(page, s.name, s.seconds, () => s.act(kit, page), s.still);
+    if (!s.stillOnly) clips.push({ file, seconds: s.seconds });
     if (s.cleanup) await s.cleanup(kit, page); else await page.context().close();
   }
   // join with 0.4 s cross-fades
@@ -121,6 +153,7 @@ try {
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...inputs, '-filter_complex', chain.replace(/;$/, ''), '-map', '[v]', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', final]);
     console.log(`→ ${final}`);
   }
+  await featureGraphic();
 } finally {
   await browser.close(); server.stop(); village.stop();
 }

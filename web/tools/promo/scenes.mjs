@@ -38,7 +38,7 @@ export const SCENES = [
     },
   },
   {
-    name: 'house', seconds: 6,
+    name: 'house', seconds: 6, still: 4.6,
     setup: async (kit) => {
       const page = await story(kit);
       await page.evaluate(() => { const g = window.__game; g.player.position.set(2.6, 0, -2.6); g.camera.snap(g.player.position, true); });
@@ -54,7 +54,17 @@ export const SCENES = [
     },
   },
   {
-    name: 'village', seconds: 6,
+    name: 'rooms', seconds: 2.5, still: 2, stillOnly: true,
+    setup: async (kit) => {
+      const page = await story(kit);
+      await page.evaluate(() => { const g = window.__game; g.player.position.set(-3, 0, 1); g.camera.snap(g.player.position, true); });
+      await kit.zoom(page, 4); await kit.sleep(1500);
+      return page;
+    },
+    act: async (kit, page) => { await kit.caption(page, 'Kocaman bir ev, bütün bir köy', 'A family home with its rooms, a whole village around it'); },
+  },
+  {
+    name: 'village', seconds: 6, still: 3.0,
     setup: async (kit) => {
       const page = await story(kit);
       await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
@@ -71,7 +81,7 @@ export const SCENES = [
     },
   },
   {
-    name: 'speak', seconds: 6,
+    name: 'speak', seconds: 6, still: 2.2,
     setup: async (kit) => {
       const page = await story(kit);
       await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
@@ -88,7 +98,7 @@ export const SCENES = [
     },
   },
   {
-    name: 'school', seconds: 6,
+    name: 'school', seconds: 6, still: 4.5,
     setup: async (kit) => {
       const page = await story(kit, '&fastclass');
       page.evaluate(() => window.__game.lessons.enter('l1'));
@@ -102,7 +112,7 @@ export const SCENES = [
     },
   },
   {
-    name: 'square', seconds: 8,
+    name: 'square', seconds: 8, still: 6.5,
     setup: async (kit) => {
       friends.push(await square(kit, 'Leyla', { params: '&gender=girl&look=covered', outfit: 'dress', aura: true, extra: true }));
       friends.push(await square(kit, 'Omar', { outfit: 'suit', extra: true }));
@@ -126,7 +136,7 @@ export const SCENES = [
     cleanup: async (kit, page) => { for (const p of [page, ...friends]) await p.context().close(); },
   },
   {
-    name: 'chess', seconds: 7,
+    name: 'chess', seconds: 7, still: 6.0,
     setup: async (kit) => {
       const page = await square(kit, 'Ahmet');
       await page.evaluate(() => { const g = window.__game; g.player.position.set(-15, 0, 20.6); g.camera.snap(g.player.position, false); }); // white's side of the giant board
@@ -144,13 +154,13 @@ export const SCENES = [
     },
   },
   {
-    name: 'shop', seconds: 5,
+    name: 'shop', seconds: 5, still: 3.0,
     setup: async (kit) => {
       const page = await story(kit, '&gender=girl&look=covered');
       await page.evaluate(() => window.__game.wallet.add(150, 'promo'));
       await page.evaluate(() => window.__game.shop.open());
       await kit.sleep(1500);
-      await page.evaluate(() => document.querySelector('.shop-body')?.scrollTo(0, 99999));
+      await page.evaluate(() => [...document.querySelectorAll('.shop-body > *')].slice(0, 2).forEach((e) => { e.style.display = 'none'; })); // outfits only: no prices in store pictures
       await kit.sleep(500);
       return page;
     },
@@ -162,7 +172,7 @@ export const SCENES = [
     name: 'end', seconds: 4,
     setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2500); return page; },
     act: async (kit, page) => {
-      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Anadolu Ailesi</h1><p>Türkçe Öğren</p><span class="badge">Google Play’de ücretsiz</span><small>Free on Google Play</small>');
+      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Anadolu Ailesi</h1><p>Türkçe Öğren</p><small>Learn Turkish by living it</small>');
     },
   },
 ];
