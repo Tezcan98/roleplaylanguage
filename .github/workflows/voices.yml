@@ -1,0 +1,35 @@
+# Records the game's voice library (web/assets/speech) once through the village server and
+# commits it, so the game plays every fixed line from the website instead of asking Gemini.
+# Run it from Actions → "voices" → Run workflow; it skips what is already recorded and stops
+# at Gemini's daily cap, so running it again the next day goes on where it stopped.
+name: voices
+on:
+  workflow_dispatch:
+    inputs:
+      server:
+        description: TTS address of the village server
+        default: https://31-58-245-116.sslip.io/api/tts
+  schedule:
+    - cron: '17 3 * * *' # every night: new lines added to the story get their voice
+permissions:
+  contents: write
+concurrency: voices
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: sudo apt-get install -y ffmpeg >/dev/null
+      - run: node web/tools/build-voices.mjs --server=${{ inputs.server || 'https://31-58-245-116.sslip.io/api/tts' }}
+      - name: Commit the new recordings
+        run: |
+          git add web/assets/speech
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git config user.name "voices bot"
+          git config user.email "voices-bot@users.noreply.github.com"
+          git commit -m "Voice library: $(git diff --cached --name-only | grep -c mp3) new lines"
+          git push

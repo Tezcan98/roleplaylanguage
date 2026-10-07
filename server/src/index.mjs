@@ -67,7 +67,7 @@ const http = createServer((req, res) => {
     const u = new URL(req.url, 'http://x');
     const origin = req.headers.origin;
     const cors = origin && originAllowed(origin, origins) ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
-    tts.handle(u.searchParams.get('v'), u.searchParams.get('t'), clientIp(req)).then((r) => {
+    tts.handle(u.searchParams.get('v'), u.searchParams.get('t'), clientIp(req), u.searchParams.get('f') ?? undefined).then((r) => {
       if (r.status !== 200) { res.writeHead(r.status, { 'Content-Type': 'application/json', ...cors }); return res.end(JSON.stringify({ error: r.error })); }
       res.writeHead(200, { 'Content-Type': 'audio/wav', 'Content-Length': r.body.length, 'Cache-Control': 'public, max-age=31536000, immutable', ...cors });
       res.end(r.body);

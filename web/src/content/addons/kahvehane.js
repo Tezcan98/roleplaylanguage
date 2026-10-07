@@ -1,3 +1,4 @@
+import { man, M2 } from '../characters.js';
 /**
  * The open-air kahvehane on the village square. Hüsnü, Kemal and Rıfat sit at their tavla
  * table all day and argue about Rıfat's "theories" (the moon landing, the rain, the secret lake under the fountain…) — Kemal and Hüsnü answer
@@ -82,10 +83,10 @@ export default {
     },
   },
   voices: {
-    husnu: { id: 'tr_TR-fahrettin-medium', pitch: 0.8 },
-    kemal: { id: 'tr_TR-fettah-medium', pitch: 0.86 },
-    rifat: { id: 'tr_TR-fahrettin-medium', pitch: 1.12 },
-    kahveci: { id: 'tr_TR-fettah-medium', pitch: 1.1 },
+    husnu: man('Rasalgethi'),
+    kemal: man('Alnilam', M2),
+    rifat: man('Enceladus'),
+    kahveci: man('Sadachbia', M2),
   },
   castAll: {
     husnu: ['village', 'amca1', 'sitBench'],

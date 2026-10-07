@@ -1,3 +1,4 @@
+import { man, M2 } from '../characters.js';
 /**
  * The greengrocer (manav) at the village square. Sunday afternoon mom sends Ahmet to buy
  * a kilo of apples and two kilos of potatoes: kilos, fruit and vegetable names, prices,
@@ -15,7 +16,7 @@ export default {
       face,
     },
   },
-  voices: { manav: { id: 'tr_TR-fettah-medium', pitch: 0.97 } },
+  voices: { manav: man('Sadaltager', M2) },
   castAll: { manav: ['village', 'manav', 'stand'] },
   kindNames: {
     elma: { tr: 'kilo elma', en: 'kg of apples' },

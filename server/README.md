@@ -58,6 +58,16 @@ Ayarlar (ortam değişkenleri): `PORT`, `HOST`, `ALLOWED_ORIGINS`, `MAX_PER_IP`,
 - **Satranç:** İsmail Dede'nin skor tablosu (en çok maç yapanlar) `CHESS_SCORES` dosyasında tutulur
   (varsayılan `/tmp/yilmaz-chess-scores.json`; systemd birimi `/var/lib/yilmaz-village/` kullanır, yeniden başlatmada silinmez).
 
+## Ses deposu (her cümle bir kez üretilir)
+
+Her karakterin kendi doğal sesi var: kadınlar ve erkekler Gemini TTS ile (`v=g-<Ses>`; erkekler için Gemini
+yapamazsa Piper). Üretilen her satır sunucunun önbelleğine yazılır (`TTS_CACHE`, systemd'de
+`/var/lib/yilmaz-village/tts`, yeniden başlatmada silinmez) ve aynı cümle için Gemini bir daha çağrılmaz.
+Ayrıca oyunun bütün sabit cümleleri **depoya** kaydedilir: `web/assets/speech/*.mp3` + `index.json`.
+Oyun önce buraya bakar, cümle varsa sunucuya hiç gitmez. Doldurmak için GitHub → Actions → **voices** → Run
+workflow (her gece de kendiliğinden çalışır, eksikleri tamamlar; Gemini'nin günlük sınırına gelirse ertesi gün
+devam eder) ya da elle: `node web/tools/build-voices.mjs --server=https://31-58-245-116.sslip.io/api/tts`.
+
 ## Meydan moderasyonu (Jev / Laya)
 
 Meydandaki her konuşma balonu gösterilmeden önce `src/Moderator.js` kontrol eder. **Türkçe olmayan**
@@ -71,7 +81,7 @@ ve `MODERATION_LOG` dosyasına (JSON satırları) yazılır. On dakikada üç ke
    - **Laya** (açık ağırlıklı, kendi makinende, veri dışarı çıkmaz, ~30 ms):
      `pip install "laya[serve]" && LAYA_HOST=127.0.0.1 LAYA_MODELS=multilingual laya-serve`, sonra
      `MODERATION_URL=http://127.0.0.1:8000 MODERATION_MODEL=multilingual`.
-     Laya ~1 GB bellek ister: köy sunucusunun 256 MB sınırına sığmaz, ayrı bir servis olarak çalıştırın.
+     Laya modeli yüzlerce MB bellek ister: köy sunucusunun 256 MB sınırına sığmaz, ayrı bir servis olarak çalıştırın.
    - İsterseniz Gemini: `MODERATION=gemini` (`GEMINI_API_KEY`).
    Model yanıt vermezse 1. katman çalışmaya devam eder (`MODERATION_FAIL_CLOSED=1` → o sırada hiçbir balon gösterilmez).
 

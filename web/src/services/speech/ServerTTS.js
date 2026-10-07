@@ -1,9 +1,9 @@
 /**
- * Turkish speech generated on the village server (Piper, server/src/Tts.js). Each line is a
+ * Turkish speech generated on the village server (Gemini voices, Piper, server/src/Tts.js). Each line is a
  * cached WAV, so playback starts quickly and nothing big is downloaded on the phone.
  * Characters keep their own voice; `pitch` speeds the clip up / down a little.
  */
-const SHORT = { 'tr-kadin': 'kadin', 'tr-kiz': 'kiz', 'tr-nine': 'nine', 'tr_TR-fahrettin-medium': 'fahrettin', 'tr_TR-fettah-medium': 'fettah' };
+import { SHORT } from './SpeechRepo.js';
 
 export class ServerTTS {
   #audio = null;
@@ -19,15 +19,23 @@ export class ServerTTS {
   /** A voice that fails while the others work (no women's model on the server) is skipped: her lines go straight to the fallback. */
   has(voice) { return this.supported && !this.#badVoices.has(voice.id); }
 
-  src(text, voiceId) { return `${this.url}?v=${SHORT[voiceId] ?? 'fahrettin'}&t=${encodeURIComponent(text.trim())}`; }
+  /**
+   * A man's voice is one of Gemini's (`g-<Name>`) with Piper as the server's stand-in (`f`);
+   * `fresh`: a sentence made up on the spot goes straight to Piper (Gemini's quota is for fixed lines).
+   */
+  src(text, voice, fresh = false) {
+    const t = encodeURIComponent(text.trim());
+    if (voice.id?.startsWith('g-')) return fresh ? `${this.url}?v=${SHORT[voice.piper] ?? 'fahrettin'}&t=${t}` : `${this.url}?v=${voice.id}&f=${SHORT[voice.piper] ?? 'fahrettin'}&t=${t}`;
+    return `${this.url}?v=${SHORT[voice.id] ?? 'fahrettin'}&t=${t}`;
+  }
 
   /** Ask the server for a line ahead of time (the browser keeps it in its HTTP cache). */
-  warm(text, voice) { if (this.has(voice) && text) fetch(this.src(text, voice.id)).catch(() => {}); }
+  warm(text, voice) { if (this.has(voice) && text) fetch(this.src(text, voice)).catch(() => {}); }
 
-  speak(text, { voice, rate = 1 }) {
+  speak(text, { voice, rate = 1, fresh = false }) {
     this.cancel();
     return new Promise((resolve, reject) => {
-      const a = this.#audio = new Audio(this.src(text, voice.id));
+      const a = this.#audio = new Audio(this.src(text, voice, fresh));
       a.preservesPitch = false;
       a.playbackRate = (voice.pitch ?? 1) * rate;
       a.onended = () => resolve();

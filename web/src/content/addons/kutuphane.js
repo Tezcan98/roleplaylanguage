@@ -1,3 +1,4 @@
+import { man } from '../characters.js';
 /**
  * The open library on the village square and its librarian, Aslan Bey: a quiet man who
  * talks in riddles and half-told stories. Every visit is a different mysterious little
@@ -82,7 +83,7 @@ export default {
       face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#B7C9D6"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M15 31q2-15 17-15t17 15q-6-6-17-6t-17 6z" fill="#B8BCC4"/><circle cx="26" cy="36" r="4.5" fill="none" stroke="#1B2440" stroke-width="1.8"/><circle cx="38" cy="36" r="4.5" fill="none" stroke="#1B2440" stroke-width="1.8"/><path d="M30.5 36h3" stroke="#1B2440" stroke-width="1.8"/><circle cx="26" cy="36" r="1.4" fill="#1B2440"/><circle cx="38" cy="36" r="1.4" fill="#1B2440"/><path d="M24 43q8-5 16 0q-8 3-16 0z" fill="#8A8E96"/></svg>',
     },
   },
-  voices: { aslanBey: { id: 'tr_TR-fahrettin-medium', pitch: 0.74 } },
+  voices: { aslanBey: man('Schedar') },
   castAll: { aslanBey: ['village', 'aslanBey', 'stand'] },
   dialogues: { aslanBey: { start: nextTalk, nodes: nodes() } },
 };

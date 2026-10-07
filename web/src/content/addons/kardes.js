@@ -1,3 +1,4 @@
+import { man, M2 } from '../characters.js';
 /**
  * Ali, the little brother (6). He runs around the house, jumps on the bed now and then
  * (mom tells him off) and keeps asking "Abi, bu ne?" — each talk is a picture quiz on a
@@ -65,7 +66,7 @@ export default {
       ],
     },
   },
-  voices: { kardes: { id: 'tr_TR-fettah-medium', pitch: 1.4 } },
+  voices: { kardes: man('Fenrir', M2) },
   castAll: { kardes: ['house', 'start', 'roam'] },
   dialogues: { kardes: { start: (ctx) => (ctx.flag('met-kardes') ? nextThing(ctx) : 'hello'), nodes: nodes() } },
 };

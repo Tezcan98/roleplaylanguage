@@ -1,9 +1,11 @@
 /**
- * Turkish speech for the game: GET /api/tts?v=<voice>&t=<text> → audio/wav. Men and boys
- * speak with Piper (a stand-alone binary, no system packages); Piper has no Turkish woman's
- * voice (its "dfki" is a man), so women and girls speak with Gemini's text-to-speech
- * (woman / girl / grandmother voices; capped per day). Every line is generated once and kept
- * in a disk cache, so the story's fixed lines are instant for everyone.
+ * Turkish speech for the game: GET /api/tts?v=<voice>&t=<text>[&f=<piper voice>] → audio/wav.
+ * Every character has a natural voice of their own from Gemini's text-to-speech: the women
+ * (kadin / kiz / nine) and, since Piper sounded robotic, the men and boys too (v=g-<Name>,
+ * one of Gemini's prebuilt voices, e.g. g-Orus). A man's line that Gemini can't make (no key,
+ * daily cap, quota) is made by Piper instead (`f`: fahrettin / fettah), so men are never
+ * silent; women fall back to the device's woman's voice. Every line is generated once and
+ * kept in a disk cache, so the story's fixed lines are instant for everyone.
  */
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -13,6 +15,8 @@ import { join } from 'node:path';
 export const TTS_VOICES = { fahrettin: 'tr_TR-fahrettin-medium', fettah: 'tr_TR-fettah-medium' };
 /** Women's voices (Gemini prebuilt voices). `dfki`: what older pages ask for their women — now a woman too. */
 export const GEMINI_VOICES = { kadin: 'Kore', kiz: 'Leda', nine: 'Sulafat', dfki: 'Kore' };
+/** Gemini's prebuilt men's voices a page may ask for as v=g-<Name>. */
+export const GEMINI_MEN = new Set(['Puck', 'Charon', 'Fenrir', 'Orus', 'Iapetus', 'Enceladus', 'Umbriel', 'Algieba', 'Algenib', 'Rasalgethi', 'Alnilam', 'Schedar', 'Achird', 'Zubenelgenubi', 'Sadachbia', 'Sadaltager']);
 const GEMINI_MODELS = ['gemini-3.8-flash-tts', 'gemini-2.5-flash-preview-tts'];
 const MAX_TEXT = 300;
 
@@ -51,7 +55,8 @@ export class Tts {
   }
 
   /** @returns {Promise<{ status: number, body?: Buffer, error?: string }>} */
-  async handle(voice, text, ip) {
+  async handle(voice, text, ip, fallback = 'fahrettin') {
+    if (typeof voice === 'string' && voice.startsWith('g-')) return this.#man(voice.slice(2), text, ip, fallback);
     if (!this.enabled) return { status: 503, error: 'disabled' };
     const female = GEMINI_VOICES[voice], model = TTS_VOICES[voice];
     const t = typeof text === 'string' ? text.normalize('NFC').trim().replace(/\s+/g, ' ') : '';
@@ -73,6 +78,30 @@ export class Tts {
     } catch (e) {
       this.log(`[tts] ${e.message}`);
       return { status: 502, error: 'synthesis failed' };
+    }
+  }
+
+  /** A man's line in his own Gemini voice; Piper (`fallback`) when Gemini can't make it. */
+  async #man(name, text, ip, fallback) {
+    const piper = TTS_VOICES[fallback] ? fallback : 'fahrettin';
+    if (!GEMINI_MEN.has(name)) return this.handle(piper, text, ip);
+    const t = typeof text === 'string' ? text.normalize('NFC').trim().replace(/\s+/g, ' ') : '';
+    if (!t || t.length > MAX_TEXT) return { status: 400, error: 'bad request' };
+    if (!this.gemini || Date.now() < this.geminiPausedUntil) return this.handle(piper, t, ip);
+    const key = createHash('sha1').update(`gemini:${name}|${t}`).digest('hex');
+    const file = join(this.cacheDir, `${key}.wav`);
+    if (await stat(file).then(() => true, () => false)) return { status: 200, body: await readFile(file) };
+    if (!this.#allow(ip)) return { status: 429, error: 'slow down' };
+    if (!this.#inflight.has(key)) {
+      if (!this.#geminiBudget()) return this.handle(piper, t, ip);
+      this.#inflight.set(key, this.#queued(() => this.#gemini(name, t, file)).finally(() => this.#inflight.delete(key)));
+    }
+    try {
+      await this.#inflight.get(key);
+      return { status: 200, body: await readFile(file) };
+    } catch (e) {
+      this.log(`[tts] ${e.message} → piper`);
+      return this.handle(piper, t, ip);
     }
   }
 

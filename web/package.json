@@ -19,7 +19,8 @@
     "playtest:square": "node tools/playtest/square.mjs",
     "playtest:features": "node tools/playtest/features.mjs",
     "i18n": "node tools/extract-glosses.mjs",
-    "playtest:turn": "TURN_PUBLIC_IP=127.0.0.1 TURN_ALLOW_PRIVATE=1 node tools/playtest/multiplayer.mjs --standalone --relayonly"
+    "playtest:turn": "TURN_PUBLIC_IP=127.0.0.1 TURN_ALLOW_PRIVATE=1 node tools/playtest/multiplayer.mjs --standalone --relayonly",
+    "voices:build": "node tools/build-voices.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",

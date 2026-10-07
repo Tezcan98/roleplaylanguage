@@ -1,27 +1,30 @@
 /** Who's who: looks (for the procedural rig), portrait SVG, labels and voices. */
 
 /**
- * Voices. Men and boys: Piper (CC0: fahrettin, fettah), `pitch` shifts them per character so
- * nobody sounds like anybody else. Women and girls (`female`): the server makes their lines
- * with Gemini's Turkish women's voices (woman / girl / grandmother — Piper has no Turkish
- * woman's voice; its "dfki" is a man). Without the server, the browser's Turkish woman's
- * voice speaks for them — never a man's (services/speech/CharacterVoices.js).
+ * Voices. Every character speaks with a natural voice of their own, made on the server by
+ * Gemini's text-to-speech: the women and girls (`female`: woman / girl / grandmother) and the
+ * men and boys (`man(name)`: one of Gemini's prebuilt voices). No more speeding Piper up or
+ * down to tell people apart — that made them sound like cartoons. When Gemini can't make a
+ * man's line (daily cap, no key), the server speaks it with Piper (`piper`); without the
+ * server the device's own Turkish voice speaks — a woman's for the women, never a man's
+ * (services/speech/CharacterVoices.js).
  */
-const M1 = 'tr_TR-fahrettin-medium', M2 = 'tr_TR-fettah-medium';
+export const M1 = 'tr_TR-fahrettin-medium', M2 = 'tr_TR-fettah-medium';
+export const man = (name, piper = M1) => ({ id: `g-${name}`, piper, pitch: 1 });
 export const WOMAN = { id: 'tr-kadin', female: true, pitch: 1 }, GIRL = { id: 'tr-kiz', female: true, pitch: 1 }, GRANDMA = { id: 'tr-nine', female: true, pitch: 1 };
 export const VOICES = {
-  default: { id: M1, pitch: 1 },
-  ahmet: { id: M2, pitch: 1.18 },
+  default: man('Charon'),
+  ahmet: man('Puck', M2),
   anne: WOMAN,
   okuyucu: WOMAN, // reads library books aloud (on request)
-  baba: { id: M2, pitch: 0.9 },
-  dede: { id: M1, pitch: 0.84 },
+  baba: man('Orus', M2),
+  dede: man('Algenib'),
   ogretmen: WOMAN,
   elif: GIRL,
-  can: { id: M2, pitch: 1.28 },
+  can: man('Achird', M2),
   zehra: GIRL,
-  muhtar: { id: M1, pitch: 0.94 },
-  bakkal: { id: M2, pitch: 1.04 },
+  muhtar: man('Iapetus'),
+  bakkal: man('Umbriel', M2),
 };
 
 const kidFace = (bg, skin, hair, extra = '') => `<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${bg}"/>${extra}<circle cx="32" cy="36" r="14" fill="${skin}"/><path d="M18 33c1-9 7-13 14-13s13 4 14 13c-4-4-9-5-14-5s-10 1-14 5z" fill="${hair}"/><circle cx="27" cy="37" r="2" fill="#1B2440"/><circle cx="37" cy="37" r="2" fill="#1B2440"/><path d="M28 43q4 3 8 0" stroke="#B83A5A" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;

@@ -1,3 +1,4 @@
+import { man, M2 } from '../characters.js';
 /**
  * İsmail Dede runs the giant chess board on the square (systems/ChessGame.js): you tell him
  * which colour you want, he seats the players, keeps the time and the score board, and
@@ -24,7 +25,7 @@ export default {
       face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#E6D8C4"/><circle cx="32" cy="36" r="16" fill="#E2B48C"/><path d="M16 38q1-10 5-13v12zM48 38q-1-10-5-13v12z" fill="#EEEEEE"/><path d="M15 26q17-10 34 0v-3q-17-9-34 0z" fill="#6B4F3A"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M20 41q12 16 24 0q-4 6-12 6t-12-6z" fill="#EEEEEE"/></svg>',
     },
   },
-  voices: { ismail: { id: 'tr_TR-fettah-medium', pitch: 0.8 } },
+  voices: { ismail: man('Algieba', M2) },
   castAll: { ismail: ['village', 'chessDede', 'sitBench'] },
   dialogues: {
     ismail: { start: dedeStart, nodes: {

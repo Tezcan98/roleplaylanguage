@@ -82,6 +82,7 @@ import { WebSpeechTTS } from './services/speech/TextToSpeech.js';
 import { PiperTTS } from './services/speech/PiperTTS.js';
 import { ServerTTS } from './services/speech/ServerTTS.js';
 import { CharacterVoices } from './services/speech/CharacterVoices.js';
+import { SpeechRepo } from './services/speech/SpeechRepo.js';
 import { Settings } from './services/Settings.js';
 import { LocalSaveRepository } from './services/storage/SaveRepository.js';
 import { AutoSave } from './systems/AutoSave.js';
@@ -115,6 +116,7 @@ import { ListModal } from './ui/ListModal.js';
 import { DialogueView } from './ui/DialogueView.js';
 
 import { gloss, wordNote, loadGlossLang, glossLang } from './i18n/Gloss.js';
+import { man } from './content/characters.js';
 import { schoolDay } from './content/hotspots.js';
 import { setPlayerGender, setPlayerLook, playerGender, playerName, personalizeContent, setTeacher, teacherInfo } from './i18n/Persona.js';
 import { NpcChatClient } from './services/ai/NpcChatClient.js';
@@ -149,7 +151,7 @@ settings.set('teacher', setTeacher(params.get('teacher') ?? settings.get('teache
 {
   const t = teacherInfo();
   NPCS.ogretmen.name = `${t.name} Öğretmen`;
-  if (t.gender === 'm') { Object.assign(NPCS.ogretmen, TEACHER_MAN); VOICES.ogretmen = { id: 'tr_TR-fahrettin-medium', pitch: 1.0 }; }
+  if (t.gender === 'm') { Object.assign(NPCS.ogretmen, TEACHER_MAN); VOICES.ogretmen = man('Iapetus'); }
 }
 personalizeContent(STORY, DIALOGUES, FREE_ACTIONS, HOUSE_RULES, LESSONS, CLASSMATE_BOTS, TEXTBOOK, ITEMS);
 if (playerGender() === 'girl') VOICES.ahmet = { id: 'tr-kiz', female: true, pitch: 1 }; // the player's own voice
@@ -211,6 +213,7 @@ const controller = new PlayerController({ player, input, world, modes, cast, cam
 const progressShown = new Set();
 const ttsServerUrl = manifest.ttsServer ?? villageServer.replace(/^ws/, 'http').replace(/\/ws\/village$/, '/api/tts');
 const tts = new CharacterVoices({
+  repo: params.has('nospeechrepo') ? null : new SpeechRepo(),
   server: params.has('nospeechserver') ? null : new ServerTTS(params.get('tts') ?? ttsServerUrl),
   neural: new PiperTTS({
     onProgress: (voice, f) => {

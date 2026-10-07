@@ -32,7 +32,7 @@ const http = createServer(async (req, res) => {
   if (npcChatRoute(req, res, { chat })) return;
   if (req.url.startsWith('/api/tts')) {
     const u = new URL(req.url, 'http://x');
-    const r = await tts.handle(u.searchParams.get('v'), u.searchParams.get('t'), req.socket.remoteAddress);
+    const r = await tts.handle(u.searchParams.get('v'), u.searchParams.get('t'), req.socket.remoteAddress, u.searchParams.get('f') ?? undefined);
     res.writeHead(r.status, { 'Content-Type': r.status === 200 ? 'audio/wav' : 'application/json' });
     return res.end(r.status === 200 ? r.body : JSON.stringify({ error: r.error }));
   }

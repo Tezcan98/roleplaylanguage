@@ -78,3 +78,25 @@ test('Gemini quota used up (429): no more asking until Google says, the page use
   assert.ok(tts.geminiPausedUntil - Date.now() > 3500_000, 'for the hour Google asked');
   assert.equal((await tts.handle('fettah', 'Merhaba', 'x')).status, 200, 'men’s voices (Piper) still work');
 });
+
+test('men and boys: their own Gemini voice (no more robotic Piper); Piper when Gemini can not', async () => {
+  const dir = fakePiper();
+  const voices = [];
+  let fail = false;
+  const fetch = async (url, { body }) => {
+    voices.push(JSON.parse(body).generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName);
+    if (fail) return { ok: false, status: 500 };
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ inlineData: { mimeType: 'audio/L16;rate=24000', data: Buffer.from([1, 0]).toString('base64') } }] } }] }) };
+  };
+  const tts = new Tts({ piperDir: dir, cacheDir: join(dir, 'cache'), gemini: { key: 'k', models: ['a'], perDay: 2, fetch }, log: () => {} });
+  const a = await tts.handle('g-Orus', 'Kolay gelsin!', 'x', 'fettah');
+  assert.equal(a.status, 200);
+  assert.equal(voices[0], 'Orus');
+  assert.equal(readdirSync(dir).includes('runs.log'), false, 'Piper did not run');
+  fail = true;
+  const b = await tts.handle('g-Algenib', 'Hoş geldin evladım.', 'x', 'fahrettin');
+  assert.equal(b.body.toString(), 'RIFFHoş geldin evladım.\n', 'Gemini failed: Piper speaks instead');
+  assert.equal((await tts.handle('g-Nobody', 'Merhaba', 'x')).body.toString(), 'RIFFMerhaba\n', 'unknown voice name: Piper');
+  const off = new Tts({ piperDir: dir, cacheDir: join(dir, 'cache3'), log: () => {} });
+  assert.equal((await off.handle('g-Orus', 'Selam', 'x', 'fettah')).status, 200, 'no Gemini key: Piper');
+});

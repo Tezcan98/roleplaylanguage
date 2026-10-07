@@ -1,3 +1,4 @@
+import { man, M2 } from '../characters.js';
 /**
  * The village square's tea garden: Osman the tea maker (çaycı) at the çay ocağı. Ordering tea
  * practises polite requests and numbers (how many sugars); free chat with him on Gemini.
@@ -25,9 +26,9 @@ export default {
     },
   },
   voices: {
-    cayci: { id: 'tr_TR-fahrettin-medium', pitch: 1.06 },
-    huseyin: { id: 'tr_TR-fahrettin-medium', pitch: 0.85 },
-    kadir: { id: 'tr_TR-fettah-medium', pitch: 0.9 },
+    cayci: man('Zubenelgenubi'),
+    huseyin: man('Rasalgethi'),
+    kadir: man('Alnilam', M2),
   },
   castAll: {
     cayci: ['village', 'cayci', 'stand'],
