@@ -2,6 +2,12 @@ import * as THREE from 'three';
 import { Chess } from 'chess.js';
 import { chessSquare, CHESS } from '../world/locations/VillageSquare.js';
 import { el } from '../ui/dom.js';
+import { playerName } from '../i18n/Persona.js';
+
+/** Offline score board (you and Dede): real games only, kept on the device. */
+const LOCAL_SCORES = 'chessScores';
+const loadScores = () => { try { return JSON.parse(localStorage.getItem(LOCAL_SCORES) ?? '{}'); } catch { return {}; } };
+const MIN_MOVES = 6; // walking away from the board (resign) counts only after a few moves
 
 /** Turkish piece names (taught while playing). */
 export const PIECE_WORDS = { k: ['şah', 'king'], q: ['vezir', 'queen'], r: ['kale', 'rook'], b: ['fil', 'bishop'], n: ['at', 'knight'], p: ['piyon', 'pawn'] };
@@ -204,7 +210,7 @@ export class ChessGame {
     const seats = L.mine ? { [L.mine]: me, [L.mine === 'w' ? 'b' : 'w']: DEDE } : { w: null, b: null };
     const now = Date.now(), playing = L.phase === 'playing';
     return {
-      phase: L.phase, fen: L.game.fen(), turn: L.game.turn(), last: L.last, result: L.result, seats, queue: [], scores: [], draw: { ...L.draw },
+      phase: L.phase, fen: L.game.fen(), turn: L.game.turn(), last: L.last, result: L.result, seats, queue: [], scores: this.#localScores(), draw: { ...L.draw },
       clocks: { ...L.clocks, ...(playing ? { [L.game.turn()]: Math.max(0, L.clocks[L.game.turn()] - (now - L.turnAt)) } : {}) },
       running: playing ? L.game.turn() : null,
     };
@@ -250,9 +256,29 @@ export class ChessGame {
     }
   }
 
+  /** The offline board: you and Dede, most games first (only games really played). */
+  #localScores() {
+    const s = loadScores(), me = s.me, dede = s.dede;
+    return [me && { name: playerName() || 'Sen', games: me.games, wins: me.wins }, dede && { name: 'İsmail Dede', games: dede.games, wins: dede.wins }]
+      .filter((r) => r?.games > 0).sort((a, b) => b.games - a.games || b.wins - a.wins);
+  }
+
+  #recordLocal(winner, reason) {
+    const L = this.#local;
+    if (!L.mine || (reason === 'resign' && L.game.history().length < MIN_MOVES)) return; // leaving at once is no game
+    const s = loadScores(), mine = L.mine;
+    for (const [k, c] of [['me', mine], ['dede', mine === 'w' ? 'b' : 'w']]) {
+      const r = s[k] ?? { games: 0, wins: 0 };
+      r.games++; if (winner === c) r.wins++;
+      s[k] = r;
+    }
+    try { localStorage.setItem(LOCAL_SCORES, JSON.stringify(s)); } catch { /* private mode: the board just stays as it is */ }
+  }
+
   #localFinish(winner, reason, points = null) {
     const L = this.#local;
     clearInterval(this.#timer);
+    this.#recordLocal(winner, reason);
     Object.assign(L, { phase: 'over', result: { winner, reason, ...(points ? { points } : {}) } });
     this.#apply(this.#localState());
     setTimeout(() => { if (!this.online && this.#local === L) { this.#resetLocal(); this.#apply(this.#localState(), true); } }, PAUSE);

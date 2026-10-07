@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { buildPitch } from '../Pitch.js';
-import { addTrashBin } from '../trashBin.js';
+// import { addTrashBin } from '../trashBin.js';
 
 const WOOD = { tex: 'darkWood' };
 const LIGHT_WOOD = { tex: 'lightWood' };
@@ -93,10 +93,10 @@ export class VillageSquare extends Location {
     C.addBox(-2.2, 2.2, -10.0, -8.4);
     this.anchor('manav', 0, -7.8, 0);
     this.hotspot('village.manavStall', -1.8, -7.7, 1.0); // the greengrocer's shop window
-    addTrashBin(this, mf, C, 'village.trash1', 3.0, -8.6); // between the greengrocer and the grocer
-    addTrashBin(this, mf, C, 'village.trash2', 5.6, -4.4);
-    // more round the square: by the fountain benches, the library, the west benches, the tea garden
-    [[-7.6, 5.4], [7.6, 5.4], [-22, -16.6], [-18, 0], [7.4, 9.5]].forEach(([x, z], i) => addTrashBin(this, mf, C, `village.trash${i + 3}`, x, z));
+    // addTrashBin(this, mf, C, 'village.trash1', 3.0, -8.6); // between the greengrocer and the grocer
+    // addTrashBin(this, mf, C, 'village.trash2', 5.6, -4.4);
+    // // more round the square: by the fountain benches, the library, the west benches, the tea garden
+    // [[-7.6, 5.4], [7.6, 5.4], [-22, -16.6], [-18, 0], [7.4, 9.5]].forEach(([x, z], i) => addTrashBin(this, mf, C, `village.trash${i + 3}`, x, z));
 
     // the tailor's stall (terzi): HD outfits on a mannequin (main.js puts the model on it); opens the shop
     this.prop(kit, 'prop.terzi', -5, 0, -9.4, 0, () => mf.group(

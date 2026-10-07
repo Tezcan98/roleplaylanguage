@@ -56,7 +56,8 @@ export const HOTSPOTS = {
   },
   // what you bought: on the sini at home, or in a rubbish bin (systems/TableAndBins.js)
   'house.tableGoods': { label: 'Masaya koy', use: ['table-goods'], available: (c) => looseGoods(c.state).length > 0 || c.state.table?.length > 0 },
-  ...Object.fromEntries(['house.trash', 'yard.trash', ...Array.from({ length: 7 }, (_, i) => `village.trash${i + 1}`), 'school.trash1', 'school.trash2'].map((id) => [id, { label: 'Çöpe at', use: ['trash'] }])), // TRASH bins (world/trashBin.js)
+  // rubbish bins: off for now (world/trashBin.js, TableAndBins.atBin)
+  // ...Object.fromEntries(['house.trash', 'yard.trash', ...Array.from({ length: 7 }, (_, i) => `village.trash${i + 1}`), 'school.trash1', 'school.trash2'].map((id) => [id, { label: 'Çöpe at', use: ['trash'] }])), // TRASH bins (world/trashBin.js)
   'house.tea': free('make_tea'),
   'house.table': free('set_table'),
   'house.dishes': free('wash_dishes'),

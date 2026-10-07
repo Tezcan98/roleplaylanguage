@@ -488,3 +488,14 @@ body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.op
 .market .mk-buy[disabled]{background:#5A4A3A;color:#BBA98F}
 .market .mk-purse{margin-top:8px;text-align:right;font-weight:700;color:#F4E6C8}
 .market .mk-purse b{color:#F1C66A}
+.market .mk-win{max-height:calc(100dvh - 24px);overflow:auto}
+/* a phone held sideways: shelf on the left, the chosen thing and the money on the right (all in view, the × too) */
+@media (max-height:560px){
+  .overlay.market{padding-top:calc(env(safe-area-inset-top,0px) + 8px);padding-bottom:8px}
+  .market .mk-win{width:min(600px,96vw);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto 1fr auto;grid-template-areas:"head head" "grid info" "grid purse";column-gap:12px}
+  .market .mk-head{grid-area:head;margin-bottom:6px;padding-bottom:6px}
+  .market .mk-grid{grid-area:grid;grid-template-columns:repeat(4,min(64px,14vh));align-self:start}
+  .market .mk-info{grid-area:info;margin-top:0;min-height:0}
+  .market .mk-purse{grid-area:purse;align-self:end}
+  .market .mk-icon{font-size:min(26px,6vh)}
+}

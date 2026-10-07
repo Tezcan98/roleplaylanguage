@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Location } from '../Location.js';
-import { addTrashBin } from '../trashBin.js';
+// import { addTrashBin } from '../trashBin.js';
 
 const WALL = { tex: 'plaster', repeat: [3, 1] };
 const DARK = { tex: 'darkWood', repeat: [1, 1] };
@@ -175,7 +175,7 @@ export class HouseInterior extends Location {
     this.hotspot('house.kitchen', 7.05, -3.35, 1.0); // water from the fridge
     this.hotspot('house.tea', 9.05, -3.35, 1.0);
     this.hotspot('house.dishes', 9.85, -3.35, 1.0);
-    addTrashBin(this, mf, C, 'house.trash', 11.75, -3.95, 0.95).scale.setScalar(0.8); // the kitchen's rubbish bin
+    // addTrashBin(this, mf, C, 'house.trash', 11.75, -3.95, 0.95).scale.setScalar(0.8); // the kitchen's rubbish bin
     this.prop(kit, 'prop.broom', 12.35, 0, -1.2, Math.PI / 2, () => mf.group(
       mf.at(mf.cyl(0.025, 0.025, 1.35, DARK, 8), 0, 0.68, 0),
       mf.at(mf.box(0.32, 0.12, 0.08, { tex: 'lightWood' }), 0, 0.08, 0)

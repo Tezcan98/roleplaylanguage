@@ -139,11 +139,14 @@ export function addLookExtras(scene, holder, look) {
       [-1, 1].forEach((s) => put(new THREE.Mesh(new THREE.TorusGeometry(fw * 0.2, fw * 0.035, 6, 18), rim), c.x + s * fw * 0.27, face.min.y + fh * 0.3, face.max.z + fh * 0.12));
       put(new THREE.Mesh(new THREE.BoxGeometry(fw * 0.14, fw * 0.035, fw * 0.035), rim), c.x, face.min.y + fh * 0.35, face.max.z + fh * 0.12);
     }
+    // the cap: off on the HD model for now (it looked like a big pot on the head)
+    /*
     if (look.cap) {
       const top = hair.isEmpty() ? face.max.y + fh * 2 : hair.max.y, r = hair.isEmpty() ? fw * 0.8 : (hair.max.x - hair.min.x) * 0.47;
       put(new THREE.Mesh(new THREE.CylinderGeometry(r, r, fh * 0.9, 18), mat(look.cap)), c.x, top - fh * 0.2, c.z - fw * 0.25);
       put(new THREE.Mesh(new THREE.BoxGeometry(r * 1.1, fh * 0.12, r * 0.8), mat(look.cap)), c.x, top - fh * 0.6, face.max.z + r * 0.15);
     }
+    */
     if (look.apron && !shirt.isEmpty() && hips) {
       const w = (shirt.max.x - shirt.min.x) * 0.5, h = (shirt.max.y - shirt.min.y) * 1.25;
       put(new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.02), mat(0xFFFFFF)), c.x, shirt.max.y - h * 0.62, shirt.max.z + 0.012, hips);

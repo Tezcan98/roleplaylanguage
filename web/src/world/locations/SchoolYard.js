@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { Foliage } from '../../engine/Foliage.js';
 import { buildPitch } from '../Pitch.js';
-import { addTrashBin } from '../trashBin.js';
+// import { addTrashBin } from '../trashBin.js';
 
 const DARK = { tex: 'darkWood' };
 
@@ -48,8 +48,8 @@ export class SchoolYard extends Location {
     });
     C.addBox(-10.1, 10.1, -16.1, -9.9);
     this.hotspot('school.door', 0, -9.2, 1.6);
-    addTrashBin(this, mf, C, 'school.trash1', 3.5, -8.6);
-    addTrashBin(this, mf, C, 'school.trash2', 2.6, 10.4);
+    // addTrashBin(this, mf, C, 'school.trash1', 3.5, -8.6);
+    // addTrashBin(this, mf, C, 'school.trash2', 2.6, 10.4);
 
     // flagpole with the Turkish flag (beside the pitch)
     add(mf.at(mf.cyl(0.06, 0.08, 7, { tex: 'metal' }, 8), 12.6, 3.5, -8.6));

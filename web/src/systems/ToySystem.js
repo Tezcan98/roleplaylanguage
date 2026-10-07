@@ -11,6 +11,7 @@ const SHOT_RANGE = 1.6;       // m: a hard shot reaches a ball this close
 export class ToySystem {
   #last = null;
   #wordsAt = -Infinity;
+  #dt = 0;
 
   constructor({ world, player, free, tts }) {
     Object.assign(this, { world, player, free, tts });
@@ -58,7 +59,15 @@ export class ToySystem {
     return best;
   }
 
+  /** Is the player facing (roughly) towards `q`? */
+  #towards(q) {
+    const p = this.player.position, rot = this.player.group.rotation.y;
+    const dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz) || 1;
+    return (dx * Math.sin(rot) + dz * Math.cos(rot)) / d > 0.5;
+  }
+
   update(dt, t) {
+    this.#dt = dt;
     const p = this.player.position;
     const speed = this.#last && dt > 0 ? dist(p, this.#last) / dt : 0;
     this.#last = { x: p.x, z: p.z };
@@ -74,10 +83,13 @@ export class ToySystem {
   #touch(entry, speed, t) {
     const { toy } = entry, p = this.player.position;
     const d = dist(toy.position, p), reach = toy.radius + PLAYER_R;
+    // the leg swings a moment before the foot meets the ball (running at it), not after
+    if (speed > 0.5 && d < reach + 0.45 && (entry.swing ?? 0) <= 0 && this.#towards(toy.position)) { this.player.kick?.(Math.min(1, speed / 6)); entry.swing = 0.5; }
+    entry.swing = (entry.swing ?? 0) - this.#dt;
     if (d >= reach) return;
     if (speed > 0.5 && entry.cool <= 0) {
       toy.kick(p, Math.min(1, speed / 6));
-      this.player.kick?.(Math.min(1, speed / 6));
+      if ((entry.swing ?? 0) <= 0) { this.player.kick?.(Math.min(1, speed / 6)); entry.swing = 0.5; }
       entry.cool = KICK_COOLDOWN;
       entry.onKick?.(toy);
       if (!entry.quiet && t - this.#wordsAt > WORDS_EVERY) { this.#wordsAt = t; this.free.perform(entry.action); }

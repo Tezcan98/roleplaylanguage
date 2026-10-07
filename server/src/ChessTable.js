@@ -239,9 +239,11 @@ export class ChessTable {
     this.phase = 'over';
     this.overAt = this.now();
     this.result = { winner, reason, ...(pts ? { points: pts } : {}) };
+    // a game someone walked away from (or that waited too long) after a move or two is no game for the board
+    const played = !['left', 'limit'].includes(reason) || this.game.history().length >= 6;
     for (const c of ['w', 'b']) {
       const s = this.seats[c];
-      if (!s || s.ai) continue;
+      if (!played || !s || s.ai) continue;
       const key = s.name.toLocaleLowerCase('tr');
       const row = this.scores.get(key) ?? { name: s.name, games: 0, wins: 0, draws: 0, losses: 0 };
       row.name = s.name;

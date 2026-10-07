@@ -96,7 +96,7 @@ export class Character {
 
   /** Kick the ball: the right leg swings back and through (`power` 0–1: a hard shot swings more). */
   kick(power = 0.6, hold = null) { // `hold` (0–1): stop at that moment of the swing (tools: pictures of the pose)
-    if (!this.seated && !this.posed) this.#kick = { t: (hold ?? 0) * 0.42, dur: 0.42, power: 0.6 + 0.6 * power, hold: hold != null };
+    if (!this.seated && !this.posed) this.#kick = { t: (hold ?? 0) * 0.3, dur: 0.3, power: 0.6 + 0.5 * power, hold: hold != null };
   }
 
   /** The kicking leg on top of the walk (blocky: the leg joint; HD: the thigh bone, after the animation). */
@@ -104,7 +104,7 @@ export class Character {
     const k = this.#kick;
     if (!k) return;
     const p = Math.min(1, k.t / k.dur);
-    const a = (p < 0.3 ? 0.5 * (p / 0.3) : 0.5 - 1.9 * Math.sin(((p - 0.3) / 0.7) * Math.PI)) * k.power; // back, then through
+    const a = -1.5 * Math.sin(p * Math.PI) * k.power; // straight through and back (no wind-up: it would come after the ball has gone)
     this.rig.legR.rotation.x = a; // + swings the leg back, − forward
     const thigh = this.mixer && this.mixer === this.#hd?.mixer ? this.#hd.scene.getObjectByName('UpperLegR') : null;
     if (thigh) thigh.rotateX(a); // the bone's x axis turns the same way as the blocky leg's
@@ -238,9 +238,10 @@ export class Character {
 
   #playClip(name) {
     if (!this.mixer || this.current === name || !this.clips[name]) return;
-    // every other running clip fades out (not only `current`: after a reset of `current` the
-    // idle kept playing under the sit and the two mixed into a half-standing pose)
-    Object.entries(this.clips).forEach(([n, a]) => { if (n !== name && a.isRunning()) a.fadeOut(0.2); });
+    // every other clip still weighing on the body fades out — not only `current` (after a reset of
+    // `current` the idle kept playing under the sit), and also a finished, held one: the sit after
+    // getting up from a bench (it is paused, not "running") kept the walk crouched
+    Object.entries(this.clips).forEach(([n, a]) => { if (n !== name && a.isScheduled() && a.getEffectiveWeight() > 0) a.fadeOut(0.2); });
     this.clips[name].reset().fadeIn(0.2).play();
     this.current = name;
   }
