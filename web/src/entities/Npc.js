@@ -1,8 +1,12 @@
 import { Character } from './Character.js';
 import { Behaviors } from './Behaviors.js';
 
-/** Villagers are HD characters on the square (Character.setHd), blocky everywhere else. */
+/**
+ * Villagers are HD characters on the square (Character.setHd), blocky everywhere else — only for
+ * a player who is HD too (bought in the shop): `HD_VILLAGERS.on`, set by main.js.
+ */
 export const HD_PLACES = new Set(['village']);
+export const HD_VILLAGERS = { on: false };
 /** The HD model and dressing for a villager's blocky look. */
 export function villagerHd(look) {
   const woman = !!(look.skirt || look.headscarf || look.bun);
@@ -45,9 +49,12 @@ export class Npc extends Character {
     this.#hdFor(location.id);
   }
 
+  /** After the player became HD (or stopped being): the villagers follow. */
+  refreshHd() { if (this.location) this.#hdFor(this.location); }
+
   /** HD on the square, blocky elsewhere; sitting behaviours sit the HD body down. */
   #hdFor(place) {
-    const on = HD_PLACES.has(place);
+    const on = HD_VILLAGERS.on && HD_PLACES.has(place);
     if (!on && !this.hdOn) return;
     this.hdOn = on;
     const { key, opts } = villagerHd(this.appearance);

@@ -386,6 +386,7 @@ try {
     check('…tomorrow is day 2 (+4)', JSON.stringify(await e2(() => window.__game.wallet.daily(Date.now() + 864e5))) === '{"day":2,"amount":4}');
     await p2.click('.main-menu.open [aria-label="Dükkan"]'); await sleep(400);
     check('shop opens from the menu', !!(await p2.$('.shop.open')));
+    check('blocky player: the villagers on the square are blocky too', await e2(() => !window.__game.cast.get('manav').hdOn));
     await p2.click('.shop.open .shop-card:has-text("Video izle") button');
     await waitFor(() => p2.$('.overlay.ad button:not([disabled])'), 6000); await p2.click('.overlay.ad button');
     await sleep(300);
@@ -399,6 +400,7 @@ try {
     await e2(() => { window.__game.wallet.add(125); window.__game.shop.render(); }); // 181
     await p2.click('.shop.open .shop-card:has-text("HD karakter") button'); await sleep(300);
     check('the HD character (120 credits): bought and on, in its everyday clothes', (await e2(() => window.__game.wallet.equipped('hd'))) === 'hd' && (await e2(() => window.__game.wallet.balance)) === 61);
+    check('…and the villagers on the square are HD for you now', await waitFor(() => e2(() => window.__game.cast.get('manav').hdOn === true), 4000));
     await p2.click('.shop.open .shop-card:has-text("Günlük kıyafet") button'); await sleep(300);
     check('an outfit (30 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 31);
     await p2.click('.shop.open .shop-card:has-text("Yıldız Işığı") button'); await sleep(300);

@@ -28,7 +28,7 @@ import { Classroom } from './world/locations/Classroom.js';
 import { VillageSquare, SQUARE_PITCH } from './world/locations/VillageSquare.js';
 
 import { Player } from './entities/Player.js';
-import { Npc } from './entities/Npc.js';
+import { Npc, HD_VILLAGERS } from './entities/Npc.js';
 
 import { TimeSystem } from './systems/TimeSystem.js';
 import { DayNightLighting } from './systems/DayNightLighting.js';
@@ -380,7 +380,12 @@ const village = new VillageMultiplayer({
 village.autoName = () => `${playerName()}${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question
 village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // others see them too
 // the HD character from the shop: everywhere once bought — home too (prayer poses use the blocky body for a moment)
-const playerHd = () => { player.setAura(auraOn(wallet)); const o = outfitOn(wallet); player.setHd(models, outfitModel(o ?? 'casual', playerGender()), !!o, { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: o === 'dress' }); };
+const playerHd = () => {
+  player.setAura(auraOn(wallet)); const o = outfitOn(wallet);
+  player.setHd(models, outfitModel(o ?? 'casual', playerGender()), !!o, { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: o === 'dress' });
+  // an HD player (credits spent in the shop) sees the villagers on the square in HD too
+  if (HD_VILLAGERS.on !== !!o) { HD_VILLAGERS.on = !!o; npcs.forEach((n) => n.refreshHd()); }
+};
 bus.on(EV.LOCATION, playerHd);
 playerHd();
 
