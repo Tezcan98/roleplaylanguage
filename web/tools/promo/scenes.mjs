@@ -86,13 +86,13 @@ export const SCENES = [
       const page = await story(kit);
       await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
       await kit.sleep(3500); await kit.closeCards(page); await kit.hideHud(page);
-      await page.evaluate(() => { const g = window.__game, m = g.cast.get('muhtar'); g.player.position.set(m.position.x + 1.6, 0, m.position.z + 1.2); g.camera.snap(g.player.position, false); });
+      await page.evaluate(() => { const g = window.__game, m = g.cast.get('bakkal'); g.player.position.set(m.position.x + 0.3, 0, m.position.z + 1.9); g.camera.snap(g.player.position, false); });
       await kit.sleep(800);
       return page;
     },
     act: async (kit, page) => {
       await kit.caption(page, 'Konuş, seni anlasın', 'Speak Turkish out loud, the game listens');
-      await page.evaluate(() => window.__game.dialogue.open('muhtar', 'm1'));
+      await page.evaluate(() => window.__game.dialogue.open('bakkal', 'm1'));
       await kit.sleep(2600);
       await page.click('#dlg .mic').catch(() => {});
     },

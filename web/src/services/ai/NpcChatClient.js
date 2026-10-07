@@ -3,7 +3,7 @@
  * The server owns the character prompts and the Gemini key; this only sends the player's
  * line with the last turns and returns { reply, meaning, correction, words }.
  */
-const PERSONAS = new Set(['manav', 'bakkal', 'muhtar', 'elif', 'can', 'zehra', 'ogretmen', 'anne', 'baba', 'dede', 'nine', 'kardes', 'cayci']);
+const PERSONAS = new Set(['manav', 'bakkal', 'elif', 'can', 'zehra', 'ogretmen', 'anne', 'baba', 'dede', 'nine', 'kardes', 'cayci']);
 const KEEP_TURNS = 10;
 
 export class NpcChatClient {

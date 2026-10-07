@@ -49,8 +49,8 @@ export const TALK_SPOTS = {
 };
 
 /**
- * Village square east of the yard: a working fountain in the middle, the grocer, the
- * muhtar's office, the greengrocer's stall, a tea garden (çay ocağı) with tables, a giant
+ * Village square east of the yard: a working fountain in the middle, the grocer's shop (open
+ * at the front: shelves, counter, crates), the greengrocer's stall, a tea garden (çay ocağı) with tables, a giant
  * chess board with İsmail Dede's bench, his score board and benches to watch from, a fenced
  * football pitch, an open-air coffeehouse (kahvehane) where the uncles chat, an open library
  * with Aslan Bey, the well, benches and trees in stone rings. Nothing that people sit under
@@ -72,28 +72,7 @@ export class VillageSquare extends Location {
     C.addCircle(0, 0, 2.8);
     this.hotspot('village.fountain', 0, 3.4, 1.8);
 
-    // grocer
-    this.prop(kit, 'prop.bakkal', 9.8, 0, -7.5, 0, () => mf.group(
-      mf.at(mf.box(7, 3.6, 5.2, { tex: 'plaster', repeat: [2, 1] }), 0, 1.8, 0),
-      mf.at(mf.box(7.5, 0.25, 1.3, { tex: 'roof', repeat: [3, 1] }), 0, 3.75, 0),
-      mf.at(mf.box(3.4, 1.8, 0.15, WOOD), 0, 1.3, 2.66),
-      mf.at(mf.box(3.8, 0.35, 1.1, LIGHT_WOOD), 0, 2.75, 2.9),
-      mf.at(mf.box(0.8, 0.9, 0.8, LIGHT_WOOD), -2.3, 0.45, 2.85),
-      mf.at(mf.box(0.8, 0.9, 0.8, LIGHT_WOOD), 2.3, 0.45, 2.85)));
-    C.addBox(6.1, 13.5, -10.2, -4.9);
-    this.anchor('bakkal', 9.8, -3.7, Math.PI);
-    // by the side crates, outside the grocer's talk range so both actions are reachable
-    this.hotspot('village.bakkalCounter', 12.9, -4.2, 1.0);
-
-    // muhtar's office with a flag
-    this.prop(kit, 'prop.muhtarOffice', -10, 0, -7.5, 0, () => mf.group(
-      mf.at(mf.box(6.5, 3.5, 5.5, { tex: 'whiteWall', repeat: [2, 1] }), 0, 1.75, 0),
-      mf.at(mf.box(7, 0.25, 1.4, { tex: 'roof', repeat: [3, 1] }), 0, 3.65, 0),
-      mf.at(mf.box(2.6, 1.9, 0.15, WOOD), 0, 1.25, 2.78),
-      mf.at(mf.box(0.08, 3.2, 0.08, WOOD), -2.3, 2.7, 2.95),
-      mf.at(mf.box(0.9, 0.55, 0.05, { tex: 'flag' }), -1.8, 3.65, 2.95)));
-    C.addBox(-13.3, -6.7, -10.3, -4.7);
-    this.anchor('muhtar', -10, -3.7, Math.PI);
+    this.#grocer(kit, mf, C);
 
     // greengrocer's stall (manav) behind the fountain
     this.prop(kit, 'prop.manavStall', 0, 0, -9.2, 0, () => {
@@ -471,5 +450,63 @@ export class VillageSquare extends Location {
       this.#stool(mf, `kitap${n}`, x - 0.4, z - 0.85, 0);
       this.#stool(mf, `kitap${n + 1}`, x + 0.4, z - 0.85, 0);
     });
+  }
+  /**
+   * Bakkal: a small shop open at the front so the camera sees in — shelves of goods along
+   * the walls (under a roof at the back only), Mehmet behind the counter with the scales and
+   * the till, bread and crates outside under a striped awning, a sign over the door.
+   */
+  #grocer(kit, mf, C) {
+    const add = (m) => this.add(m), x = 9.8, z = -7.55, w = 7.4, d = 5.3;
+    const x0 = x - w / 2, x1 = x + w / 2, z0 = z - d / 2, z1 = z + d / 2, H = 3.2, T = 0.25, wall = { tex: 'plaster', repeat: [2, 1] };
+    add(mf.at(mf.box(w, H, T, wall), x, H / 2, z0)); C.addBox(x0, x1, z0 - T / 2, z0 + T / 2);
+    [x0, x1].forEach((wx) => { add(mf.at(mf.box(T, H, d, wall), wx, H / 2, z)); C.addBox(wx - T / 2, wx + T / 2, z0, z1); });
+    add(mf.at(mf.box(w + 0.3, 0.2, 1.8, { tex: 'roof', repeat: [3, 1] }), x, H + 0.1, z0 + 0.8)); // roof over the shelves only
+    const floor = add(mf.ground(w - 0.3, d - 0.2, { tex: 'floorWood', repeat: [3, 2] }, 0.03)); floor.position.x = x; floor.position.z = z;
+    // shelves with goods on three walls
+    const shelf = (sx, sz, sw, rot) => {
+      const g = new THREE.Group();
+      g.add(mf.at(mf.box(sw, 2.3, 0.5, WOOD), 0, 1.15, 0));
+      g.add(mf.at(mf.box(sw - 0.14, 2.1, 0.02, { tex: 'groceryShelf', repeat: [Math.max(1, Math.round(sw / 1.4)), 1] }), 0, 1.15, 0.26));
+      g.position.set(sx, 0, sz); g.rotation.y = rot;
+      return add(g);
+    };
+    shelf(x, z0 + 0.4, w - 0.8, 0);
+    shelf(x0 + 0.4, z - 0.2, d - 1.6, Math.PI / 2);
+    shelf(x1 - 0.4, z - 0.2, d - 1.6, -Math.PI / 2);
+    C.addBox(x0, x1, z0, z0 + 0.7); C.addBox(x0, x0 + 0.7, z0, z1 - 0.8); C.addBox(x1 - 0.7, x1, z0, z1 - 0.8);
+    // the counter across the front, with scales, till and a jar of sweets
+    const cz = z1 - 1.9;
+    add(mf.at(mf.box(3.2, 1.0, 0.7, LIGHT_WOOD), x, 0.5, cz));
+    add(mf.at(mf.box(3.3, 0.06, 0.8, WOOD), x, 1.03, cz));
+    add(mf.at(mf.box(0.45, 0.3, 0.35, 0x34495E), x + 1.1, 1.21, cz)); // till
+    add(mf.at(mf.cyl(0.16, 0.16, 0.03, { tex: 'metal' }, 16), x - 1.05, 1.2, cz)); // scales: pan
+    add(mf.at(mf.box(0.3, 0.12, 0.3, 0xB0B6BE), x - 1.05, 1.1, cz)); // scales: body
+    add(mf.at(mf.cyl(0.13, 0.13, 0.3, 0xD6EAF8, 12), x - 0.3, 1.21, cz)); // jar of sweets
+    [0xE4574A, 0xF4D03F, 0x5DADE2, 0x58D68D].forEach((c, i) => add(mf.at(mf.sphere(0.04, c, 6), x - 0.36 + (i % 2) * 0.1, 1.12 + Math.floor(i / 2) * 0.08, cz)));
+    C.addBox(x - 1.6, x + 1.6, cz - 0.35, cz + 0.35);
+    this.anchor('bakkal', x, cz - 0.75, 0); // behind the counter, facing the square
+    this.hotspot('village.bakkalCounter', x1 - 1.0, z1 + 0.9, 1.0);
+    // outside: bread basket, crates of produce and milk bottles under a striped awning
+    add(mf.at(mf.box(w + 0.4, 0.06, 1.6, { tex: 'awning', repeat: [4, 1] }), x, 2.75, z1 + 0.6)).rotation.x = 0.18;
+    [x0 + 0.1, x1 - 0.1].forEach((px) => add(mf.at(mf.box(0.1, 2.7, 0.1, WOOD), px, 1.35, z1 + 1.35)));
+    const crate = (cx, color, n = 6) => {
+      add(mf.at(mf.box(0.8, 0.45, 0.6, LIGHT_WOOD), cx, 0.23, z1 + 0.7));
+      for (let k = 0; k < n; k++) add(mf.at(mf.sphere(0.09, color, 8), cx - 0.24 + (k % 3) * 0.24, 0.5, z1 + 0.58 + Math.floor(k / 3) * 0.24));
+    };
+    crate(x0 + 0.8, 0xC8A15B); // bread rolls
+    crate(x0 + 1.75, 0xF39C12);
+    [0, 1, 2, 3].forEach((k) => add(mf.at(mf.cyl(0.07, 0.07, 0.32, 0xF8F9F9, 8), x1 - 1.9 + k * 0.17, 0.16, z1 + 0.7))); // milk bottles
+    C.addBox(x0 + 0.35, x0 + 2.2, z1 + 0.35, z1 + 1.05);
+    // sign over the door
+    const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+    const g = c.getContext('2d');
+    g.fillStyle = '#2E5E3A'; g.fillRect(0, 0, 512, 96);
+    g.fillStyle = '#F4D58D'; g.font = 'bold 58px Fredoka, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('MEHMET BAKKAL', 256, 51);
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.64), new THREE.MeshBasicMaterial({ map: tex }));
+    sign.position.set(x, H + 0.45, z1 + 0.02); add(sign);
+    add(mf.at(mf.box(3.5, 0.72, 0.06, WOOD), x, H + 0.45, z1 - 0.03));
   }
 }

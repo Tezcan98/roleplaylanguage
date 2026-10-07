@@ -16,14 +16,14 @@ export default {
         anne: ['house', 'kitchen', 'cook'],
         baba: ['house', 'sedirL', 'sitBench'],
         dede: ['house', 'sedirR', 'sitBench'],
-        muhtar: ['house', 'sofraGuest', 'sitFloor'], // tonight's guest
+        ismail: ['house', 'sofraGuest', 'sitFloor'], // tonight's guest: İsmail Dede, grandpa's old friend
         bakkal: ['village', 'bakkal', 'stand'],
         ogretmen: null, elif: null, can: null, zehra: null,
       },
       intro: {
         num: 'Perşembe · Bölüm 17', title: 'Perşembe akşamı',
-        text: 'Okul güzel geçti. Bu akşam Cuma gecesi: muhtar amca misafirimiz. Yatsı namazını evde hep birlikte, cemaatle kılacağız.',
-        en: 'School went well. Tonight is the eve of Friday: the muhtar is our guest. We will pray the night prayer together at home, in congregation.',
+        text: 'Okul güzel geçti. Bu akşam Cuma gecesi: İsmail Dede misafirimiz. Yatsı namazını evde hep birlikte, cemaatle kılacağız.',
+        en: 'School went well. Tonight is the eve of Friday: İsmail Dede is our guest. We will pray the night prayer together at home, in congregation.',
       },
       quests: [
         { id: 'yatsi-ezan', title: 'Yatsı vakti', obj: 'Dedenle konuş', en: 'Talk to grandpa', target: { npc: 'dede' }, minutes: 5 },
@@ -44,7 +44,7 @@ export default {
     dede: {
       start: (ctx) => ({ 'yatsi-ezan': 'ez1', abdest: 'abWait', namaz: 'nmWait' })[ctx.q],
       nodes: {
-        ez1: { ask: 'listen', say: 'Yatsı ezanı okunuyor. Muhtar amca da burada. Hadi, abdest alıp cemaatle namaz kılalım.', en: "The call to the night prayer is sounding. The muhtar is here too. Come, let's do our ablution and pray together in congregation.",
+        ez1: { ask: 'listen', say: 'Yatsı ezanı okunuyor. İsmail Dede de burada. Hadi, abdest alıp cemaatle namaz kılalım.', en: "The call to the night prayer is sounding. İsmail Dede is here too. Come, let's do our ablution and pray together in congregation.",
           prompt: 'Deden ne diyor?', words: [['yatsı', 'night prayer'], ['ezan', 'call to prayer'], ['abdest', 'ablution'], ['namaz', 'prayer'], ['ailecek', 'as a family']],
           options: [
             { tr: 'Televizyon izleyelim.', en: "Let's watch TV.", wrong: true },

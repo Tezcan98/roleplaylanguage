@@ -10,8 +10,8 @@
  * Chapter `enter`: effects run when the chapter starts. A dialogue/hotspot effect
  * `chapter` moves the story on.
  */
-/** The muhtar and the grocer are always at the village square. */
-const VILLAGE_NPCS = { muhtar: ['village', 'muhtar', 'stand'], bakkal: ['village', 'bakkal', 'stand'] };
+/** The grocer is always at the village square. */
+const VILLAGE_NPCS = { bakkal: ['village', 'bakkal', 'stand'] };
 
 const FAMILY_AT_SOFRA = {
   dede: ['house', 'sofraN', 'sitFloor'],
@@ -237,9 +237,9 @@ export const STORY = {
         },
         {
           id: 'letter', title: 'Mektup',
-          obj: (c) => (c.flag('letter-delivered') ? 'Muhtarın haberini dedene anlat' : c.has('mektup') ? 'Mektubu muhtara götür (köy meydanı)' : 'Dedenle konuş'),
-          en: (c) => (c.flag('letter-delivered') ? "Tell grandpa the muhtar's news" : c.has('mektup') ? 'Take the letter to the muhtar (village square)' : 'Talk to grandpa'),
-          target: (c) => (c.flag('letter-delivered') || !c.has('mektup') ? { npc: 'dede' } : { npc: 'muhtar' }),
+          obj: (c) => (c.flag('letter-delivered') ? 'Bakkalın haberini dedene anlat' : c.has('mektup') ? 'Mektubu bakkal Mehmet amcaya götür (köy meydanı)' : 'Dedenle konuş'),
+          en: (c) => (c.flag('letter-delivered') ? "Tell grandpa the grocer's news" : c.has('mektup') ? 'Take the letter to Mehmet the grocer (village square)' : 'Talk to grandpa'),
+          target: (c) => (c.flag('letter-delivered') || !c.has('mektup') ? { npc: 'dede' } : { npc: 'bakkal' }),
           minutes: 25,
         },
         { id: 'make-tea', title: 'Çay saati', obj: 'Akşam oldu: mutfakta çay hazırla', en: "It's evening: prepare tea in the kitchen", target: { hotspot: 'house.tea' }, complete: { use: 'house.tea' } },
@@ -469,14 +469,14 @@ export const STORY = {
       },
       intro: {
         num: 'Cumartesi · Bölüm 21', title: 'Hafta sonu başladı',
-        text: 'Okul yok! Arkadaşların köy meydanında. Muhtar da bugün köyde büyük bir hazırlık olduğunu söylüyor.',
-        en: 'No school! Your friends are at the village square. The muhtar says there is a big preparation in the village today.',
+        text: 'Okul yok! Arkadaşların köy meydanında. Bakkal Mehmet amca da oğlunun düğünü için büyük bir hazırlık yapıyor.',
+        en: 'No school! Your friends are at the village square. Mehmet the grocer is making big preparations for his son’s wedding.',
       },
       quests: [
         { id: 'sat-elif', title: 'Elif ile buluş', obj: 'Elif ile konuş', en: 'Talk to Elif', target: { npc: 'elif' }, minutes: 10 },
         { id: 'sat-can', title: 'Can ile buluş', obj: 'Can ile konuş', en: 'Talk to Can', target: { npc: 'can' }, minutes: 10 },
         { id: 'sat-zehra', title: 'Zehra ile buluş', obj: 'Zehra ile konuş', en: 'Talk to Zehra', target: { npc: 'zehra' }, minutes: 10 },
-        { id: 'sat-muhtar', title: 'Köy hazırlığı', obj: 'Muhtarla konuş', en: 'Talk to the muhtar', target: { npc: 'muhtar' }, after: ['chapter'], minutes: 20 },
+        { id: 'sat-bakkal', title: 'Düğün hazırlığı', obj: 'Bakkal Mehmet amcayla konuş', en: 'Talk to Mehmet the grocer', target: { npc: 'bakkal' }, after: ['chapter'], minutes: 20 },
       ],
     },
 

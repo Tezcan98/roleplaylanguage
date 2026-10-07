@@ -59,4 +59,9 @@ export const KIND_NAMES = {
   para: { tr: 'lira', en: 'Turkish lira' },
   sut: { tr: 'süt', en: 'milk' },
   mektup: { tr: 'mektup', en: 'letter' },
+  // bought at the grocer's
+  simit: { tr: 'simit', en: 'simit (sesame bread ring)' },
+  ayran: { tr: 'ayran', en: 'ayran (yogurt drink)' },
+  peynir: { tr: 'peynir', en: 'cheese' },
+  yumurta: { tr: 'yumurta', en: 'egg' },
 };

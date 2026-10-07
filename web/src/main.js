@@ -269,6 +269,23 @@ effects
     toasts.show(`+${n ?? 1} ${tr}`, gloss(en));
   })
   .register('wear', (what, off) => { player.wear(what, off !== 'off'); state.flags[`wear-${what}`] = off !== 'off'; })
+  // the grocer: pay from the bag (no money, no shopping)
+  .register('buy', (kind, price) => {
+    const p = Number(price);
+    if (inventory.count('para') < p) { toasts.show(`Paran yetmiyor: ${p} lira lazım`, gloss('Not enough money. Ask dad for pocket money!')); return; }
+    inventory.remove('para', p);
+    inventory.add(kind, 1);
+    const { tr, en } = items.info(kind);
+    toasts.show(`+1 ${tr} · −${p} lira`, gloss(en));
+  })
+  // dad's pocket money: once a day
+  .register('pocket-money', (n) => {
+    const key = `harclik-${state.day}`;
+    if (state.flags[key]) { toasts.show('Bugünkü harçlığını aldın.', gloss('You already had your pocket money today.')); return; }
+    state.flags[key] = true;
+    inventory.add('para', Number(n));
+    toasts.show(`+${n} lira`, gloss('Pocket money'));
+  })
   .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); })
   .register('sit', (anchor) => { // a seat in the current place (sofra at home, tea-garden stools…)
     const a = world.current.anchors.get(anchor) ?? world.get('house').anchors.get(anchor);
@@ -355,8 +372,8 @@ const village = new VillageMultiplayer({
 });
 village.autoName = () => `${playerName()}${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question
 village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // others see them too
-// the HD character from the shop: in the public places (square, schoolyard), the blocky one elsewhere
-const playerHd = () => { player.setAura(auraOn(wallet)); const o = outfitOn(wallet); player.setHd(models, outfitModel(o ?? 'casual', playerGender()), !!o && ['village', 'schoolyard'].includes(world.current?.id), { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: o === 'dress' }); };
+// the HD character from the shop: everywhere once bought — home too (prayer poses use the blocky body for a moment)
+const playerHd = () => { player.setAura(auraOn(wallet)); const o = outfitOn(wallet); player.setHd(models, outfitModel(o ?? 'casual', playerGender()), !!o, { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: o === 'dress' }); };
 bus.on(EV.LOCATION, playerHd);
 playerHd();
 

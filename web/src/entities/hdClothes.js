@@ -39,6 +39,7 @@ export function addHeadscarf(scene, holder, color = 0xEFE3CF) {
   drape.scale.setScalar(h / ws);
   drape.position.copy(holder.worldToLocal(new THREE.Vector3(hp.x, hp.y - h * 0.12, hp.z - h * 0.04))); // round the neck, under the chin
   for (const m of [cap, drape]) { holder.add(m); head.attach(m); }
+  return [cap, drape];
 }
 
 /**

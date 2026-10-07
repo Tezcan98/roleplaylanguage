@@ -235,6 +235,27 @@ const GENERATORS = {
     g.font = `bold ${s * 0.26}px Fredoka, sans-serif`;
     g.fillText('ÇAY OCAĞI', s / 2, s / 2, s * 0.95);
   },
+  /** Shelves of a village grocer: bottles, jars, packets, tins (one texture for a whole shelf). */
+  groceryShelf(g, s) {
+    g.fillStyle = '#4A3222'; g.fillRect(0, 0, s, s);
+    const goods = ['#E4574A', '#F4D03F', '#3E8E4A', '#2F6FDB', '#F39C12', '#FFFFFF', '#8E44AD', '#16A085'];
+    for (let r = 0; r < 4; r++) {
+      const y0 = r * s / 4 + s * 0.03, h = s / 4 - s * 0.07;
+      for (let x = s * 0.02, i = 0; x < s * 0.95; i++) {
+        const kind = (i * 5 + r * 3) % 4, w = s * [0.05, 0.08, 0.065, 0.09][kind], bh = h * [0.9, 0.6, 0.75, 0.5][kind];
+        g.fillStyle = goods[(i * 3 + r) % goods.length];
+        if (kind === 0) { g.fillRect(x + w * 0.3, y0 + h - bh, w * 0.4, bh * 0.25); g.fillRect(x, y0 + h - bh * 0.78, w, bh * 0.78); } // bottle
+        else g.fillRect(x, y0 + h - bh, w, bh); // packet / jar / tin
+        g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(x + w * 0.15, y0 + h - bh * 0.55, w * 0.7, bh * 0.18); // label
+        x += w + s * 0.012;
+      }
+      g.fillStyle = '#6B4F3A'; g.fillRect(0, y0 + h, s, s * 0.04);
+    }
+  },
+  /** Red and white stripes for the grocer's awning. */
+  awning(g, s) {
+    for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#F4F1DE' : '#C0392B'; g.fillRect(i * s / 8, 0, s / 8, s); }
+  },
   /** Four rows of book spines on a dark shelf (one texture for a whole bookcase). */
   bookshelf(g, s) {
     g.fillStyle = '#3B2418'; g.fillRect(0, 0, s, s);

@@ -3,7 +3,7 @@ import { EV } from '../core/events.js';
 import { PRAYER_POSES, prayerState } from '../entities/Behaviors.js';
 
 /** Who stands where: grandpa leads (imam); the men's row behind him, the women's row behind them. */
-const ROWS = [['dede', 'imam'], ['baba', 'saf1'], ['muhtar', 'saf1c'], ['kardes', 'saf1d'], ['anne', 'saf2'], ['nine', 'saf2b']];
+const ROWS = [['dede', 'imam'], ['baba', 'saf1'], ['ismail', 'saf1c'], ['kardes', 'saf1d'], ['anne', 'saf2'], ['nine', 'saf2b']];
 
 /**
  * The family prayer: everyone takes their place on the prayer rugs and goes through the
@@ -56,14 +56,14 @@ export class PrayerScene {
       house.setPrayerRugs(false);
       this.cast.apply(this.story.chapter.cast);
       this.cast.dismiss('dede'); // grandpa goes to bed
-      if (this.cast.get('muhtar')?.location === 'house') this.cast.dismiss('muhtar'); // the guest goes home
+      if (this.cast.get('ismail')?.location === 'house') this.cast.move('ismail', 'village', 'chessDede', 'sitBench'); // the guest goes home
       this.player.setPosed(false);
       this.player.place({ x: -2.6, z: 2.0, rot: Math.PI });
       this.camera.clearFixed();
       this.caption.hide();
       this.#pop?.();
       this.words.forEach(([tr, en]) => this.vocab.learn(tr, en));
-      this.toasts.show('Muhtar amca evine gitti, dede de yattı. İyi geceler!', 'The muhtar went home and grandpa went to bed. Good night!');
+      this.toasts.show('İsmail Dede evine gitti, dede de yattı. İyi geceler!', 'İsmail Dede went home and grandpa went to bed. Good night!');
       this.effects.run(['flag:prayed-yatsi']);
     }), 2600));
   }

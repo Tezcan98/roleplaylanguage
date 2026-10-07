@@ -46,6 +46,7 @@ export class Character {
   /** Hand the body over to a scripted pose (e.g. prayer); walking animation pauses meanwhile. */
   setPosed(on) {
     this.posed = on;
+    this.#hdPosed(on);
     if (!on) {
       const r = this.rig;
       r.body.position.set(0, 0, 0);
@@ -57,7 +58,30 @@ export class Character {
   }
 
   /** Headscarf on or off (only characters that wear one at home and outside differently). */
-  setCovered(on) { if (this.covered === on) return; this.covered = on; this.rig.setCovered?.(on); }
+  setCovered(on) {
+    if (this.covered === on) return;
+    this.covered = on;
+    this.rig.setCovered?.(on);
+    this.#hdCover(on);
+  }
+
+  /** The HD body follows too (covered girls: scarf on outside, hair at home). */
+  #hdCover(on) {
+    const hd = this.#hd;
+    if (!hd?.scarf) return;
+    hd.scarf.forEach((m) => { m.visible = on; });
+    hd.hair.forEach((m) => { m.visible = !on; });
+  }
+
+  /** Scripted poses (prayer) need the blocky body's joints: the HD body steps aside meanwhile. */
+  #hdPosed(on) {
+    const hd = this.#hd;
+    if (!hd || hd === 'loading' || !this.#hdWanted) return;
+    hd.scene.visible = !on;
+    this.rig.body.visible = on;
+    this.mixer = on ? null : hd.mixer;
+    if (!on) { this.current = null; this.#playClip(this.seated ? 'sit' : 'idle'); }
+  }
 
   walk(t, amount) {
     if (this.seated || this.posed) return;
@@ -107,30 +131,31 @@ export class Character {
         scene.updateMatrixWorld(true);
         const b = new THREE.Box3().setFromObject(scene, true);
         scene.scale.multiplyScalar(2.15 / (b.max.y - b.min.y)); // the blocky body's height (the group's scale makes a child of it)
-        const skin = this.appearance.skin ?? 0xE9B98F;
+        const skin = this.appearance.skin ?? 0xE9B98F, hair = [];
         scene.traverse((o) => {
           if (!o.isMesh) return;
           o.castShadow = true;
           for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
             m.metalness = 0; m.roughness = 0.85; // the converted files come out dark and shiny
             if (m.name === 'Skin') m.color.setHex(skin);
-            if (covered && m.name === 'Hair') o.visible = false;
+            if (covered && m.name === 'Hair') { o.visible = false; hair.push(o); }
           }
         });
         const [, outfit, gender] = key.split('.'); // hd.<outfit>.<boy|girl>
         const scarf = paintOutfit(scene, dress ? 'dress' : outfit, gender);
         this.group.add(scene);
-        if (covered) addHeadscarf(scene, this.group, scarf);
+        const scarfParts = covered ? addHeadscarf(scene, this.group, scarf) ?? [] : [];
         if (dress) addDress(scene, this.group);
-        this.#hd = { scene, mixer, clips };
+        this.#hd = { scene, mixer, clips, ...(scarfParts.length ? { scarf: scarfParts, hair } : {}) };
+        if (this.covered === false) this.#hdCover(false); // already at home: hair open
       } catch (e) { console.warn('[models] hd:', e.message); this.#hd = null; return; }
     }
     const hd = this.#hd;
     if (!hd || hd === 'loading') return;
     on = this.#hdWanted;
-    hd.scene.visible = on;
-    this.rig.body.visible = !on;
-    this.mixer = on ? hd.mixer : null;
+    hd.scene.visible = on && !this.posed;
+    this.rig.body.visible = !on || !!this.posed;
+    this.mixer = on && !this.posed ? hd.mixer : null;
     this.clips = on ? hd.clips : {};
     this.current = null;
     if (on) this.#playClip(this.seated ? 'sit' : 'idle');

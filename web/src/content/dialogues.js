@@ -11,35 +11,26 @@ import { nextTale, taleNodes, TALES } from './tales.js';
  *   speak  — expect: ['accepted', ...], show?: 'what to read'
  */
 export const DIALOGUES = {
-  muhtar: {
+  bakkal: {
     start: (ctx) => {
       if (ctx.q === 'letter' && ctx.has('mektup')) return 'm1';
-      if (ctx.q === 'sat-muhtar') return 'wedding';
-      return ctx.q === 'go-school' ? 'school' : 'idle';
+      if (ctx.q === 'sat-bakkal') return 'wedding';
+      return ctx.q === 'buy' && !ctx.has('sut') ? 'b1' : 'shop';
     },
     nodes: {
+      // grandpa's letter: the grocer's son is getting married
       m1: { ask: 'speak', say: 'Hoş geldin evlat! Elindeki ne?', en: "Welcome, kid! What's that in your hand?", words: [['göndermek', 'to send']],
         expect: ['Dedem bu mektubu gönderdi', 'Dedem mektup gönderdi', 'Dedemden mektup'], show: 'Dedem bu mektubu gönderdi.', showEn: 'My grandpa sent this letter.', next: 'm2' },
-      m2: { ask: 'listen', say: 'Cumartesi köyde düğün var! Dedene söyle, herkes davetli.', en: "There's a wedding in the village on Saturday! Tell your grandpa, everyone is invited.",
-        prompt: 'Muhtar mektubu okudu. Ne dedi?', words: [['cumartesi', 'Saturday'], ['düğün', 'wedding'], ['davetli', 'invited']],
+      m2: { ask: 'listen', say: 'Cumartesi oğlumun düğünü var! Dedene söyle, herkes davetli.', en: "My son's wedding is on Saturday! Tell your grandpa, everyone is invited.",
+        prompt: 'Mehmet amca mektubu okudu. Ne dedi?', words: [['cumartesi', 'Saturday'], ['düğün', 'wedding'], ['davetli', 'invited'], ['oğul', 'son']],
         options: [
           { tr: 'Pazar günü okul yok.', en: 'No school on Sunday.', wrong: true },
           { tr: 'Cumartesi köyde düğün var.', en: "There's a wedding in the village on Saturday.", next: 'm3' },
           { tr: 'Cuma günü pazar kurulacak.', en: 'There will be a market on Friday.', wrong: true },
         ] },
       m3: { say: 'Dedene selam söyle!', en: 'Say hello to your grandpa for me!', words: [['selam söylemek', 'to send regards']],
-        options: [{ tr: 'Söylerim muhtar amca!', en: 'I will, uncle muhtar!', do: ['take:mektup', 'flag:letter-delivered'] }] },
-      wedding: { say: 'Cumartesi köyde düğün var! Meydanda hazırlık yapıyoruz. Arkadaşlarınla da eğlenebilirsin.', en: 'There is a wedding in the village on Saturday! We are preparing in the square. You can have fun with your friends too.', words: [['düğün', 'wedding'], ['hazırlık', 'preparation'], ['eğlenmek', 'to have fun']], options: [{ tr: 'Çok güzel! Yardım ederim.', en: 'Great! I will help.', do: ['quest'] }] },
-      idle: { say: 'Hoş geldin evlat! Ben köyün muhtarı Hasan.', en: "Welcome, kid! I'm Hasan, the village headman.", words: [['köy', 'village'], ['meydan', 'square'], ['muhtar', 'village headman']],
-        options: [{ tr: 'Merhaba muhtar amca!', en: 'Hello, uncle muhtar!' }] },
-      school: { say: 'Okul yolu bahçe kapısından. Geç kalma!', en: "The way to school is through the garden gate. Don't be late!", words: [['yol', 'road / way'], ['geç kalmak', 'to be late']],
-        options: [{ tr: 'Teşekkür ederim muhtar amca!', en: 'Thank you, uncle muhtar!' }] },
-    },
-  },
-
-  bakkal: {
-    start: (ctx) => (ctx.q === 'buy' && !ctx.has('sut') ? 'b1' : 'shop'),
-    nodes: {
+        options: [{ tr: 'Söylerim Mehmet amca!', en: 'I will, uncle Mehmet!', do: ['take:mektup', 'flag:letter-delivered'] }] },
+      wedding: { say: 'Cumartesi oğlumun düğünü var! Meydanda hazırlık yapıyoruz. Arkadaşlarınla da eğlenebilirsin.', en: "My son's wedding is on Saturday! We are preparing in the square. You can have fun with your friends too.", words: [['düğün', 'wedding'], ['hazırlık', 'preparation'], ['eğlenmek', 'to have fun']], options: [{ tr: 'Çok güzel! Yardım ederim.', en: 'Great! I will help.', do: ['quest'] }] },
       b1: { ask: 'order', say: 'Hoş geldin Ahmet! Ne istiyorsun?', en: 'Welcome Ahmet! What would you like?', words: [['istemek', 'to want']],
         answer: 'Bir ekmek ve bir süt lütfen.', answerEn: 'A bread and a milk, please.', next: 'b2' },
       b2: { ask: 'listen', say: 'Ekmek on lira, süt on beş lira.', en: 'Bread is ten lira, milk is fifteen lira.', prompt: 'Dinle: toplam kaç lira?',
@@ -53,9 +44,30 @@ export const DIALOGUES = {
         options: [{ tr: 'Buyurun, otuz lira.', en: 'Here you are, thirty lira.', next: 'b4' }] },
       b4: { say: 'Teşekkürler. Paranın üstü beş lira. Annene selam söyle!', en: "Thanks. Your change is five lira. Say hello to your mom!", words: [['paranın üstü', 'change (money)'], ['beş', 'five']],
         options: [{ tr: 'Teşekkür ederim, iyi akşamlar!', en: 'Thank you, good evening!', do: ['take:para:25', 'give:ekmek', 'give:sut'] }] },
-      shop: { say: 'Hoş geldin! Bakkalda ekmek, süt, peynir ve zeytin var.', en: 'Welcome! The shop has bread, milk, cheese and olives.',
-        words: [['bakkal', 'grocer'], ['ekmek', 'bread'], ['süt', 'milk'], ['peynir', 'cheese'], ['zeytin', 'olive']],
-        options: [{ tr: 'Bir ekmek lütfen.', en: 'One bread, please.' }, { tr: 'Sadece bakıyorum.', en: "I'm just looking." }] },
+      // shopping: ask for something, hear the price, pay (the money comes from the bag: 'buy')
+      shop: { say: 'Hoş geldin! Ne istersin? Ekmek, süt, simit, ayran, peynir, yumurta… hepsi taze.', en: 'Welcome! What would you like? Bread, milk, simit, ayran, cheese, eggs… all fresh.',
+        words: [['bakkal', 'grocer'], ['taze', 'fresh'], ['istemek', 'to want']],
+        options: [
+          { tr: 'Bir ekmek lütfen.', en: 'A loaf of bread, please.', next: 'buy-ekmek' },
+          { tr: 'Bir süt lütfen.', en: 'A milk, please.', next: 'buy-sut' },
+          { tr: 'Bir simit lütfen.', en: 'A simit, please.', next: 'buy-simit' },
+          { tr: 'Bir ayran lütfen.', en: 'An ayran, please.', next: 'buy-ayran' },
+          { tr: 'Yarım kilo peynir lütfen.', en: 'Half a kilo of cheese, please.', next: 'buy-peynir' },
+          { tr: 'Altı yumurta lütfen.', en: 'Six eggs, please.', next: 'buy-yumurta' },
+          { tr: 'Sadece bakıyorum.', en: "I'm just looking." },
+        ] },
+      'buy-ekmek': { ask: 'listen', say: 'Bir ekmek on lira.', en: 'A loaf of bread is ten lira.', prompt: 'Kaç lira?', words: [['ekmek', 'bread'], ['on', 'ten']],
+        options: [{ tr: 'Buyurun, on lira.', en: 'Here you are, ten lira.', do: ['buy:ekmek:10'] }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
+      'buy-sut': { ask: 'listen', say: 'Bir süt on beş lira.', en: 'A milk is fifteen lira.', prompt: 'Kaç lira?', words: [['süt', 'milk'], ['on beş', 'fifteen']],
+        options: [{ tr: 'Buyurun, on beş lira.', en: 'Here you are, fifteen lira.', do: ['buy:sut:15'] }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
+      'buy-simit': { ask: 'listen', say: 'Bir simit on lira.', en: 'A simit is ten lira.', prompt: 'Kaç lira?', words: [['simit', 'simit (sesame bread ring)'], ['on', 'ten']],
+        options: [{ tr: 'Buyurun, on lira.', en: 'Here you are, ten lira.', do: ['buy:simit:10'] }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
+      'buy-ayran': { ask: 'listen', say: 'Bir ayran on lira.', en: 'An ayran is ten lira.', prompt: 'Kaç lira?', words: [['ayran', 'ayran (yogurt drink)'], ['on', 'ten']],
+        options: [{ tr: 'Buyurun, on lira.', en: 'Here you are, ten lira.', do: ['buy:ayran:10'] }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
+      'buy-peynir': { ask: 'listen', say: 'Yarım kilo peynir altmış lira.', en: 'Half a kilo of cheese is sixty lira.', prompt: 'Kaç lira?', words: [['peynir', 'cheese'], ['yarım kilo', 'half a kilo'], ['altmış', 'sixty']],
+        options: [{ tr: 'Buyurun, altmış lira.', en: 'Here you are, sixty lira.', do: ['buy:peynir:60'] }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
+      'buy-yumurta': { ask: 'listen', say: 'Altı yumurta otuz lira.', en: 'Six eggs are thirty lira.', prompt: 'Kaç lira?', words: [['yumurta', 'egg'], ['altı', 'six'], ['otuz', 'thirty']],
+        options: [{ tr: 'Buyurun, otuz lira.', en: 'Here you are, thirty lira.', do: ['buy:yumurta:30'] }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
     },
   },
 
@@ -281,12 +293,12 @@ export const DIALOGUES = {
         words: [['sağ ol', 'thanks'], ['kibar', 'polite'], ['orta', 'middle']],
         options: [{ tr: 'Tamam dede!', en: 'Okay grandpa!' }] },
 
-      lt1: { say: 'Ahmet, gel evladım. Bu mektubu muhtara götürür müsün? Muhtar köy meydanında, beyaz binada.', en: 'Ahmet, come my child. Will you take this letter to the muhtar? He is in the village square, at the white building.',
-        words: [['mektup', 'letter'], ['götürmek', 'to take (somewhere)'], ['beyaz', 'white']],
+      lt1: { say: 'Ahmet, gel evladım. Bu mektubu bakkal Mehmet amcaya götürür müsün? Dükkânı köy meydanında.', en: 'Ahmet, come my child. Will you take this letter to Mehmet the grocer? His shop is in the village square.',
+        words: [['mektup', 'letter'], ['götürmek', 'to take (somewhere)'], ['dükkân', 'shop']],
         options: [{ tr: 'Tabii dede, hemen götürüyorum!', en: "Of course grandpa, I'm taking it right away!", do: ['give:mektup'] }] },
-      ltWait: { say: 'Mektubu muhtara verdin mi? Muhtar meydanda, beyaz binanın önünde.', en: 'Did you give the letter to the muhtar? He is in the square, in front of the white building.',
+      ltWait: { say: 'Mektubu Mehmet amcaya verdin mi? Bakkal dükkânı meydanda.', en: 'Did you give the letter to Mehmet? The grocer’s shop is in the square.',
         options: [{ tr: 'Gidiyorum dede.', en: "I'm going, grandpa." }] },
-      ltBack: { ask: 'order', say: 'Geldin mi evladım? Muhtar ne dedi?', en: 'You are back, my child? What did the muhtar say?',
+      ltBack: { ask: 'order', say: 'Geldin mi evladım? Mehmet amca ne dedi?', en: 'You are back, my child? What did Mehmet say?',
         answer: 'Cumartesi köyde düğün var.', answerEn: "There's a wedding in the village on Saturday.", next: 'ltEnd' },
       ltEnd: { say: 'Düğün mü? Ne güzel! Davul zurna çalar, hep beraber halay çekeriz.', en: 'A wedding? How lovely! The drum and pipe will play and we will all dance the halay together.',
         words: [['davul', 'drum'], ['zurna', 'folk pipe'], ['halay', 'circle folk dance']],
@@ -336,7 +348,11 @@ export const DIALOGUES = {
       b4: { say: 'Sen bir tanesin! Annen domates istiyor. Bahçeden üç domates topla, eve götür.', en: "You're the best! Mom wants tomatoes. Pick three tomatoes from the garden and take them home.", words: [['istemek', 'to want'], ['üç', 'three']],
         options: [{ tr: 'Tamam baba!', en: 'Okay dad!' }] },
       tools: { say: 'Bugün alet çantasını düzenledim. Hafta sonu arabaya bakacağız.', en: 'I organized the toolbox today. We will look at the car on the weekend.', words: [['alet', 'tool'], ['çanta', 'bag'], ['düzenlemek', 'to organize']], options: [{ tr: 'Ben de yardım ederim baba.', en: 'I will help too, dad.', do: ['quest'] }] },
-      idle: { say: 'Araba neredeyse hazır!', en: 'The car is almost ready!', words: [['neredeyse', 'almost']], options: [{ tr: 'Kolay gelsin baba!', en: 'Take it easy dad!' }] },
+      idle: { say: 'Araba neredeyse hazır!', en: 'The car is almost ready!', words: [['neredeyse', 'almost']],
+        options: [{ tr: 'Kolay gelsin baba!', en: 'Take it easy dad!' }, { tr: 'Baba, harçlık verir misin?', en: 'Dad, can I have some pocket money?', next: 'harclik' }] },
+      harclik: { say: 'Al bakalım, yirmi lira. Bakkalda ne alacağını düşün, boşa harcama!', en: "Here you go, twenty lira. Think about what you'll buy at the grocer's, don't waste it!",
+        words: [['harçlık', 'pocket money'], ['yirmi', 'twenty'], ['harcamak', 'to spend']],
+        options: [{ tr: 'Teşekkür ederim baba!', en: 'Thank you, dad!', do: ['pocket-money:20'] }] },
 
       // --- breakfast: build the sentence ---
       t1: { ask: 'order', say: 'Oğlum, çay ister misin?', en: 'Son, would you like some tea?', words: [['çay', 'tea'], ['bardak', 'glass']],
