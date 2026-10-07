@@ -58,6 +58,25 @@ Ayarlar (ortam değişkenleri): `PORT`, `HOST`, `ALLOWED_ORIGINS`, `MAX_PER_IP`,
 - **Satranç:** İsmail Dede'nin skor tablosu (en çok maç yapanlar) `CHESS_SCORES` dosyasında tutulur
   (varsayılan `/tmp/yilmaz-chess-scores.json`; systemd birimi `/var/lib/yilmaz-village/` kullanır, yeniden başlatmada silinmez).
 
+## Meydan moderasyonu (Jev / Laya)
+
+Meydandaki her konuşma balonu gösterilmeden önce `src/Moderator.js` kontrol eder. **Türkçe olmayan**
+mesajlar ve **zararlı** olanlar (cinsellik, uyuşturucu/alkol/sigara, küfür, kötü alışkanlıklar, şiddet/tehdit,
+zorbalık, nefret, kendine zarar, telefon/adres gibi kişisel bilgi) kimseye gösterilmez, konuşana nedeni söylenir
+ve `MODERATION_LOG` dosyasına (JSON satırları) yazılır. On dakikada üç kez engellenen oyuncu beş dakika mesaj gönderemez.
+
+1. Kelime listesi (`ChatFilter`) ve yazı/kelime ile dil kontrolü: her zaman açık, anında.
+2. **Karar modeli** (System 1, `POST /v1/systemone`), ayarlanırsa:
+   - **Jev** (TypeSafe, barındırılan): `TYPESAFE_API_KEY=…` yeter (adres `https://api.typesafe.ai`).
+   - **Laya** (açık ağırlıklı, kendi makinende, veri dışarı çıkmaz, ~30 ms):
+     `pip install "laya[serve]" && LAYA_HOST=127.0.0.1 LAYA_MODELS=multilingual laya-serve`, sonra
+     `MODERATION_URL=http://127.0.0.1:8000 MODERATION_MODEL=multilingual`.
+     Laya ~1 GB bellek ister: köy sunucusunun 256 MB sınırına sığmaz, ayrı bir servis olarak çalıştırın.
+   - İsterseniz Gemini: `MODERATION=gemini` (`GEMINI_API_KEY`).
+   Model yanıt vermezse 1. katman çalışmaya devam eder (`MODERATION_FAIL_CLOSED=1` → o sırada hiçbir balon gösterilmez).
+
+Günlük: `tail -f /tmp/yilmaz-moderation.log` (systemd'de `journalctl -u yilmaz-village | grep moderation`).
+
 ## Test
 
 ```bash

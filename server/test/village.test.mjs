@@ -96,7 +96,7 @@ test('bad usernames and rooms are refused', async () => {
   }
 });
 
-test('positions are broadcast; public speech is filtered and rate-limited', async () => {
+test('positions are broadcast; public speech is moderated and rate-limited', async () => {
   const a = await join('Ali', 'say');
   const b = await join('Veli', 'say');
   a.send({ type: 'state', x: 1, z: 2, rot: 0, moving: true });
@@ -105,10 +105,23 @@ test('positions are broadcast; public speech is filtered and rate-limited', asyn
   a.send({ type: 'state', x: 1, z: 2, rot: 0, moving: false, sit: true }); // sat down at a tea table
   assert.equal((await b.next('states')).players[0].sit, true);
   a.send({ type: 'say', text: '  Merhaba amk  ' });
-  a.send({ type: 'say', text: 'too soon' });
-  assert.equal((await b.next('say')).text, 'Merhaba ***');
+  assert.equal((await a.next('say-blocked')).reason, 'profanity', 'the speaker is told why');
+  await silence(1300);
+  a.send({ type: 'say', text: 'hello my friend how are you' });
+  assert.equal((await a.next('say-blocked')).reason, 'language', 'the square is Turkish-only');
+  await silence(1300);
+  a.send({ type: 'say', text: '  Merhaba, nasılsın?  ' });
+  a.send({ type: 'say', text: 'Çok erken' });
+  const said = await b.next('say');
+  assert.equal(said.text, 'Merhaba, nasılsın?');
   await silence();
-  assert.equal(b.inbox.filter((m) => m.type === 'say').length, 0, 'second bubble within the gap is dropped');
+  assert.equal(b.inbox.filter((m) => m.type === 'say').length, 0, 'held-back bubbles never reach the others; the second within the gap is dropped');
+  await silence(1300);
+  a.send({ type: 'say', text: 'siktir' }); // third strike in ten minutes
+  assert.ok((await a.next('say-blocked')).until > Date.now(), 'muted for a while');
+  await silence(1300);
+  a.send({ type: 'say', text: 'Merhaba' });
+  assert.equal((await a.next('say-blocked')).reason, 'muted');
   await a.close(); await b.close();
 });
 

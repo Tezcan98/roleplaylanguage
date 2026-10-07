@@ -2,6 +2,7 @@ import { WebSocketServer } from 'ws';
 import { createHmac } from 'node:crypto';
 import { ChatFilter } from './ChatFilter.js';
 import { ChessTable } from './ChessTable.js';
+import { Moderator } from './Moderator.js';
 
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 const SHIRTS = [0xE4574A, 0x2F6FDB, 0x3E8E4A, 0xE0B04A, 0x7A3552, 0x16A085, 0xD35400, 0x8E44AD];
@@ -20,6 +21,7 @@ const outfitOf = (o) => ({ ...(OUTFITS.includes(o?.outfit) ? { outfit: o.outfit 
 const RATE = { burst: 60, perSecond: 30 }; // messages per client (10/s states + WebRTC ICE bursts)
 const MAX_BALLS = 4;                        // shared balls per room (the square's pitch has two)
 const SAY_GAP = 1200;                       // ms between two public speech bubbles
+const STRIKES = 3, STRIKE_WINDOW = 10 * 60_000, MUTE = 5 * 60_000; // held-back bubbles → a short silence
 const HEARTBEAT = 30000;                    // ms; silent connections are dropped
 const IDLE = 45000;                         // ms without any message from a page that promised a keep-alive (`ka`): its game is frozen (phone locked) — drop it
 
@@ -52,6 +54,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'welcome', id, name, look, peers, ball?, ice } | { type: 'error', message }
  *     ice: WebRTC ICE servers for voice calls (STUN + TURN with short-lived credentials)
  *   { type: 'join', peer } | { type: 'leave', id } | { type: 'states', players }
+ *   { type: 'say-blocked', reason, until? }  your bubble was held back (not Turkish / harmful; `until` = muted till)
  *   { type: 'talk', id, on } | { type: 'say', id, text } | { type: 'ball', id, n, x, z, vx, vz }
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
  *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
@@ -79,7 +82,8 @@ export class VillageServer {
    *   (username "<expiry>:<id>", password HMAC-SHA1(secret, username)), valid for a day
    * @param {Map} [o.chessScores]  chess score board to start from; `onChessScore()` after every game (to save it)
    */
-  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {} } = {}) {
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }) } = {}) {
+    this.moderator = moderator; // decides which public bubbles may be shown (word list, language, Jev / Laya)
     this.log = log;
     this.chessScores = chessScores; // İsmail Dede's score board, shared by every square (name → games, wins…)
     this.onChessScore = onChessScore;
@@ -179,7 +183,7 @@ export class VillageServer {
       case 'say':
         if (typeof msg.text !== 'string' || !msg.text.trim() || Date.now() - c.lastSay < SAY_GAP) return;
         c.lastSay = Date.now();
-        this.#toRoom(c, { type: 'say', id: c.id, text: ChatFilter.clean(msg.text.trim().slice(0, 140)) });
+        this.#say(c, msg.text.trim().slice(0, 140));
         break;
       case 'ball': {
         const n = [msg.x, msg.z, msg.vx, msg.vz];
@@ -275,6 +279,23 @@ export class VillageServer {
     members.set(c.id, c);
     if (this.#table(room).rejoin(c)) this.#toAll(room, this.#table(room).state()); // back at the board after a dropped connection
     this.log(`[village] ${c.name} joined ${room} (${members.size})`);
+  }
+
+  /**
+   * A public bubble goes to the room only once the moderator lets it through. A held-back one
+   * is logged and the speaker is told why (never the others); three in ten minutes and the
+   * speaker's bubbles are not taken for five minutes.
+   */
+  async #say(c, text) {
+    const now = Date.now();
+    if (c.mutedUntil > now) return this.#send(c, { type: 'say-blocked', reason: 'muted', until: c.mutedUntil });
+    const v = await this.moderator.check(text);
+    if (!c.id) return; // left meanwhile
+    if (v.ok) { this.#toRoom(c, { type: 'say', id: c.id, text }); return; }
+    c.strikes = (c.strikes ?? []).filter((t) => now - t < STRIKE_WINDOW).concat(now);
+    if (c.strikes.length >= STRIKES) { c.mutedUntil = now + MUTE; c.strikes = []; }
+    this.moderator.record({ room: c.room, name: c.name, id: c.id, text, reason: v.reason, by: v.by, muted: c.mutedUntil > now });
+    this.#send(c, { type: 'say-blocked', reason: v.reason, ...(c.mutedUntil > now ? { until: c.mutedUntil } : {}) });
   }
 
   #endCall(c, reason) {

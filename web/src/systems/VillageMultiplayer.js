@@ -10,6 +10,11 @@ const DECLINE_TEXT = {
   busy: ['şu an başka biriyle konuşuyor', 'is busy'],
   far: ['çok uzakta', 'is too far away'],
 };
+const BLOCKED_TEXT = {
+  language: ['Meydanda Türkçe konuşalım! Mesajın gösterilmedi.', "Let's speak Turkish in the square! Your message was not shown."],
+  harm: ['Bu mesaj meydana uygun değil, gösterilmedi.', 'This message is not suitable for the square, so it was not shown.'],
+  muted: ['Bir süre mesaj gönderemezsin ({m} dk).', 'You cannot send messages for a little while.'],
+};
 const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Oyuncu engellendi, sohbet bitti.' };
 
 /**
@@ -66,6 +71,12 @@ export class VillageMultiplayer {
     net.on('goal', ({ side }) => this.onGoal?.(this.joinedAt, side, false)); // someone scored in a match
     net.on('score-reset', () => this.onScoreReset?.(this.joinedAt)); // someone reset the score board
     net.on('chess', (st) => { if (this.joinedAt === 'village') this.chess?.applyServer(st); }); // the square's giant chess board
+    // my bubble was held back by the square's moderator: take it down and say why
+    net.on('say-blocked', ({ reason, until }) => {
+      this.labels.bubble(this.player, '', null, 0);
+      const [tr, en] = until ? BLOCKED_TEXT.muted : BLOCKED_TEXT[reason === 'language' ? 'language' : 'harm'];
+      this.toasts.show(tr.replace('{m}', Math.max(1, Math.ceil(((until ?? 0) - Date.now()) / 60000))), en);
+    });
     net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
     net.on('call-request', async ({ from, name }) => {
       if (this.isBlocked(from, name)) { this.net.send({ type: 'call-answer', to: from, accept: false }); return; }
