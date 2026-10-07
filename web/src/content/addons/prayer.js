@@ -1,5 +1,5 @@
 /**
- * Thursday evening (the eve of Friday): the household and a guest pray the yatsı (night)
+ * Thursday evening (the eve of Friday): the household prays the yatsı (night)
  * prayer in congregation, led by grandpa.
  * Teaches the wudu (abdest) steps — body parts and verbs — and the prayer postures.
  * Quests: hear the ezan → take abdest at the washbasin → stand on the prayer rugs.
@@ -7,7 +7,7 @@
 export default {
   id: 'prayer',
 
-  // Thursday evening (the eve of Friday): a guest comes and the household prays yatsı together
+  // Thursday evening (the eve of Friday): the household prays yatsı together
   chapters: [{
     after: 'd4-home',
     chapter: {
@@ -16,14 +16,13 @@ export default {
         anne: ['house', 'kitchen', 'cook'],
         baba: ['house', 'sedirL', 'sitBench'],
         dede: ['house', 'sedirR', 'sitBench'],
-        ismail: ['house', 'sofraGuest', 'sitFloor'], // tonight's guest: İsmail Dede, grandpa's old friend
         bakkal: ['village', 'bakkal', 'stand'],
         ogretmen: null, elif: null, can: null, zehra: null,
       },
       intro: {
         num: 'Perşembe · Bölüm 17', title: 'Perşembe akşamı',
-        text: 'Okul güzel geçti. Bu akşam Cuma gecesi: İsmail Dede misafirimiz. Yatsı namazını evde hep birlikte, cemaatle kılacağız.',
-        en: 'School went well. Tonight is the eve of Friday: İsmail Dede is our guest. We will pray the night prayer together at home, in congregation.',
+        text: 'Okul güzel geçti. Bu akşam Cuma gecesi. Yatsı namazını evde hep birlikte, cemaatle kılacağız.',
+        en: 'School went well. Tonight is the eve of Friday. We will pray the night prayer together at home, in congregation.',
       },
       quests: [
         { id: 'yatsi-ezan', title: 'Yatsı vakti', obj: 'Dedenle konuş', en: 'Talk to grandpa', target: { npc: 'dede' }, minutes: 5 },
@@ -44,7 +43,7 @@ export default {
     dede: {
       start: (ctx) => ({ 'yatsi-ezan': 'ez1', abdest: 'abWait', namaz: 'nmWait' })[ctx.q],
       nodes: {
-        ez1: { ask: 'listen', say: 'Yatsı ezanı okunuyor. İsmail Dede de burada. Hadi, abdest alıp cemaatle namaz kılalım.', en: "The call to the night prayer is sounding. İsmail Dede is here too. Come, let's do our ablution and pray together in congregation.",
+        ez1: { ask: 'listen', say: 'Yatsı ezanı okunuyor. Hadi, abdest alıp cemaatle namaz kılalım.', en: "The call to the night prayer is sounding. Come, let's do our ablution and pray together in congregation.",
           prompt: 'Deden ne diyor?', words: [['yatsı', 'night prayer'], ['ezan', 'call to prayer'], ['abdest', 'ablution'], ['namaz', 'prayer'], ['ailecek', 'as a family']],
           options: [
             { tr: 'Televizyon izleyelim.', en: "Let's watch TV.", wrong: true },

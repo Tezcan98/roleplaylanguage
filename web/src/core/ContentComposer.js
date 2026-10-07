@@ -40,5 +40,11 @@ export function composeContent(base, addons) {
     }
     for (const key of ['hotspots', 'kindNames', 'npcs', 'voices']) Object.assign(base[key], a[key] ?? {});
   }
+  // chapters added by a later add-on get the earlier add-ons' everyday cast too
+  for (const a of addons) {
+    for (const ch of base.story.chapters) {
+      for (const [npc, spot] of Object.entries(a.castAll ?? {})) if (!(npc in ch.cast)) ch.cast[npc] = spot;
+    }
+  }
   return base;
 }
