@@ -133,7 +133,7 @@ export class VillageMultiplayer {
     if (best && count(best) > count(mine)) this.settings.set('serverRegion', best);
   }
 
-  /** Alone in this room while another room has players: offer to go there. */
+  /** Alone in this room while another room has players: offer to go there (from the story: go there). */
   async #suggestBusierRoom() {
     if (!this.healthUrl || !this.choice || this.remotes.count > 0) return;
     let rooms;
@@ -142,7 +142,8 @@ export class VillageMultiplayer {
     const suffix = this.places[this.joinedAt]?.suffix ?? '';
     const [best, n] = Object.entries(rooms).filter(([r]) => r.endsWith(suffix) && this.rooms.some(([id]) => `${id}${suffix}` === r)).map(([r, k]) => [r.slice(0, r.length - suffix.length || undefined), k]).filter(([r]) => r !== mine).sort((a, b) => b[1] - a[1])[0] ?? [];
     if (!best || !n || this.remotes.count > 0 || !this.net.connected) return;
-    const go = await this.choice.ask({
+    // walked in from the story (the room lookup was too slow before joining): just go where the others are
+    const go = !this.chosenRoom || await this.choice.ask({
       title: `${this.#roomLabel(mine)} meydanı şimdilik boş`,
       text: `${this.#roomLabel(best)} meydanında ${n} kişi var. Oraya geçelim mi?`,
       en: 'This square is empty right now. Another square has players — switch there?',

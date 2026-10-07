@@ -53,22 +53,30 @@ export class ServerPicker {
   get label() { return SERVERS.find(([id]) => id === this.#value)?.[1] ?? this.#value; }
   set value(v) { if (SERVERS.some(([id]) => id === v)) { this.#value = v; this.#render(); } }
 
+  /** Cards are made once and then updated in place: a tap during a refresh still lands. */
   #render() {
-    this.cards.replaceChildren(...SERVERS.map(([id, label]) => {
-      const n = this.#counts[id] ?? 0;
-      const level = n === 0 ? 'empty' : n < 6 ? 'calm' : n < 15 ? 'lively' : 'busy';
-      const word = { empty: ['Boş', gloss('Empty')], calm: ['Sakin', gloss('Quiet')], lively: ['Hareketli', gloss('Lively')], busy: ['Kalabalık', gloss('Crowded')] }[level];
-      const on = id === this.#value;
-      return el('button', {
-        class: `server-card lvl-${level}${on ? ' on' : ''}`, attrs: { type: 'button', role: 'radio', 'aria-checked': String(on), 'data-server': id },
+    if (!this.cards.children.length) {
+      this.cards.replaceChildren(...SERVERS.map(([id, label]) => el('button', {
+        class: 'server-card', attrs: { type: 'button', role: 'radio', 'data-server': id },
         on: { click: () => { this.#touched = true; this.#value = id; this.#render(); this.onChange?.(id); } },
       }, [
         el('span', { class: 'sc-city', text: label }),
-        el('span', { class: 'sc-count', text: `👥 ${n}` }),
-        el('span', { class: 'sc-meter' }, [el('i', { style: { width: `${Math.min(100, (n / MAX_PLAYERS) * 100)}%` } })]),
-        el('span', { class: 'sc-level' }, [word[0], el('small', { class: 'en-t', text: ` · ${word[1]}` })]),
-      ]);
-    }));
+        el('span', { class: 'sc-count' }),
+        el('span', { class: 'sc-meter' }, [el('i')]),
+        el('span', { class: 'sc-level' }),
+      ])));
+    }
+    SERVERS.forEach(([id], i) => {
+      const card = this.cards.children[i], n = this.#counts[id] ?? 0;
+      const level = n === 0 ? 'empty' : n < 6 ? 'calm' : n < 15 ? 'lively' : 'busy';
+      const word = { empty: ['Boş', gloss('Empty')], calm: ['Sakin', gloss('Quiet')], lively: ['Hareketli', gloss('Lively')], busy: ['Kalabalık', gloss('Crowded')] }[level];
+      const on = id === this.#value;
+      card.className = `server-card lvl-${level}${on ? ' on' : ''}`;
+      card.setAttribute('aria-checked', String(on));
+      card.querySelector('.sc-count').textContent = `👥 ${n}`;
+      card.querySelector('.sc-meter i').style.width = `${Math.min(100, (n / MAX_PLAYERS) * 100)}%`;
+      card.querySelector('.sc-level').replaceChildren(word[0], el('small', { class: 'en-t', text: ` · ${word[1]}` }));
+    });
     const total = Object.values(this.#counts).reduce((a, b) => a + b, 0);
     this.status.textContent = `Çevrimiçi: ${total} · ${gloss('Pick an emptier square if you want it quiet.')}`;
     this.onUpdate?.();
