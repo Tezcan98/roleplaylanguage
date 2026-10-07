@@ -3,12 +3,14 @@ const COOL = 2.5; // s after a goal before another can count
 /**
  * Matches on a pitch (the schoolyard's, the square's): when a ball crosses a goal line between
  * the posts it's a goal — the score board, a cheer and the ball back on the centre spot. A
- * fenced pitch keeps its balls in (the doors in the fence are for people, not balls). Online,
+ * fenced pitch keeps its balls in, except through the doors in the fence (the ball can roll out
+ * onto the square there). Online,
  * the player who kicked last reports a goal, so every screen counts it once.
  */
 export class Football {
   #cool = 0;
   #prevX = new Map(); // ball → x a frame ago (a goal must come in over the line from the pitch)
+  #prevPos = new Map(); // ball → where it was a frame ago (which side of the fence it is on)
 
   /** `place` = location id; `pitch` = { x0, x1, z0, z1, goalHalf, cz, fence? }; `writeScore(a, b)` = its board. */
   constructor({ place, pitch, balls, writeScore, world, village, toasts }) {
@@ -16,14 +18,30 @@ export class Football {
     this.score = { a: 0, b: 0 }; // a = blue (scores into the right goal), b = red
   }
 
-  /** A ball (stray, or pushed through a door) that is outside the fence goes back in. */
+  /**
+   * The wire fence: a ball bounces off it from either side, but where there is no wire (the doors
+   * on the north side) it rolls straight through, out onto the square or back in.
+   */
   #fence(ball) {
     const f = this.pitch.fence, p = ball.position, m = ball.radius + 0.1;
-    if (!f || p.x < f.x0 - 1.5 || p.x > f.x1 + 1.5 || p.z < f.z0 - 1.5 || p.z > f.z1 + 1.5) return; // far away: not ours
-    if (p.x < f.x0 + m) { p.x = f.x0 + m; ball.vel.x = Math.abs(ball.vel.x) * 0.6; }
-    if (p.x > f.x1 - m) { p.x = f.x1 - m; ball.vel.x = -Math.abs(ball.vel.x) * 0.6; }
-    if (p.z < f.z0 + m) { p.z = f.z0 + m; ball.vel.z = Math.abs(ball.vel.z) * 0.6; }
-    if (p.z > f.z1 - m) { p.z = f.z1 - m; ball.vel.z = -Math.abs(ball.vel.z) * 0.6; }
+    const was = this.#prevPos.get(ball) ?? { x: p.x, z: p.z };
+    this.#prevPos.set(ball, { x: p.x, z: p.z });
+    if (!f || Math.hypot(p.x - was.x, p.z - was.z) > 1.5) return; // no fence, or a jump (put back, a position from the network)
+    const open = (x) => (f.gaps ?? []).some(([a, b]) => x > a + ball.radius && x < b - ball.radius);
+    // [line, axis, the other coordinate's range, crossing allowed here?]
+    const sides = [[f.x0, 'x', [f.z0, f.z1]], [f.x1, 'x', [f.z0, f.z1]], [f.z0, 'z', [f.x0, f.x1], open], [f.z1, 'z', [f.x0, f.x1]]];
+    for (const [line, axis, [lo, hi], through] of sides) {
+      const other = axis === 'x' ? p.z : p.x;
+      if (other < lo - m || other > hi + m) continue; // beside this stretch of fence
+      const before = was[axis] - line, now = p[axis] - line;
+      const crossed = Math.sign(before) !== Math.sign(now) || Math.abs(now) < m;
+      if (!crossed || Math.abs(before) < 1e-6 || through?.(axis === 'x' ? p.z : p.x)) continue;
+      const side = Math.sign(before); // stay on the side it came from, bounce back
+      p[axis] = line + side * m;
+      const v = ball.vel[axis];
+      if (Math.sign(v) !== side) ball.vel[axis] = -v * 0.6;
+      this.#prevPos.set(ball, { x: p.x, z: p.z });
+    }
   }
 
   update(dt) {

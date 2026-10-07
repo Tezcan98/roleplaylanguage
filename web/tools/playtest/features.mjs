@@ -196,7 +196,12 @@ try {
   await ev(() => { const b = window.__game.squareFootball.balls[0]; b.setState({ x: 8.3, z: 15, vx: 0, vz: -8 }); }); // straight at the door in the fence (8.3: between 7.4 and 9.2)
   await sleep(1500);
   const bz = await ev(() => window.__game.squareFootball.balls[0].position.z);
-  check('square pitch: the wire fence keeps the ball in (even at the door)', bz > 14, `z = ${bz.toFixed(2)}`);
+  check('square pitch: through a door (no wire) the ball rolls out onto the square', bz < 14, `z = ${bz.toFixed(2)}`);
+  await ev(() => { const b = window.__game.squareFootball.balls[0]; b.setState({ x: 14, z: 15, vx: 0, vz: -8 }); }); // at the wire
+  await sleep(1500);
+  const bz2 = await ev(() => window.__game.squareFootball.balls[0].position.z);
+  check('…where there is wire it bounces back in', bz2 > 14, `z = ${bz2.toFixed(2)}`);
+  await ev(() => { const b = window.__game.squareFootball.balls[0]; b.setState({ x: 15.5, z: 21, vx: 0, vz: 0 }); });
   // goals: in over the line from the pitch counts, from behind the goal does not
   const sqScore = () => ev(() => window.__game.squareFootball.score.a + window.__game.squareFootball.score.b);
   const score0 = await sqScore();
