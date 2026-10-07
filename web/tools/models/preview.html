@@ -2,7 +2,7 @@
 <!-- Renders the shop pictures of the outfits: node tools/models/render-previews.mjs -->
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
-import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; import { addHeadscarf, addDress, paintOutfit } from '../../src/entities/hdClothes.js';
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; import { addHeadscarf, addDress, paintOutfit, addShoes } from '../../src/entities/hdClothes.js';
 const W = 240, H = 300;
 const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setClearColor(0x000000, 0); r.outputColorSpace = THREE.SRGBColorSpace; document.body.append(r.domElement);
 const L = new GLTFLoader();
@@ -14,6 +14,7 @@ window.render = async (file, covered, aura = false, dress = false) => {
   const b = new THREE.Box3().setFromObject(sc, true); sc.scale.multiplyScalar(2.0 / (b.max.y - b.min.y)); sc.updateMatrixWorld(true);
   const [, outfit, gender] = file.match(/hd_(\w+)_(boy|girl)\.glb/);
   const scarf = paintOutfit(sc, dress ? 'dress' : outfit, gender);
+  addShoes(sc);
   s.add(sc);
   if (covered) addHeadscarf(sc, s, scarf);
   if (dress) addDress(sc, s)?.follow();

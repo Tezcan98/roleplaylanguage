@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { buildRig, RIG_PROPS } from './CharacterRig.js';
 import { fitToBox } from '../engine/ModelLibrary.js';
 import { sitPose } from './Behaviors.js';
-import { addHeadscarf, addDress, paintOutfit } from './hdClothes.js';
+import { addHeadscarf, addDress, paintOutfit, addShoes, paintLook, addLookExtras, facingZ } from './hdClothes.js';
 
 const wrapAngle = (d) => { while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
@@ -12,9 +12,11 @@ export class Character {
   #aura = null;
   #hdKey = null;
   #hdWanted = false;
+  #lastPos = null;
   constructor(id, appearance, { mf, models }) {
     this.id = id;
     this.appearance = appearance;
+    this.models = models;
     this.rig = buildRig(mf, appearance);
     this.group = this.rig.g;
     (appearance.props || []).forEach((p) => { this.rig.props[p] = RIG_PROPS[p](mf, this.rig); this.rig.props[p].visible = false; });
@@ -91,6 +93,13 @@ export class Character {
   }
 
   update(dt) {
+    const hdWalk = this.#hd?.stride && this.mixer === this.#hd.mixer && this.current === 'walk' ? this.clips.walk : null;
+    if (hdWalk && dt > 0) { // the steps keep up with the real speed
+      const p = this.group.position, moved = this.#lastPos ? Math.hypot(p.x - this.#lastPos.x, p.z - this.#lastPos.z) / dt : 0;
+      const natural = this.#hd.stride * (this.group.scale.x || 1);
+      hdWalk.timeScale += (Math.min(3.5, Math.max(0.7, moved / natural || 1)) - hdWalk.timeScale) * Math.min(1, dt * 8);
+    }
+    this.#lastPos = { x: this.group.position.x, z: this.group.position.z };
     this.mixer?.update(dt);
     const skirt = this.#hd?.skirt;
     if (skirt) { skirt.skirt.visible = this.#hd.scene.visible && !this.seated; if (skirt.skirt.visible) skirt.follow(); } // seated: the legs, in the dress's colour
@@ -112,10 +121,12 @@ export class Character {
   }
 
   /**
-   * The HD character from the shop (assets/models/hd_*.glb, Quaternius CC0) instead of the blocky
-   * body while `on`. Loaded once; `covered`: the hair goes, a headscarf goes on (Sare).
+   * The HD character (assets/models/hd_*.glb, Quaternius CC0) instead of the blocky body while
+   * `on`: the player's from the shop, and the villagers on the square. Loaded once.
+   * `covered`: the hair goes, a headscarf goes on; `dress`: a long skirt; `look`: a villager's
+   * own colours and moustache, glasses, cap, apron (CharacterRig's appearance).
    */
-  async setHd(models, key, on, { covered = false, dress = false } = {}) {
+  async setHd(models, key, on, { covered = false, dress = false, look = null, scarfColor = null } = {}) {
     this.#hdWanted = on;
     if (on && this.#hd && this.#hd !== 'loading' && this.#hdKey !== key) { // another outfit: drop the old one
       this.#hd.scene.removeFromParent(); this.#hd.skirt?.skirt.removeFromParent(); this.#hd = null;
@@ -125,14 +136,18 @@ export class Character {
       this.#hd = 'loading';
       try {
         const { scene, animations } = await models.load(key);
+        // every character its own materials (the clones share them: one shirt colour would paint them all)
+        scene.traverse((o) => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map((m) => m.clone()) : o.material.clone(); });
         // the animation first: it moves the bones (and the model's size) into their real place
         const mixer = new THREE.AnimationMixer(scene), clips = {};
         animations.forEach((a) => { clips[a.name] = mixer.clipAction(a); });
         if (clips.sit) { clips.sit.setLoop(THREE.LoopOnce); clips.sit.clampWhenFinished = true; } // sits down and stays
         clips.idle?.play(); mixer.update(0);
         scene.updateMatrixWorld(true);
-        const b = new THREE.Box3().setFromObject(scene, true);
-        scene.scale.multiplyScalar(2.15 / (b.max.y - b.min.y)); // the blocky body's height (the group's scale makes a child of it)
+        const b = new THREE.Box3().setFromObject(scene, true), k = 2.15 / (b.max.y - b.min.y);
+        scene.scale.multiplyScalar(k); // the blocky body's height (the group's scale makes a child of it)
+        scene.position.y = -b.min.y * k + 0.04 / (this.group.scale.y || 1); // the soles just on the ground (floors and paving lie a little above 0)
+        const stride = this.#strideSpeed(scene, mixer, clips);
         const skin = this.appearance.skin ?? 0xE9B98F, hair = [];
         scene.traverse((o) => {
           if (!o.isMesh) return;
@@ -145,10 +160,17 @@ export class Character {
         });
         const [, outfit, gender] = key.split('.'); // hd.<outfit>.<boy|girl>
         const scarf = paintOutfit(scene, dress ? 'dress' : outfit, gender);
+        if (look) paintLook(scene, look);
+        addShoes(scene, look?.pants && dress ? 0x4A3A30 : 0x3B2A20);
         this.group.add(scene);
-        const scarfParts = covered ? addHeadscarf(scene, this.group, scarf) ?? [] : [];
-        const skirt = dress ? addDress(scene, this.group) : null;
-        this.#hd = { scene, mixer, clips, skirt, ...(scarfParts.length ? { scarf: scarfParts, hair } : {}) };
+        const extras = facingZ(this.group, () => {
+          const scarfParts = covered ? addHeadscarf(scene, this.group, scarfColor ?? scarf) ?? [] : [];
+          const skirt = dress ? addDress(scene, this.group, look?.skirt ?? null) : null;
+          if (look) addLookExtras(scene, this.group, look);
+          return { scarfParts, skirt };
+        });
+        const { scarfParts, skirt } = extras;
+        this.#hd = { scene, mixer, clips, skirt, stride, ...(scarfParts.length ? { scarf: scarfParts, hair } : {}) };
         if (this.covered === false) this.#hdCover(false); // already at home: hair open
       } catch (e) { console.warn('[models] hd:', e.message); this.#hd = null; return; }
     }
@@ -162,6 +184,25 @@ export class Character {
     this.current = null;
     if (on) this.#playClip(this.seated ? 'sit' : 'idle');
   }
+
+  /**
+   * How fast the walk animation itself moves forward (group units a second at normal speed): how
+   * far a foot travels back while on the ground, per half step. update() plays the walk that much
+   * faster or slower than the character really moves, so the feet don't slide.
+   */
+  #strideSpeed(scene, mixer, clips) {
+    const walk = clips.walk, foot = scene.getObjectByName('FootL');
+    if (!walk || !foot) return 0;
+    const dur = walk.getClip().duration, v = new THREE.Vector3();
+    let lo = Infinity, hi = -Infinity;
+    clips.idle?.stop(); walk.play();
+    for (let i = 0; i <= 24; i++) { mixer.setTime((dur * i) / 24); scene.updateMatrixWorld(true); scene.worldToLocal(foot.getWorldPosition(v)); lo = Math.min(lo, v.z); hi = Math.max(hi, v.z); }
+    walk.stop(); clips.idle?.play(); mixer.setTime(0); scene.updateMatrixWorld(true);
+    return ((hi - lo) * scene.scale.z) / (dur / 2);
+  }
+
+  /** After a change of seat or behaviour: the HD body sits or stands again. */
+  replayHd() { if (this.mixer && this.mixer === this.#hd?.mixer) { this.current = null; this.#playClip(this.seated ? 'sit' : 'idle'); } }
 
   /** A pulsing golden ring of light on the ground under the character (bought in the shop). */
   setAura(on) {
@@ -178,7 +219,9 @@ export class Character {
 
   #playClip(name) {
     if (!this.mixer || this.current === name || !this.clips[name]) return;
-    this.clips[this.current]?.fadeOut(0.2);
+    // every other running clip fades out (not only `current`: after a reset of `current` the
+    // idle kept playing under the sit and the two mixed into a half-standing pose)
+    Object.entries(this.clips).forEach(([n, a]) => { if (n !== name && a.isRunning()) a.fadeOut(0.2); });
     this.clips[name].reset().fadeIn(0.2).play();
     this.current = name;
   }

@@ -1,6 +1,17 @@
 import { Character } from './Character.js';
 import { Behaviors } from './Behaviors.js';
 
+/** Villagers are HD characters on the square (Character.setHd), blocky everywhere else. */
+export const HD_PLACES = new Set(['village']);
+/** The HD model and dressing for a villager's blocky look. */
+export function villagerHd(look) {
+  const woman = !!(look.skirt || look.headscarf || look.bun);
+  return {
+    key: woman ? 'hd.casual.girl' : look.vest ? 'hd.suit.boy' : 'hd.casual.boy',
+    opts: { covered: !!look.headscarf, scarfColor: look.headscarf ?? null, dress: !!look.skirt, look },
+  };
+}
+
 /** A non-player character: stands at an anchor in a location and runs a behaviour. */
 export class Npc extends Character {
   constructor(id, def, deps) {
@@ -31,6 +42,17 @@ export class Npc extends Character {
     if (!this.home) throw new Error(`${this.id}: unknown anchor ${location.id}.${anchor}`);
     this.place(this.home);
     this.setBehavior(behaviorName);
+    this.#hdFor(location.id);
+  }
+
+  /** HD on the square, blocky elsewhere; sitting behaviours sit the HD body down. */
+  #hdFor(place) {
+    const on = HD_PLACES.has(place);
+    if (!on && !this.hdOn) return;
+    this.hdOn = on;
+    const { key, opts } = villagerHd(this.appearance);
+    this.seated = on && !!this.behavior.seated;
+    this.setHd(this.models, key, on, opts);
   }
 
   setBehavior(name) {
@@ -44,6 +66,7 @@ export class Npc extends Character {
     Object.keys(r.props).forEach((p) => this.showProp(p, false));
     this.behavior = Behaviors[name] ?? Behaviors.stand;
     (this.behavior.props || []).forEach((p) => this.showProp(p, true));
+    if (this.hdOn) { this.seated = !!this.behavior.seated; this.replayHd(); }
   }
 
   /**
