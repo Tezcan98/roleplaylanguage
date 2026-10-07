@@ -257,9 +257,19 @@ try {
   // --- shopping: the bag, rubbish bins, the table at home -------------------------------
   const bag = (k) => ev((k) => window.__game.inventory.count(k), k);
   const picks = () => ev(() => [...document.querySelectorAll('.overlay.open .blist .pick')].map((b) => b.textContent));
-  await ev(() => { const g = window.__game; g.inventory.add('para', 100); g.dialogue.effects.run(['buy:elma:20', 'buy:sut:15']); });
-  check('bought at the greengrocer and the grocer: in the bag, paid from it', (await bag('elma')) === 1 && (await bag('sut')) === 1 && (await bag('para')) === 65);
-  check('…the greengrocer sells any day (fruit menu)', await ev(() => !!window.__game.dialogue.dialogues.manav.nodes['buy-portakal'] && window.__game.dialogue.dialogues.manav.nodes.idle.options.some((o) => o.next === 'shop')));
+  const money0 = await bag('para');
+  check('game money: a new game starts with some lira, shown in the HUD', money0 >= 30 && (await page.textContent('.hud .money')).includes(String(money0)));
+  await ev(() => window.__game.inventory.add('para', 100));
+  await ev(() => window.__game.market.open('manav')); await sleep(300);
+  check('the greengrocer\'s shop window: a shelf of slots with prices', (await page.$$('.market.open .mk-slot:not(.mk-none)')).length === 6 && (await page.$$('.market.open .mk-slot.mk-none')).length === 6);
+  await page.click('.market.open .mk-slot[aria-label="kilo elma"]'); await sleep(200);
+  check('…tap one: what it is and its price in words', (await page.textContent('.market.open .mk-info')).includes('yirmi lira'));
+  await page.click('.market.open .mk-buy'); await sleep(300);
+  check('…bought: in the bag, paid with the game money', (await bag('elma')) === 1 && (await bag('para')) === money0 + 80 && (await page.textContent('.market.open .mk-purse')).includes(`${money0 + 80} lira`));
+  await ev(() => window.__game.market.close());
+  await ev(() => window.__game.dialogue.effects.run(['buy:sut:15']));
+  check('bought at the greengrocer and the grocer: in the bag, paid from it', (await bag('elma')) === 1 && (await bag('sut')) === 1 && (await bag('para')) === money0 + 65);
+  check('…the greengrocer sells any day (his shop window)', await ev(() => window.__game.dialogue.dialogues.manav.nodes.idle.options.some((o) => o.do?.includes('market:manav'))));
   await goTo('village.trash1'); await sleep(500);
   check('a rubbish bin on the square: "Çöpe at"', (await ev(() => document.getElementById('act').textContent)).includes('Çöpe at'), await ev(() => document.getElementById('act').textContent));
   await page.keyboard.press('e'); await sleep(400);

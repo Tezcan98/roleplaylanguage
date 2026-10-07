@@ -92,8 +92,11 @@ export class VillageSquare extends Location {
     });
     C.addBox(-2.2, 2.2, -10.0, -8.4);
     this.anchor('manav', 0, -7.8, 0);
+    this.hotspot('village.manavStall', -1.8, -7.7, 1.0); // the greengrocer's shop window
     addTrashBin(this, mf, C, 'village.trash1', 3.0, -8.6); // between the greengrocer and the grocer
     addTrashBin(this, mf, C, 'village.trash2', 5.6, -4.4);
+    // more round the square: by the fountain benches, the library, the west benches, the tea garden
+    [[-7.6, 5.4], [7.6, 5.4], [-22, -16.6], [-18, 0], [7.4, 9.5]].forEach(([x, z], i) => addTrashBin(this, mf, C, `village.trash${i + 3}`, x, z));
 
     // the tailor's stall (terzi): HD outfits on a mannequin (main.js puts the model on it); opens the shop
     this.prop(kit, 'prop.terzi', -5, 0, -9.4, 0, () => mf.group(
@@ -489,7 +492,7 @@ export class VillageSquare extends Location {
     [0xE4574A, 0xF4D03F, 0x5DADE2, 0x58D68D].forEach((c, i) => add(mf.at(mf.sphere(0.04, c, 6), x - 0.36 + (i % 2) * 0.1, 1.12 + Math.floor(i / 2) * 0.08, cz)));
     C.addBox(x - 1.6, x + 1.6, cz - 0.35, cz + 0.35);
     this.anchor('bakkal', x, cz - 0.75, 0); // behind the counter, facing the square
-    this.hotspot('village.bakkalCounter', x1 - 1.0, z1 + 0.9, 1.0);
+    this.hotspot('village.bakkalCounter', x1 - 1.0, z1 + 0.9, 1.0); // the shop window (ui/MarketView.js)
     // outside: bread basket, crates of produce and milk bottles under a striped awning
     add(mf.at(mf.box(w + 0.4, 0.06, 1.6, { tex: 'awning', repeat: [4, 1] }), x, 2.75, z1 + 0.6)).rotation.x = 0.18;
     [x0 + 0.1, x1 - 0.1].forEach((px) => add(mf.at(mf.box(0.1, 2.7, 0.1, WOOD), px, 1.35, z1 + 1.35)));

@@ -43,3 +43,30 @@ export const goodLook = (kind) => GOOD_LOOKS[kind] ?? anything;
 export const TABLE_WORDS = [['masa', 'table'], ['koymak', 'to put'], ['almak', 'to take']];
 export const BIN_WORDS = [['çöp kutusu', 'rubbish bin'], ['çöp', 'rubbish'], ['atmak', 'to throw (away)']];
 
+
+/**
+ * The shops' shelves (ui/MarketView.js): [kind, price in lira, icon, what you get].
+ * Paid with the game money in the bag ('para').
+ */
+export const MARKETS = {
+  bakkal: {
+    title: 'Mehmet Bakkal', en: "Mehmet's grocery", npc: 'bakkal',
+    goods: [['ekmek', 10, '🍞', 'bir ekmek'], ['sut', 15, '🥛', 'bir şişe süt'], ['simit', 10, '🥯', 'bir simit'], ['ayran', 10, '🥤', 'bir ayran'], ['peynir', 60, '🧀', 'yarım kilo peynir'], ['yumurta', 30, '🥚', 'altı yumurta']],
+  },
+  manav: {
+    title: 'Rıza Manav', en: "Rıza's greengrocer's", npc: 'manav',
+    goods: [['elma', 20, '🍎', 'bir kilo elma'], ['portakal', 25, '🍊', 'bir kilo portakal'], ['armut', 20, '🍐', 'bir kilo armut'], ['muz', 30, '🍌', 'bir kilo muz'], ['domates', 15, '🍅', 'bir kilo domates'], ['patates', 10, '🥔', 'bir kilo patates']],
+  },
+};
+
+const ONES = ['', 'bir', 'iki', 'üç', 'dört', 'beş', 'altı', 'yedi', 'sekiz', 'dokuz'];
+const TENS = ['', 'on', 'yirmi', 'otuz', 'kırk', 'elli', 'altmış', 'yetmiş', 'seksen', 'doksan'];
+/** 0–999 in Turkish words: 25 → "yirmi beş". */
+export function sayNumber(n) {
+  if (!n) return 'sıfır';
+  const h = Math.floor(n / 100), t = Math.floor((n % 100) / 10), o = n % 10;
+  return [h ? `${h > 1 ? `${ONES[h]} ` : ''}yüz` : '', TENS[t], ONES[o]].filter(Boolean).join(' ');
+}
+
+/** Chores at home: mom gives a little pocket money for each, once a day. */
+export const CHORE_PAY = { wash_dishes: 5, sweep_house: 5, set_table: 5, water_garden: 5 };

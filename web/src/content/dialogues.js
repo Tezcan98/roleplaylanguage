@@ -44,31 +44,13 @@ export const DIALOGUES = {
         options: [{ tr: 'Buyurun, otuz lira.', en: 'Here you are, thirty lira.', next: 'b4' }] },
       b4: { say: 'Teşekkürler. Paranın üstü beş lira. Annene selam söyle!', en: "Thanks. Your change is five lira. Say hello to your mom!", words: [['paranın üstü', 'change (money)'], ['beş', 'five']],
         options: [{ tr: 'Teşekkür ederim, iyi akşamlar!', en: 'Thank you, good evening!', do: ['take:para:25', 'give:ekmek', 'give:sut'] }] },
-      // shopping: ask for something, hear the price, pay (the money comes from the bag: 'buy')
+      // shopping: the shop window with the shelves (prices, paid from the bag)
       shop: { say: 'Hoş geldin! Ne istersin? Ekmek, süt, simit, ayran, peynir, yumurta… hepsi taze.', en: 'Welcome! What would you like? Bread, milk, simit, ayran, cheese, eggs… all fresh.',
         words: [['bakkal', 'grocer'], ['taze', 'fresh'], ['istemek', 'to want']],
         options: [
-          { tr: 'Bir ekmek lütfen.', en: 'A loaf of bread, please.', next: 'buy-ekmek' },
-          { tr: 'Bir süt lütfen.', en: 'A milk, please.', next: 'buy-sut' },
-          { tr: 'Bir simit lütfen.', en: 'A simit, please.', next: 'buy-simit' },
-          { tr: 'Bir ayran lütfen.', en: 'An ayran, please.', next: 'buy-ayran' },
-          { tr: 'Yarım kilo peynir lütfen.', en: 'Half a kilo of cheese, please.', next: 'buy-peynir' },
-          { tr: 'Altı yumurta lütfen.', en: 'Six eggs, please.', next: 'buy-yumurta' },
+          { tr: 'Rafa bakayım.', en: 'Let me look at the shelves.', do: ['market:bakkal'] }, // the shop window (ui/MarketView.js)
           { tr: 'Sadece bakıyorum.', en: "I'm just looking." },
-          { tr: 'Bu kadar, teşekkürler.', en: "That's all, thank you." },
         ] },
-      'buy-ekmek': { ask: 'listen', say: 'Bir ekmek on lira.', en: 'A loaf of bread is ten lira.', prompt: 'Kaç lira?', words: [['ekmek', 'bread'], ['on', 'ten']],
-        options: [{ tr: 'Buyurun, on lira.', en: 'Here you are, ten lira.', do: ['buy:ekmek:10'], next: 'shop' }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
-      'buy-sut': { ask: 'listen', say: 'Bir süt on beş lira.', en: 'A milk is fifteen lira.', prompt: 'Kaç lira?', words: [['süt', 'milk'], ['on beş', 'fifteen']],
-        options: [{ tr: 'Buyurun, on beş lira.', en: 'Here you are, fifteen lira.', do: ['buy:sut:15'], next: 'shop' }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
-      'buy-simit': { ask: 'listen', say: 'Bir simit on lira.', en: 'A simit is ten lira.', prompt: 'Kaç lira?', words: [['simit', 'simit (sesame bread ring)'], ['on', 'ten']],
-        options: [{ tr: 'Buyurun, on lira.', en: 'Here you are, ten lira.', do: ['buy:simit:10'], next: 'shop' }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
-      'buy-ayran': { ask: 'listen', say: 'Bir ayran on lira.', en: 'An ayran is ten lira.', prompt: 'Kaç lira?', words: [['ayran', 'ayran (yogurt drink)'], ['on', 'ten']],
-        options: [{ tr: 'Buyurun, on lira.', en: 'Here you are, ten lira.', do: ['buy:ayran:10'], next: 'shop' }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
-      'buy-peynir': { ask: 'listen', say: 'Yarım kilo peynir altmış lira.', en: 'Half a kilo of cheese is sixty lira.', prompt: 'Kaç lira?', words: [['peynir', 'cheese'], ['yarım kilo', 'half a kilo'], ['altmış', 'sixty']],
-        options: [{ tr: 'Buyurun, altmış lira.', en: 'Here you are, sixty lira.', do: ['buy:peynir:60'], next: 'shop' }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
-      'buy-yumurta': { ask: 'listen', say: 'Altı yumurta otuz lira.', en: 'Six eggs are thirty lira.', prompt: 'Kaç lira?', words: [['yumurta', 'egg'], ['altı', 'six'], ['otuz', 'thirty']],
-        options: [{ tr: 'Buyurun, otuz lira.', en: 'Here you are, thirty lira.', do: ['buy:yumurta:30'], next: 'shop' }, { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true }] },
     },
   },
 

@@ -114,6 +114,8 @@ import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
 import { ListModal } from './ui/ListModal.js';
 import { TableAndBins } from './systems/TableAndBins.js';
+import { MarketView } from './ui/MarketView.js';
+import { CHORE_PAY } from './content/goods.js';
 import { DialogueView } from './ui/DialogueView.js';
 
 import { gloss, wordNote, loadGlossLang, glossLang } from './i18n/Gloss.js';
@@ -272,15 +274,7 @@ effects
   })
   .register('wear', (what, off) => { player.wear(what, off !== 'off'); state.flags[`wear-${what}`] = off !== 'off'; })
   // the grocer: pay from the bag (no money, no shopping)
-  .register('buy', (kind, price) => {
-    const p = Number(price);
-    if (inventory.count('para') < p) { toasts.show(`Paran yetmiyor: ${p} lira lazım`, gloss('Not enough money. Ask dad for pocket money!')); return; }
-    inventory.remove('para', p);
-    inventory.add(kind, 1);
-    state.bought[kind] = (state.bought[kind] ?? 0) + 1; // yours: for the table or the bin
-    const { tr, en } = items.info(kind);
-    toasts.show(`+1 ${tr} · −${p} lira`, gloss(en));
-  })
+  .register('buy', (kind, price) => buyGood(kind, Number(price)))
   // dad's pocket money: once a day
   .register('pocket-money', (n) => {
     const key = `harclik-${state.day}`;
@@ -301,6 +295,27 @@ effects
     bus.emit(EV.INVENTORY);
   });
 story.setEffects(effects);
+
+// --- game money (lira in the bag): shop windows at the grocer's and the greengrocer's ---
+function buyGood(kind, p) {
+  if (inventory.count('para') < p) { toasts.show(`Paran yetmiyor: ${p} lira lazım`, gloss('Not enough money. Ask dad for pocket money!')); return false; }
+  inventory.remove('para', p);
+  inventory.add(kind, 1);
+  state.bought[kind] = (state.bought[kind] ?? 0) + 1; // yours: for the table or the bin
+  const { tr, en } = items.info(kind);
+  vocab.learn(tr.replace(/^kilo /, ''), en.replace(/^kg of /, ''));
+  toasts.show(`+1 ${tr} · −${p} lira`, gloss(en));
+  return true;
+}
+const market = new MarketView(host, { modes, items, vocab, money: () => inventory.count('para'), buy: buyGood });
+effects.register('market', (id) => setTimeout(() => market.open(id), 0)); // after the conversation has closed
+// chores at home: mom gives a little pocket money, once a day each
+bus.on(EV.FREE_ACTION, ({ id }) => {
+  const pay = CHORE_PAY[id], key = `chore-${id}-${state.day}`;
+  if (!pay || state.flags[key]) return;
+  state.flags[key] = true;
+  setTimeout(() => { inventory.add('para', pay); toasts.show(`Annen sana ${pay} lira harçlık verdi!`, gloss('Mom gave you pocket money for helping!')); }, 1200);
+});
 
 // --- what you bought: on the table at home, or in a rubbish bin ---
 const tableAndBins = new TableAndBins({ state, inventory, items, world, mf, list, toasts, vocab, bus });
@@ -528,7 +543,7 @@ const hud = new Hud(host, {
 const refreshQuest = () => questPanel.show(story.objective());
 bus.on(EV.TIME, () => hud.setTime(time.dayName, time.label, time.isNight));
 bus.on(EV.WORD, ({ size }) => hud.setWords(size));
-bus.on(EV.INVENTORY, () => { hud.setBag(inventory.size); hud.setTextbook(inventory.has('kitap')); refreshQuest(); });
+bus.on(EV.INVENTORY, () => { hud.setBag(inventory.size); hud.setMoney(inventory.count('para')); hud.setTextbook(inventory.has('kitap')); refreshQuest(); });
 bus.on(EV.CREDITS, ({ balance }) => hud.setCredits(balance));
 hud.setCredits(wallet.balance); // from the start (online from the menu, too)
 bus.on(EV.QUEST, refreshQuest);
@@ -675,7 +690,7 @@ function startNew(then) {
     const dayIndex = Number.isInteger(requestedDay) && requestedDay > 0
       ? STORY.chapters.findIndex((ch) => ch.day === requestedDay)
       : 0;
-    hud.setCredits(wallet.balance); hud.setWords(vocab.size); hud.setBag(inventory.size);
+    hud.setCredits(wallet.balance); hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setMoney(inventory.count('para'));
     story.startChapter(dayIndex >= 0 ? dayIndex : 0, () => {
       enterPlay();
       const think = story.chapter.think;
@@ -689,7 +704,7 @@ function continueGame(then) {
     state.restore(saved);
     player.wear('jacket', !!state.flags['wear-jacket']);
     items.refresh();
-    hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setCredits(wallet.balance); hud.setTextbook(inventory.has('kitap'));
+    hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setMoney(inventory.count('para')); hud.setCredits(wallet.balance); hud.setTextbook(inventory.has('kitap'));
     story.resume(world.get(state.location).spawn, () => { enterPlay(); then?.(); });
   });
 }
@@ -745,4 +760,4 @@ setInterval(() => {
 }, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

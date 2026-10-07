@@ -465,3 +465,26 @@ body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.op
 .shop-pic{width:84px;height:105px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
 .shop-aura{width:84px;height:105px;background:radial-gradient(ellipse 42px 14px at 50% 82%,rgba(255,213,74,.95) 0 55%,rgba(255,233,160,.35) 70%,transparent 72%);animation:auraPulse 1.6s ease-in-out infinite}
 @keyframes auraPulse{50%{filter:brightness(1.35)}}
+/* shop window at the grocer's / greengrocer's (ui/MarketView.js): an MMO-style shelf of slots */
+.market .mk-win{width:min(360px,94vw);background:linear-gradient(#3B2A1E,#24180F);border:3px solid #B88A3E;border-radius:10px;box-shadow:0 0 0 2px #1A110A,0 10px 30px rgba(0,0,0,.6),inset 0 0 18px rgba(0,0,0,.6);color:#F4E6C8;padding:8px 10px 12px}
+.market .mk-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 4px 8px;border-bottom:1px solid #6B5233;margin-bottom:10px}
+.market .mk-title{font:700 17px Fredoka,sans-serif;color:#F1C66A;text-shadow:0 1px 0 #000}
+.market .mk-title small{color:#CDB894;font-weight:500;font-size:12px}
+.market .mk-x{width:30px;height:30px;border-radius:6px;border:1px solid #B88A3E;background:#5A2A1E;color:#F4E6C8;display:grid;place-items:center;cursor:pointer;padding:0}
+.market .mk-x svg{width:16px;height:16px}
+.market .mk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#140D08;border:1px solid #6B5233;border-radius:6px;box-shadow:inset 0 0 10px #000}
+.market .mk-slot{position:relative;aspect-ratio:1;border:1px solid #6B5233;border-radius:4px;background:radial-gradient(#3A2B1F,#1E140D);box-shadow:inset 0 0 6px #000;display:grid;place-items:center;padding:0;cursor:pointer;color:inherit}
+.market .mk-slot.mk-none{cursor:default;opacity:.55}
+.market .mk-slot.on{border-color:#F1C66A;box-shadow:0 0 0 2px #F1C66A,inset 0 0 8px #000}
+.market .mk-slot.poor .mk-icon{filter:grayscale(.7) brightness(.7)}
+.market .mk-icon{font-size:30px;line-height:1}
+.market .mk-price{position:absolute;right:3px;bottom:2px;font:700 11px Nunito,sans-serif;color:#F1C66A;text-shadow:0 1px 1px #000}
+.market .mk-info{min-height:84px;margin-top:10px;padding:8px 10px;background:rgba(0,0,0,.35);border:1px solid #6B5233;border-radius:6px;display:flex;flex-direction:column;gap:4px}
+.market .mk-name{font:700 16px Fredoka,sans-serif}
+.market .mk-name small,.market .mk-hint small{color:#CDB894;font:500 12px Nunito,sans-serif}
+.market .mk-cost{color:#F1C66A;font-weight:700}
+.market .mk-hint{color:#CDB894;margin:auto 0}
+.market .mk-buy{align-self:flex-end;background:#B88A3E;color:#1A110A;border-color:#1A110A;padding:6px 16px}
+.market .mk-buy[disabled]{background:#5A4A3A;color:#BBA98F}
+.market .mk-purse{margin-top:8px;text-align:right;font-weight:700;color:#F4E6C8}
+.market .mk-purse b{color:#F1C66A}

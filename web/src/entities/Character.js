@@ -13,6 +13,7 @@ export class Character {
   #hdKey = null;
   #hdWanted = false;
   #lastPos = null;
+  #kick = null; // { t, dur, power }: a kick of the ball, the right leg swings
   constructor(id, appearance, { mf, models }) {
     this.id = id;
     this.appearance = appearance;
@@ -90,6 +91,23 @@ export class Character {
     const r = this.rig, s = Math.sin(t * 10) * 0.6 * amount;
     r.legL.rotation.x = s; r.legR.rotation.x = -s; r.armL.rotation.x = -s * 0.8; r.armR.rotation.x = s * 0.8;
     this.#playClip(amount > 0.05 ? 'walk' : 'idle');
+    this.#kickPose();
+  }
+
+  /** Kick the ball: the right leg swings back and through (`power` 0–1: a hard shot swings more). */
+  kick(power = 0.6, hold = null) { // `hold` (0–1): stop at that moment of the swing (tools: pictures of the pose)
+    if (!this.seated && !this.posed) this.#kick = { t: (hold ?? 0) * 0.42, dur: 0.42, power: 0.6 + 0.6 * power, hold: hold != null };
+  }
+
+  /** The kicking leg on top of the walk (blocky: the leg joint; HD: the thigh bone, after the animation). */
+  #kickPose() {
+    const k = this.#kick;
+    if (!k) return;
+    const p = Math.min(1, k.t / k.dur);
+    const a = (p < 0.3 ? 0.5 * (p / 0.3) : 0.5 - 1.9 * Math.sin(((p - 0.3) / 0.7) * Math.PI)) * k.power; // back, then through
+    this.rig.legR.rotation.x = a; // + swings the leg back, − forward
+    const thigh = this.mixer && this.mixer === this.#hd?.mixer ? this.#hd.scene.getObjectByName('UpperLegR') : null;
+    if (thigh) thigh.rotateX(a); // the bone's x axis turns the same way as the blocky leg's
   }
 
   update(dt) {
@@ -101,6 +119,7 @@ export class Character {
     }
     this.#lastPos = { x: this.group.position.x, z: this.group.position.z };
     this.mixer?.update(dt);
+    if (this.#kick) { if (!this.#kick.hold) this.#kick.t += dt; this.#kickPose(); if (this.#kick.t >= this.#kick.dur) { this.#kick = null; this.rig.legR.rotation.x = 0; } }
     const skirt = this.#hd?.skirt;
     if (skirt) { skirt.skirt.visible = this.#hd.scene.visible && !this.seated; if (skirt.skirt.visible) skirt.follow(); } // seated: the legs, in the dress's colour
     if (this.#aura?.visible) { const k = 0.5 + 0.5 * Math.sin(performance.now() / 260); this.#aura.children[1].material.opacity = 0.55 + 0.4 * k; this.#aura.rotation.z += dt * 0.8; }

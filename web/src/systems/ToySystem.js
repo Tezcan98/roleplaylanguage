@@ -39,6 +39,7 @@ export class ToySystem {
     if (!entry) return false;
     const rot = this.player.group.rotation.y;
     entry.toy.shoot(Math.sin(rot), Math.cos(rot));
+    this.player.kick?.(1);
     entry.cool = KICK_COOLDOWN * 2;
     entry.onKick?.(entry.toy);
     return true;
@@ -76,6 +77,7 @@ export class ToySystem {
     if (d >= reach) return;
     if (speed > 0.5 && entry.cool <= 0) {
       toy.kick(p, Math.min(1, speed / 6));
+      this.player.kick?.(Math.min(1, speed / 6));
       entry.cool = KICK_COOLDOWN;
       entry.onKick?.(toy);
       if (!entry.quiet && t - this.#wordsAt > WORDS_EVERY) { this.#wordsAt = t; this.free.perform(entry.action); }

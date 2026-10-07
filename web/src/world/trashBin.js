@@ -10,8 +10,9 @@ export function addTrashBin(loc, mf, C, id, x, z, reach = 1.15) {
     mf.at(mf.box(0.16, 0.04, 0.05, 0x1B4A2E), 0, 0.8, 0),
   );
   bin.position.set(x, 0, z);
+  bin.scale.setScalar(1.25); // big enough to be seen across the square
   loc.add(bin);
-  C.addCircle(x, z, 0.3);
+  C.addCircle(x, z, 0.36);
   loc.hotspot(id, x, z, reach);
   return bin;
 }

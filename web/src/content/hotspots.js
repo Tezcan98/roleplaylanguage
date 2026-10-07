@@ -33,7 +33,8 @@ export const HOTSPOTS = {
   'village.fountain': free('village_fountain'),
   'village.well': free('village_well'),
   ...Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`village.bench${i + 1}`, { label: 'Banka otur', use: [`sit:bench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])), // BENCH_SEATS in VillageSquare
-  'village.bakkalCounter': free('village_shop'),
+  'village.bakkalCounter': { label: 'Alışveriş yap', use: ['market:bakkal'] }, // shop windows (ui/MarketView.js)
+  'village.manavStall': { label: 'Meyve sebze al', use: ['market:manav'] },
   // giant chess on the square (ChessGame), and the stools of the tea garden
   // seats in the tea garden and on the benches round the chess board (counts: TEA_SEATS / CHESS_SEATS in VillageSquare)
   ...Object.fromEntries(Array.from({ length: 22 }, (_, i) => [`village.cay${i + 1}`, { label: 'Çay bahçesinde otur', use: [`sit:cay${i + 1}`, 'free:village_tea'], available: (c) => !c.seated }])),
@@ -55,7 +56,7 @@ export const HOTSPOTS = {
   },
   // what you bought: on the sini at home, or in a rubbish bin (systems/TableAndBins.js)
   'house.tableGoods': { label: 'Masaya koy', use: ['table-goods'], available: (c) => looseGoods(c.state).length > 0 || c.state.table?.length > 0 },
-  ...Object.fromEntries(['house.trash', 'yard.trash', 'village.trash1', 'village.trash2'].map((id) => [id, { label: 'Çöpe at', use: ['trash'], available: (c) => looseGoods(c.state).length > 0 }])),
+  ...Object.fromEntries(['house.trash', 'yard.trash', ...Array.from({ length: 7 }, (_, i) => `village.trash${i + 1}`), 'school.trash1', 'school.trash2'].map((id) => [id, { label: 'Çöpe at', use: ['trash'] }])), // TRASH bins (world/trashBin.js)
   'house.tea': free('make_tea'),
   'house.table': free('set_table'),
   'house.dishes': free('wash_dishes'),

@@ -7,7 +7,8 @@ export class Inventory {
   count(kind) { return this.state.inventory[kind] || 0; }
   has(kind) { return this.count(kind) > 0; }
   entries() { return Object.entries(this.state.inventory).filter(([, n]) => n > 0); }
-  get size() { return this.entries().reduce((s, [, n]) => s + n, 0); }
+  /** Things in the bag (the money is counted on its own, in the HUD). */
+  get size() { return this.entries().reduce((s, [k, n]) => s + (k === 'para' ? 0 : n), 0); }
 
   add(kind, n = 1) {
     this.state.inventory[kind] = this.count(kind) + n;
