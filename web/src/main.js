@@ -56,7 +56,7 @@ import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, TestBilling, TEST_PURCHASES } from './services/monetization/Billing.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
-import { outfitOn, outfitModel, auraOn } from './content/shop.js';
+import { outfitOn, outfitModel, auraOn, migrateWallet } from './content/shop.js';
 import { LocalClassroomSession, WebSocketClassroomSession } from './services/multiplayer/ClassroomSession.js';
 import { ClassroomView } from './ui/ClassroomView.js';
 import { VillageNetwork } from './services/multiplayer/VillageNetwork.js';
@@ -113,6 +113,7 @@ import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
 import { ListModal } from './ui/ListModal.js';
+import { TableAndBins } from './systems/TableAndBins.js';
 import { DialogueView } from './ui/DialogueView.js';
 
 import { gloss, wordNote, loadGlossLang, glossLang } from './i18n/Gloss.js';
@@ -197,6 +198,7 @@ const vocab = new Vocabulary(state, bus);
 const input = new InputSystem(joystick);
 // credits live on the device, apart from the story save (a new game keeps what you bought or earned)
 const wallet = new CreditWallet({ settings, bus, start: Math.max(START_CREDITS, new LocalSaveRepository().load()?.credits ?? 0) });
+migrateWallet(wallet);
 const player = new Player('ahmet', PLAYER_LOOKS[playerLook], { mf, models });
 ctx.scene.add(player.group);
 lighting.follow = player.position;
@@ -275,6 +277,7 @@ effects
     if (inventory.count('para') < p) { toasts.show(`Paran yetmiyor: ${p} lira lazım`, gloss('Not enough money. Ask dad for pocket money!')); return; }
     inventory.remove('para', p);
     inventory.add(kind, 1);
+    state.bought[kind] = (state.bought[kind] ?? 0) + 1; // yours: for the table or the bin
     const { tr, en } = items.info(kind);
     toasts.show(`+1 ${tr} · −${p} lira`, gloss(en));
   })
@@ -298,6 +301,10 @@ effects
     bus.emit(EV.INVENTORY);
   });
 story.setEffects(effects);
+
+// --- what you bought: on the table at home, or in a rubbish bin ---
+const tableAndBins = new TableAndBins({ state, inventory, items, world, mf, list, toasts, vocab, bus });
+effects.register('table-goods', () => tableAndBins.atTable()).register('trash', () => tableAndBins.atBin());
 
 // --- prayer scene, meal times ---
 const prayer = new PrayerScene({ playerRow: () => (playerGender() === 'girl' ? 'saf2c' : 'saf1b'),
@@ -721,16 +728,16 @@ setInterval(() => {
   const t = game.t, anne = cast.get('anne');
   if (kid.roam.jumping && anne?.location === 'house' && t - kidScoldAt > 45) {
     kidScoldAt = t;
-    labels.bubble(anne, 'Ali, yatakta zıplama!', null, 3);
+    labels.bubble(anne, 'Ali, yatakta zıplama!', null, 3, "Ali, don't jump on the bed!");
     tts.speak('Ali, yatakta zıplama!', { speaker: 'anne' });
-    setTimeout(() => { labels.bubble(kid, 'Tamam anne!', null, 2.5); tts.speak('Tamam anne!', { speaker: 'kardes' }); }, 1800);
+    setTimeout(() => { labels.bubble(kid, 'Tamam anne!', null, 2.5, 'Okay mum!'); tts.speak('Tamam anne!', { speaker: 'kardes' }); }, 1800);
   } else if (t > kidAskAt && kid.position.distanceTo(player.position) < 4.5) {
     kidAskAt = t + 240; // not too often: he is a child, not a teacher
     const call = `${playerGender() === 'girl' ? 'Abla' : 'Abi'}, bu ne? Gel bak!`;
-    labels.bubble(kid, call, null, 4);
+    labels.bubble(kid, call, null, 4, 'Look, what is this? Come and see!');
     tts.speak(call, { speaker: 'kardes' });
   }
 }, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__game = { shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

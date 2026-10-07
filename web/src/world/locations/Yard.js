@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { Foliage } from '../../engine/Foliage.js';
+import { addTrashBin } from '../trashBin.js';
 
 const DARK = { tex: 'darkWood' };
 
@@ -36,6 +37,7 @@ export class Yard extends Location {
     });
     C.addBox(-5.1, 5.1, -17.1, -10.9);
     this.hotspot('yard.door', 0, -10.2);
+    addTrashBin(this, mf, C, 'yard.trash', -3.2, -10.45);
     this.anchor('houseDoor', 0, -9.4, 0);
 
     // fountain (çeşme)

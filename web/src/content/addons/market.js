@@ -6,6 +6,28 @@ import { man, M2 } from '../characters.js';
  */
 const face = '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#C9E6A8"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M16 30q4-12 16-12t16 12q-6-3-16-3t-16 3z" fill="#4A3426"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M25 43q7 5 14 0" stroke="#7A3B2A" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>';
 
+/** Shopping any day: [kind, what you ask for, en, price line, en, price, words]. Paid from the bag ('buy'). */
+const FRUIT = [
+  ['elma', 'Bir kilo elma lütfen.', 'A kilo of apples, please.', 'Elmanın kilosu yirmi lira.', 'Apples are twenty lira a kilo.', 20, [['elma', 'apple'], ['yirmi', 'twenty']]],
+  ['portakal', 'Bir kilo portakal lütfen.', 'A kilo of oranges, please.', 'Portakalın kilosu yirmi beş lira.', 'Oranges are twenty-five lira a kilo.', 25, [['portakal', 'orange'], ['yirmi beş', 'twenty-five']]],
+  ['armut', 'Bir kilo armut lütfen.', 'A kilo of pears, please.', 'Armudun kilosu yirmi lira.', 'Pears are twenty lira a kilo.', 20, [['armut', 'pear'], ['yirmi', 'twenty']]],
+  ['muz', 'Bir kilo muz lütfen.', 'A kilo of bananas, please.', 'Muzun kilosu otuz lira.', 'Bananas are thirty lira a kilo.', 30, [['muz', 'banana'], ['otuz', 'thirty']]],
+  ['domates', 'Bir kilo domates lütfen.', 'A kilo of tomatoes, please.', 'Domatesin kilosu on beş lira.', 'Tomatoes are fifteen lira a kilo.', 15, [['domates', 'tomato'], ['on beş', 'fifteen']]],
+  ['patates', 'Bir kilo patates lütfen.', 'A kilo of potatoes, please.', 'Patatesin kilosu on lira.', 'Potatoes are ten lira a kilo.', 10, [['patates', 'potato'], ['on', 'ten']]],
+];
+const NUM = { 10: ['on', 'ten'], 15: ['on beş', 'fifteen'], 20: ['yirmi', 'twenty'], 25: ['yirmi beş', 'twenty-five'], 30: ['otuz', 'thirty'] };
+const SHOP = {
+  shop: { say: 'Buyur evlat! Elma, portakal, armut, muz, domates, patates… Hangisinden istersin?', en: 'Here you are, kid! Apples, oranges, pears, bananas, tomatoes, potatoes… Which would you like?',
+    words: [['meyve', 'fruit'], ['sebze', 'vegetable'], ['kilo', 'kilogram']],
+    options: [...FRUIT.map(([kind, tr, en]) => ({ tr, en, next: `buy-${kind}` })), { tr: 'Bu kadar, teşekkürler.', en: "That's all, thank you." }] },
+  ...Object.fromEntries(FRUIT.map(([kind, , , say, en, price, words]) => [`buy-${kind}`, {
+    ask: 'listen', say, en, prompt: 'Kaç lira?', words,
+    options: [
+      { tr: `Buyurun, ${NUM[price][0]} lira.`, en: `Here you are, ${NUM[price][1]} lira.`, do: [`buy:${kind}:${price}`], next: 'shop' },
+      { tr: 'Çok pahalı!', en: 'Too expensive!', wrong: true },
+    ] }])),
+};
+
 export default {
   id: 'market',
 
@@ -71,7 +93,8 @@ export default {
           options: [{ tr: 'Teşekkürler, kolay gelsin!', en: 'Thanks, take it easy!', do: ['take:para:40', 'give:elma', 'give:patates:2'] }] },
         idle: { say: 'Taze meyve, taze sebze! Elma, armut, portakal, domates, patates…', en: 'Fresh fruit, fresh vegetables! Apples, pears, oranges, tomatoes, potatoes…',
           words: [['meyve', 'fruit'], ['sebze', 'vegetable'], ['armut', 'pear'], ['portakal', 'orange']],
-          options: [{ tr: 'Kolay gelsin!', en: 'Take it easy!' }, { tr: 'Domates tohumu var mı?', en: 'Do you have tomato seeds?', next: 'seeds' }] },
+          options: [{ tr: 'Meyve sebze almak istiyorum.', en: 'I want to buy fruit and vegetables.', next: 'shop' }, { tr: 'Kolay gelsin!', en: 'Take it easy!' }, { tr: 'Domates tohumu var mı?', en: 'Do you have tomato seeds?', next: 'seeds' }] },
+        ...SHOP,
       },
     },
   },

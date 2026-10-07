@@ -53,11 +53,11 @@ export class TalkAreas {
   }
 
   /** A villager says a line: a bubble over the head for anyone near. Returns its length in s. */
-  #say({ who, tr }) {
+  #say({ who, tr, en }) {
     const c = this.cast.get(who);
     const secs = 2.2 + tr.length * 0.07;
     if (!c?.visible || c.location !== 'village') return 0;
-    if (Math.hypot(c.position.x - this.player.position.x, c.position.z - this.player.position.z) < NEAR) this.labels.bubble(c, tr, null, secs);
+    if (Math.hypot(c.position.x - this.player.position.x, c.position.z - this.player.position.z) < NEAR) this.labels.bubble(c, tr, null, secs, en);
     return secs;
   }
 

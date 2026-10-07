@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { el } from './dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 /** HTML labels pinned to 3D positions: NPC names and the player's thought bubble. */
 export class LabelLayer {
@@ -20,12 +21,16 @@ export class LabelLayer {
 
   think(text, seconds, now) { this.thought.textContent = text; this.thinkUntil = now + seconds; }
 
-  /** Speech bubble over a character for a few seconds (`mood`: 'ok' | 'bad'). */
-  bubble(character, text, mood, seconds = 3.5) {
+  /**
+   * Speech bubble over a character for a few seconds (`mood`: 'ok' | 'bad'). `en`: what it
+   * means, shown under the Turkish in the player's own language (hidden with the translations).
+   */
+  bubble(character, text, mood, seconds = 3.5, en = '') {
     let b = this.bubbles.get(character.id);
     if (!b) { b = { node: el('div', { class: 'bubble' }) }; this.root.append(b.node); this.bubbles.set(character.id, b); }
     Object.assign(b, { character, until: performance.now() / 1000 + seconds });
-    b.node.textContent = text;
+    const meaning = en && gloss(en);
+    b.node.replaceChildren(text, ...(meaning ? [el('small', { class: 'bubble-en en-t', text: meaning })] : []));
     b.node.className = `bubble ${mood ?? ''}`;
   }
 

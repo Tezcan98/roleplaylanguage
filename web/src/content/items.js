@@ -64,4 +64,8 @@ export const KIND_NAMES = {
   ayran: { tr: 'ayran', en: 'ayran (yogurt drink)' },
   peynir: { tr: 'peynir', en: 'cheese' },
   yumurta: { tr: 'yumurta', en: 'egg' },
+  // bought at the greengrocer's (apples and potatoes: the market add-on)
+  portakal: { tr: 'kilo portakal', en: 'kg of oranges' },
+  armut: { tr: 'kilo armut', en: 'kg of pears' },
+  muz: { tr: 'kilo muz', en: 'kg of bananas' },
 };

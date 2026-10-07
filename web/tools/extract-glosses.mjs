@@ -49,6 +49,7 @@ for (const f of files(new URL('../src', import.meta.url).pathname)) {
   // toasts.show(…, 'english') / setLine(…, 'english') / en: 'english' in UI code
   for (const m of src.matchAll(/(?:toasts\.show|setLine)\([^;]*?,\s*'([^'$]+)'/g)) add(m[1]);
   for (const m of src.matchAll(/\b(?:en|titleEn):\s*'([^']+)'/g)) add(m[1]);
+  for (const m of src.matchAll(/labels\.bubble\([^;]*?,\s*(['"])((?:(?!\1).)+)\1\)/g)) add(m[2]); // a bubble's meaning (last argument)
 }
 // [tr, en] message pairs inside rule functions (door locks, house rules, decline texts)
 for (const f of ['content/hotspots.js', 'content/freeActions.js', 'systems/VillageMultiplayer.js']) {

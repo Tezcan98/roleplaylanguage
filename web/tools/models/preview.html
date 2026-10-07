@@ -16,7 +16,7 @@ window.render = async (file, covered, aura = false, dress = false) => {
   const scarf = paintOutfit(sc, dress ? 'dress' : outfit, gender);
   s.add(sc);
   if (covered) addHeadscarf(sc, s, scarf);
-  if (dress) addDress(sc, s);
+  if (dress) addDress(sc, s)?.follow();
   if (aura) { // the golden light under the feet
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.62, 48), new THREE.MeshBasicMaterial({ color: 0xFFD54A, side: THREE.DoubleSide }));
     const glow = new THREE.Mesh(new THREE.CircleGeometry(0.75, 48), new THREE.MeshBasicMaterial({ color: 0xFFE9A0, transparent: true, opacity: 0.55 }));

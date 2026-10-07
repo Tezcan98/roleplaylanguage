@@ -1,4 +1,5 @@
 import { FREE_ACTIONS } from './freeActions.js';
+import { looseGoods } from './goods.js';
 
 const free = (id) => ({ label: FREE_ACTIONS[id].label, use: [`free:${id}`] });
 /** A school day of the story (not a visit, not paused for practice). */
@@ -52,6 +53,9 @@ export const HOTSPOTS = {
     available: (c) => c.has('ekmek') && !c.flag('bread-on-table'),
     use: ['place-bread'],
   },
+  // what you bought: on the sini at home, or in a rubbish bin (systems/TableAndBins.js)
+  'house.tableGoods': { label: 'Masaya koy', use: ['table-goods'], available: (c) => looseGoods(c.state).length > 0 || c.state.table?.length > 0 },
+  ...Object.fromEntries(['house.trash', 'yard.trash', 'village.trash1', 'village.trash2'].map((id) => [id, { label: 'Çöpe at', use: ['trash'], available: (c) => looseGoods(c.state).length > 0 }])),
   'house.tea': free('make_tea'),
   'house.table': free('set_table'),
   'house.dishes': free('wash_dishes'),

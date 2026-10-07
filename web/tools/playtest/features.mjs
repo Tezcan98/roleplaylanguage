@@ -253,6 +253,33 @@ try {
   check('a ney plays softly in the library', (await ev(() => window.__game.ney.level)) > 0.3, String(await ev(() => window.__game.ney.level)));
   await ev(() => window.__game.player.position.set(4, 0, 4)); await sleep(300);
   check('…and not by the fountain', (await ev(() => window.__game.ney.level)) === 0);
+
+  // --- shopping: the bag, rubbish bins, the table at home -------------------------------
+  const bag = (k) => ev((k) => window.__game.inventory.count(k), k);
+  const picks = () => ev(() => [...document.querySelectorAll('.overlay.open .blist .pick')].map((b) => b.textContent));
+  await ev(() => { const g = window.__game; g.inventory.add('para', 100); g.dialogue.effects.run(['buy:elma:20', 'buy:sut:15']); });
+  check('bought at the greengrocer and the grocer: in the bag, paid from it', (await bag('elma')) === 1 && (await bag('sut')) === 1 && (await bag('para')) === 65);
+  check('…the greengrocer sells any day (fruit menu)', await ev(() => !!window.__game.dialogue.dialogues.manav.nodes['buy-portakal'] && window.__game.dialogue.dialogues.manav.nodes.idle.options.some((o) => o.next === 'shop')));
+  await goTo('village.trash1'); await sleep(500);
+  check('a rubbish bin on the square: "Çöpe at"', (await ev(() => document.getElementById('act').textContent)).includes('Çöpe at'), await ev(() => document.getElementById('act').textContent));
+  await page.keyboard.press('e'); await sleep(400);
+  check('…lists only what you bought (no money, no story things)', JSON.stringify(await picks()).includes('süt') && !JSON.stringify(await picks()).includes('lira'), JSON.stringify(await picks()));
+  await page.click('.overlay.open .blist .pick:has-text("süt")'); await sleep(300);
+  check('…the milk is thrown away', (await bag('sut')) === 0 && (await bag('elma')) === 1);
+  await ev(() => document.querySelector('.overlay.open .bookin .iconbtn')?.click()); await sleep(200);
+  await ev(() => window.__game.travel.place('house', 'start', { force: true })); await sleep(800);
+  await goTo('house.tableGoods'); await sleep(500);
+  check('at home by the sini: "Masaya koy"', (await ev(() => document.getElementById('act').textContent)).includes('Masaya koy'), await ev(() => document.getElementById('act').textContent));
+  await page.keyboard.press('e'); await sleep(400);
+  await page.click('.overlay.open .blist .pick:has-text("elma")'); await sleep(300);
+  check('…the apples are on the table (and out of the bag)', (await bag('elma')) === 0 && JSON.stringify(await ev(() => window.__game.story.state.table)) === '["elma"]' && (await ev(() => window.__game.tableAndBins.group.children.length)) === 1);
+  await page.click('.overlay.open .blist .pick:has-text("Masadan al")'); await sleep(300);
+  check('…and back in the bag', (await bag('elma')) === 1 && (await ev(() => window.__game.story.state.table.length)) === 0);
+  await page.click('.overlay.open .blist .pick:has-text("elma")'); await sleep(300);
+  await ev(() => document.querySelector('.overlay.open .bookin .iconbtn')?.click()); await sleep(200);
+  check('…saved with the game', (await ev(() => window.__game.story.state.snapshot().table)).includes('elma'));
+  await ev(() => { const g = window.__game; g.labels.bubble(g.player, 'Tamam anne!', null, 3, 'Okay mum!'); });
+  check('speech bubbles: the meaning under the Turkish, in the player\'s language', await ev(() => [...document.querySelectorAll('.bubble')].some((b) => b.textContent.includes('Tamam anne!') && b.querySelector('.bubble-en')?.textContent === '¡Vale, mamá!')));
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(600);
   await drainUi(page);
 
@@ -368,10 +395,14 @@ try {
     check('test payments (until the Play products are live): a pack is bought at once', await page.evaluate(() => window.__game.billing.buy({ id: 'credits_50' })));
     check('…on the web a pack says it is sold in the Android app', await e2(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('Android uygulamasında'))));
     check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
+    check('outfits need the HD character first', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Günlük kıyafet')).querySelector('button').disabled));
+    await e2(() => { window.__game.wallet.add(125); window.__game.shop.render(); }); // 181
+    await p2.click('.shop.open .shop-card:has-text("HD karakter") button'); await sleep(300);
+    check('the HD character (120 credits): bought and on, in its everyday clothes', (await e2(() => window.__game.wallet.equipped('hd'))) === 'hd' && (await e2(() => window.__game.wallet.balance)) === 61);
     await p2.click('.shop.open .shop-card:has-text("Günlük kıyafet") button'); await sleep(300);
-    check('an outfit (10 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 46);
+    check('an outfit (30 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 31);
     await p2.click('.shop.open .shop-card:has-text("Yıldız Işığı") button'); await sleep(300);
-    check('the glowing ring (15 credits)', (await e2(() => window.__game.wallet.equipped('aura'))) === 'aura' && (await e2(() => window.__game.wallet.balance)) === 31);
+    check('the glowing ring (25 credits)', (await e2(() => window.__game.wallet.equipped('aura'))) === 'aura' && (await e2(() => window.__game.wallet.balance)) === 6);
     await e2(() => window.__game.shop.close());
     // a full-screen ad between two story days (not within the same day)
     await e2(() => document.querySelector('.main-menu.open .btn')?.click()); await sleep(1500);

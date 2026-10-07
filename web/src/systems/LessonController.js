@@ -78,7 +78,7 @@ export class LessonController {
       room.writeBoard(lesson.title, step.board ?? []);
       (step.words ?? []).forEach(([tr, en]) => this.vocab?.learn(tr, en));
       this.tts.speak(step.say, { speaker: 'ogretmen' });
-      this.labels.bubble(this.cast.get('ogretmen'), step.say, null, 5);
+      this.labels.bubble(this.cast.get('ogretmen'), step.say, null, 5, step.en);
       const r = await new Promise((resolve) => {
         this.view.teachStep(step, i, lesson.teach.length, { onNext: () => resolve('next'), onSkip: lesson.isPractice || this.done(lesson.id) ? () => resolve('skip') : null /* revision: skippable */, onReplay: () => this.tts.speak(step.say, { speaker: 'ogretmen' }) });
         if (!step.repeat) return;
@@ -145,7 +145,7 @@ export class LessonController {
     // the player's own name would make the line new for every player (her voice is made once per sentence): she says the question only
     this.spoken = q.turnStudentId === 'ahmet' && q.who ? said.slice(q.who.length + 2).replace(/^./, (c) => c.toLocaleUpperCase('tr-TR')) : said;
     this.tts.speak(this.spoken, { speaker: 'ogretmen' });
-    this.labels.bubble(this.cast.get('ogretmen'), said, null, 4);
+    this.labels.bubble(this.cast.get('ogretmen'), said, null, 4, q.en);
     this.#activity?.destroy();
 
     if (q.turnStudentId !== 'ahmet') {

@@ -72,13 +72,14 @@ export class ShopView {
 
     // spend: outfits (one on at a time) and ad-free mode
     const items = SHOP.filter((i) => !i.for || i.for(this.gender, this.look)).map((i) => {
-      const owned = w.owns(i.id), worn = i.slot && w.equipped(i.slot) === i.id;
+      const owned = w.owns(i.id), worn = i.slot && w.equipped(i.slot) === i.id && (!i.needs || w.equipped(i.needs) === i.needs);
       let action;
-      if (!owned) action = btn(`🪙 ${i.price}`, 'buy', () => this.#buy(i), w.balance < i.price);
+      if (i.needs && !w.owns(i.needs)) action = btn('Önce HD karakter', '', () => {}, true); // outfits are for the HD character
+      else if (!owned) action = btn(`🪙 ${i.price}`, 'buy', () => this.#buy(i), w.balance < i.price);
       else if (!i.slot) action = btn('Alındı ✓', '', () => {}, true);
-      else action = worn ? btn('Çıkar', 'worn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Giy', 'go', () => { w.equip(i); this.onOutfit(); });
+      else action = worn ? btn('Çıkar', 'worn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Giy', 'go', () => { this.#wear(i); this.onOutfit(); });
       // what the character will look like (no icons): the outfit picture, a glowing ring
-      const pic = i.outfit || i.picture ? el('img', { class: 'shop-pic', attrs: { src: outfitPicture(i, this.gender, this.look), alt: i.title, loading: 'lazy' } }) : i.icon;
+      const pic = i.outfit || i.look || i.picture ? el('img', { class: 'shop-pic', attrs: { src: outfitPicture(i, this.gender, this.look), alt: i.title, loading: 'lazy' } }) : i.icon;
       return card(worn ? 'item worn' : 'item', pic, i.title, gloss(i.en), action);
     });
     this.body.replaceChildren(
@@ -87,8 +88,16 @@ export class ShopView {
     );
   }
 
+  /** An outfit puts the HD character on too. */
+  #wear(item) {
+    this.wallet.equip(item);
+    const needs = item.needs && SHOP.find((i) => i.id === item.needs);
+    if (needs) this.wallet.equip(needs);
+  }
+
   #buy(item) {
     if (!this.wallet.buy(item)) return;
+    if (item.slot) this.#wear(item);
     this.toasts.show(`${item.title} senin!`, 'It is yours!');
     if (item.slot) this.onOutfit(); else this.render();
   }

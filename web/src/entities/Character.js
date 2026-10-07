@@ -92,6 +92,8 @@ export class Character {
 
   update(dt) {
     this.mixer?.update(dt);
+    const skirt = this.#hd?.skirt;
+    if (skirt) { skirt.skirt.visible = this.#hd.scene.visible && !this.seated; if (skirt.skirt.visible) skirt.follow(); } // seated: the legs, in the dress's colour
     if (this.#aura?.visible) { const k = 0.5 + 0.5 * Math.sin(performance.now() / 260); this.#aura.children[1].material.opacity = 0.55 + 0.4 * k; this.#aura.rotation.z += dt * 0.8; }
   }
 
@@ -116,7 +118,7 @@ export class Character {
   async setHd(models, key, on, { covered = false, dress = false } = {}) {
     this.#hdWanted = on;
     if (on && this.#hd && this.#hd !== 'loading' && this.#hdKey !== key) { // another outfit: drop the old one
-      this.#hd.scene.removeFromParent(); this.#hd = null;
+      this.#hd.scene.removeFromParent(); this.#hd.skirt?.skirt.removeFromParent(); this.#hd = null;
     }
     if (on && !this.#hd && models?.has(key)) {
       this.#hdKey = key;
@@ -145,8 +147,8 @@ export class Character {
         const scarf = paintOutfit(scene, dress ? 'dress' : outfit, gender);
         this.group.add(scene);
         const scarfParts = covered ? addHeadscarf(scene, this.group, scarf) ?? [] : [];
-        if (dress) addDress(scene, this.group);
-        this.#hd = { scene, mixer, clips, ...(scarfParts.length ? { scarf: scarfParts, hair } : {}) };
+        const skirt = dress ? addDress(scene, this.group) : null;
+        this.#hd = { scene, mixer, clips, skirt, ...(scarfParts.length ? { scarf: scarfParts, hair } : {}) };
         if (this.covered === false) this.#hdCover(false); // already at home: hair open
       } catch (e) { console.warn('[models] hd:', e.message); this.#hd = null; return; }
     }

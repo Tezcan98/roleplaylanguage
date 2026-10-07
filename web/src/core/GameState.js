@@ -21,11 +21,13 @@ export class GameState {
     this.credits = START_CREDITS;
     this.heldBook = null; // the library book in the player's hand
     this.bookPage = {};   // book id → the page you stopped at
+    this.bought = {};     // kind → how many were bought in a shop (those may go on the table or in the bin)
+    this.table = [];      // kinds put on the sini at home, in order
   }
 
   snapshot() {
-    const { day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage } = this;
-    return structuredClone({ v: 1, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage });
+    const { day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table } = this;
+    return structuredClone({ v: 1, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table });
   }
 
   restore(data) {

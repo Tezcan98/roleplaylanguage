@@ -32,11 +32,11 @@ export class AmbientTalk {
   }
 
   /** One line as a bubble over the speaker's head. Returns how long it lasts (s). */
-  #say({ who, tr }) {
+  #say({ who, tr, en }) {
     const c = this.cast.get(who);
     if (!c || c.location !== this.place.location) return 0;
     const secs = 2.4 + tr.length * 0.065;
-    this.labels.bubble(c, tr, null, secs);
+    this.labels.bubble(c, tr, null, secs, en);
     return secs;
   }
 }

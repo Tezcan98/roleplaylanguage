@@ -102,6 +102,8 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{
 .blist{overflow:auto;padding:10px 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:15px}
 .blist .tr{font-weight:800}
 .blist .en2{color:var(--muted);font-weight:700}
+.blist .pick{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:center;text-align:start;padding:10px 12px;border:2px solid var(--wood);border-radius:12px;background:#FFF8EC;font:inherit;color:inherit;cursor:pointer}
+.blist .pick:active{transform:scale(.98);background:#FBEBCF}
 .empty{grid-column:1/-1;color:var(--muted);font-weight:700}
 
 /* ---------- activities ---------- */
@@ -131,6 +133,7 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{
 .toggle input{width:22px;height:22px;accent-color:var(--gold)}
 .toggle select{min-height:40px;border-radius:10px;border:2px solid var(--wood);background:#fff;font:700 14px Nunito,sans-serif;padding:0 8px;color:var(--ink)}
 .bubble{position:absolute;transform:translate(-50%,-100%);background:#fff;border:2px solid var(--wood);border-radius:14px;padding:5px 10px;font:600 14px Fredoka,sans-serif;max-width:220px;text-align:center}
+.bubble-en{display:block;margin-top:2px;font:500 12px Nunito,sans-serif;color:#6A5A48;line-height:1.25}
 .bubble.ok{border-color:#3E8E4A;background:#EAF6EA}
 .bubble.bad{border-color:#B83A3A;background:#FBEAEA}
 
