@@ -34,9 +34,134 @@ const square = async (kit, name, { params = '', outfit = null, aura = false, ext
   return page;
 };
 
-const friends = [];
+
+/**
+ * The crowd on the square: learners from different countries, each its own HD body (and the
+ * filmed player, Hakan). They join once and stay for all the multiplayer scenes.
+ */
+const CROWD = [
+  { name: 'Leyla', params: '&gender=girl&look=covered', outfit: 'dress', aura: true },
+  { name: 'Sofia', params: '&gender=girl&look=open', outfit: 'casual' },
+  { name: 'Omar', params: '&look=modest', outfit: 'suit' },
+  { name: 'Amélie', params: '&gender=girl&look=open', outfit: 'dress' },
+  { name: 'Yusuf', params: '&look=modest', outfit: 'casual' },
+];
+const crowd = { pages: {}, me: null };
+const who = (name) => (name === 'Hakan' ? crowd.me : crowd.pages[name]);
+const say = (name, text) => who(name).evaluate((t) => window.__game.village.say(t), text);
+/** Stand where told, facing a point. */
+const stand = (name, x, z, fx, fz) => who(name).evaluate(([x, z, fx, fz]) => window.__game.player.place({ x, z, rot: Math.atan2(fx - x, fz - z) }), [x, z, fx, fz]);
+/** The filmed player's camera, fixed: from (x, y, z) looking at (lx, ly, lz). */
+const camera = (x, y, z, lx, ly, lz) => crowd.me.evaluate(([x, y, z, lx, ly, lz]) => { const g = window.__game, V = g.player.position.constructor; g.camera.setFixed(new V(x, y, z), new V(lx, ly, lz)); }, [x, y, z, lx, ly, lz]);
+/** A ring of people round (cx, cz), open towards the camera (south), all facing the middle. */
+const ring = async (names, cx, cz, r) => {
+  for (const [i, n] of names.entries()) {
+    const a = Math.PI * (0.92 - (0.84 * i) / Math.max(1, names.length - 1)); // from the west round the north (-z) to the east
+    await stand(n, cx + Math.cos(a) * r, cz - Math.sin(a) * r, cx, cz);
+  }
+};
+/** Lines said one after the other: [name, text, pause after]. */
+const lines = async (kit, list) => { for (const [n, t, w] of list) { await say(n, t); await kit.sleep(w); } };
+const ALL = ['Leyla', 'Sofia', 'Omar', 'Amélie', 'Yusuf', 'Hakan'];
+
+const MULTI = [
+  {
+    name: 'mpFountain', seconds: 9, still: 7.5, shot: '06-square',
+    setup: async (kit) => {
+      for (const c of CROWD) crowd.pages[c.name] = await square(kit, c.name, { ...c, extra: true });
+      crowd.me = await square(kit, 'Hakan', { params: '&look=strong', outfit: 'casual' });
+      await ring(ALL, 3.2, 6.4, 2.1);
+      await camera(3.8, 4.3, 11.2, 3.2, 0.9, 5.4);
+      await kit.sleep(2500);
+      return crowd.me;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Dünyadan arkadaşlarla buluş', 'Meet Turkish learners from all over the world', { bottom: true }); // the speech bubbles are at the top
+      await kit.sleep(700);
+      await lines(kit, [
+        ['Leyla', 'Merhaba! Ben Leyla, Mısırlıyım.', 1300], ['Sofia', 'Merhaba Leyla! Ben Sofia, İspanya’danım.', 1300],
+        ['Omar', 'Selam! Ben Omar. Türkçe öğreniyorum.', 1300], ['Amélie', 'Ben de! Türkçe çok güzel.', 1200],
+        ['Hakan', 'Hoş geldiniz! Nasılsınız?', 1200], ['Yusuf', 'İyiyiz, teşekkürler!', 0],
+      ]);
+    },
+    cleanup: async () => {}, // the crowd stays for the next scenes
+  },
+  {
+    name: 'mpTea', seconds: 7,
+    setup: async (kit) => {
+      await kit.caption(crowd.me, null);
+      const spots = { Hakan: [12.6, 5.0], Sofia: [14.0, 4.6], Omar: [15.2, 5.6], Leyla: [12.2, 6.6], Yusuf: [15.0, 7.2], Amélie: [13.6, 7.6] };
+      for (const [n, [x, z]] of Object.entries(spots)) await stand(n, x, z, 13.7, 6.1);
+      await camera(14.2, 3.0, 12.4, 13.7, 1.0, 6.0);
+      await kit.sleep(2200);
+      return crowd.me;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Birlikte Türkçe konuşun', 'Chat in Turkish together, at the tea garden', { bottom: true });
+      await kit.sleep(600);
+      await lines(kit, [
+        ['Hakan', 'Çay içelim mi?', 1300], ['Sofia', 'Evet! Şekersiz bir çay lütfen.', 1400],
+        ['Omar', 'Ben şekerli içerim.', 1300], ['Leyla', 'Bu çay bahçesi çok güzel!', 0],
+      ]);
+    },
+    cleanup: async () => {},
+  },
+  {
+    name: 'mpWalk', seconds: 6,
+    setup: async (kit) => {
+      await kit.caption(crowd.me, null);
+      for (const [i, n] of ALL.entries()) await stand(n, -3 + (i % 3) * 1.4, 15 + Math.floor(i / 3) * 1.6, -3 + (i % 3) * 1.4, 0);
+      await crowd.me.evaluate(() => window.__game.camera.clearFixed());
+      await crowd.me.evaluate(() => { const g = window.__game; g.camera.snap(g.player.position, false); });
+      await kit.zoom(crowd.me, -3);
+      await kit.sleep(1800);
+      return crowd.me;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Köyü birlikte gez', 'Explore the village together');
+      const walkers = ALL.map(who);
+      await Promise.all(walkers.map((p) => p.keyboard.down('w')));
+      await kit.sleep(900);
+      await say('Amélie', 'Hadi kütüphaneye gidelim!');
+      await kit.sleep(1500);
+      await say('Yusuf', 'Tamam, gidelim!');
+      await kit.sleep(2000);
+      await Promise.all(walkers.map((p) => p.keyboard.up('w')));
+    },
+    cleanup: async () => {},
+  },
+  {
+    name: 'mpChess', seconds: 9, still: 7.5, shot: '07-chess',
+    setup: async (kit) => {
+      await kit.caption(crowd.me, null);
+      // Omar (white) and Sofia (black) at the giant board, the others watching from the side
+      await stand('Omar', -15, 20.4, -15, 15); await stand('Sofia', -15, 9.6, -15, 15);
+      await stand('Leyla', -9.6, 16.6, -15, 15); await stand('Yusuf', -9.4, 14.6, -15, 15);
+      await stand('Amélie', -9.8, 18.4, -15, 15); await stand('Hakan', -10.2, 12.8, -15, 15);
+      await who('Omar').evaluate(() => window.__game.village.chess.ask('w'));
+      await kit.sleep(500);
+      await who('Sofia').evaluate(() => window.__game.village.chess.ask('b'));
+      await kit.sleep(1500);
+      await camera(-6.5, 6.5, 24.5, -13.5, 0.6, 15);
+      await kit.sleep(1500);
+      return crowd.me;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Dev satranç, futbol, kütüphane', 'Giant chess, football, books and more', { bottom: true });
+      const move = (n, from, to) => who(n).evaluate(([from, to]) => window.__game.village.net.send({ type: 'chess-move', from, to, promotion: 'q' }), [from, to]);
+      await say('Omar', 'Hadi başlayalım!'); await kit.sleep(600);
+      await move('Omar', 'e2', 'e4'); await kit.sleep(1500);
+      await move('Sofia', 'e7', 'e5'); await say('Sofia', 'Sıra sende, Omar!'); await kit.sleep(1500);
+      await move('Omar', 'g1', 'f3'); await kit.sleep(1200);
+      await say('Leyla', 'Güzel hamle!'); await kit.sleep(400);
+      await move('Sofia', 'b8', 'c6');
+    },
+    cleanup: async () => { for (const p of [crowd.me, ...Object.values(crowd.pages)]) await p.context().close(); },
+  },
+];
 
 export const SCENES = [
+  ...MULTI,
   {
     name: 'title', seconds: 4,
     setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2500); return page; },
@@ -45,7 +170,7 @@ export const SCENES = [
     },
   },
   {
-    name: 'grocer', seconds: 6, still: 4.4,
+    name: 'grocer', seconds: 6, still: 4.4, shot: '01-grocer',
     setup: async (kit) => {
       const page = await story(kit);
       await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
@@ -63,7 +188,7 @@ export const SCENES = [
     },
   },
   {
-    name: 'rooms', seconds: 2.5, still: 2, stillOnly: true,
+    name: 'rooms', seconds: 2.5, still: 2, shot: '02-rooms', stillOnly: true,
     setup: async (kit) => {
       const page = await story(kit);
       await page.evaluate(() => { const g = window.__game; g.player.position.set(-3, 0, 1); g.camera.snap(g.player.position, true); });
@@ -73,7 +198,7 @@ export const SCENES = [
     act: async (kit, page) => { await kit.caption(page, 'Kocaman bir ev, bütün bir köy', 'A family home with its rooms, a whole village around it'); },
   },
   {
-    name: 'village', seconds: 6, still: 3.0,
+    name: 'village', seconds: 6, still: 3.0, stillOnly: true, shot: '03-village',
     setup: async (kit) => {
       const page = await story(kit);
       await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
@@ -90,7 +215,7 @@ export const SCENES = [
     },
   },
   {
-    name: 'speak', seconds: 6, still: 2.4,
+    name: 'speak', seconds: 6, still: 2.4, shot: '04-speak',
     setup: async (kit) => {
       const page = await story(kit);
       await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
@@ -107,7 +232,7 @@ export const SCENES = [
     },
   },
   {
-    name: 'school', seconds: 6, still: 4.5,
+    name: 'school', seconds: 6, still: 4.5, shot: '05-school',
     setup: async (kit) => {
       const page = await story(kit, '&fastclass');
       page.evaluate(() => window.__game.lessons.enter('l1'));
@@ -121,51 +246,7 @@ export const SCENES = [
     },
   },
   {
-    name: 'square', seconds: 8, still: 6.5,
-    setup: async (kit) => {
-      friends.push(await square(kit, 'Leyla', { params: '&gender=girl&look=covered', outfit: 'dress', aura: true, extra: true }));
-      friends.push(await square(kit, 'Omar', { outfit: 'suit', extra: true }));
-      friends.push(await square(kit, 'Seher', { params: '&gender=girl&look=open', outfit: 'casual', extra: true }));
-      const page = await square(kit, 'Hakan', { params: '&look=strong', outfit: 'casual' }); // the four characters, each with its own HD body
-      // everyone together near the fountain, facing the camera
-      const spots = [[-1.6, 5.4], [1.6, 5.6], [2.4, 7.0], [-0.4, 7.4]];
-      for (const [i, p] of [...friends, page].entries()) await p.evaluate(([x, z]) => { const g = window.__game; g.player.position.set(x, 0, z); }, spots[i]);
-      // a close camera on the four of them (the game's own camera stays further back)
-      await page.evaluate((spots) => { const g = window.__game, V = g.player.position.constructor, cx = spots.reduce((a, s) => a + s[0], 0) / spots.length, cz = spots.reduce((a, s) => a + s[1], 0) / spots.length; g.camera.setFixed(new V(cx + 0.6, 3.4, cz + 6.2), new V(cx, 1.0, cz)); }, spots);
-      await kit.sleep(2500);
-      return page;
-    },
-    act: async (kit, page) => {
-      await kit.caption(page, 'Dünyadan arkadaşlarla buluş', 'Meet Turkish learners from all over the world');
-      await kit.sleep(900);
-      await friends[0].evaluate(() => window.__game.village.say('Merhaba! Ben Leyla. Mısırlıyım.'));
-      await kit.sleep(2200);
-      await friends[1].evaluate(() => window.__game.village.say('Selam Leyla! Ben Omar, Pakistanlıyım.'));
-      await kit.sleep(2000);
-      await page.evaluate(() => window.__game.village.say('Hoş geldiniz! Çay içelim mi?'));
-    },
-    cleanup: async (kit, page) => { for (const p of [page, ...friends]) await p.context().close(); },
-  },
-  {
-    name: 'chess', seconds: 7, still: 6.0,
-    setup: async (kit) => {
-      const page = await square(kit, 'Ahmet');
-      await page.evaluate(() => { const g = window.__game; g.player.position.set(-15, 0, 20.6); g.camera.snap(g.player.position, false); }); // white's side of the giant board
-      await kit.sleep(1000);
-      await page.evaluate(() => (window.__game.village.chess).playDede('w'));
-      await kit.sleep(3000);
-      return page;
-    },
-    act: async (kit, page) => {
-      await kit.caption(page, 'Dev satranç, futbol, kütüphane', 'Giant chess with İsmail Dede, football, books and more');
-      for (const [from, to] of [['e2', 'e4'], ['g1', 'f3'], ['f1', 'c4']]) {
-        await page.evaluate(([from, to]) => window.__game.village.net.send({ type: 'chess-move', from, to, promotion: 'q' }), [from, to]);
-        await kit.sleep(2100);
-      }
-    },
-  },
-  {
-    name: 'shop', seconds: 5, still: 3.0,
+    name: 'shop', seconds: 5, still: 3.0, shot: '08-shop',
     setup: async (kit) => {
       const page = await story(kit, '&gender=girl&look=covered');
       await page.evaluate(() => window.__game.wallet.add(150, 'promo'));
@@ -187,3 +268,6 @@ export const SCENES = [
     },
   },
 ];
+
+/** The video: multiplayer scenes with single-player play in between. */
+export const CUT = ['title', 'mpFountain', 'grocer', 'mpTea', 'speak', 'mpWalk', 'school', 'mpChess', 'shop', 'end'];

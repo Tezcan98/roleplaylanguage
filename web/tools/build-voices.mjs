@@ -7,7 +7,7 @@
  * day when Gemini's daily cap stopped it) until everything is there.
  *
  *   node tools/build-voices.mjs                       count the lines, record nothing
- *   node tools/build-voices.mjs --server=https://31-58-245-116.sslip.io/api/tts
+ *   node tools/build-voices.mjs --server=https://sehem2.com.tr/api/tts
  *   options: --look=boy-modest|boy-strong|girl-covered|girl-open|all  (whose name the family says; default all)
  *            --limit=N   record at most N new lines this run
  * Needs ffmpeg (WAV → MP3); without it the WAV is kept as is, under the same .mp3 name.

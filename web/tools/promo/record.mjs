@@ -10,7 +10,7 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { startServer, startVillageServer, sleep } from '../playtest/lib.mjs';
-import { SCENES } from './scenes.mjs';
+import { SCENES, CUT } from './scenes.mjs'; // SCENES: recording order; CUT: the order in the video
 
 const out = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'promo-out';
 const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
@@ -80,7 +80,7 @@ const kit = {
 };
 
 /** Record `seconds` of `page` while `act()` runs; returns the clip's path. `still`: also a store screenshot that many seconds in. */
-async function record(page, name, seconds, act, still = null) {
+async function record(page, name, seconds, act, still = null, shotName = null) {
   const dir = join(out, `frames-${name}`); rmSync(dir, { recursive: true, force: true }); mkdirSync(dir);
   const cdp = await page.context().newCDPSession(page);
   const frames = [];
@@ -91,10 +91,12 @@ async function record(page, name, seconds, act, still = null) {
   });
   await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: W * SCALE, maxHeight: H * SCALE, everyNthFrame: 1 });
   const t0 = Date.now();
-  const shot = still == null ? null : sleep(still * 1000).then(() => page.screenshot({ path: join(out, 'screens', `${String(++shots).padStart(2, '0')}-${name}.png`) }));
-  await Promise.all([act(), sleep(seconds * 1000), shot]);
+  let quiet = null; // while the screenshot is taken the screencast sends shrunken frames: those are left out
+  const shot = still == null ? null : sleep(still * 1000).then(() => { quiet = [Date.now() / 1000 - 0.05, Infinity]; }).then(() => page.screenshot({ path: join(out, 'screens', `${shotName ?? `${String(++shots).padStart(2, '0')}-${name}`}.png`) }));
+  await Promise.all([act(), sleep(seconds * 1000), shot?.then(() => { quiet[1] = Date.now() / 1000 + 0.15; })]);
   while (Date.now() - t0 < seconds * 1000) await sleep(50);
   await cdp.send('Page.stopScreencast'); await sleep(200);
+  if (quiet) frames.splice(0, frames.length, ...frames.filter((f) => f.t < quiet[0] || f.t > quiet[1]));
   // each frame lasts until the next one (the screencast only sends changed frames)
   const list = frames.map((f, i) => `file '${f.file.split('/').pop()}'\nduration ${Math.max(0.001, ((frames[i + 1]?.t ?? frames[0].t + seconds) - f.t)).toFixed(4)}`).join('\n');
   writeFileSync(join(dir, 'list.txt'), `${list}\nfile '${frames.at(-1).file.split('/').pop()}'\n`);
@@ -142,10 +144,12 @@ try {
     if (only && !only.includes(s.name) && !JOIN) continue;
     if (JOIN) { if (!s.stillOnly) clips.push({ file: join(out, `${s.name}.mp4`), seconds: s.seconds }); continue; } // --join: the clips already there
     const page = await s.setup(kit);
-    const file = await record(page, s.name, s.seconds, () => s.act(kit, page), s.still);
+    const file = await record(page, s.name, s.seconds, () => s.act(kit, page), s.still, s.shot);
     if (!s.stillOnly) clips.push({ file, seconds: s.seconds });
     if (s.cleanup) await s.cleanup(kit, page); else await page.context().close();
   }
+  // the video: the scenes in CUT order (clips recorded in this run or an earlier one)
+  if (CUT) clips.splice(0, clips.length, ...CUT.map((n) => ({ file: join(out, `${n}.mp4`), seconds: SCENES.find((s) => s.name === n).seconds })));
   // join with 0.4 s cross-fades
   if (clips.length > 1) {
     const F = 0.4, inputs = clips.flatMap((c) => ['-i', c.file]);

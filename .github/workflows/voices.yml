@@ -8,7 +8,7 @@ on:
     inputs:
       server:
         description: TTS address of the village server
-        default: https://31-58-245-116.sslip.io/api/tts
+        default: https://sehem2.com.tr/api/tts
   schedule:
     - cron: '17 3 * * *' # every night: new lines added to the story get their voice
 permissions:
@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 22
       - run: sudo apt-get install -y ffmpeg >/dev/null
-      - run: node web/tools/build-voices.mjs --server=${{ inputs.server || 'https://31-58-245-116.sslip.io/api/tts' }}
+      - run: node web/tools/build-voices.mjs --server=${{ inputs.server || 'https://sehem2.com.tr/api/tts' }}
       - name: Commit the new recordings
         run: |
           git add web/assets/speech
