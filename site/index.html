@@ -182,7 +182,7 @@ footer a{color:#E8DDC6}
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 1.8 13.4 12 3.6 22.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1z" fill="#00D7FE"/><path d="m16.8 8.6-3.4 3.4-9.8-10.2c.3-.2.8-.2 1.2 0z" fill="#00F076"/><path d="m16.8 15.4-12 6.8c-.4.2-.9.2-1.2 0L13.4 12z" fill="#F63448"/><path d="m20.6 10.8-3.8-2.2-3.4 3.4 3.4 3.4 3.8-2.2c.8-.5.8-1.9 0-2.4z" fill="#FFD400"/></svg>
           <span><small data-t="play.small"></small><b>Google Play</b></span>
         </a>
-        <a class="store web" href="https://tezcan98.github.io/roleplaylanguage/" rel="noopener">
+        <a class="store web" href="/oyun/tr/">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9s1.2-6.4 3.7-9z"/></svg>
           <span><small data-t="web.small"></small><b data-t="web.big"></b></span>
         </a>
@@ -416,6 +416,7 @@ function apply() {
   root.lang = lang; root.dir = lang === 'ar' || lang === 'ur' ? 'rtl' : 'ltr';
   document.querySelectorAll('[data-t]').forEach((e) => { const v = t[e.dataset.t]; if (v == null) return; if (e.hasAttribute('data-html')) e.innerHTML = v; else e.textContent = v; });
   document.querySelectorAll('.langs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  document.querySelectorAll('.store.web').forEach((a) => { a.href = `/oyun/${lang}/`; }); // the game, with the meanings in the site's language
   document.getElementById('final-ctas').innerHTML = document.querySelector('.hero .ctas').innerHTML;
   phrase(false);
 }

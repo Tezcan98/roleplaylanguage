@@ -143,6 +143,9 @@ const settings = new Settings();
 const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
+// on our own site the address carries the language: sehem2.com.tr/oyun/en/ → meanings in English (kept as the player's choice)
+const pathLang = location.pathname.match(/\/oyun\/(ar|ur|en|es|fr)(?:\/|$)/)?.[1];
+if (pathLang && !params.has('gloss')) settings.set('glossLang', pathLang);
 await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
 const fullscreenBtn = setupLandscape(); // ⛶ in the HUD
 // boy (Ahmet) or girl (Sare): the content is rewritten once, before any system reads it

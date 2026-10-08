@@ -23,6 +23,7 @@ const copyGameAssets = {
   name: 'copy-game-assets',
   closeBundle() {
     cpSync('assets', 'dist/assets', { recursive: true, filter: (src) => !src.includes('/voices') });
+    cpSync('sw.js', 'dist/sw.js'); // the website's service worker (always the newest game; the app does not use it)
   },
 };
 
