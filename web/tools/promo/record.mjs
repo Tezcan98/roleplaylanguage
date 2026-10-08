@@ -14,6 +14,8 @@ import { SCENES } from './scenes.mjs';
 
 const out = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'promo-out';
 const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
+const JOIN = process.argv.includes('--join'); // --join: only join the scene clips already recorded (after re-recording one with --only)
+const CLEAN = process.argv.includes('--clean'); // --clean: no interface, no captions (a background loop for the website)
 const FPS = 30, W = 1280, H = 720, SCALE = 1.5; // 1920×1080 frames, UI the size of a tablet's
 mkdirSync(out, { recursive: true });
 
@@ -54,19 +56,22 @@ const PROMO_CSS = `
 /** Helpers the scenes use. */
 const kit = {
   open, sleep,
-  caption: (page, tr, en, { bottom = false, side = false } = {}) => page.evaluate(([tr, en, bottom, side]) => {
+  caption: (page, tr, en, { bottom = false, side = false } = {}) => CLEAN ? null : page.evaluate(([tr, en, bottom, side]) => {
     document.querySelector('.promo-cap')?.remove();
     if (!tr) return;
     const d = document.createElement('div'); d.className = `promo-cap${bottom ? ' bottom' : ''}${side ? ' side' : ''}`;
     d.innerHTML = `<b></b><small></small>`; d.querySelector('b').textContent = tr; d.querySelector('small').textContent = en;
     document.body.append(d);
   }, [tr, en, bottom, side]),
-  card: (page, html) => page.evaluate((html) => {
+  card: (page, html) => CLEAN ? null : page.evaluate((html) => {
     document.querySelector('.promo-card')?.remove();
     if (!html) return;
     const d = document.createElement('div'); d.className = 'promo-card'; d.innerHTML = html; document.body.append(d);
   }, html),
-  hideHud: (page, on = true) => page.evaluate((on) => document.body.classList.toggle('promo-hide', on), on),
+  hideHud: async (page, on = true) => {
+    await page.evaluate((on) => document.body.classList.toggle('promo-hide', on), on);
+    if (CLEAN && on) await page.addStyleTag({ content: 'body > div > *:not(canvas){visibility:hidden!important}' }); // only the game world
+  },
   /** Hold a movement key for `ms` (w a s d). */
   walk: async (page, key, ms) => { await page.keyboard.down(key); await sleep(ms); await page.keyboard.up(key); },
   /** Camera closer (z < 1) or further, like the mouse wheel. */
@@ -106,7 +111,8 @@ async function featureGraphic() {
   const bg = join(out, 'feature-bg.png');
   const game = await open();
   await game.evaluate(() => document.querySelector('.menu-main')?.click()); await sleep(2500); await kit.closeCards(game);
-  await game.evaluate(() => window.__game.travel.go('village', 'yardRoad')); await sleep(3500); await kit.closeCards(game);
+  await game.evaluate(() => { const g = window.__game, w = g.wallet, it = { id: 'hd', slot: 'hd' }; w.buy({ ...it, price: 0 }); w.equip(it); g.shop.onOutfit?.(); }); // HD player → HD villagers
+  await game.evaluate(() => window.__game.travel.go('village', 'yardRoad')); await sleep(5000); await kit.closeCards(game);
   await game.evaluate(() => { const g = window.__game; g.player.position.set(-1, 0, 7); g.camera.snap(g.player.position, false); });
   await kit.zoom(game, -1); await sleep(2000);
   await game.addStyleTag({ content: 'body > div > *:not(canvas){visibility:hidden!important}' });
@@ -133,7 +139,8 @@ let shots = 0;
 mkdirSync(join(out, 'screens'), { recursive: true });
 try {
   for (const s of SCENES) {
-    if (only && !only.includes(s.name)) continue;
+    if (only && !only.includes(s.name) && !JOIN) continue;
+    if (JOIN) { if (!s.stillOnly) clips.push({ file: join(out, `${s.name}.mp4`), seconds: s.seconds }); continue; } // --join: the clips already there
     const page = await s.setup(kit);
     const file = await record(page, s.name, s.seconds, () => s.act(kit, page), s.still);
     if (!s.stillOnly) clips.push({ file, seconds: s.seconds });
@@ -153,7 +160,7 @@ try {
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...inputs, '-filter_complex', chain.replace(/;$/, ''), '-map', '[v]', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', final]);
     console.log(`→ ${final}`);
   }
-  await featureGraphic();
+  if (!CLEAN && !JOIN) await featureGraphic();
 } finally {
   await browser.close(); server.stop(); village.stop();
 }

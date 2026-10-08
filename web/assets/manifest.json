@@ -2,7 +2,15 @@
   "models": {
     "hd.casual.boy": "assets/models/hd_casual_boy.glb",
     "hd.casual.girl": "assets/models/hd_casual_girl.glb",
-    "hd.suit.boy": "assets/models/hd_suit_boy.glb"
+    "hd.suit.boy": "assets/models/hd_suit_boy.glb",
+    "hd.curly.boy": "assets/models/hd_curly_boy.glb",
+    "hd.bald.boy": "assets/models/hd_bald_boy.glb",
+    "hd.long.boy": "assets/models/hd_long_boy.glb",
+    "hd.cook.boy": "assets/models/hd_cook_boy.glb",
+    "hd.elder.boy": "assets/models/hd_elder_boy.glb",
+    "hd.dark.girl": "assets/models/hd_dark_girl.glb",
+    "hd.brown.girl": "assets/models/hd_brown_girl.glb",
+    "hd.elder.girl": "assets/models/hd_elder_girl.glb"
   },
   "textures": {
     "grass": {

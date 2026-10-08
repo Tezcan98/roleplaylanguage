@@ -397,7 +397,7 @@ village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // 
 // the HD character from the shop: everywhere once bought — home too (prayer poses use the blocky body for a moment)
 const playerHd = () => {
   player.setAura(auraOn(wallet)); const o = outfitOn(wallet);
-  player.setHd(models, outfitModel(o ?? 'casual', playerGender()), !!o, { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: o === 'dress' });
+  player.setHd(models, outfitModel(o ?? 'casual', playerGender(), playerLook.split('-')[1]), !!o, { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: o === 'dress' });
   // an HD player (credits spent in the shop) sees the villagers on the square in HD too
   if (HD_VILLAGERS.on !== !!o) { HD_VILLAGERS.on = !!o; npcs.forEach((n) => n.refreshHd()); }
 };

@@ -6,6 +6,8 @@ const PALETTE = {
   'casual.girl': { Shirt: 0xC07A68, Pants: 0x5C4A42, Belt: 0x4A3020, scarf: 0xEFE3CF }, // terracotta, warm brown, cream scarf
   'dress.girl': { Shirt: 0x3F7F73, Pants: 0x3F7F73, Belt: 0xB08A4E, scarf: 0xEFE3CF }, // a teal dress with a tan belt, cream scarf
   'suit.boy': { Black: 0x2B3448 },                                                    // a navy suit
+  'curly.boy': { Shirt: 0xB5523F, Pants: 0x3F4A5A, Belt: 0x2E2218 },                // Hakan: brick red, slate trousers
+  'brown.girl': { Shirt: 0xD9A23E, Pants: 0x2E5E8C, Belt: 0x4A3020, scarf: 0xEFE3CF }, // Seher: mustard, denim blue
 };
 
 /** Paints the HD model in its outfit's colours; returns the headscarf colour that goes with it. */
@@ -26,7 +28,7 @@ export function addHeadscarf(scene, holder, color = 0xEFE3CF) {
   if (!head) return;
   holder.updateMatrixWorld(true);
   const hb = new THREE.Box3();
-  scene.traverse((o) => { if (o.isMesh && o.material?.name === 'Skin') hb.expandByObject(o, true); });
+  hb.union(boxOf(scene, 'Skin')); // (the feet's mesh has two materials since the shoes: skin + shoes)
   const hp = head.getWorldPosition(new THREE.Vector3());
   const h = hb.max.y - hp.y; // head bone (at the neck) → top of the head
   const ws = holder.getWorldScale(new THREE.Vector3()).x;
@@ -54,12 +56,12 @@ export function addDress(scene, holder, color = null) {
   if (!hips) return null;
   const turned = holder.rotation.y;
   holder.rotation.y = 0; holder.updateMatrixWorld(true); // measured facing +z
-  const box = (name) => { const b = new THREE.Box3(); scene.traverse((o) => { if (o.isMesh && o.material?.name === name) b.expandByObject(o, true); }); return b; };
+  const box = (name) => boxOf(scene, name);
   const pants = box('Pants'), all = new THREE.Box3().setFromObject(scene, true);
   let shirt = null;
-  scene.traverse((o) => { if (o.isMesh && o.material?.name === 'Shirt') shirt = o.material.color; });
+  scene.traverse((o) => { if (o.isMesh) for (const m of [o.material].flat()) if (m.name === 'Shirt') shirt = m.color; });
   if (color != null) shirt = new THREE.Color(color); // a villager's skirt colour
-  scene.traverse((o) => { if (o.isMesh && o.material?.name === 'Pants' && shirt) o.material.color.copy(shirt); });
+  scene.traverse((o) => { if (o.isMesh && shirt) for (const m of [o.material].flat()) if (m.name === 'Pants') m.color.copy(shirt); });
   const ws = holder.getWorldScale(new THREE.Vector3()).x;
   const top = pants.max.y, bottom = all.min.y + (pants.max.y - all.min.y) * 0.1; // waist → just above the feet
   const wx = pants.max.x - pants.min.x, wz = pants.max.z - pants.min.z;
@@ -110,11 +112,16 @@ export function addShoes(scene, color = 0x3B2A20) {
 
 /** A villager's own colours on the HD model (the blocky look: shirt, trousers, hair, vest). */
 export function paintLook(scene, look) {
-  const p = { Shirt: look.shirt, Pants: look.pants, Hair: look.hair, Black: look.vest ?? look.shirt, Details: look.vest ?? look.shirt };
+  const names = new Set(); scene.traverse((o) => { if (o.isMesh) for (const m of [o.material].flat()) names.add(m.name); });
+  const coat = names.has('Main'); // the elders' body: Main = the long coat, Black = the shirt under it, Brown = trousers
+  const p = {
+    Shirt: look.shirt, Pants: look.pants, Hair: look.hair ?? look.sides, Black: coat ? look.shirt : look.vest ?? look.shirt, Details: look.vest ?? look.shirt,
+    Main: look.vest ?? look.shirt, Brown: look.pants, Clothes: look.shirt, DarkClothes: look.pants, Band: look.vest ?? look.mustache, // the tea makers' white jacket
+  };
   scene.traverse((o) => {
     if (!o.isMesh) return;
     for (const m of [o.material].flat()) if (p[m.name] != null) m.color.setHex(p[m.name]);
-    if ([o.material].flat()[0]?.name === 'Hair' && !look.hair) o.visible = false; // bald
+    if ([o.material].flat()[0]?.name === 'Hair' && !look.hair && !look.sides) o.visible = false; // bald
   });
 }
 

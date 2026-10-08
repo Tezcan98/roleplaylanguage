@@ -6,7 +6,7 @@
  */
 const outfit = (id, title, en, only) => ({ id: `hd-${id}`, outfit: id, slot: 'body', needs: 'hd', title, en, price: 30, ...(only ? { for: (gender) => gender === only } : {}) });
 /** The shop picture of an outfit as this player would wear it (tools/models/render-previews.mjs). */
-export const outfitPicture = (item, gender, look) => `assets/shop/hd_${item.outfit ?? item.look ?? item.id}_${gender !== 'girl' ? 'boy' : look === 'open' ? 'girl' : 'covered'}.png`;
+export const outfitPicture = (item, gender, look) => `assets/shop/hd_${item.outfit ?? item.look ?? item.id}_${gender !== 'girl' ? (look === 'strong' ? 'strong' : 'boy') : look === 'open' ? 'girl' : 'covered'}.png`;
 
 export const SHOP = [
   { id: 'adFree', title: 'Reklamsız mod', en: 'No more ads between the days of the story', price: 100, icon: '🚫' },
@@ -33,4 +33,10 @@ export function migrateWallet(wallet) {
   wallet.settings.set('wallet', d);
 }
 /** The model for an outfit and a gender. */
-export const outfitModel = (outfit, gender) => `hd.${outfit === 'dress' ? 'casual' : outfit}.${gender === 'girl' ? 'girl' : 'boy'}`; // the dress: the everyday girl with a long skirt
+export const outfitModel = (outfit, gender, style = '') => {
+  const girl = gender === 'girl';
+  let body = outfit === 'dress' ? 'casual' : outfit; // the dress: the everyday girl with a long skirt
+  if (body === 'casual' && !girl && style === 'strong') body = 'curly'; // each of the four characters has a body of its own: Hakan
+  if (body === 'casual' && girl && style === 'open') body = 'brown'; // Seher
+  return `hd.${body}.${girl ? 'girl' : 'boy'}`;
+};

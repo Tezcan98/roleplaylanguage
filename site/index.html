@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anadolu Ailesi · Türkçeyi köyde yaşayarak öğren</title>
+<meta name="description" content="Anadolu Ailesi: bir Anadolu köyünde geçen 3D hikâyeli oyunla Türkçe öğren. Ailenle konuş, okula git, meydanda dünyadan oyuncularla buluş.">
+<meta property="og:title" content="Anadolu Ailesi">
+<meta property="og:description" content="Türkçeyi bir Anadolu köyünde yaşayarak öğren.">
+<meta property="og:image" content="assets/poster.webp">
+<meta name="theme-color" content="#18213B">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&family=Noto+Naskh+Arabic:wght@500;700&family=Noto+Nastaliq+Urdu:wght@500;700&display=swap">
+<style>
+/* Layout: a night-blue hero over the game itself, then cream "dialogue-box" sections bordered in wood, an İznik tile band between them. */
+:root{
+  --night:#18213B; --night-2:#222D4D; --cream:#F6EBD3; --paper:#FFF8EA; --wood:#8A5A12; --wood-dark:#5C3B0C;
+  --gold:#F2B630; --turq:#1E8C8C; --cobalt:#2457A6; --ink:#2A2118; --muted:#6E5E4A;
+  --display:'Fredoka',system-ui,sans-serif; --body:'Nunito',system-ui,sans-serif;
+  --r:22px; --gutter:clamp(16px,4vw,48px);
+  color-scheme:light;
+}
+:root[dir=rtl]{--display:'Noto Naskh Arabic','Fredoka',serif;--body:'Noto Naskh Arabic','Nunito',serif}
+:root[lang=ur]{--display:'Noto Nastaliq Urdu','Fredoka',serif;--body:'Noto Nastaliq Urdu','Nunito',serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--cream);color:var(--ink);font:500 17px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+img,video{max-width:100%;display:block}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:8px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.12}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:var(--gutter)}
+
+/* header */
+.top{position:absolute;inset-inline:0;top:0;z-index:5;padding-top:env(safe-area-inset-top,0px)}
+.top .wrap{display:flex;align-items:center;gap:16px;padding-block:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff;font:700 22px var(--display)}
+.brand img{width:44px;height:44px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+.langs{margin-inline-start:auto;display:flex;gap:4px;flex-wrap:wrap;background:rgba(24,33,59,.55);backdrop-filter:blur(8px);border-radius:999px;padding:4px}
+.langs button{border:0;background:none;color:#E8DDC6;font:700 13px var(--body);padding:6px 11px;border-radius:999px;cursor:pointer}
+.langs button[aria-pressed=true]{background:var(--gold);color:var(--night)}
+
+/* hero */
+.hero{position:relative;min-height:min(92vh,880px);display:grid;align-items:center;color:#fff;overflow:hidden;background:var(--night)}
+.hero video,.hero .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(24,33,59,.94) 0%,rgba(24,33,59,.78) 42%,rgba(24,33,59,.25) 75%,rgba(24,33,59,.1)),linear-gradient(0deg,rgba(24,33,59,.85),transparent 35%)}
+:root[dir=rtl] .hero::after{background:linear-gradient(270deg,rgba(24,33,59,.94) 0%,rgba(24,33,59,.78) 42%,rgba(24,33,59,.25) 75%,rgba(24,33,59,.1)),linear-gradient(0deg,rgba(24,33,59,.85),transparent 35%)}
+.hero .wrap{position:relative;z-index:2;width:100%;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:48px;align-items:end;padding-block:130px 70px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font:700 13px var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.eyebrow::before{content:'';width:26px;height:2px;background:var(--gold)}
+.hero h1{font-size:clamp(38px,5.6vw,68px);margin:14px 0 18px;font-weight:700}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero p.lead{font-size:clamp(17px,1.6vw,20px);max-width:36em;color:#E9E2D2;margin:0 0 30px}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch}
+.store{display:inline-flex;align-items:center;gap:12px;min-height:60px;padding:10px 22px 10px 16px;border-radius:14px;text-decoration:none;font-family:var(--body);transition:transform .15s ease,box-shadow .15s ease}
+.store:hover{transform:translateY(-2px)}
+.store svg{width:28px;height:28px;flex:none}
+.store span{display:flex;flex-direction:column;line-height:1.15}
+.store small{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.store b{font:600 20px var(--display)}
+.store.play{background:#000;color:#fff;border:1.5px solid #3a3a3a;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.store.web{background:var(--gold);color:var(--night);box-shadow:0 8px 24px rgba(242,182,48,.35)}
+.store.ios{background:rgba(255,255,255,.08);color:#fff;border:1.5px dashed rgba(255,255,255,.45);cursor:default}
+.store.ios:hover{transform:none}
+.soon{font:800 10px var(--body);letter-spacing:.08em;text-transform:uppercase;background:var(--turq);color:#fff;border-radius:999px;padding:3px 8px;margin-inline-start:4px;align-self:center}
+
+/* the phrase card: lines from the game, meaning in your language */
+.phrase{background:var(--paper);color:var(--ink);border:3px solid var(--wood);border-radius:var(--r);box-shadow:0 0 0 6px rgba(138,90,18,.25),0 24px 60px rgba(0,0,0,.45);padding:18px 20px 16px;max-width:430px;justify-self:end;width:100%}
+:root[dir=rtl] .phrase{justify-self:start}
+.phrase .who{display:flex;align-items:center;gap:10px;font:700 15px var(--display);margin-bottom:10px}
+.phrase .who i{width:36px;height:36px;border-radius:50%;background:var(--cream);display:grid;place-items:center;font-style:normal;font-size:20px;border:2px solid var(--wood)}
+.phrase .who small{display:block;font:600 12px var(--body);color:var(--muted)}
+.phrase .tr{font:600 20px/1.35 var(--display);margin:0;min-height:2.7em;direction:ltr;text-align:left;font-family:'Fredoka',system-ui,sans-serif}
+.phrase .mean{margin:6px 0 0;color:var(--muted);font-size:15px;min-height:2.6em;font-style:italic}
+.phrase .dots{display:flex;gap:6px;margin-top:12px}
+.phrase .dots b{width:8px;height:8px;border-radius:50%;background:#E3D3B1;transition:background .3s}
+.phrase .dots b.on{background:var(--wood)}
+.phrase .fade{animation:fade .5s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* numbers strip */
+.facts{background:var(--night);color:#fff;border-top:1px solid rgba(255,255,255,.08)}
+.facts ul{list-style:none;margin:0;padding:22px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.facts li{display:flex;flex-direction:column;align-items:center;text-align:center}
+.facts b{font:700 clamp(28px,3.4vw,40px) 'Fredoka',system-ui,sans-serif;color:var(--gold);font-variant-numeric:tabular-nums}
+.facts span{font-size:14px;color:#CFC6B3}
+
+/* İznik tile band */
+.tiles{height:46px;background-color:var(--cobalt);background-image:
+  radial-gradient(circle at 50% 50%,var(--paper) 0 5px,transparent 6px),
+  conic-gradient(from 45deg at 50% 50%,var(--turq) 0 25%,transparent 0 50%,var(--turq) 0 75%,transparent 0),
+  radial-gradient(circle at 0 0,var(--paper) 0 9px,transparent 10px),radial-gradient(circle at 100% 0,var(--paper) 0 9px,transparent 10px),
+  radial-gradient(circle at 0 100%,var(--paper) 0 9px,transparent 10px),radial-gradient(circle at 100% 100%,var(--paper) 0 9px,transparent 10px);
+  background-size:46px 46px;animation:slide 40s linear infinite}
+@keyframes slide{to{background-position:460px 0}}
+
+/* sections */
+section{padding-block:clamp(64px,9vw,110px)}
+.head{max-width:720px;margin-bottom:46px}
+.head h2{font-size:clamp(30px,3.8vw,46px);color:var(--night)}
+.head p{color:var(--muted);margin:12px 0 0;font-size:18px}
+.feature{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(28px,5vw,64px);align-items:center}
+.feature + .feature{margin-top:clamp(56px,8vw,96px)}
+.feature:nth-of-type(even) .shot{order:2}
+.shot{position:relative;border-radius:var(--r);border:4px solid var(--wood);background:var(--wood);box-shadow:0 0 0 6px rgba(138,90,18,.18),0 30px 60px -20px rgba(60,38,8,.5);overflow:hidden;transform:rotate(-.6deg);transition:transform .3s ease}
+.feature:nth-of-type(even) .shot{transform:rotate(.6deg)}
+.shot:hover{transform:rotate(0) scale(1.01)}
+.shot img{aspect-ratio:16/9;width:100%;height:auto;object-fit:cover}
+.feature .num{font:700 14px 'Fredoka',sans-serif;color:var(--turq);letter-spacing:.1em}
+.feature h3{font-size:clamp(26px,2.8vw,34px);color:var(--night);margin:6px 0 12px}
+.feature p{margin:0;color:#4A3F31}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;padding:0;list-style:none}
+.tags li{background:var(--paper);border:1.5px solid #E2CFA8;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:700;color:var(--wood-dark)}
+.tags li[lang=tr]{font-family:'Fredoka',sans-serif;font-weight:500}
+
+/* how you learn */
+.learn{background:var(--paper);border-block:1px solid #E8D7B4}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;list-style:none;padding:0;margin:0;counter-reset:s}
+.steps li{background:#fff;border:2px solid #EADBBB;border-radius:var(--r);padding:26px 24px;position:relative}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;inset-inline-end:20px;top:14px;font:700 54px 'Fredoka',sans-serif;color:#F0E3C6}
+.steps .ico{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:26px;margin-bottom:14px;background:var(--cream);border:2px solid var(--wood)}
+.steps h3{font-size:24px;color:var(--night);margin-bottom:8px;position:relative}
+.steps p{margin:0;color:#4A3F31;position:relative}
+.steps .ex{display:block;margin-top:12px;font:500 15px 'Fredoka',sans-serif;color:var(--turq);direction:ltr;text-align:start}
+
+/* languages */
+.langgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px}
+.langgrid figure{margin:0;background:var(--paper);border:2px solid #EADBBB;border-radius:18px;padding:16px 18px}
+.langgrid figcaption{font:800 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--turq);margin-bottom:6px}
+.langgrid p{margin:0;font-size:17px}
+.langgrid .rtl{direction:rtl;text-align:right;font-family:'Noto Naskh Arabic',serif}
+.langgrid .ur{font-family:'Noto Nastaliq Urdu',serif;line-height:2}
+.langgrid .source{background:var(--night);color:#fff;border-color:var(--night)}
+.source figcaption{color:var(--gold)!important}
+.source p{font-family:'Fredoka',sans-serif;font-size:20px!important}
+
+/* closing */
+.final{background:radial-gradient(ellipse at 70% 0%,var(--night-2),var(--night) 70%);color:#fff;text-align:center}
+.final h2{font-size:clamp(34px,4.6vw,56px)}
+.final p{color:#CFC6B3;max-width:40em;margin:14px auto 34px;font-size:18px}
+.final .ctas{justify-content:center}
+.final img{width:96px;height:96px;border-radius:24px;margin:0 auto 22px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+footer{background:#111830;color:#A79F8C;font-size:14px;padding-block:26px calc(26px + env(safe-area-inset-bottom,0px))}
+footer .wrap{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-between}
+footer a{color:#E8DDC6}
+
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:minmax(0,1fr);padding-block:120px 48px}
+  .phrase{justify-self:stretch;max-width:none}
+  .feature,.feature:nth-of-type(even){grid-template-columns:minmax(0,1fr)}
+  .feature:nth-of-type(even) .shot{order:0}
+  .steps{grid-template-columns:minmax(0,1fr)}
+  .facts ul{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){ .langs{margin-inline-start:0} .store{flex:1 1 100%} }
+@media (prefers-reduced-motion:reduce){ .tiles{animation:none} .phrase .fade{animation:none} .hero video{display:none} html{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="assets/icon-192.png" alt="">Anadolu Ailesi</a>
+    <nav class="langs" aria-label="Language">
+      <button type="button" data-lang="tr">TR</button><button type="button" data-lang="en">EN</button><button type="button" data-lang="ar">العربية</button><button type="button" data-lang="ur">اردو</button><button type="button" data-lang="es">ES</button><button type="button" data-lang="fr">FR</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="hero">
+  <img class="poster" src="assets/poster.webp" alt="">
+  <video autoplay muted loop playsinline preload="auto" poster="assets/poster.webp" aria-hidden="true"><source src="assets/loop.mp4" type="video/mp4"></video>
+  <div class="wrap">
+    <div>
+      <span class="eyebrow" data-t="eyebrow"></span>
+      <h1 data-t="title" data-html></h1>
+      <p class="lead" data-t="lead"></p>
+      <div class="ctas">
+        <a class="store play" href="https://play.google.com/store/apps/details?id=com.anadoluailesi.app" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.6 1.8 13.4 12 3.6 22.2c-.4-.2-.6-.6-.6-1.1V2.9c0-.5.2-.9.6-1.1z" fill="#00D7FE"/><path d="m16.8 8.6-3.4 3.4-9.8-10.2c.3-.2.8-.2 1.2 0z" fill="#00F076"/><path d="m16.8 15.4-12 6.8c-.4.2-.9.2-1.2 0L13.4 12z" fill="#F63448"/><path d="m20.6 10.8-3.8-2.2-3.4 3.4 3.4 3.4 3.8-2.2c.8-.5.8-1.9 0-2.4z" fill="#FFD400"/></svg>
+          <span><small data-t="play.small"></small><b>Google Play</b></span>
+        </a>
+        <a class="store web" href="https://tezcan98.github.io/roleplaylanguage/" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9s1.2-6.4 3.7-9z"/></svg>
+          <span><small data-t="web.small"></small><b data-t="web.big"></b></span>
+        </a>
+        <span class="store ios" aria-disabled="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.2 1-4.1 2.5-1.8 3-.5 7.5 1.2 10 .8 1.2 1.8 2.6 3.1 2.5 1.2 0 1.7-.8 3.2-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.5-1-2.5-3.8zM14 5.3c.7-.8 1.1-1.9 1-3-1 0-2.1.7-2.8 1.5-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.4z"/></svg>
+          <span><small>App Store</small><b data-t="ios.big"></b></span><em class="soon" data-t="soon"></em>
+        </span>
+      </div>
+    </div>
+    <aside class="phrase" aria-live="polite">
+      <div class="who"><i id="ph-face">👩</i><div><span id="ph-name"></span><small id="ph-role"></small></div></div>
+      <p class="tr" id="ph-tr" lang="tr"></p>
+      <p class="mean" id="ph-mean"></p>
+      <div class="dots" id="ph-dots"></div>
+    </aside>
+  </div>
+</div>
+
+<div class="facts"><div class="wrap"><ul>
+  <li><b>22</b><span data-t="f.chapters"></span></li>
+  <li><b>900+</b><span data-t="f.lines"></span></li>
+  <li><b>20</b><span data-t="f.chars"></span></li>
+  <li><b>6</b><span data-t="f.langs"></span></li>
+</ul></div></div>
+<div class="tiles" aria-hidden="true"></div>
+
+<section id="features"><div class="wrap">
+  <div class="head"><h2 data-t="feat.title"></h2><p data-t="feat.lead"></p></div>
+
+  <article class="feature">
+    <div class="shot"><img src="assets/shots/02-rooms.webp" alt="" loading="lazy" width="1280" height="720"></div>
+    <div><span class="num">01</span><h3 data-t="f1.t"></h3><p data-t="f1.p"></p><ul class="tags"><li lang="tr">Günaydın!</li><li lang="tr">Kolay gelsin</li><li lang="tr">Afiyet olsun</li></ul></div>
+  </article>
+  <article class="feature">
+    <div class="shot"><img src="assets/shots/04-speak.webp" alt="" loading="lazy" width="1280" height="720"></div>
+    <div><span class="num">02</span><h3 data-t="f2.t"></h3><p data-t="f2.p"></p></div>
+  </article>
+  <article class="feature">
+    <div class="shot"><img src="assets/shots/05-school.webp" alt="" loading="lazy" width="1280" height="720"></div>
+    <div><span class="num">03</span><h3 data-t="f3.t"></h3><p data-t="f3.p"></p><ul class="tags"><li>A1.1</li><li>A1.2</li><li lang="tr">Merhaba!</li><li lang="tr">Kaç yaşındasın?</li></ul></div>
+  </article>
+  <article class="feature">
+    <div class="shot"><img src="assets/shots/06-square.webp" alt="" loading="lazy" width="1280" height="720"></div>
+    <div><span class="num">04</span><h3 data-t="f4.t"></h3><p data-t="f4.p"></p></div>
+  </article>
+  <article class="feature">
+    <div class="shot"><img src="assets/shots/07-chess.webp" alt="" loading="lazy" width="1280" height="720"></div>
+    <div><span class="num">05</span><h3 data-t="f5.t"></h3><p data-t="f5.p"></p><ul class="tags"><li lang="tr">Şah mat!</li><li lang="tr">Gol!</li><li lang="tr">Kaşağı</li></ul></div>
+  </article>
+  <article class="feature">
+    <div class="shot"><img src="assets/shots/03-village.webp" alt="" loading="lazy" width="1280" height="720"></div>
+    <div><span class="num">06</span><h3 data-t="f6.t"></h3><p data-t="f6.p"></p></div>
+  </article>
+</div></section>
+
+<section class="learn"><div class="wrap">
+  <div class="head"><h2 data-t="learn.title"></h2><p data-t="learn.lead"></p></div>
+  <ol class="steps">
+    <li><div class="ico" aria-hidden="true">👂</div><h3 data-t="s1.t"></h3><p data-t="s1.p"></p><span class="ex" lang="tr">“Cumartesi köyde düğün var.”</span></li>
+    <li><div class="ico" aria-hidden="true">🎙️</div><h3 data-t="s2.t"></h3><p data-t="s2.p"></p><span class="ex" lang="tr">“Dedem bu mektubu gönderdi.”</span></li>
+    <li><div class="ico" aria-hidden="true">🧩</div><h3 data-t="s3.t"></h3><p data-t="s3.p"></p><span class="ex" lang="tr">Bir ekmek · ve bir süt · lütfen.</span></li>
+  </ol>
+</div></section>
+
+<section><div class="wrap">
+  <div class="head"><h2 data-t="lang.title"></h2><p data-t="lang.lead"></p></div>
+  <div class="langgrid">
+    <figure class="source"><figcaption>Türkçe · Ayşe Anne</figcaption><p lang="tr">Günaydın Ahmet! Neyin var? Neden üzgünsün?</p></figure>
+    <figure><figcaption>English</figcaption><p lang="en">Good morning Ahmet! What's wrong? Why are you sad?</p></figure>
+    <figure><figcaption>العربية</figcaption><p class="rtl" lang="ar">صباح الخير يا أحمد! ما بك؟ لماذا أنت حزين؟</p></figure>
+    <figure><figcaption>اردو</figcaption><p class="rtl ur" lang="ur">صبح بخیر احمد! کیا ہوا؟ اداس کیوں ہو؟</p></figure>
+    <figure><figcaption>Español</figcaption><p lang="es">¡Buenos días, Ahmet! ¿Qué te pasa? ¿Por qué estás triste?</p></figure>
+    <figure><figcaption>Français</figcaption><p lang="fr">Bonjour Ahmet ! Qu’est-ce qui ne va pas ? Pourquoi es-tu triste ?</p></figure>
+  </div>
+</div></section>
+
+<section class="final"><div class="wrap">
+  <img src="assets/icon-192.png" alt="">
+  <h2 data-t="final.title"></h2>
+  <p data-t="final.lead"></p>
+  <div class="ctas" id="final-ctas"></div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>© 2026 Anadolu Ailesi</span>
+  <span><a href="https://github.com/Tezcan98/roleplaylanguage/blob/main/docs/store/privacy-policy.md" rel="noopener" data-t="privacy"></a></span>
+</div></footer>
+
+<script>
+const T = {
+  tr: {
+    eyebrow: 'Türkçe öğrenme oyunu', title: 'Türkçeyi bir <em>Anadolu köyünde</em> yaşayarak öğren',
+    lead: 'Ailenle kahvaltı yap, okula git, köy meydanında dünyanın dört bir yanından oyuncularla buluş. Her cümle Türkçe, anlamı hemen altında.',
+    'play.small': 'Hemen indir', 'web.small': 'Kurulum yok', 'web.big': 'Tarayıcıda oyna', 'ios.big': 'iPhone', soon: 'Yakında',
+    'f.chapters': 'hikâye bölümü', 'f.lines': 'Türkçe replik', 'f.chars': 'karakter', 'f.langs': 'dilde anlam',
+    'feat.title': 'Ders kitabı değil, bir köy', 'feat.lead': 'Kelimeler ezberlenmiyor, yaşanıyor. Her konuşma bir iş, bir sohbet, bir oyun.',
+    'f1.t': 'Ailenle Türkçe konuş', 'f1.p': 'Annen, baban, deden, ninen ve küçük kardeşin Ali. Kahvaltı, bahçe, ev işleri, akşam yemeği: gündelik Türkçe, gerçek durumlarda.',
+    'f2.t': 'Konuş, oyun seni dinlesin', 'f2.p': 'Mikrofona bas ve cümleni söyle. Oyun anlarsa hikâye devam eder; takılırsan örneği dinlersin.',
+    'f3.t': 'Okulda adım adım dersler', 'f3.p': 'Öğretmen tahtaya yazar, anlatır, sınıfa soru sorar. A1 seviyesinden başlayan dersler, sınıf arkadaşlarıyla sırayla cevaplar.',
+    'f4.t': 'Meydanda dünyayla buluş', 'f4.p': 'Köy meydanında başka öğrenenlerle karşılaş, Türkçe yaz, Türkçe konuş. Herkes aynı köyde, aynı dili öğreniyor.',
+    'f5.t': 'Satranç, futbol, kitaplar', 'f5.p': 'İsmail Dede ile dev satranç oyna, halı sahada gol at, kütüphaneden bir Türk klasiğinin özetini alıp bankta oku.',
+    'f6.t': 'Kocaman bir ev, bütün bir köy', 'f6.p': 'Odalarıyla bir aile evi, bahçe, okul, çay bahçesi, bakkal ve manav. Her köşede öğrenilecek yeni kelimeler.',
+    'learn.title': 'Üç adımda öğrenirsin', 'learn.lead': 'Oyundaki her konuşma bu üç alıştırmadan birine dönüşür.',
+    's1.t': 'Dinle', 's1.p': 'Karakter konuşur, sen ne dediğini seçersin. Metin cevaplayana kadar gizli kalır.',
+    's2.t': 'Söyle', 's2.p': 'Cümleyi yüksek sesle söylersin. Rakamla bile söylesen anlar: “10” da olur, “on” da.',
+    's3.t': 'Kur', 's3.p': 'Parçaları doğru sıraya dizersin. İki kez takılırsan doğru parça parlar.',
+    'lang.title': 'Anlamı senin dilinde', 'lang.lead': 'Her Türkçe cümlenin altında, seçtiğin dilde anlamı. Yeni kelimeler kendiliğinden defterine eklenir.',
+    'final.title': 'Köy seni bekliyor', 'final.lead': 'Android’de indir ya da hemen tarayıcında oyna. iPhone sürümü yolda.',
+    privacy: 'Gizlilik politikası',
+  },
+  en: {
+    eyebrow: 'A game for learning Turkish', title: 'Learn Turkish by living it, in an <em>Anatolian village</em>',
+    lead: 'Have breakfast with your family, go to school, meet players from all over the world in the village square. Every line in Turkish, its meaning right underneath.',
+    'play.small': 'Get it on', 'web.small': 'Nothing to install', 'web.big': 'Play in browser', 'ios.big': 'iPhone', soon: 'Coming soon',
+    'f.chapters': 'story chapters', 'f.lines': 'Turkish lines', 'f.chars': 'characters', 'f.langs': 'languages of meaning',
+    'feat.title': 'Not a textbook. A village.', 'feat.lead': 'You don’t memorise words, you live them. Every conversation is a job, a chat or a game.',
+    'f1.t': 'Talk with your family in Turkish', 'f1.p': 'Mom, dad, grandpa, grandma and your little brother Ali. Breakfast, the garden, chores, dinner: everyday Turkish in real situations.',
+    'f2.t': 'Speak, and the game listens', 'f2.p': 'Press the mic and say your sentence. If the game understands, the story goes on; if you get stuck, listen to the example.',
+    'f3.t': 'Lessons step by step at school', 'f3.p': 'The teacher writes on the board, explains and asks the class. Lessons from A1, answering in turn with your classmates.',
+    'f4.t': 'Meet the world in the square', 'f4.p': 'Run into other learners in the village square, write and speak Turkish together. Everyone in the same village, learning the same language.',
+    'f5.t': 'Chess, football, books', 'f5.p': 'Play giant chess with İsmail Dede, score on the pitch, borrow a Turkish classic from the library and read it on a bench.',
+    'f6.t': 'A big house, a whole village', 'f6.p': 'A family home with its rooms, a garden, a school, a tea garden, a grocer and a greengrocer. New words around every corner.',
+    'learn.title': 'You learn in three steps', 'learn.lead': 'Every conversation in the game turns into one of these three exercises.',
+    's1.t': 'Listen', 's1.p': 'A character speaks, you choose what they said. The text stays hidden until you answer.',
+    's2.t': 'Say it', 's2.p': 'You say the sentence out loud. Even with digits it understands: “10” works as well as “on”.',
+    's3.t': 'Build it', 's3.p': 'Put the pieces in the right order. Stuck twice? The right piece lights up.',
+    'lang.title': 'The meaning, in your language', 'lang.lead': 'Under every Turkish line, its meaning in the language you pick. New words go into your notebook by themselves.',
+    'final.title': 'The village is waiting', 'final.lead': 'Download it on Android or play right now in your browser. The iPhone version is on its way.',
+    privacy: 'Privacy policy',
+  },
+  ar: {
+    eyebrow: 'لعبة لتعلّم التركية', title: 'تعلّم التركية بالعيش في <em>قرية أناضولية</em>',
+    lead: 'تناول الفطور مع عائلتك، اذهب إلى المدرسة، والتقِ بلاعبين من كل أنحاء العالم في ساحة القرية. كل جملة بالتركية، ومعناها تحتها مباشرة.',
+    'play.small': 'احصل عليه من', 'web.small': 'بلا تثبيت', 'web.big': 'العب في المتصفح', 'ios.big': 'iPhone', soon: 'قريبًا',
+    'f.chapters': 'فصلًا في القصة', 'f.lines': 'جملة تركية', 'f.chars': 'شخصية', 'f.langs': 'لغات للمعاني',
+    'feat.title': 'ليست كتابًا مدرسيًا، بل قرية', 'feat.lead': 'لا تحفظ الكلمات، بل تعيشها. كل حوار مهمة أو دردشة أو لعبة.',
+    'f1.t': 'تحدّث مع عائلتك بالتركية', 'f1.p': 'الأم والأب والجد والجدة وأخوك الصغير علي. الفطور والحديقة وأعمال البيت والعشاء: تركية يومية في مواقف حقيقية.',
+    'f2.t': 'تكلّم، واللعبة تستمع', 'f2.p': 'اضغط على الميكروفون وقل جملتك. إذا فهمتك اللعبة تستمر القصة، وإن تعثّرت تستمع إلى المثال.',
+    'f3.t': 'دروس خطوة بخطوة في المدرسة', 'f3.p': 'المعلّمة تكتب على السبورة وتشرح وتسأل الصف. دروس تبدأ من المستوى A1، وتجيب بالدور مع زملائك.',
+    'f4.t': 'التقِ بالعالم في الساحة', 'f4.p': 'قابل متعلّمين آخرين في ساحة القرية، واكتبوا وتحدثوا بالتركية معًا. الجميع في القرية نفسها، يتعلّمون اللغة نفسها.',
+    'f5.t': 'شطرنج وكرة قدم وكتب', 'f5.p': 'العب الشطرنج العملاق مع الجد إسماعيل، سجّل هدفًا في الملعب، واستعر ملخّص رواية تركية كلاسيكية واقرأه على مقعد.',
+    'f6.t': 'بيت كبير وقرية كاملة', 'f6.p': 'بيت عائلة بغرفه، وحديقة ومدرسة وحديقة شاي وبقالة وخضّار. كلمات جديدة في كل زاوية.',
+    'learn.title': 'تتعلّم في ثلاث خطوات', 'learn.lead': 'كل حوار في اللعبة يتحوّل إلى واحد من هذه التمارين الثلاثة.',
+    's1.t': 'استمع', 's1.p': 'تتكلّم الشخصية وتختار أنت ما قالته. يبقى النص مخفيًا حتى تجيب.',
+    's2.t': 'قُلها', 's2.p': 'تقول الجملة بصوت عالٍ. تفهمك حتى بالأرقام: «10» مثل «on».',
+    's3.t': 'رتّبها', 's3.p': 'رتّب القطع بالترتيب الصحيح. إن تعثّرت مرتين تضيء القطعة الصحيحة.',
+    'lang.title': 'المعنى بلغتك', 'lang.lead': 'تحت كل جملة تركية معناها باللغة التي تختارها. وتُضاف الكلمات الجديدة إلى دفترك تلقائيًا.',
+    'final.title': 'القرية بانتظارك', 'final.lead': 'نزّلها على أندرويد أو العب الآن في متصفحك. نسخة iPhone في الطريق.',
+    privacy: 'سياسة الخصوصية',
+  },
+  ur: {
+    eyebrow: 'ترکی سیکھنے کا گیم', title: 'ترکی سیکھیں، <em>اناطولیہ کے گاؤں</em> میں جی کر',
+    lead: 'گھر والوں کے ساتھ ناشتہ کریں، اسکول جائیں، گاؤں کے چوک میں دنیا بھر کے کھلاڑیوں سے ملیں۔ ہر جملہ ترکی میں، اس کا مطلب بالکل نیچے۔',
+    'play.small': 'حاصل کریں', 'web.small': 'انسٹال کی ضرورت نہیں', 'web.big': 'براؤزر میں کھیلیں', 'ios.big': 'iPhone', soon: 'جلد آ رہا ہے',
+    'f.chapters': 'کہانی کے ابواب', 'f.lines': 'ترکی جملے', 'f.chars': 'کردار', 'f.langs': 'زبانوں میں مطلب',
+    'feat.title': 'نصابی کتاب نہیں، ایک گاؤں', 'feat.lead': 'الفاظ رٹے نہیں جاتے، جیے جاتے ہیں۔ ہر گفتگو ایک کام، ایک بات چیت یا ایک کھیل ہے۔',
+    'f1.t': 'گھر والوں سے ترکی میں بات کریں', 'f1.p': 'امی، ابو، دادا، دادی اور چھوٹا بھائی علی۔ ناشتہ، باغ، گھر کے کام، رات کا کھانا: روزمرہ ترکی، حقیقی حالات میں۔',
+    'f2.t': 'بولیں، گیم سنتا ہے', 'f2.p': 'مائیک دبائیں اور اپنا جملہ بولیں۔ گیم سمجھ جائے تو کہانی آگے بڑھتی ہے؛ اٹکیں تو مثال سنیں۔',
+    'f3.t': 'اسکول میں قدم بہ قدم اسباق', 'f3.p': 'استانی بورڈ پر لکھتی ہیں، سمجھاتی ہیں اور کلاس سے سوال کرتی ہیں۔ A1 سے شروع ہونے والے اسباق، ہم جماعتوں کے ساتھ باری باری جواب۔',
+    'f4.t': 'چوک میں دنیا سے ملیں', 'f4.p': 'گاؤں کے چوک میں دوسرے سیکھنے والوں سے ملیں، مل کر ترکی لکھیں اور بولیں۔ سب ایک ہی گاؤں میں، ایک ہی زبان سیکھ رہے ہیں۔',
+    'f5.t': 'شطرنج، فٹ بال، کتابیں', 'f5.p': 'اسماعیل دادا کے ساتھ بڑی شطرنج کھیلیں، میدان میں گول کریں، لائبریری سے ترکی کلاسک کا خلاصہ لے کر بینچ پر پڑھیں۔',
+    'f6.t': 'بڑا گھر، پورا گاؤں', 'f6.p': 'کمروں والا خاندانی گھر، باغ، اسکول، چائے خانہ، پرچون اور سبزی والا۔ ہر کونے میں نئے الفاظ۔',
+    'learn.title': 'تین قدموں میں سیکھیں', 'learn.lead': 'گیم کی ہر گفتگو ان تین مشقوں میں سے ایک بن جاتی ہے۔',
+    's1.t': 'سنیں', 's1.p': 'کردار بولتا ہے، آپ چنتے ہیں کہ اس نے کیا کہا۔ جواب دینے تک متن چھپا رہتا ہے۔',
+    's2.t': 'بولیں', 's2.p': 'آپ جملہ اونچی آواز میں بولتے ہیں۔ ہندسوں میں بھی سمجھتا ہے: «10» بھی چلے گا اور «on» بھی۔',
+    's3.t': 'جوڑیں', 's3.p': 'ٹکڑوں کو صحیح ترتیب میں رکھیں۔ دو بار اٹکیں تو صحیح ٹکڑا چمکتا ہے۔',
+    'lang.title': 'مطلب آپ کی زبان میں', 'lang.lead': 'ہر ترکی جملے کے نیچے آپ کی چنی ہوئی زبان میں اس کا مطلب۔ نئے الفاظ خود بخود آپ کی کاپی میں چلے جاتے ہیں۔',
+    'final.title': 'گاؤں آپ کا منتظر ہے', 'final.lead': 'اینڈرائیڈ پر ڈاؤن لوڈ کریں یا ابھی اپنے براؤزر میں کھیلیں۔ iPhone ورژن راستے میں ہے۔',
+    privacy: 'رازداری کی پالیسی',
+  },
+  es: {
+    eyebrow: 'Un juego para aprender turco', title: 'Aprende turco viviéndolo, en un <em>pueblo de Anatolia</em>',
+    lead: 'Desayuna con tu familia, ve a la escuela y conoce a jugadores de todo el mundo en la plaza del pueblo. Cada frase en turco, con su significado justo debajo.',
+    'play.small': 'Disponible en', 'web.small': 'Sin instalar nada', 'web.big': 'Juega en el navegador', 'ios.big': 'iPhone', soon: 'Muy pronto',
+    'f.chapters': 'capítulos de historia', 'f.lines': 'frases en turco', 'f.chars': 'personajes', 'f.langs': 'idiomas de significado',
+    'feat.title': 'No es un libro de texto. Es un pueblo.', 'feat.lead': 'Las palabras no se memorizan, se viven. Cada conversación es una tarea, una charla o un juego.',
+    'f1.t': 'Habla en turco con tu familia', 'f1.p': 'Mamá, papá, el abuelo, la abuela y tu hermanito Ali. Desayuno, huerto, tareas de casa, cena: turco cotidiano en situaciones reales.',
+    'f2.t': 'Habla, y el juego te escucha', 'f2.p': 'Pulsa el micrófono y di tu frase. Si el juego te entiende, la historia sigue; si te atascas, escucha el ejemplo.',
+    'f3.t': 'Clases paso a paso en la escuela', 'f3.p': 'La maestra escribe en la pizarra, explica y pregunta a la clase. Clases desde el nivel A1, respondiendo por turnos con tus compañeros.',
+    'f4.t': 'Conoce al mundo en la plaza', 'f4.p': 'Encuéntrate con otros estudiantes en la plaza del pueblo y escribid y hablad en turco juntos. Todos en el mismo pueblo, aprendiendo el mismo idioma.',
+    'f5.t': 'Ajedrez, fútbol, libros', 'f5.p': 'Juega al ajedrez gigante con el abuelo İsmail, marca en el campo, toma prestado un clásico turco en la biblioteca y léelo en un banco.',
+    'f6.t': 'Una casa grande, un pueblo entero', 'f6.p': 'Una casa familiar con sus habitaciones, un huerto, una escuela, un jardín de té, una tienda y una frutería. Palabras nuevas en cada rincón.',
+    'learn.title': 'Aprendes en tres pasos', 'learn.lead': 'Cada conversación del juego se convierte en uno de estos tres ejercicios.',
+    's1.t': 'Escucha', 's1.p': 'Un personaje habla y tú eliges lo que dijo. El texto queda oculto hasta que respondes.',
+    's2.t': 'Dilo', 's2.p': 'Dices la frase en voz alta. Te entiende incluso con cifras: «10» vale igual que «on».',
+    's3.t': 'Constrúyela', 's3.p': 'Ordena las piezas. ¿Te atascas dos veces? La pieza correcta se ilumina.',
+    'lang.title': 'El significado, en tu idioma', 'lang.lead': 'Debajo de cada frase en turco, su significado en el idioma que elijas. Las palabras nuevas pasan solas a tu cuaderno.',
+    'final.title': 'El pueblo te espera', 'final.lead': 'Descárgalo en Android o juega ahora mismo en tu navegador. La versión para iPhone está en camino.',
+    privacy: 'Política de privacidad',
+  },
+  fr: {
+    eyebrow: 'Un jeu pour apprendre le turc', title: 'Apprends le turc en le vivant, dans un <em>village d’Anatolie</em>',
+    lead: 'Prends le petit-déjeuner en famille, va à l’école, rencontre des joueurs du monde entier sur la place du village. Chaque phrase en turc, avec son sens juste en dessous.',
+    'play.small': 'Disponible sur', 'web.small': 'Rien à installer', 'web.big': 'Jouer dans le navigateur', 'ios.big': 'iPhone', soon: 'Bientôt',
+    'f.chapters': 'chapitres d’histoire', 'f.lines': 'répliques en turc', 'f.chars': 'personnages', 'f.langs': 'langues de traduction',
+    'feat.title': 'Pas un manuel. Un village.', 'feat.lead': 'On n’apprend pas les mots par cœur, on les vit. Chaque conversation est une tâche, une discussion ou un jeu.',
+    'f1.t': 'Parle turc avec ta famille', 'f1.p': 'Maman, papa, grand-père, grand-mère et ton petit frère Ali. Petit-déjeuner, potager, tâches ménagères, dîner : le turc de tous les jours, en situation réelle.',
+    'f2.t': 'Parle, le jeu t’écoute', 'f2.p': 'Appuie sur le micro et dis ta phrase. Si le jeu comprend, l’histoire continue ; si tu bloques, écoute l’exemple.',
+    'f3.t': 'Des cours pas à pas à l’école', 'f3.p': 'La maîtresse écrit au tableau, explique et interroge la classe. Des cours dès le niveau A1, en répondant à tour de rôle avec tes camarades.',
+    'f4.t': 'Rencontre le monde sur la place', 'f4.p': 'Croise d’autres apprenants sur la place du village, écrivez et parlez turc ensemble. Tout le monde dans le même village, à apprendre la même langue.',
+    'f5.t': 'Échecs, football, livres', 'f5.p': 'Joue aux échecs géants avec grand-père İsmail, marque sur le terrain, emprunte un classique turc à la bibliothèque et lis-le sur un banc.',
+    'f6.t': 'Une grande maison, tout un village', 'f6.p': 'Une maison de famille avec ses pièces, un potager, une école, un jardin de thé, une épicerie et un primeur. Des mots nouveaux à chaque coin.',
+    'learn.title': 'Tu apprends en trois étapes', 'learn.lead': 'Chaque conversation du jeu devient l’un de ces trois exercices.',
+    's1.t': 'Écoute', 's1.p': 'Un personnage parle, tu choisis ce qu’il a dit. Le texte reste caché jusqu’à ta réponse.',
+    's2.t': 'Dis-le', 's2.p': 'Tu dis la phrase à voix haute. Il comprend même les chiffres : « 10 » marche aussi bien que « on ».',
+    's3.t': 'Construis-la', 's3.p': 'Remets les morceaux dans l’ordre. Bloqué deux fois ? Le bon morceau s’allume.',
+    'lang.title': 'Le sens, dans ta langue', 'lang.lead': 'Sous chaque phrase turque, son sens dans la langue que tu choisis. Les nouveaux mots rejoignent ton carnet tout seuls.',
+    'final.title': 'Le village t’attend', 'final.lead': 'Télécharge-le sur Android ou joue tout de suite dans ton navigateur. La version iPhone arrive.',
+    privacy: 'Politique de confidentialité',
+  },
+};
+
+/* lines from the game, with their meanings (from the game's own translation files) */
+const PHRASES = [
+  { face: '👩', name: 'Ayşe Anne', role: { tr: 'anne', en: 'mom', ar: 'الأم', ur: 'امی', es: 'mamá', fr: 'maman' }, tr: 'Günaydın Ahmet! Neyin var? Neden üzgünsün?',
+    m: { en: "Good morning Ahmet! What's wrong? Why are you sad?", ar: 'صباح الخير يا أحمد! ما بك؟ لماذا أنت حزين؟', ur: 'صبح بخیر احمد! کیا ہوا؟ اداس کیوں ہو؟', es: '¡Buenos días, Ahmet! ¿Qué te pasa? ¿Por qué estás triste?', fr: 'Bonjour Ahmet ! Qu’est-ce qui ne va pas ? Pourquoi es-tu triste ?' } },
+  { face: '👦', name: 'Ahmet', role: { tr: 'sen', en: 'you', ar: 'أنت', ur: 'آپ', es: 'tú', fr: 'toi' }, tr: 'Canım sıkılıyor.',
+    m: { en: "I'm bored.", ar: 'أنا أشعر بالملل.', ur: 'میں بور ہو رہا ہوں۔', es: 'Me aburro.', fr: 'Je m’ennuie.' } },
+  { face: '👴', name: 'Hüseyin Dede', role: { tr: 'dede', en: 'grandpa', ar: 'الجد', ur: 'دادا', es: 'abuelo', fr: 'grand-père' }, tr: 'Gel otur evladım. Sana Nasreddin Hoca’nın kazan masalını anlatayım.',
+    m: { en: "Come sit, my child. Let me tell you Nasreddin Hodja's cauldron tale.", ar: 'تعال واجلس يا ولدي. سأحكي لك حكاية قِدر نصر الدين خوجة.', ur: 'آؤ بیٹھو بیٹا۔ میں تمہیں ملا نصر الدین کی دیگ والی کہانی سناتا ہوں۔', es: 'Ven, siéntate, hijo. Te voy a contar el cuento del caldero de Nasreddin Hodja.', fr: 'Viens t’asseoir, mon enfant. Je vais te raconter l’histoire du chaudron de Nasreddin Hodja.' } },
+  { face: '🧔', name: 'Çaycı Osman', role: { tr: 'çaycı', en: 'tea maker', ar: 'بائع الشاي', ur: 'چائے والا', es: 'el del té', fr: 'le serveur de thé' }, tr: 'Afiyet olsun! Çay içerken ne dersin?',
+    m: { en: 'Enjoy! What do you say over tea?', ar: 'بالهناء! ماذا تقول وأنت تشرب الشاي؟', ur: 'مزے سے پیو! چائے پیتے ہوئے کیا کہتے ہو؟', es: '¡Que aproveche! ¿Qué se dice tomando el té?', fr: 'Régale-toi ! Que dit-on en buvant le thé ?' } },
+];
+
+const pick = () => { try { const s = localStorage.getItem('aa-lang'); if (T[s]) return s; } catch {} const n = (navigator.language || 'tr').slice(0, 2); return T[n] ? n : 'en'; };
+let lang = pick(), idx = 0;
+
+function apply() {
+  const t = T[lang], root = document.documentElement;
+  root.lang = lang; root.dir = lang === 'ar' || lang === 'ur' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-t]').forEach((e) => { const v = t[e.dataset.t]; if (v == null) return; if (e.hasAttribute('data-html')) e.innerHTML = v; else e.textContent = v; });
+  document.querySelectorAll('.langs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  document.getElementById('final-ctas').innerHTML = document.querySelector('.hero .ctas').innerHTML;
+  phrase(false);
+}
+
+function phrase(animate = true) {
+  const p = PHRASES[idx], meaning = p.m[lang === 'tr' ? 'en' : lang];
+  const tr = document.getElementById('ph-tr'), mean = document.getElementById('ph-mean');
+  document.getElementById('ph-face').textContent = p.face;
+  document.getElementById('ph-name').textContent = p.name;
+  document.getElementById('ph-role').textContent = p.role[lang];
+  tr.textContent = p.tr; mean.textContent = meaning;
+  mean.dir = lang === 'ar' || lang === 'ur' ? 'rtl' : 'ltr';
+  if (animate) for (const e of [tr, mean]) { e.classList.remove('fade'); void e.offsetWidth; e.classList.add('fade'); }
+  document.getElementById('ph-dots').innerHTML = PHRASES.map((_, i) => `<b class="${i === idx ? 'on' : ''}"></b>`).join('');
+}
+
+document.querySelectorAll('.langs button').forEach((b) => b.addEventListener('click', () => {
+  lang = b.dataset.lang; try { localStorage.setItem('aa-lang', lang); } catch {} apply();
+}));
+apply();
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(() => { idx = (idx + 1) % PHRASES.length; phrase(); }, 4500);
+</script>
+</body>
+</html>

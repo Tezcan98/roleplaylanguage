@@ -1,3 +1,4 @@
+import { outfitModel } from '../content/shop.js';
 import { Character } from '../entities/Character.js';
 
 /**
@@ -23,7 +24,7 @@ export class RemotePlayers {
     location.group.add(char.group);
     if (sit) char.sit(true);
     if (look?.aura) char.setAura(true);
-    if (look?.outfit) char.setHd(this.models, `hd.${look.outfit === 'dress' ? 'casual' : look.outfit}.${look.gender === 'girl' ? 'girl' : 'boy'}`, true, { covered: look.style === 'covered', dress: look.outfit === 'dress' }); // bought in the shop
+    if (look?.outfit) char.setHd(this.models, outfitModel(look.outfit, look.gender, look.style), true, { covered: look.style === 'covered', dress: look.outfit === 'dress' }); // bought in the shop
     this.#players.set(id, { char, target: { x, z, rot }, moving: false });
   }
 

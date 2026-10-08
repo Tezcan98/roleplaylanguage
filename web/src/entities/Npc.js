@@ -7,11 +7,23 @@ import { Behaviors } from './Behaviors.js';
  */
 export const HD_PLACES = new Set(['village']);
 export const HD_VILLAGERS = { on: false };
+/**
+ * Which HD body each villager has (assets/models/hd_*.glb), so the square isn't full of twins:
+ * grey-haired elders in a long coat, the tea makers in a white jacket, curly, balding, long-haired…
+ * Anyone not listed: a suit with a vest, the everyday body otherwise.
+ */
+const BODIES = {
+  dede: 'elder', ismail: 'elder', huseyin: 'elder', husnu: 'elder', cayci: 'cook', kahveci: 'cook',
+  kadir: 'bald', bakkal: 'curly', kemal: 'curly', manav: 'long', can: 'long', rifat: 'suit', aslanBey: 'suit',
+  nine: 'elder', ogretmen: 'dark', elif: 'brown', zehra: 'dark',
+};
+
 /** The HD model and dressing for a villager's blocky look. */
-export function villagerHd(look) {
+export function villagerHd(look, id = '') {
   const woman = !!(look.skirt || look.headscarf || look.bun);
+  const body = BODIES[id] ?? (!woman && look.vest ? 'suit' : 'casual');
   return {
-    key: woman ? 'hd.casual.girl' : look.vest ? 'hd.suit.boy' : 'hd.casual.boy',
+    key: `hd.${woman && body === 'suit' ? 'casual' : body}.${woman ? 'girl' : 'boy'}`,
     opts: { covered: !!look.headscarf, scarfColor: look.headscarf ?? null, dress: !!look.skirt, look },
   };
 }
@@ -57,7 +69,7 @@ export class Npc extends Character {
     const on = HD_VILLAGERS.on && HD_PLACES.has(place);
     if (!on && !this.hdOn) return;
     this.hdOn = on;
-    const { key, opts } = villagerHd(this.appearance);
+    const { key, opts } = villagerHd(this.appearance, this.id);
     this.seated = on && !!this.behavior.seated;
     this.setHd(this.models, key, on, opts);
   }

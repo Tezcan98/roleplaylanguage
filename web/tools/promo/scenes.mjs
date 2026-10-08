@@ -2,10 +2,19 @@
  * The promo's scenes, in order. Each: setup(kit) → a page ready to film (not recorded),
  * act(kit, page) → what happens on camera during `seconds`.
  */
-const story = async (kit, params = '') => {
+/** The HD character (and an outfit / the golden light) bought and put on, as in the shop. */
+const dress = (page, { outfit = null, aura = false } = {}) => page.evaluate(([outfit, aura]) => {
+  const g = window.__game, w = g.wallet; w.add(500, 'promo');
+  const items = [{ id: 'hd', slot: 'hd' }, outfit && { id: `hd-${outfit}`, slot: 'body' }, aura && { id: 'aura', slot: 'aura' }].filter(Boolean);
+  for (const it of items) { w.buy({ ...it, price: 0 }); w.equip(it); }
+  g.shop.onOutfit?.();
+}, [outfit, aura]);
+
+const story = async (kit, params = '', look = {}) => {
   const page = await kit.open(params);
   await page.evaluate(() => document.querySelector('.menu-main')?.click());
   await kit.sleep(2500); await kit.closeCards(page); await kit.sleep(400);
+  await dress(page, look); await kit.sleep(800);
   await kit.hideHud(page);
   return page;
 };
@@ -13,10 +22,8 @@ const story = async (kit, params = '') => {
 /** Into the village square from the menu ("Meydana gir"), with a name and (optionally) a bought outfit. */
 const square = async (kit, name, { params = '', outfit = null, aura = false, extra = false } = {}) => {
   const page = await kit.open(params, { extra });
-  if (outfit || aura) await page.evaluate(([outfit, aura]) => {
-    const w = window.__game.wallet; w.add(100, 'promo');
-    for (const id of [outfit && `hd-${outfit}`, aura && 'aura'].filter(Boolean)) { const it = { id, slot: id === 'aura' ? 'aura' : 'body', price: 0 }; w.buy(it); w.equip(it); }
-  }, [outfit, aura]);
+  await page.evaluate((q) => { const u = new URLSearchParams(q); for (const k of ['gender', 'look']) if (u.get(k)) window.__game.settings.set(k, u.get(k)); }, params); // what the others see comes from the settings
+  await dress(page, { outfit, aura });
   await page.evaluate((n) => window.__game.settings.set('username', n), name);
   await page.click('.main-menu.open button:has-text("Meydana gir")');
   await kit.sleep(1500);
@@ -38,18 +45,20 @@ export const SCENES = [
     },
   },
   {
-    name: 'house', seconds: 6, still: 4.6,
+    name: 'grocer', seconds: 6, still: 4.4,
     setup: async (kit) => {
       const page = await story(kit);
-      await page.evaluate(() => { const g = window.__game; g.player.position.set(2.6, 0, -2.6); g.camera.snap(g.player.position, true); });
-      await kit.sleep(800);
+      await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
+      await kit.sleep(4500); await kit.closeCards(page); await kit.hideHud(page);
+      await page.evaluate(() => { const g = window.__game, n = g.cast.get('bakkal'); g.player.position.set(n.position.x - 0.4, 0, n.position.z + 1.8); g.camera.snap(g.player.position, false); });
+      await kit.sleep(1500);
       return page;
     },
     act: async (kit, page) => {
-      await kit.caption(page, 'Ailenle Türkçe konuş', 'Talk with your family, in everyday Turkish');
+      await kit.caption(page, 'Bakkalda Türkçe alışveriş', 'Shop at the grocer’s, in Turkish');
       await kit.sleep(500);
-      await page.evaluate(() => window.__game.dialogue.open('anne'));
-      await kit.sleep(3200);
+      await page.evaluate(() => window.__game.dialogue.open('bakkal', 'shop'));
+      await kit.sleep(3000);
       await page.click('#dlg .choice >> nth=0').catch(() => page.keyboard.press('1'));
     },
   },
@@ -81,19 +90,19 @@ export const SCENES = [
     },
   },
   {
-    name: 'speak', seconds: 6, still: 2.2,
+    name: 'speak', seconds: 6, still: 2.4,
     setup: async (kit) => {
       const page = await story(kit);
       await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
-      await kit.sleep(3500); await kit.closeCards(page); await kit.hideHud(page);
-      await page.evaluate(() => { const g = window.__game, m = g.cast.get('bakkal'); g.player.position.set(m.position.x + 0.3, 0, m.position.z + 1.9); g.camera.snap(g.player.position, false); });
-      await kit.sleep(800);
+      await kit.sleep(4500); await kit.closeCards(page); await kit.hideHud(page);
+      await page.evaluate(() => { const g = window.__game, n = g.cast.get('cayci'); g.player.position.set(n.position.x - 1.5, 0, n.position.z + 1.2); g.camera.snap(g.player.position, false); });
+      await kit.sleep(1500);
       return page;
     },
     act: async (kit, page) => {
       await kit.caption(page, 'Konuş, seni anlasın', 'Speak Turkish out loud, the game listens');
-      await page.evaluate(() => window.__game.dialogue.open('bakkal', 'm1'));
-      await kit.sleep(2600);
+      await page.evaluate(() => window.__game.dialogue.open('cayci', 'zc1'));
+      await kit.sleep(2800);
       await page.click('#dlg .mic').catch(() => {});
     },
   },
@@ -116,12 +125,14 @@ export const SCENES = [
     setup: async (kit) => {
       friends.push(await square(kit, 'Leyla', { params: '&gender=girl&look=covered', outfit: 'dress', aura: true, extra: true }));
       friends.push(await square(kit, 'Omar', { outfit: 'suit', extra: true }));
-      const page = await square(kit, 'Ahmet', { outfit: 'casual' });
+      friends.push(await square(kit, 'Seher', { params: '&gender=girl&look=open', outfit: 'casual', extra: true }));
+      const page = await square(kit, 'Hakan', { params: '&look=strong', outfit: 'casual' }); // the four characters, each with its own HD body
       // everyone together near the fountain, facing the camera
-      const spots = [[-1.3, 5.6], [1.3, 5.8], [0, 7.4]];
+      const spots = [[-1.6, 5.4], [1.6, 5.6], [2.4, 7.0], [-0.4, 7.4]];
       for (const [i, p] of [...friends, page].entries()) await p.evaluate(([x, z]) => { const g = window.__game; g.player.position.set(x, 0, z); }, spots[i]);
-      await page.evaluate(() => { const g = window.__game; g.camera.snap(g.player.position, false); });
-      await kit.zoom(page, -6); await kit.sleep(2500);
+      // a close camera on the four of them (the game's own camera stays further back)
+      await page.evaluate((spots) => { const g = window.__game, V = g.player.position.constructor, cx = spots.reduce((a, s) => a + s[0], 0) / spots.length, cz = spots.reduce((a, s) => a + s[1], 0) / spots.length; g.camera.setFixed(new V(cx + 0.6, 3.4, cz + 6.2), new V(cx, 1.0, cz)); }, spots);
+      await kit.sleep(2500);
       return page;
     },
     act: async (kit, page) => {
