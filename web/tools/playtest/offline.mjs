@@ -24,7 +24,7 @@ try {
   check('game loads without internet', true);
   await page.click('text=Hikayeye başla'); await sleep(1500);
   await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(800);
-  await page.evaluate(() => window.__game.player.position.set(3.6, 0, -2.7)); await sleep(300);
+  await page.evaluate(() => { const g = window.__game, m = g.cast.get('anne').position; g.player.position.set(m.x, 0, m.z + 0.6); }); await sleep(300); // next to mom, wherever the kitchen is
   await page.keyboard.press('e'); await sleep(800);
   check('dialogue opens', (await page.evaluate(() => window.__game.dialogue.talking)) === 'anne');
   check('fonts are bundled', await page.evaluate(() => document.fonts.check('700 20px Fredoka') && document.fonts.check("700 16px 'Noto Naskh Arabic'")));
