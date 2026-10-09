@@ -34,6 +34,10 @@ export const GOOD_LOOKS = {
     [[-0.05, 0], [0.06, 0.03]].forEach(([x, z]) => { const p = mf.sphere(0.07, 0xB08A57, 10); p.scale.set(1.3, 0.8, 1); g.add(mf.at(p, x, 0.055, z)); });
     return g;
   },
+  tost: (mf) => { const t = mf.box(0.2, 0.05, 0.12, 0xD9A05B); t.rotation.y = 0.3; return mf.group(mf.at(t, 0, 0.025, 0), mf.at(mf.box(0.19, 0.012, 0.11, 0xF4D03F), 0, 0.03, 0)); },
+  meyvesuyu: (mf) => mf.group(mf.at(mf.box(0.08, 0.15, 0.05, 0xF39C12), 0, 0.075, 0), mf.at(mf.cyl(0.006, 0.006, 0.06, 0xFFFFFF, 4), 0.02, 0.18, 0)),
+  kek: (mf) => mf.group(mf.at(mf.cyl(0.07, 0.06, 0.08, 0x8B5A2B, 12), 0, 0.04, 0), mf.at(mf.cyl(0.072, 0.072, 0.015, 0xF7E3B5, 12), 0, 0.085, 0)),
+  su: (mf) => mf.group(mf.at(mf.cyl(0.04, 0.04, 0.2, 0xBFE3F7, 10), 0, 0.1, 0), mf.at(mf.cyl(0.02, 0.02, 0.03, 0x2F6FDB, 8), 0, 0.215, 0)),
   muz: (mf) => { const b = mf.torus(0.13, 0.03, 0xF4D03F, 12, Math.PI * 0.6); b.rotation.x = Math.PI / 2; return mf.group(mf.at(b, 0, 0.03, 0)); },
 };
 const anything = (mf) => mf.group(mf.at(mf.box(0.16, 0.12, 0.16, 0xC9A26A), 0, 0.06, 0)); // a little parcel
@@ -56,6 +60,11 @@ export const MARKETS = {
   manav: {
     title: 'Rıza Manav', en: "Rıza's greengrocer's", npc: 'manav',
     goods: [['elma', 20, '🍎', 'bir kilo elma'], ['portakal', 25, '🍊', 'bir kilo portakal'], ['armut', 20, '🍐', 'bir kilo armut'], ['muz', 30, '🍌', 'bir kilo muz'], ['domates', 15, '🍅', 'bir kilo domates'], ['patates', 10, '🥔', 'bir kilo patates']],
+  },
+  // the school canteen (content/addons/kantin.js)
+  kantin: {
+    title: 'Okul Kantini', en: 'School canteen', npc: 'kantinci',
+    goods: [['tost', 25, '🥪', 'bir kaşarlı tost'], ['simit', 10, '🥯', 'bir simit'], ['kek', 15, '🧁', 'bir kek'], ['ayran', 10, '🥤', 'bir ayran'], ['meyvesuyu', 15, '🧃', 'bir meyve suyu'], ['su', 5, '💧', 'bir şişe su']],
   },
 };
 

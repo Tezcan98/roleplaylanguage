@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { buildPitch } from '../Pitch.js';
+import { Townscape } from '../Townscape.js';
 // import { addTrashBin } from '../trashBin.js';
 
 const WOOD = { tex: 'darkWood' };
@@ -166,6 +167,33 @@ export class VillageSquare extends Location {
     this.anchor('yardRoad', -HALF + 2.2, 0, Math.PI / 2);
     this.hotspot('village.yard', -HALF + 0.8, 0, 2.2);
     this.hotspot('village.menu', -HALF + 0.8, 0, 2.2); // same exit when playing online from the menu
+    this.#town(mf);
+  }
+
+  /**
+   * Beyond the fence: roads with cars on three sides, the country lane to the yard in the west,
+   * and the village round it — shops facing the square across the roads, houses, trees. Seen,
+   * never reached (the fence stops you), so the square no longer ends at the edge of the world.
+   */
+  #town(mf) {
+    const T = new Townscape(mf, this, 5), R0 = HALF + 3.5, R1 = R0 + 6, B = R1 + 7.5;
+    T.ground(0, 0, 300, 300, { tex: 'grass', repeat: [70, 70] }, -0.02);
+    T.road(-110, -R1, 110, -R0); // north
+    T.road(-110, R0, 110, R1); // south (the school road crosses it)
+    T.road(R0, -110, R1, 110); // east
+    T.traffic('x', -(R0 + R1) / 2, -110, 110, 3);
+    T.traffic('x', (R0 + R1) / 2, -110, 110, 2);
+    T.traffic('z', (R0 + R1) / 2, -110, 110, 2);
+    [['FIRIN', -30], ['KASAP', -20], ['ECZANE', -10], ['BERBER', 10], ['POSTANE', 20], ['KIRTASİYE', 30]].forEach(([name, x]) => T.shop(x, -B, 0, name, { w: 8 }));
+    [-40, 0, 40].forEach((x) => T.house(x, -B, 0));
+    [['LOKANTA', 20], ['TUHAFİYE', 30]].forEach(([name, x]) => T.shop(x, B, Math.PI, name, { w: 8 }));
+    [-36, -26, -16, -7, 9, 40].forEach((x) => T.house(x, B, Math.PI));
+    [['MANİFATURA', -24], ['HIRDAVAT', -12], ['KUAFÖR', 12], ['MUHTARLIK', 24]].forEach(([name, z]) => T.shop(B, z, -Math.PI / 2, name, { w: 8 }));
+    [-36, 0, 36].forEach((z) => T.house(B, z, -Math.PI / 2));
+    // west: past the lane, houses in gardens (our house is that way)
+    [-28, -16, 14, 26].forEach((z) => T.house(-HALF - 16, z, Math.PI / 2, { w: 6.5 }));
+    [[-HALF - 11, -6], [-HALF - 11, 7], [-HALF - 12, 20], [-HALF - 12, -21], [-HALF - 22, 0]].forEach(([x, z]) => T.tree(x, z, 1.2));
+    T.done();
   }
 
   /** Octagonal basin, a column with a bowl, a rippling water surface and jets of water drops. */

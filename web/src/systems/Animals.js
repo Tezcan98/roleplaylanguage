@@ -12,7 +12,6 @@ export const HERD = [
   { kind: 'sheep', where: 'yard', x: -13.5, z: 14.5, rot: 0.6, roam: 0 },
   { kind: 'sheep', where: 'yard', x: -11.6, z: 15.8, rot: 2.4, roam: 0 },
   { kind: 'sheep', where: 'yard', x: -12.2, z: 13.2, rot: -1.2, roam: 0 },
-  { kind: 'dog', where: 'yard', x: 2.6, z: -7.6, rot: 0.4, roam: 0 },
   // the hitching post on the square, by the north fence between the library and the coffeehouse
   { kind: 'horse', where: 'village', x: -1, z: -25.5, rot: 0, ride: true },
   { kind: 'horse', where: 'village', x: 2.2, z: -25.5, rot: 0, ride: true },

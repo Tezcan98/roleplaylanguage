@@ -48,6 +48,7 @@ export const HOTSPOTS = {
   ...Object.fromEntries(['libShelf', 'libShelf2', 'libShelf3', 'libShelf4'].map((id) => [`village.${id}`, { label: (c) => (c.state?.heldBook ? 'Kitabı rafa koy' : 'Kitap al'), use: ['library'] }])), // systems/Library.js
   // garden gate = the street: choose school or the village square (see the 'street' effect)
   'yard.gate': { label: 'Sokağa çık', use: ['street'], link: ['schoolyard', 'village'] },
+  ...Object.fromEntries([1, 2, 3, 4].map((n) => [`school.bench${n}`, { label: 'Banka otur', use: [`sit:schoolBench${n}`], available: (c) => !c.seated }])), // by the school pitch
   'house.sofra': { label: 'Sofraya otur', use: ['sit:sofraS'], available: (c) => !c.seated },
   'house.breadTable': {
     label: 'Ekmeği sofraya koy',

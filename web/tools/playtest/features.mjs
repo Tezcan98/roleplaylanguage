@@ -315,6 +315,27 @@ try {
   for (let i = 0; i < 40 && !(await ev(() => window.__game.world.current.id === 'schoolyard' && !window.__game.story.paused)); i++) { await drainUi(page); await sleep(800); }
   check('practice: back in the schoolyard afterwards, the day continues', (await ev(() => window.__game.world.current.id)) === 'schoolyard' && (await ev(() => window.__game.story.quest?.id)) === questBefore);
   check('practice cost 1 credit', (await ev(() => window.__game.wallet.balance)) === creditsBeforePractice - 1);
+
+  // --- the schoolyard: benches to sit on, the canteen -------------------------------------
+  await goTo('school.bench1'); await sleep(400);
+  check('schoolyard benches: "Banka otur"', (await ev(() => document.getElementById('act').textContent)).includes('Banka otur'));
+  await page.keyboard.press('e'); await sleep(600);
+  check('…and you sit down', await ev(() => !!window.__game.player.seated));
+  await ev(() => window.__game.player.sit(false));
+  await ev(() => window.__game.player.position.set(-13.6, 0, -5.6)); await sleep(400);
+  check('the canteen: "Hasan Amca ile konuş"', (await ev(() => document.getElementById('act').textContent)).includes('Hasan Amca'));
+  await page.keyboard.press('e'); await sleep(600);
+  check('…first you greet him (say "Kolay gelsin")', (await ev(() => window.__game.dialogue.node?.ask)) === 'speak');
+  await ev(() => document.querySelector('#dlg .mic')?.click()); await sleep(1500);
+  check('…then he asks what you will have', (await ev(() => window.__game.dialogue.node?.say ?? '')).includes('Ne alırsın') && await ev(() => !!window.__game.story.state.flags['met-kantinci']));
+  await ev(() => document.querySelectorAll('#dlg .choice')[1]?.click()); // "Neler var?"
+  await waitFor(() => page.$('.market.open'), 3000);
+  check('…"Neler var?" opens the canteen shelf', (await page.$$('.market.open .mk-slot:not(.mk-none)')).length === 6);
+  const lira = await bag('para');
+  await page.click('.market.open .mk-slot[aria-label="tost"]'); await sleep(200);
+  await page.click('.market.open .mk-buy'); await sleep(300);
+  check('…a toast for twenty-five lira', (await bag('tost')) === 1 && (await bag('para')) === lira - 25);
+  await ev(() => window.__game.market.close());
   await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
 
   // --- word practice -------------------------------------------------------------------

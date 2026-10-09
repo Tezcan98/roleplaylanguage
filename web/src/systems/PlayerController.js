@@ -20,7 +20,7 @@ export class PlayerController {
       const yaw = this.camera?.yaw ?? 0; // the view is turned: "up" means away from the camera
       if (yaw) { const c = Math.cos(yaw), s = Math.sin(yaw); [x, z] = [x * c - z * s, x * s + z * c]; }
       const loc = this.world.current, n = Math.hypot(x, z);
-      const run = this.input.running ? RUN : 1; // running (on horseback: a gallop)
+      const run = 1; // running is off for now: `this.input.running ? RUN : 1` (Shift / 🏃 by the joystick)
       const speed = (loc.indoor ? 3.6 : 5.2) * (player.mount ? RIDE_SPEED : 1) * run * mag * dt;
       const P = player.position;
       P.x += x / n * speed;

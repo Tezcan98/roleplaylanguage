@@ -9,7 +9,7 @@ export class Joystick {
     // 🏃 above the stick: tap to run, tap again to walk (Shift on a keyboard)
     this.running = false;
     this.runBtn = el('button', { attrs: { id: 'run', type: 'button', 'aria-label': 'Koş', 'aria-pressed': 'false' }, text: '🏃', on: { click: () => { this.running = !this.running; this.runBtn.setAttribute('aria-pressed', String(this.running)); } } });
-    host.append(this.root, this.runBtn);
+    host.append(this.root); // the 🏃 button (this.runBtn) is not shown while running is off (PlayerController)
     let id = null;
     const move = (e) => {
       const r = this.root.getBoundingClientRect();

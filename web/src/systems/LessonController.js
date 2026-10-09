@@ -122,8 +122,9 @@ export class LessonController {
       if (a.studentId !== me.id) {
         this.labels.bubble(this.cast.get(a.studentId), a.text, a.correct ? 'ok' : 'bad');
         this.tts.speak(a.text, { speaker: a.studentId });
+        if (!a.correct) setTimeout(() => { if (this.active === session) this.#correct(a.studentId); }, 1800); // the teacher puts it right
         // a classmate just took their turn: move on to the next question
-        if (this.current?.turnStudentId === a.studentId) setTimeout(() => { if (this.active === session) session.next(); }, 2500);
+        if (this.current?.turnStudentId === a.studentId) setTimeout(() => { if (this.active === session) session.next(); }, a.correct ? 2500 : 5600);
       }
     });
     session.on('scores', ({ scores }) => this.view.scoresUpdate(scores, me.id));
@@ -163,7 +164,24 @@ export class LessonController {
     if (this.active !== session || this.current !== q) return;
     session.submit(q.index, { text: res.transcript, correct: res.ok });
     this.view.status_(res.ok ? 'Doğru! Sıradaki öğrenci geliyor…' : 'Tekrar deneyebilirsin; sıra ilerliyor…', res.ok ? 'ok' : 'bad');
-    setTimeout(() => { if (this.active === session) session.next(); }, 2500);
+    if (!res.ok) this.#correct('ahmet');
+    setTimeout(() => { if (this.active === session) session.next(); }, res.ok ? 2500 : 5000);
+  }
+
+  /**
+   * A wrong answer: the teacher says what it should have been ("Hayır, Elif. Doğrusu: …").
+   * For the player she says only "Hayır, doğrusu şöyle:" out loud (the right sentence may hold the
+   * player's own name: a new voice line for every player) — the whole of it is in her bubble.
+   */
+  #correct(studentId) {
+    const q = this.current;
+    if (!q) return;
+    const mine = studentId === 'ahmet', name = mine ? playerName() : this.cast.get(studentId)?.name ?? '';
+    const right = String(q.botAnswers?.[0] ?? q.hint ?? '').replace('{name}', name);
+    if (!right) return;
+    const said = mine ? 'Hayır, doğrusu şöyle:' : `Hayır, ${name}. Doğrusu: ${right}`;
+    this.tts.speak(said, { speaker: 'ogretmen' });
+    this.labels.bubble(this.cast.get('ogretmen'), mine ? `${said} ${right}` : said, null, 4.5, `Not quite. The right answer: “${right}”`);
   }
 
   #finish(lesson) {
