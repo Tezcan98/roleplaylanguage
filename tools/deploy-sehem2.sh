@@ -14,7 +14,9 @@ cp -r site/. "$STAGE/"
 cp -r web/dist "$STAGE/oyun"
 echo "to upload: $(du -sh "$STAGE" | cut -f1)"
 
-# upload into a fresh folder, then swap it in (visitors never see half an upload)
+# upload into a fresh folder, then swap it in (visitors never see half an upload).
+# The server's ssh sometimes drops a new connection at once (throttling): a few tries.
+upload() {
 tar czf - -C "$STAGE" . | ssh -o BatchMode=yes -o ConnectTimeout=15 -i "$HOME/.ssh/id_ed25519" "$HOST" '
   set -e
   sudo rm -rf /var/www/sehem2.com.tr.new /var/www/sehem2.com.tr.old
@@ -27,3 +29,6 @@ tar czf - -C "$STAGE" . | ssh -o BatchMode=yes -o ConnectTimeout=15 -i "$HOME/.s
   sudo mv /var/www/sehem2.com.tr.new /var/www/sehem2.com.tr
   sudo rm -rf /var/www/sehem2.com.tr.old
   echo "live: $(sudo du -sh /var/www/sehem2.com.tr | cut -f1)"'
+}
+for try in 1 2 3 4; do upload && exit 0; echo "upload failed (try $try), again in 10 s…"; sleep 10; done
+exit 1
