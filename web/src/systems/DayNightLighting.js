@@ -17,8 +17,12 @@ function sample(keys, h) {
  * Drives sun, sky dome, fog, lamps and fireflies from the in-game clock.
  * The shadow camera follows the player so shadows stay sharp.
  */
+/** Point lights for lamps: the most any place has (the house: 4). */
+const MAX_LAMPS = 4;
+
 export class DayNightLighting {
   #lamps = [];
+  #used = 0;
   #dir = new THREE.Vector3();
 
   constructor(ctx, time, { sky, fireflies } = {}) {
@@ -26,15 +30,18 @@ export class DayNightLighting {
     this.follow = new THREE.Vector3();
   }
 
-  /** Called on location change: builds point lights for the location's lamps. */
+  /**
+   * Called on location change: the location's lamps light up. Always the same MAX_LAMPS point
+   * lights (the unused ones dark): when the number of lights changes, three.js recompiles every
+   * material's shader — the stall on entering a new place (house 4 lamps, yard none, classroom 2).
+   */
   bind(location) {
-    this.#lamps.forEach((l) => l.parent?.remove(l));
-    this.#lamps = (location.lamps || []).map((p) => {
-      const l = new THREE.PointLight(0xFFD08A, 0, 9, 1.6);
-      l.position.copy(p);
-      location.group.add(l);
-      return l;
-    });
+    if (!this.#lamps.length) {
+      this.#lamps = Array.from({ length: MAX_LAMPS }, () => { const l = new THREE.PointLight(0xFFD08A, 0, 9, 1.6); this.ctx.scene.add(l); return l; });
+    }
+    const spots = location.lamps || [];
+    this.#lamps.forEach((l, i) => { if (spots[i]) l.position.copy(spots[i]); else l.position.set(0, -100, 0); });
+    this.#used = Math.min(spots.length, MAX_LAMPS);
     this.location = location;
   }
 
@@ -71,7 +78,7 @@ export class DayNightLighting {
     this.sky?.update(dt, { visible: !indoor, top, horizon, sunDir: this.#dir, day, night, center: this.follow });
     this.fireflies?.update(t, indoor ? 0 : night);
     const lampOn = THREE.MathUtils.clamp((0.35 - day) * 4, 0, 1);
-    this.#lamps.forEach((l) => { l.intensity = 14 * lampOn; });
+    this.#lamps.forEach((l, i) => { l.intensity = i < this.#used ? 14 * lampOn : 0; });
     (this.location?.glows || []).forEach((m) => { m.emissive?.set(0xFFC66B).multiplyScalar(0.9 * lampOn); });
   }
 }

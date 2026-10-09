@@ -488,6 +488,7 @@ effects.register('my-garden', () => {
 
 // --- interaction ---
 // farm animals: a cow, sheep and a dog in the yard; horses to ride on the square
+setTimeout(() => world.warmUp(ctx.renderer, ctx.camera), 1200); // every place ready on the GPU before you walk in (no stutter on first entry)
 const animals = new Animals({ world, models, player, labels, toasts, vocab, clock: () => game.t, wallet, onShop: () => shop.open() });
 animals.build();
 bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') animals.leftPlace(); }); // the horse stays on the square
@@ -786,4 +787,5 @@ setInterval(() => {
 }, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
+if (params.has('debug')) window.__progs = () => ctx.renderer.info.programs?.length ?? 0; // (tests: shaders compiled so far)
 if (params.has('debug')) window.__game = { market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

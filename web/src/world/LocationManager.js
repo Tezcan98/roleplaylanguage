@@ -17,6 +17,28 @@ export class LocationManager {
   get(id) { return this.#locations.get(id); }
   all() { return [...this.#locations.values()]; }
 
+  /**
+   * Warm-up: compile every place's materials and send its textures to the GPU ahead of time (one
+   * place per step, in the background) — three.js otherwise does it on the first frame a place is
+   * seen, the stutter when you walk into somewhere new. Models that load later (HD bodies,
+   * animals) still prepare on their first frame.
+   */
+  async warmUp(renderer, camera) {
+    for (const loc of this.#locations.values()) {
+      await new Promise((r) => setTimeout(r, 120));
+      const was = loc.group.visible;
+      loc.group.visible = true;
+      try {
+        renderer.compile(this.scene, camera);
+        loc.group.traverse((o) => {
+          if (!o.material) return;
+          for (const m of [o.material].flat()) for (const k of ['map', 'normalMap', 'roughnessMap', 'emissiveMap', 'alphaMap']) if (m[k]?.isTexture) renderer.initTexture(m[k]);
+        });
+      } catch { /* a place that can't be prepared now is prepared on first sight, as before */ }
+      loc.group.visible = was;
+    }
+  }
+
   /** Location graph edges, taken from hotspots that travel somewhere (filled by content). */
   setLinks(links) { this.links = links; }
 
