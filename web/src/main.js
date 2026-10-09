@@ -626,15 +626,6 @@ const menu = new MainMenu(host, {
   onSquare: (server) => playOnline(server),
   onProfile: () => { menu.hide(); editProfile(); },
   onShop: () => shop.open(),
-  // gift code (for testing the shop; to be removed or changed before the store release)
-  onGift: (code) => {
-    const c = String(code).trim().toUpperCase();
-    if (c !== 'ANADOLU100') return 'Bu kod geçerli değil.';
-    if (settings.get(`gift-${c}`)) return 'Bu kodu zaten kullandın.';
-    settings.set(`gift-${c}`, true);
-    wallet.add(100, 'gift');
-    return '+100 kredi! İyi eğlenceler.';
-  },
 });
 /** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
 async function editProfile({ cancellable = true } = {}) {

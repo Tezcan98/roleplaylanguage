@@ -14,8 +14,8 @@ import { fullscreenPossible, goFullscreen, fullscreenIcon, canInstall, installAp
 export class MainMenu {
   #view = 'home'; // home | city | settings
 
-  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onGift }) {
-    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onGift });
+  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop }) {
+    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => settings.set('serverRegion', id) });
     this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
     this.root = el('div', { class: 'overlay main-menu' });
@@ -60,10 +60,6 @@ export class MainMenu {
       ]);
       quality.value = s.get('quality', 'medium');
       quality.addEventListener('change', () => { s.set('quality', quality.value); location.reload(); });
-      const code = el('input', { class: 'name-in gift-in', attrs: { type: 'text', placeholder: 'Hediye kodu', maxlength: '20', autocapitalize: 'characters' } });
-      const note = el('small', { class: 'gift-note' });
-      const gift = el('form', { class: 'gift-row' }, [code, el('button', { class: 'chipbtn primary', text: 'Kullan', attrs: { type: 'submit' } }), note]);
-      gift.addEventListener('submit', (e) => { e.preventDefault(); note.textContent = this.onGift(code.value); code.value = ''; });
       body = [
         back,
         el('h2', { class: 'ctitle', text: '⚙️ Ayarlar' }),
@@ -71,7 +67,6 @@ export class MainMenu {
         save && btn('Yeni oyun (baştan başla)', 'btn alt', go(this.onStart)),
         el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler' })]),
         el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
-        this.onGift && gift,
       ];
     } else {
       const gender = s.get('gender', 'boy'), [, , icon, name] = characterOf(gender, s.get('look', ''));
