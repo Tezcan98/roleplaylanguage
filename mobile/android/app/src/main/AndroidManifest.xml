@@ -39,6 +39,8 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+            <!-- Play Games sign-in (PlayGamesPlugin): the project id from res/values/strings.xml -->
+        <meta-data android:name="com.google.android.gms.games.APP_ID" android:value="@string/game_services_project_id" />
     </application>
 
     <!-- Permissions -->

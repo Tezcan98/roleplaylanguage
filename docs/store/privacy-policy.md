@@ -1,6 +1,6 @@
 # Anadolu Ailesi — Gizlilik Politikası
 
-**Son güncelleme:** 3 Ekim 2026
+**Son güncelleme:** 10 Ekim 2026
 
 Anadolu Ailesi, Türkçe öğrenmeyi hikâye ve 3D köy yaşamı üzerinden sunan bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
 
@@ -31,6 +31,19 @@ Oyundaki bazı karakterlerle serbest sohbet edilebilir. Bu sohbette yazdığın�
 
 Karakterlerin sabit repliklerinin sesi oyunun sunucusunda üretilir: erkek sesleri sunucudaki açık kaynaklı Piper ile, kadın sesleri Google Gemini metinden sese hizmetiyle. Bunun için sunucuya yalnızca söylenecek cümlenin metni gönderilir; üretilen ses dosyası herkes için aynı olduğundan sunucuda saklanır ve tekrar kullanılır. Kişisel veri içermez.
 
+## 2c. Güvenlik kaydı (90 gün)
+
+Oyuncuları, özellikle çocukları korumak için **köy meydanındaki yazılı konuşmalar** (konuşma balonları) ve **karakterlerle serbest sohbetteki mesajlar**, sunucuda **şifreli olarak 90 gün** saklanır; sonra otomatik olarak silinir. Kayıtta mesajın metni (karakter sohbetinde karakterin cevabı da), zamanı, oda, kullanıcı adı, cihaz kimliği, varsa Google Play Games oyuncu kimliği ve IP adresi bulunur.
+
+- Kayıtlar, yalnızca yetkili güvenlik görevlisinde bulunan bir anahtarla açılabilecek şekilde şifrelenir; oyunun sunucusu kayıtları yazabilir ama okuyamaz.
+- Kayıtlar yalnızca zararlı veya tehlikeli konuşmaları (taciz, zorbalık, tehdit, uygunsuz içerik, kişisel bilgi isteme vb.) incelemek, gerekirse ilgili hesabı engellemek ve yasal bir talep olduğunda yetkili makamlarla paylaşmak için kullanılır.
+- **Sesli sohbet kaydedilmez:** iki oyuncu arasında doğrudan kurulur.
+- Oyun içinde meydana ilk girişte ve sohbet kutusunda bu kayıt hakkında bilgi verilir.
+
+## 2d. Google Play Games girişi (Android)
+
+Android sürümünde oyun, Google Play Games'e otomatik olarak giriş yapmayı dener. Giriş yapılırsa yalnızca **Play Games oyuncu kimliği** (ve görünen ad) alınır ve güvenlik kaydında kullanılır. Oyun e-posta adresinizi veya Google hesap bilginizi görmez. Play Games'e giriş yapmadan da oynayabilirsiniz.
+
 ## 3. Oyun ilerlemesi ve ayarlar
 
 Oyun ilerlemesi, kelime bilgisi, kredi bakiyesi ve bazı ayarlar cihazdaki **localStorage** alanında tutulur. Bunlar oyunun kendi sunucusuna ilerleme kaydı olarak gönderilmez.
@@ -53,6 +66,7 @@ Köy meydanında kullanıcı adları ve genel konuşma metinleri sunucudan diğe
 
 - Yerel oyun ilerlemesi ve ayarlar, uygulamanın cihazdaki localStorage verisi temizlendiğinde silinir.
 - Kullanıcı adı ve cihaz kimliği, çok oyunculu bağlantı açık olduğu sürece sunucu tarafında oturum verisi olarak tutulur; kalıcı hesap sistemi yoktur.
+- Güvenlik kaydı (meydan ve karakter sohbeti mesajları) şifreli olarak 90 gün saklanır ve sonra otomatik silinir.
 - Satranç skor tablosundaki kullanıcı adı ve oyun sayıları sunucuda kalır; silinmesini istediğiniz kullanıcı adı için geliştiriciye yazabilirsiniz.
 - Karakter sesleri (kişisel veri içermeyen ses dosyaları) sunucuda önbellek olarak saklanır.
 - Sunucunun geçici bağlantı/log verileri üretim sunucusunun yapılandırmasına bağlıdır ve yayın öncesinde gerçek saklama süresi ayrıca belirlenmelidir.

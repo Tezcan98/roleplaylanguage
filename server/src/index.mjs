@@ -22,6 +22,9 @@
  *                     `pip install "laya[serve]" && LAYA_MODELS=multilingual laya-serve` → http://127.0.0.1:8000
  *   TYPESAFE_API_KEY / MODERATION_KEY  Jev key (Laya needs none) · MODERATION_MODEL e.g. multilingual
  *   MODERATION_LOG    held-back bubbles (JSON lines), default /tmp/yilmaz-moderation.log
+ *   AUDIT_PUBLIC_KEY  the operator's public key (.pem, tools/audit-keygen.mjs): turns on the encrypted
+ *                     safety log of square bubbles and character chat (AuditLog.js; read it with tools/audit-read.mjs)
+ *   AUDIT_DIR, AUDIT_DAYS  where the day files go (default /var/lib/yilmaz-village/audit) and how long they stay (90)
  *   MODERATION_TURKISH_ONLY=0  allow other languages · MODERATION_FAIL_CLOSED=1  hold back everything while the model is down
  *   CHESS_SCORES      file for İsmail Dede's chess score board, default /tmp/yilmaz-chess-scores.json
  *   GEMINI_API_KEY    enables free conversation with village characters (POST /api/npc-chat) and the women's voices
@@ -38,6 +41,7 @@ import { NpcChat } from './NpcChat.js';
 import { npcChatRoute } from './npcChatRoute.js';
 import { TurnRelay } from './TurnRelay.js';
 import { Tts } from './Tts.js';
+import { AuditLog } from './AuditLog.js';
 import { ChessScoreFile } from './ChessScoreFile.js';
 import { Moderator } from './Moderator.js';
 
@@ -45,6 +49,8 @@ const env = process.env;
 const port = Number(process.argv[2] ?? env.PORT ?? 8090);
 const host = env.HOST ?? '0.0.0.0';
 const origins = parseOrigins(env.ALLOWED_ORIGINS ?? DEFAULT_ORIGINS);
+// the safety log: square bubbles and character chat, encrypted for the operator, kept AUDIT_DAYS (90) days (AuditLog.js)
+const audit = AuditLog.fromEnv(env);
 const clientIp = (req) => (env.TRUST_PROXY === '1' && String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim()) || req.socket.remoteAddress;
 const started = Date.now();
 const tts = new Tts({
@@ -62,7 +68,7 @@ const http = createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({ ok: true, uptime: Math.round((Date.now() - started) / 1000), npcChat: chat.enabled, tts: tts.enabled, ...village.stats() }));
   }
-  if (npcChatRoute(req, res, { chat, allowOrigin: (o) => originAllowed(o, origins), clientIp })) return;
+  if (npcChatRoute(req, res, { chat, allowOrigin: (o) => originAllowed(o, origins), clientIp, audit })) return;
   if (req.url.startsWith('/api/tts')) {
     const u = new URL(req.url, 'http://x');
     const origin = req.headers.origin;
@@ -94,8 +100,8 @@ const moderator = new Moderator({
   logFile: env.MODERATION_LOG ?? '/tmp/yilmaz-moderation.log',
 });
 const chessScores = new ChessScoreFile(env.CHESS_SCORES ?? '/tmp/yilmaz-chess-scores.json');
-const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator });
-http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'}; moderation ${moderator.provider}; turn ${village.turn ? 'on' : 'off'})`));
+const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit });
+http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'}; moderation ${moderator.provider}; safety log ${audit ? `on (${audit.days} days)` : 'off'}; turn ${village.turn ? 'on' : 'off'})`));
 
 for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, () => {

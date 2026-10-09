@@ -11,7 +11,7 @@ export class NpcChatClient {
   #enabled = null;
 
   /** @param {{ url: string, lang: () => string, player: () => string }} o */
-  constructor({ url, lang, player }) { Object.assign(this, { url, lang, player }); }
+  constructor({ url, lang, player, ids = () => ({}) }) { Object.assign(this, { url, lang, player, ids }); } // ids(): { pid, gid } for the safety log
 
   /** wss://host/ws/village → https://host/api/npc-chat */
   static urlFor(villageUrl) {
@@ -35,7 +35,7 @@ export class NpcChatClient {
     const r = await fetch(this.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ npc, message, history, lang: this.lang(), player: this.player() }),
+      body: JSON.stringify({ npc, message, history, lang: this.lang(), player: this.player(), ...this.ids() }),
     });
     if (r.status === 429) throw Object.assign(new Error('limit'), { code: 'limit' });
     if (!r.ok) throw new Error(`chat ${r.status}`);

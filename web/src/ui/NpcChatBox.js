@@ -7,7 +7,7 @@ export class NpcChatBox {
     this.input = el('input', { class: 'chat-in', attrs: { type: 'text', maxlength: '200', placeholder: 'Türkçe yaz…', 'aria-label': 'Mesaj' } });
     this.send = el('button', { class: 'chipbtn primary', text: 'Gönder', attrs: { type: 'button' } });
     this.mic = canListen && el('button', { class: 'chipbtn', text: '🎙️ Söyle', attrs: { type: 'button' } });
-    this.note = el('p', { class: 'note en-t', text: gloss('Talk freely in Turkish. The answer is read aloud; tap the speaker to hear it again.') });
+    this.note = el('p', { class: 'note en-t', text: gloss('Talk freely in Turkish. The answer is read aloud; tap the speaker to hear it again. Chats are kept encrypted for 90 days for safety.') });
     const go = () => { const t = this.input.value.trim(); if (t && !this.waiting) onSend(t); };
     this.send.onclick = go;
     this.input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') go(); });

@@ -82,8 +82,9 @@ export class VillageServer {
    *   (username "<expiry>:<id>", password HMAC-SHA1(secret, username)), valid for a day
    * @param {Map} [o.chessScores]  chess score board to start from; `onChessScore()` after every game (to save it)
    */
-  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }) } = {}) {
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null } = {}) {
     this.moderator = moderator; // decides which public bubbles may be shown (word list, language, Jev / Laya)
+    this.audit = audit; // the encrypted 90-day safety log (AuditLog.js), or null
     this.log = log;
     this.chessScores = chessScores; // İsmail Dede's score board, shared by every square (name → games, wins…)
     this.onChessScore = onChessScore;
@@ -256,7 +257,7 @@ export class VillageServer {
     }
   }
 
-  #hello(c, { name, room = 'village', gender, style, pid, outfit }) {
+  #hello(c, { name, room = 'village', gender, style, pid, gid, outfit }) {
     if (c.id) return;
     if (typeof room !== 'string' || !ROOM.test(room)) return this.#send(c, { type: 'error', message: 'Geçersiz oda.' });
     const clean = String(name ?? '').trim();
@@ -265,6 +266,7 @@ export class VillageServer {
     const members = this.#room(room);
     // the same device again (its old connection not closed yet, e.g. a phone that lost its signal):
     // the new connection takes over — same name, so the chess seat is found again
+    if (typeof gid === 'string' && /^[A-Za-z0-9_.:-]{4,64}$/.test(gid)) c.gid = gid; // Play Games player id (safety log)
     if (typeof pid === 'string' && /^[a-z0-9]{8,40}$/.test(pid)) {
       c.pid = pid;
       for (const old of members.values()) if (old.pid === pid) { this.#leave(old); old.id = null; old.ws.terminate(); }
@@ -288,8 +290,10 @@ export class VillageServer {
    */
   async #say(c, text) {
     const now = Date.now();
-    if (c.mutedUntil > now) return this.#send(c, { type: 'say-blocked', reason: 'muted', until: c.mutedUntil });
+    const who = { kind: 'say', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, text };
+    if (c.mutedUntil > now) { this.audit?.write({ ...who, shown: false, flag: 'muted' }); return this.#send(c, { type: 'say-blocked', reason: 'muted', until: c.mutedUntil }); }
     const v = await this.moderator.check(text);
+    this.audit?.write({ ...who, shown: !!v.ok && !!c.id, ...(v.ok ? {} : { flag: v.reason }) }); // the safety log (AuditLog.js)
     if (!c.id) return; // left meanwhile
     if (v.ok) { this.#toRoom(c, { type: 'say', id: c.id, text }); return; }
     c.strikes = (c.strikes ?? []).filter((t) => now - t < STRIKE_WINDOW).concat(now);

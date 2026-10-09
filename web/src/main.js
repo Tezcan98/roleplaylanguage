@@ -262,7 +262,8 @@ const dialogueView = new DialogueView(host, {
   onChat: () => dialogue.startChat(),
 });
 // free conversation with village characters (Gemini behind the village server; off without a key)
-const npcChat = new NpcChatClient({ url: manifest.npcChat || NpcChatClient.urlFor(villageServer), lang: glossLang, player: playerName });
+const npcChat = new NpcChatClient({ url: manifest.npcChat || NpcChatClient.urlFor(villageServer), lang: glossLang, player: playerName,
+  ids: () => ({ pid: settings.get('deviceId') || undefined, gid: settings.get('playGamesId') || undefined }) }); // who wrote it, for the safety log
 const chatRecognizer = params.has('fakemic') ? new ScriptedRecognizer() : (native ? new nativeKit.NativeSpeechRecognizer('tr-TR') : new WebSpeechRecognizer('tr-TR'));
 const dialogue = new DialogueController({
   dialogues: DIALOGUES, cast, view: dialogueView, activities, effects, vocab, tts, modes, bus, input,
@@ -400,8 +401,8 @@ const village = new VillageMultiplayer({
   // first time in the square: how talking works here (Arabic, with Turkish)
   onFirstVisit: () => cards.show({
     num: 'Köy meydanı', title: 'Burada gerçek oyuncular var',
-    text: 'Söylediğin cümle başının üstünde yazı olarak görünür. Sesli sohbet sadece iki kişi arasında ve karşı taraf kabul ederse açılır.',
-    en: 'There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. Be kind!',
+    text: 'Söylediğin cümle başının üstünde yazı olarak görünür. Sesli sohbet sadece iki kişi arasında ve karşı taraf kabul ederse açılır. Güvenliğin için yazılı konuşmalar şifreli olarak 90 gün saklanır.',
+    en: 'There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written conversations are kept encrypted for 90 days. Be kind!',
     button: 'Tamam',
   }),
   recognizer: chatRecognizer,
@@ -652,6 +653,8 @@ else {
   if (again && saved) { menu.hide(); continueGame(); } else offerDaily();
 }
 if (native) scheduleDailyReminder(nativeKit.LocalNotifications); // keep tomorrow's reminder
+// Play Games sign-in (silent for Play Games users): the player id goes with what they write, for the safety log
+if (native) nativeKit.PlayGames.signIn().then((r) => { if (r?.signedIn && r.playerId) settings.set('playGamesId', r.playerId); }).catch(() => {});
 
 /** Online square straight from the menu: no story (paused), no autosave; leaving returns here. */
 function playOnline(server) {

@@ -205,7 +205,7 @@ export class VillageMultiplayer {
       if (this.world.current.id !== here) return;
       const room = `${this.settings.get('serverRegion', 'ankara')}${this.places[here].suffix}`;
       if (!this.settings.get('deviceId')) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join(''));
-      const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''), this.settings.get('deviceId'), this.outfit?.() ?? {});
+      const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''), this.settings.get('deviceId'), this.outfit?.() ?? {}, this.settings.get('playGamesId', ''));
       this.joinedAt = here;
       this.#last = null; // tell the others where I am right away (not the spawn point)
       welcome.peers.forEach((p) => this.remotes.add(this.#loc(), p));

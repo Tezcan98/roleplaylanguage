@@ -5,15 +5,17 @@
 export const isNativeApp = () => window.Capacitor?.isNativePlatform?.() === true;
 
 export async function loadNativeAdapters() {
-  const [{ App }, { NativeTTS }, { NativeSpeechRecognizer }, { AdMobAdProvider }, { LocalNotifications }, { NativePurchases, PURCHASE_TYPE }] = await Promise.all([
+  const [{ App }, { NativeTTS }, { NativeSpeechRecognizer }, { AdMobAdProvider }, { LocalNotifications }, { NativePurchases, PURCHASE_TYPE }, { registerPlugin }] = await Promise.all([
     import('@capacitor/app'),
     import('../services/speech/NativeTTS.js'),
     import('../services/speech/NativeSpeechRecognizer.js'),
     import('../services/monetization/AdMobAdProvider.js'),
     import('@capacitor/local-notifications'),
     import('@capgo/native-purchases'),
+    import('@capacitor/core'),
   ]);
-  return { App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider, LocalNotifications, NativePurchases, PURCHASE_TYPE };
+  const PlayGames = registerPlugin('PlayGames'); // mobile/android: PlayGamesPlugin.java
+  return { App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider, LocalNotifications, NativePurchases, PURCHASE_TYPE, PlayGames };
 }
 
 const DAILY_ID = 7001;
