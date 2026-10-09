@@ -87,13 +87,13 @@ export class DialogueController {
         catch { if (live()) box.busy(false); }
       },
     });
-    const send = async (text) => {
+    const send = async (text, typed = true) => {
       box.busy(true);
+      if (typed) box.clear(); // sent: the box is free for the next line while the answer comes
       this.view.setHint(null);
       try {
         const r = await this.chat.reply(npc, text);
         if (!live()) return;
-        box.clear();
         this.lastLine = r.reply; this.lastFresh = true;
         this.view.setLine(r.reply, r.meaning);
         this.view.setWords(r.words);
@@ -101,11 +101,11 @@ export class DialogueController {
         if (r.correction) this.view.setHint(`Doğrusu: ${r.correction}`);
         this.tts.speak(r.reply, { speaker: npc, fresh: true }); // a new sentence each time: no Gemini voice for it
       } catch (e) {
-        if (live()) { const m = e.code === 'limit' ? CHAT_BUSY.limit : CHAT_BUSY.down; this.view.setLine(m.tr, m.en); }
+        if (live()) { const m = e.code === 'limit' ? CHAT_BUSY.limit : CHAT_BUSY.down; this.view.setLine(m.tr, m.en); if (typed && !box.input.value) box.setText(text); } // not sent: the line comes back
       }
       if (live()) box.busy(false);
     };
-    send('Merhaba!'); // the character greets first
+    send('Merhaba!', false); // the character greets first
   }
 
   async show(id) {

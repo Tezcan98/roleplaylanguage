@@ -101,21 +101,8 @@ export class Yard extends Location {
     add(mf.at(mf.box(0.9, 0.45, 0.05, { tex: 'myGardenSign' }), 11.2, 0.95, 3.94));
     this.hotspot('yard.myGarden', 12.4, 4.4, 1.3);
 
-    // old car with a flat tyre
-    this.prop(kit, 'prop.car', -11, 0, 7, 0, () => {
-      const g = new THREE.Group();
-      g.add(mf.at(mf.box(4.2, 0.8, 1.9, 0xE9E2CF), 0, 0.75, 0));
-      g.add(mf.at(mf.box(2.2, 0.75, 1.72, 0xE9E2CF), -0.2, 1.52, 0));
-      g.add(mf.at(mf.box(2.1, 0.6, 1.76, 0x7FB8E0), -0.2, 1.52, 0));
-      [[1.35, 0.97], [-1.35, 0.97], [1.35, -0.97], [-1.35, -0.97]].forEach(([x, z], i) => {
-        const w = mf.cyl(0.38, 0.38, 0.28, 0x222222, 14); w.rotation.x = Math.PI / 2; w.position.set(x, 0.38, z);
-        if (i === 0) { w.scale.set(1, 1, 0.7); w.position.y = 0.3; }
-        g.add(w);
-      });
-      g.add(mf.at(mf.box(0.1, 0.25, 0.4, 0xFFE08A), 2.12, 0.85, 0.6));
-      g.add(mf.at(mf.box(0.1, 0.25, 0.4, 0xFFE08A), 2.12, 0.85, -0.6));
-      return g;
-    });
+    // dad's old car (a classic Turkish sedan) with a flat tyre
+    this.prop(kit, 'prop.car', -11, 0, 7, 0, () => oldCar(mf));
     C.addBox(-13.2, -8.8, 6, 8);
     this.anchor('car', -8.2, 7.3, -Math.PI / 2);
 
@@ -159,4 +146,79 @@ export class Yard extends Location {
     this.hotspot('yard.gate', 0, 22.8, 1.9); // the street: school or the village square
     this.anchor('gate', 0, 22, Math.PI);
   }
+}
+
+/**
+ * Dad's old car: a classic 1970s–80s Turkish sedan (the Şahin / Doğan look) — its side profile
+ * extruded with rounded edges (bonnet, cabin, boot), tinted windows between the pillars, chrome
+ * bumpers and grille, round headlights, red tail lights, door lines, mirrors, hubcaps and a
+ * Turkish number plate. The front right tyre is flat (dad is fixing it). Front = +x, 4.3 m long.
+ */
+function oldCar(mf) {
+  const g = new THREE.Group();
+  const paint = mf.mat(0x3E7FA0, { roughness: 0.38, metalness: 0.2 }); // the old blue
+  const chrome = mf.mat(0xD9DEE3, { roughness: 0.25, metalness: 0.8 });
+  const dark = mf.mat(0x1E1E22, { roughness: 0.8 });
+  const glass = mf.mat(0x9FC4D8, { roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.85 });
+  const W = 1.7; // width
+  const side = (pts, depth, mat, bevel = 0.06) => {
+    const shape = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
+    const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 3, curveSegments: 4 });
+    geo.translate(0, 0, -depth / 2);
+    return mf.mesh(geo, mat);
+  };
+  // the body: low boot at the back, long bonnet at the front
+  g.add(side([[-2.1, 0.34], [2.08, 0.34], [2.14, 0.62], [2.02, 0.84], [0.62, 0.92], [-1.25, 0.92], [-2.06, 0.86], [-2.16, 0.6]], W - 0.12, paint));
+  // the cabin: glass all round, then the roof and the pillars in the car's colour
+  const cabin = [[0.62, 0.92], [-1.22, 0.92], [-0.98, 1.46], [0.16, 1.46]];
+  g.add(side(cabin, W - 0.34, glass, 0.03));
+  g.add(mf.at(side([[0.2, 1.42], [-1.02, 1.42], [-0.99, 1.5], [0.17, 1.5]], W - 0.3, paint, 0.03), 0, 0, 0)); // roof
+  for (const z of [-1, 1]) {
+    const zz = z * (W - 0.32) / 2;
+    const pillar = (x0, y0, x1, y1) => { // a pillar from (x0, y0) up to (x1, y1) on this side
+      const len = Math.hypot(x1 - x0, y1 - y0), m = mf.box(0.08, len, 0.05, paint);
+      m.position.set((x0 + x1) / 2, (y0 + y1) / 2, zz); m.rotation.z = Math.atan2(x0 - x1, y1 - y0); g.add(m);
+    };
+    pillar(0.6, 0.93, 0.17, 1.46); pillar(-0.32, 0.93, -0.32, 1.46); pillar(-1.2, 0.93, -0.99, 1.46); // A, B, C
+    g.add(mf.at(mf.box(1.72, 0.05, 0.05, paint), -0.3, 0.95, zz)); // window sill
+    g.add(mf.at(mf.box(0.02, 0.5, 0.02, dark), -0.32, 0.62, z * (W / 2 + 0.005))); // door lines
+    g.add(mf.at(mf.box(0.02, 0.5, 0.02, dark), 0.55, 0.62, z * (W / 2 + 0.005)));
+    g.add(mf.at(mf.box(0.16, 0.03, 0.04, chrome), 0.42, 0.78, z * (W / 2 + 0.02))); // door handles
+    g.add(mf.at(mf.box(0.16, 0.03, 0.04, chrome), -0.5, 0.78, z * (W / 2 + 0.02)));
+    g.add(mf.at(mf.box(3.6, 0.04, 0.02, chrome), 0, 0.5, z * (W / 2 + 0.01))); // chrome strip along the side
+    g.add(mf.at(mf.box(0.1, 0.08, 0.12, dark), 0.62, 1.0, z * (W / 2 + 0.05))); // mirror
+  }
+  // front: chrome bumper, dark grille with chrome bars, round headlights; back: bumper, red lights
+  g.add(mf.at(mf.box(0.12, 0.12, W + 0.04, chrome), 2.2, 0.42, 0));
+  g.add(mf.at(mf.box(0.12, 0.12, W + 0.04, chrome), -2.22, 0.42, 0));
+  g.add(mf.at(mf.box(0.04, 0.22, 0.8, dark), 2.17, 0.66, 0));
+  for (const y of [0.6, 0.67, 0.74]) g.add(mf.at(mf.box(0.05, 0.02, 0.82, chrome), 2.18, y, 0));
+  const lamp = mf.mat(0xFFF2C0, { emissive: 0x6B5A20, roughness: 0.2 });
+  for (const z of [-0.6, 0.6]) {
+    const ring = mf.cyl(0.13, 0.13, 0.05, chrome, 18); ring.rotation.z = Math.PI / 2; ring.position.set(2.16, 0.68, z); g.add(ring);
+    const l = mf.cyl(0.1, 0.1, 0.06, lamp, 18); l.rotation.z = Math.PI / 2; l.position.set(2.18, 0.68, z); g.add(l);
+    g.add(mf.at(mf.box(0.05, 0.14, 0.3, mf.mat(0xC8202A, { emissive: 0x3A0608, roughness: 0.3 })), -2.19, 0.68, z));
+  }
+  // number plates (06 = Ankara)
+  const c = document.createElement('canvas'); c.width = 256; c.height = 56;
+  const x = c.getContext('2d');
+  x.fillStyle = '#F5F5F0'; x.fillRect(0, 0, 256, 56); x.fillStyle = '#1F4FA8'; x.fillRect(0, 0, 30, 56);
+  x.fillStyle = '#fff'; x.font = 'bold 16px sans-serif'; x.textAlign = 'center'; x.fillText('TR', 15, 44);
+  x.fillStyle = '#111'; x.font = 'bold 34px sans-serif'; x.fillText('06 YA 1979', 143, 40);
+  const plateTex = new THREE.CanvasTexture(c); plateTex.colorSpace = THREE.SRGBColorSpace;
+  const plate = new THREE.MeshBasicMaterial({ map: plateTex });
+  for (const [px, ry] of [[2.27, Math.PI / 2], [-2.29, -Math.PI / 2]]) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.11), plate); m.position.set(px, 0.42, 0); m.rotation.y = ry; g.add(m);
+  }
+  // wheels: tyre, hubcap; the front right one is flat
+  [[1.35, 1], [-1.35, 1], [1.35, -1], [-1.35, -1]].forEach(([wx, z], i) => {
+    const flat = i === 0;
+    const w = new THREE.Group();
+    const tyre = mf.cyl(0.36, 0.36, 0.24, dark, 22); tyre.rotation.x = Math.PI / 2; w.add(tyre);
+    const cap = mf.cyl(0.2, 0.2, 0.26, chrome, 18); cap.rotation.x = Math.PI / 2; w.add(cap);
+    w.position.set(wx, flat ? 0.29 : 0.36, z * (W / 2 - 0.08));
+    if (flat) w.scale.set(1, 0.8, 1);
+    g.add(w);
+  });
+  return g;
 }

@@ -7,7 +7,12 @@ const val = (v, ctx) => (typeof v === 'function' ? v(ctx) : v);
  * Runs free-roam actions (watch TV, wash hands…) and enforces house rules: if a rule
  * forbids the action right now, the family member reacts instead of the action happening.
  */
+/** In-game minutes before the same free action counts again. */
+const AGAIN_MINUTES = 60;
+
 export class FreeActionSystem {
+  #last = null;
+
   constructor({ actions, rules, ctx, cast, world, dialogue, vocab, time, labels, toasts, tts, bus, clock }) {
     Object.assign(this, { actions, rules, ctx, cast, world, dialogue, vocab, time, labels, toasts, tts, bus, clock });
   }
@@ -17,6 +22,12 @@ export class FreeActionSystem {
   perform(id) {
     const a = this.actions[id];
     if (!a) throw new Error(`Unknown free action ${id}`);
+    // the same thing again right away (water, washing hands… — the ones with an `again` line) does not count: no time passes, nothing learned
+    if (a.again && this.#last?.id === id && this.time.minutes - this.#last.at < AGAIN_MINUTES) { // (sitting on a bench again is fine)
+      this.labels.think(val(a.again, this.ctx), 2.5, this.clock());
+      return;
+    }
+    this.#last = { id, at: this.time.minutes };
     const rule = this.rules.find((r) => r.on === id && r.when(this.ctx));
     if (rule) { this.#enforce(rule); return; }
 

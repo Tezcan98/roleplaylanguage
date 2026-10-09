@@ -20,16 +20,47 @@ const THINGS = [
   { tr: 'saat', en: 'clock', icon: '🕰️', wrong: ['televizyon', 'kitap'] },
 ];
 
-/** A different thing each time (by how many he has asked so far). */
-function nextThing(ctx) {
-  const asked = THINGS.filter((t) => ctx.flag(`kardes-${t.tr}`)).length;
-  return `q${asked % THINGS.length}`;
+/** Little chats with no quiz: he is a child, not a teacher. */
+const CHATS = [
+  { say: 'Abi, bak! Benim oyuncak arabam kırmızı. Senin en sevdiğin renk ne?', en: 'Look, big brother! My toy car is red. What is your favourite colour?',
+    words: [['oyuncak', 'toy'], ['en sevdiğin', 'your favourite'], ['renk', 'colour']],
+    options: [{ tr: 'Benim en sevdiğim renk mavi.', en: 'My favourite colour is blue.' }, { tr: 'Ben yeşili seviyorum.', en: 'I like green.' }] },
+  { say: 'Abi, ben altı yaşındayım. Sen kaç yaşındasın?', en: 'Big brother, I am six years old. How old are you?',
+    words: [['yaş', 'age'], ['kaç', 'how many']],
+    options: [{ tr: 'Ben on yaşındayım.', en: 'I am ten years old.' }, { tr: 'Senden büyüğüm!', en: 'I am older than you!' }] },
+  { say: 'Abi, sayı sayabiliyorum! Bir, iki, üç, dört, beş!', en: 'Big brother, I can count! One, two, three, four, five!',
+    words: [['saymak', 'to count'], ['sayı', 'number']],
+    options: [{ tr: 'Aferin! Altı, yedi, sekiz!', en: 'Well done! Six, seven, eight!' }, { tr: 'Çok güzel saydın, Ali.', en: 'You counted very well, Ali.' }] },
+  { say: 'Abi, acıktım. Annem ne pişiriyor?', en: 'Big brother, I am hungry. What is mum cooking?',
+    words: [['acıkmak', 'to get hungry'], ['pişirmek', 'to cook']],
+    options: [{ tr: 'Bilmiyorum, mutfağa bakalım.', en: 'I don’t know, let’s look in the kitchen.' }, { tr: 'Galiba çorba pişiriyor.', en: 'I think she is cooking soup.' }] },
+  { say: 'Abi, dışarıda top oynayalım mı?', en: 'Big brother, shall we play ball outside?',
+    words: [['top', 'ball'], ['dışarıda', 'outside']],
+    options: [{ tr: 'Tamam, birazdan çıkalım.', en: 'Okay, let’s go out in a bit.' }, { tr: 'Şimdi olmaz, işim var.', en: 'Not now, I have work to do.' }] },
+];
+
+let lastThing = -1, lastChat = -1;
+/**
+ * What he comes with this time: now and then just a chat; otherwise a thing to name — the ones
+ * not asked yet first, then any but the last one (he used to ask about the bed for ever once all
+ * twelve were done, and the same thing again after a closed talk).
+ */
+function nextTalk(ctx) {
+  if (Math.random() < 0.35) {
+    lastChat = (lastChat + 1 + Math.floor(Math.random() * (CHATS.length - 1))) % CHATS.length;
+    return `c${lastChat}`;
+  }
+  const all = THINGS.map((_, i) => i).filter((i) => i !== lastThing);
+  const fresh = all.filter((i) => !ctx.flag(`kardes-${THINGS[i].tr}`));
+  lastThing = fresh.length ? fresh[0] : all[Math.floor(Math.random() * all.length)];
+  return `q${lastThing}`;
 }
 
 function nodes() {
   const out = {};
   THINGS.forEach((t, i) => {
-    const opts = [{ tr: t.tr, en: t.en, next: `ok${i}` }, ...t.wrong.map((w) => ({ tr: w, en: '', wrong: true }))];
+    // no meanings under the choices: only the right one had one, and it gave the answer away
+    const opts = [{ tr: t.tr, en: '', next: `ok${i}` }, ...t.wrong.map((w) => ({ tr: w, en: '', wrong: true }))];
     out[`q${i}`] = {
       say: `Abi, bu ne? ${t.icon}`, en: 'Big brother, what is this?', hint: `${t.icon} = ${t.tr}`,
       options: [opts[1], opts[0], opts[2]],
@@ -40,6 +71,7 @@ function nodes() {
       options: [{ tr: 'Aferin sana, Ali!', en: 'Well done, Ali!', do: [`flag:kardes-${t.tr}`] }],
     };
   });
+  CHATS.forEach((c, i) => { out[`c${i}`] = c; });
   // he is family: no introductions, he just wants to play
   out.hello = {
     say: 'Abi! Abi! Çok sıkıldım. Oyun oynayalım mı?', en: 'Big brother! Big brother! I am so bored. Shall we play?',
@@ -68,5 +100,5 @@ export default {
   },
   voices: { kardes: man('Fenrir', M2) },
   castAll: { kardes: ['house', 'start', 'roam'] },
-  dialogues: { kardes: { start: (ctx) => (ctx.flag('met-kardes') ? nextThing(ctx) : 'hello'), nodes: nodes() } },
+  dialogues: { kardes: { start: (ctx) => (ctx.flag('met-kardes') ? nextTalk(ctx) : 'hello'), nodes: nodes() } },
 };

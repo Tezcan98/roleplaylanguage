@@ -54,6 +54,8 @@ import { MockAdProvider } from './services/monetization/AdProvider.js';
 import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder } from './platform/native.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, TestBilling, TEST_PURCHASES } from './services/monetization/Billing.js';
+import { SettingsPanel } from './ui/SettingsPanel.js';
+import { el } from './ui/dom.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
 import { outfitOn, outfitModel, auraOn, migrateWallet } from './content/shop.js';
@@ -234,6 +236,7 @@ const tts = new CharacterVoices({
   fallback: native ? new nativeKit.NativeTTS('tr-TR') : new WebSpeechTTS('tr-TR'),
   voices: VOICES,
   enabled: () => settings.get('neuralVoices', native ? false : true),
+  muted: () => !settings.get('voicesOn', true), // ⚙️ in the HUD
 });
 // ?fakemic → scripted answers (tests); manifest.sttEndpoint → Whisper server; else browser STT
 const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
@@ -291,6 +294,12 @@ effects
   .register('sit', (anchor) => { // a seat in the current place (sofra at home, tea-garden stools…)
     const a = world.current.anchors.get(anchor) ?? world.get('house').anchors.get(anchor);
     if (a) { player.place(a); player.sit(true); }
+    // how to get up again: always at the sofra (meals), the first two times on other seats
+    const told = settings.get('sitHints', 0);
+    if (anchor.startsWith('sofra') || told < 2) {
+      toasts.show('Kalkmak için yürümen yeterli.', gloss('To get up, just walk.'));
+      settings.set('sitHints', told + 1);
+    }
   })
   .register('place-bread', () => {
     inventory.remove('ekmek', 1);
@@ -456,7 +465,7 @@ const library = new Library({
 });
 effects.register('library', () => library.atShelf());
 // a ney plays quietly in the background in Aslan Bey's open library
-const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z } });
+const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z }, muted: () => !settings.get('musicOn', true) });
 chess.onMove = (m) => talk.chessMoved(m);
 effects
   .register('chess-ask', (color) => chess.ask(color))
@@ -532,8 +541,20 @@ models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animation
 // story mode: a full-screen ad between two days (not with ad-free mode)
 story.beforeNewDay = () => (wallet.adFree ? Promise.resolve() : ads.showInterstitial());
 
+// ⚙️ in the HUD: voices and music, picture quality, how to play, back to the main menu
+const settingsPanel = new SettingsPanel(host, {
+  modes, settings,
+  onHelp: () => intro.show(),
+  onSound: (key, on) => { if (key === 'voicesOn' && !on) tts.cancel(); },
+  onMenu: ({ resume = false } = {}) => {
+    saves.save(state.snapshot()); // where you are now, for "Devam et"
+    if (resume) try { sessionStorage.setItem('autoContinue', '1'); } catch { /* ignore */ } // (quality change: straight back into the game)
+    location.reload(); // a clean start (the online square is left, the story is saved)
+  },
+});
+const settingsBtn = el('button', { class: 'pill', attrs: { type: 'button', 'aria-label': 'Ayarlar', title: 'Ayarlar · settings' }, on: { click: () => settingsPanel.open() } }, ['⚙️']);
 const hud = new Hud(host, {
-  extra: [fullscreenBtn],
+  extra: [settingsBtn, fullscreenBtn],
   onShop: () => shop.open(),
   onBookOpen: () => textbook.open(),
   onBook: () => openWords(),
@@ -746,6 +767,7 @@ setInterval(() => coverable.forEach((c) => {
 
 // the little brother: mom tells him off for jumping on the bed; now and then he calls you over to ask what something is
 let kidScoldAt = -99, kidAskAt = 120;
+const KID_CALLS = [['bu ne? Gel bak!', 'Look, what is this? Come and see!'], ['bak ne buldum!', 'Look what I found!'], ['gel, oynayalım!', 'Come on, let’s play!'], ['sana bir şey soracağım!', 'I want to ask you something!']];
 setInterval(() => {
   const kid = cast.get('kardes');
   if (!kid || kid.location !== 'house' || world.current.id !== 'house' || dialogue.talking || modes.top !== 'play') return;
@@ -757,8 +779,9 @@ setInterval(() => {
     setTimeout(() => { labels.bubble(kid, 'Tamam anne!', null, 2.5, 'Okay mum!'); tts.speak('Tamam anne!', { speaker: 'kardes' }); }, 1800);
   } else if (t > kidAskAt && kid.position.distanceTo(player.position) < 4.5) {
     kidAskAt = t + 240; // not too often: he is a child, not a teacher
-    const call = `${playerGender() === 'girl' ? 'Abla' : 'Abi'}, bu ne? Gel bak!`;
-    labels.bubble(kid, call, null, 4, 'Look, what is this? Come and see!');
+    const [line, en] = KID_CALLS[Math.floor(Math.random() * KID_CALLS.length)]; // not the same call every time
+    const call = `${playerGender() === 'girl' ? 'Abla' : 'Abi'}, ${line}`;
+    labels.bubble(kid, call, null, 4, en);
     tts.speak(call, { speaker: 'kardes' });
   }
 }, 1000);

@@ -10,8 +10,8 @@
 export class CharacterVoices {
   #turn = 0;
 
-  constructor({ repo = null, server = null, neural, fallback, voices, enabled = () => true }) {
-    Object.assign(this, { repo, server, neural, fallback, voices, enabled });
+  constructor({ repo = null, server = null, neural, fallback, voices, enabled = () => true, muted = () => false }) {
+    Object.assign(this, { repo, server, neural, fallback, voices, enabled, muted });
   }
 
   voiceOf(speaker) { return this.voices[speaker] ?? this.voices.default; }
@@ -25,7 +25,7 @@ export class CharacterVoices {
    * up, so hers is spoken by the device; a man's goes to Piper on our own server (costs nothing).
    */
   speak(text, { speaker, rate = 1, fresh = false } = {}) {
-    if (!text) return;
+    if (!text || this.muted()) return; // voices off in the settings
     const voice = this.voiceOf(speaker), turn = ++this.#turn;
     if (fresh || !this.repo) { this.#speak(text, voice, rate, fresh); return; }
     this.repo.url(voice, text).then((url) => {

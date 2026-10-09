@@ -10,6 +10,7 @@ export const FREE_ACTIONS = {
     words: [['televizyon', 'television'], ['çizgi film', 'cartoon'], ['izlemek', 'to watch']],
   },
   water: {
+    again: 'Az önce su içtim, susamadım.', // (said instead when done again within the hour)
     label: 'Su iç', think: 'Oh, soğuk su!', say: 'Bir bardak su içtim.', minutes: 2,
     words: [['su', 'water'], ['bardak', 'glass'], ['içmek', 'to drink']],
   },
@@ -25,10 +26,12 @@ export const FREE_ACTIONS = {
     words: (c) => (c.isNight ? [['karanlık', 'dark'], ['ay', 'moon'], ['yıldız', 'star']] : [['güneşli', 'sunny'], ['kuş', 'bird'], ['hava', 'weather / air']]),
   },
   wash: {
+    again: 'Ellerim zaten tertemiz.', // (said instead when done again within the hour)
     label: 'Elini yıka', think: 'Ellerim tertemiz!', say: 'Ellerimi yıkadım.', minutes: 3,
     words: [['el', 'hand'], ['yıkamak', 'to wash'], ['temiz', 'clean']],
   },
   water_garden: {
+    again: 'Bahçeyi az önce suladım.', // (said instead when done again within the hour)
     label: 'Bahçeyi sula', think: 'Domateslerin suya ihtiyacı var!', say: 'Bahçeyi suladım.', minutes: 15, anim: 'water',
     words: [['sulamak', 'to water'], ['bahçe', 'garden'], ['bitki', 'plant']],
   },
@@ -41,6 +44,7 @@ export const FREE_ACTIONS = {
     words: [['kedi', 'cat'], ['sevmek', 'to love / to pet'], ['mutlu', 'happy']],
   },
   make_tea: {
+    again: 'Çay daha yeni demlendi.', // (said instead when done again within the hour)
     label: 'Çay hazırla', think: 'Çayı demliyorum.', say: 'Çay hazırladım.', minutes: 5,
     words: [['çay', 'tea'], ['demlemek', 'to brew'], ['hazırlamak', 'to prepare']],
   },
@@ -49,22 +53,27 @@ export const FREE_ACTIONS = {
     words: [['sofra', 'table / meal spread'], ['tabak', 'plate'], ['hazırlamak', 'to prepare']],
   },
   wash_dishes: {
+    again: 'Bulaşıklar zaten temiz.', // (said instead when done again within the hour)
     label: 'Bulaşıkları yıka', think: 'Tabakları yıkıyorum.', say: 'Bulaşıkları yıkadım.', minutes: 10,
     words: [['bulaşık', 'dish / dirty dishes'], ['yıkamak', 'to wash'], ['tabak', 'plate']],
   },
   sweep_house: {
+    again: 'Evi az önce süpürdüm.', // (said instead when done again within the hour)
     label: 'Odayı süpür', think: 'Ev biraz daha temiz oldu.', say: 'Odayı süpürdüm.', minutes: 10,
     words: [['süpürmek', 'to sweep'], ['temiz', 'clean'], ['oda', 'room']],
   },
   water_plant: {
+    again: 'Çiçeği az önce suladım.', // (said instead when done again within the hour)
     label: 'Çiçeği sula', think: 'Çiçeğin biraz suya ihtiyacı var.', say: 'Çiçeği suladım.', minutes: 3,
     words: [['çiçek', 'flower'], ['ihtiyaç', 'need'], ['sulamak', 'to water']],
   },
   village_fountain: {
+    again: 'Az önce çeşmeden su içtim.', // (said instead when done again within the hour)
     label: 'Çeşmeden su iç', think: 'Çeşmenin suyu serin!', say: 'Çeşmeden su içtim.', minutes: 2,
     words: [['çeşme', 'fountain / tap'], ['serin', 'cool'], ['su içmek', 'to drink water']],
   },
   village_well: {
+    again: 'Az önce kuyudan su çektim.', // (said instead when done again within the hour)
     label: 'Kuyuyu incele', think: 'Kuyunun içi çok derin.', say: 'Kuyuyu inceledim.', minutes: 2,
     words: [['kuyu', 'well'], ['derin', 'deep'], ['incelemek', 'to examine']],
   },

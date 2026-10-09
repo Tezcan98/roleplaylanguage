@@ -11,10 +11,10 @@ export class NeyMusic {
   #missing = false;
 
   /** @param {{ place: { location: string, x: number, z: number }, src?: string }} o */
-  constructor({ world, player, place, src = 'assets/audio/ney.mp3' }) {
-    Object.assign(this, { world, player, place, src });
+  constructor({ world, player, place, src = 'assets/audio/ney.mp3', muted = () => false }) {
+    Object.assign(this, { world, player, place, src, muted });
     // browsers start sound only after a tap / key press
-    const unlock = () => { if (this.level > 0) this.#play(); };
+    const unlock = () => { if (this.level > 0 && !this.muted()) this.#play(); };
     addEventListener('pointerdown', unlock, { passive: true });
     addEventListener('keydown', unlock);
   }
@@ -38,7 +38,7 @@ export class NeyMusic {
   }
 
   update(dt) {
-    const level = this.level;
+    const level = this.muted() ? 0 : this.level; // music off in the settings: it fades out
     if (level > 0) this.#play();
     const a = this.#audio;
     if (!a) return;

@@ -434,7 +434,12 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .daily-day.today{background:var(--gold);border-color:var(--wood);transform:scale(1.08)}
 .overlay.ad.interstitial{background:#111;flex-direction:column;gap:12px}
 @media (orientation:landscape) and (max-height:520px){.shop .card{width:min(820px,100%)}.shop-sec{padding:8px 10px;gap:6px}}
-.overlay.shop,.overlay.daily,.overlay.ad,.overlay.ios-guide{z-index:70} /* above the main menu */
+.overlay.shop,.overlay.daily,.overlay.ad,.overlay.ios-guide,.overlay.settings-panel{z-index:70} /* above the main menu */
+.settings-panel .card{max-width:420px}
+.settings-body{display:grid;gap:10px;margin-top:8px}
+.settings-body .toggle{display:flex;align-items:center;gap:10px;font:600 17px Nunito,sans-serif}
+.settings-body .toggle input[type=checkbox]{width:22px;height:22px;accent-color:var(--wood)}
+.settings-body select{font:600 16px Nunito,sans-serif;padding:6px 8px;border-radius:10px;border:2px solid var(--wood)}
 body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.open) #shot{display:none!important} /* the talk button never covers a conversation or a card */
 .tile.nope{animation:nope .35s;border-color:#C0392B;background:#FADBD8}
 @keyframes nope{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}

@@ -122,7 +122,7 @@ export class Character {
     if (this.#kick) { if (!this.#kick.hold) this.#kick.t += dt; this.#kickPose(); if (this.#kick.t >= this.#kick.dur) { this.#kick = null; this.rig.legR.rotation.x = 0; } }
     const skirt = this.#hd?.skirt;
     if (skirt) { skirt.skirt.visible = this.#hd.scene.visible && !this.seated; if (skirt.skirt.visible) skirt.follow(); } // seated: the legs, in the dress's colour
-    if (this.#aura?.visible) { const k = 0.5 + 0.5 * Math.sin(performance.now() / 260); this.#aura.children[1].material.opacity = 0.55 + 0.4 * k; this.#aura.rotation.z += dt * 0.8; }
+    if (this.#aura?.visible) this.#aura.userData.tick(dt);
   }
 
   /** A GLB from Meshy (assets/manifest.json → "char.<id>") replaces the blocky body. */
@@ -223,15 +223,45 @@ export class Character {
   /** After a change of seat or behaviour: the HD body sits or stands again. */
   replayHd() { if (this.mixer && this.mixer === this.#hd?.mixer) { this.current = null; this.#playClip(this.seated ? 'sit' : 'idle'); } }
 
-  /** A pulsing golden ring of light on the ground under the character (bought in the shop). */
+  /**
+   * "Altın Yıldız Işığı" (bought in the shop): a gold ring on the ground, a soft column of light
+   * rising from it and golden sparkles drifting up — seen by everyone in the square. Plain
+   * (not additive) gold for the ring, so it shows on the light cobblestones in daylight too.
+   */
   setAura(on) {
     if (on && !this.#aura) {
-      const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.62, 40), new THREE.MeshBasicMaterial({ color: 0xFFD54A, transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-      const glow = new THREE.Mesh(new THREE.CircleGeometry(0.62, 40), new THREE.MeshBasicMaterial({ color: 0xFFE9A0, transparent: true, opacity: 0.25, depthWrite: false, blending: THREE.AdditiveBlending }));
-      this.#aura = new THREE.Group(); this.#aura.add(glow, ring);
-      this.#aura.rotation.x = -Math.PI / 2; this.#aura.position.y = 0.06;
-      this.#aura.scale.setScalar(1 / (this.group.scale.x || 1)); // the same size for children and grown-ups
-      this.group.add(this.#aura);
+      const g = new THREE.Group();
+      const flat = (mesh) => { mesh.rotation.x = -Math.PI / 2; return mesh; };
+      const glow = flat(new THREE.Mesh(new THREE.CircleGeometry(0.8, 48), new THREE.MeshBasicMaterial({ color: 0xFFD54A, transparent: true, opacity: 0.35, depthWrite: false })));
+      const ring = flat(new THREE.Mesh(new THREE.RingGeometry(0.5, 0.72, 48), new THREE.MeshBasicMaterial({ color: 0xFFB300, transparent: true, opacity: 0.95, depthWrite: false, side: THREE.DoubleSide })));
+      const inner = flat(new THREE.Mesh(new THREE.RingGeometry(0.3, 0.36, 48), new THREE.MeshBasicMaterial({ color: 0xFFF3B0, transparent: true, opacity: 0.9, depthWrite: false, side: THREE.DoubleSide })));
+      glow.position.y = 0.05; ring.position.y = 0.06; inner.position.y = 0.065;
+      // the column of light: bright at the feet, fading out upwards
+      const c = document.createElement('canvas'); c.width = 4; c.height = 64;
+      const cg = c.getContext('2d'), grad = cg.createLinearGradient(0, 64, 0, 0);
+      grad.addColorStop(0, 'rgba(255,190,40,0.6)'); grad.addColorStop(0.45, 'rgba(255,190,40,0.18)'); grad.addColorStop(1, 'rgba(255,190,40,0)');
+      cg.fillStyle = grad; cg.fillRect(0, 0, 4, 64);
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.7, 1.9, 32, 1, true), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      beam.position.y = 0.95;
+      // sparkles drifting up round the character
+      const N = 14, pos = new Float32Array(N * 3), seeds = [];
+      for (let k = 0; k < N; k++) { const a = Math.random() * Math.PI * 2, r = 0.35 + Math.random() * 0.35; seeds.push({ a, r, y: Math.random() * 1.9, v: 0.35 + Math.random() * 0.4 }); }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const sparks = new THREE.Points(pg, new THREE.PointsMaterial({ color: 0xFFE680, size: 0.09, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending }));
+      g.add(glow, ring, inner, beam, sparks);
+      g.scale.setScalar(1 / (this.group.scale.x || 1)); // the same size for children and grown-ups
+      let t = 0;
+      g.userData.tick = (dt) => {
+        t += dt;
+        const k = 0.5 + 0.5 * Math.sin(t * 3);
+        ring.material.opacity = 0.75 + 0.25 * k; glow.material.opacity = 0.25 + 0.2 * k; beam.material.opacity = 0.6 + 0.4 * k;
+        ring.rotation.z += dt * 0.8; inner.rotation.z -= dt * 1.2;
+        seeds.forEach((sd, k2) => { sd.y = (sd.y + sd.v * dt) % 1.9; sd.a += dt * 0.6; pos.set([Math.cos(sd.a) * sd.r, 0.1 + sd.y, Math.sin(sd.a) * sd.r], k2 * 3); });
+        pg.attributes.position.needsUpdate = true;
+      };
+      g.userData.tick(0);
+      this.#aura = g;
+      this.group.add(g);
     }
     if (this.#aura) this.#aura.visible = on;
   }
