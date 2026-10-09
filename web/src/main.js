@@ -169,6 +169,7 @@ const modes = new ModeStack();
 
 // --- engine ---
 const ctx = new RenderContext(document.body, { quality });
+if (params.has('norender')) ctx.render = () => {}; // ?norender: a player that only takes part (recordings with many players), nothing drawn
 const textures = new TextureFactory(ctx.renderer);
 await textures.loadOverrides(manifest.textures);
 const mf = new MeshFactory(textures, { standard: quality !== 'low' });

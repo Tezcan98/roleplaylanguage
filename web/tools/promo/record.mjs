@@ -28,7 +28,7 @@ async function open(params = '', { extra = false } = {}) { // extra: a player on
   const ctx = await browser.newContext({ viewport: extra ? { width: 480, height: 270 } : { width: W, height: H }, deviceScaleFactor: extra ? 1 : SCALE, permissions: ['microphone'] });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.warn('[page]', e.message));
-  await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=${extra ? 'low' : 'high'}&mockads&gloss=en&mp=${encodeURIComponent(village.url)}${params}`);
+  await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=${extra ? 'low&norender' : 'high'}&mockads&gloss=en&mp=${encodeURIComponent(village.url)}${params}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
   await page.addStyleTag({ content: PROMO_CSS });
   return page;
@@ -149,7 +149,7 @@ try {
     if (s.cleanup) await s.cleanup(kit, page); else await page.context().close();
   }
   // the video: the scenes in CUT order (clips recorded in this run or an earlier one)
-  if (CUT) clips.splice(0, clips.length, ...CUT.map((n) => ({ file: join(out, `${n}.mp4`), seconds: SCENES.find((s) => s.name === n).seconds })));
+  if (CUT && !CLEAN) clips.splice(0, clips.length, ...CUT.map((n) => ({ file: join(out, `${n}.mp4`), seconds: SCENES.find((s) => s.name === n).seconds })));
   // join with 0.4 s cross-fades
   if (clips.length > 1) {
     const F = 0.4, inputs = clips.flatMap((c) => ['-i', c.file]);

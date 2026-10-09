@@ -45,6 +45,12 @@ const CROWD = [
   { name: 'Omar', params: '&look=modest', outfit: 'suit' },
   { name: 'Amélie', params: '&gender=girl&look=open', outfit: 'dress' },
   { name: 'Yusuf', params: '&look=modest', outfit: 'casual' },
+  { name: 'Mariam', params: '&gender=girl&look=covered', outfit: 'casual' },
+  { name: 'Diego', params: '&look=strong', outfit: 'suit' },
+  { name: 'Zainab', params: '&gender=girl&look=covered', outfit: 'dress' },
+  { name: 'Lucas', params: '&look=modest', outfit: 'suit', aura: true },
+  { name: 'Hana', params: '&gender=girl&look=open', outfit: 'casual' },
+  { name: 'Bilal', params: '&look=strong', outfit: 'casual' },
 ];
 const crowd = { pages: {}, me: null };
 const who = (name) => (name === 'Hakan' ? crowd.me : crowd.pages[name]);
@@ -62,7 +68,7 @@ const ring = async (names, cx, cz, r) => {
 };
 /** Lines said one after the other: [name, text, pause after]. */
 const lines = async (kit, list) => { for (const [n, t, w] of list) { await say(n, t); await kit.sleep(w); } };
-const ALL = ['Leyla', 'Sofia', 'Omar', 'Amélie', 'Yusuf', 'Hakan'];
+const ALL = [...CROWD.map((c) => c.name), 'Hakan'];
 
 const MULTI = [
   {
@@ -70,8 +76,9 @@ const MULTI = [
     setup: async (kit) => {
       for (const c of CROWD) crowd.pages[c.name] = await square(kit, c.name, { ...c, extra: true });
       crowd.me = await square(kit, 'Hakan', { params: '&look=strong', outfit: 'casual' });
-      await ring(ALL, 3.2, 6.4, 2.1);
-      await camera(3.8, 4.3, 11.2, 3.2, 0.9, 5.4);
+      await ring(ALL.slice(0, 7), 3.2, 6.6, 2.6); // two circles chatting
+      await ring(ALL.slice(7), -3.6, 7.4, 1.7);
+      await camera(0.2, 5.2, 14.2, 0, 0.9, 6.4);
       await kit.sleep(2500);
       return crowd.me;
     },
@@ -81,7 +88,8 @@ const MULTI = [
       await lines(kit, [
         ['Leyla', 'Merhaba! Ben Leyla, Mısırlıyım.', 1300], ['Sofia', 'Merhaba Leyla! Ben Sofia, İspanya’danım.', 1300],
         ['Omar', 'Selam! Ben Omar. Türkçe öğreniyorum.', 1300], ['Amélie', 'Ben de! Türkçe çok güzel.', 1200],
-        ['Hakan', 'Hoş geldiniz! Nasılsınız?', 1200], ['Yusuf', 'İyiyiz, teşekkürler!', 0],
+        ['Hakan', 'Hoş geldiniz! Nasılsınız?', 1000], ['Yusuf', 'İyiyiz, teşekkürler!', 900],
+        ['Diego', '¡Hola! Yani… Merhaba! Ben Diego.', 900], ['Hana', 'Merhaba Diego, hoş geldin!', 0],
       ]);
     },
     cleanup: async () => {}, // the crowd stays for the next scenes
@@ -90,9 +98,8 @@ const MULTI = [
     name: 'mpTea', seconds: 7,
     setup: async (kit) => {
       await kit.caption(crowd.me, null);
-      const spots = { Hakan: [12.6, 5.0], Sofia: [14.0, 4.6], Omar: [15.2, 5.6], Leyla: [12.2, 6.6], Yusuf: [15.0, 7.2], Amélie: [13.6, 7.6] };
-      for (const [n, [x, z]] of Object.entries(spots)) await stand(n, x, z, 13.7, 6.1);
-      await camera(14.2, 3.0, 12.4, 13.7, 1.0, 6.0);
+      for (const [i, n] of ALL.entries()) { const col = i % 4, row = Math.floor(i / 4); await stand(n, 11.6 + col * 1.5 + (row % 2) * 0.5, 4.2 + row * 1.5, 13.8, 6.0); }
+      await camera(14.4, 3.8, 13.6, 13.9, 1.0, 5.8);
       await kit.sleep(2200);
       return crowd.me;
     },
@@ -101,7 +108,7 @@ const MULTI = [
       await kit.sleep(600);
       await lines(kit, [
         ['Hakan', 'Çay içelim mi?', 1300], ['Sofia', 'Evet! Şekersiz bir çay lütfen.', 1400],
-        ['Omar', 'Ben şekerli içerim.', 1300], ['Leyla', 'Bu çay bahçesi çok güzel!', 0],
+        ['Omar', 'Ben şekerli içerim.', 1300], ['Leyla', 'Bu çay bahçesi çok güzel!', 1100], ['Bilal', 'Bir çay daha lütfen!', 0],
       ]);
     },
     cleanup: async () => {},
@@ -110,7 +117,7 @@ const MULTI = [
     name: 'mpWalk', seconds: 6,
     setup: async (kit) => {
       await kit.caption(crowd.me, null);
-      for (const [i, n] of ALL.entries()) await stand(n, -3 + (i % 3) * 1.4, 15 + Math.floor(i / 3) * 1.6, -3 + (i % 3) * 1.4, 0);
+      for (const [i, n] of ALL.entries()) await stand(n, -3.6 + (i % 4) * 1.3, 14.6 + Math.floor(i / 4) * 1.5, -3.6 + (i % 4) * 1.3, 0);
       await crowd.me.evaluate(() => window.__game.camera.clearFixed());
       await crowd.me.evaluate(() => { const g = window.__game; g.camera.snap(g.player.position, false); });
       await kit.zoom(crowd.me, -3);
@@ -136,8 +143,8 @@ const MULTI = [
       await kit.caption(crowd.me, null);
       // Omar (white) and Sofia (black) at the giant board, the others watching from the side
       await stand('Omar', -15, 20.4, -15, 15); await stand('Sofia', -15, 9.6, -15, 15);
-      await stand('Leyla', -9.6, 16.6, -15, 15); await stand('Yusuf', -9.4, 14.6, -15, 15);
-      await stand('Amélie', -9.8, 18.4, -15, 15); await stand('Hakan', -10.2, 12.8, -15, 15);
+      const watchers = ALL.filter((n) => n !== 'Omar' && n !== 'Sofia');
+      for (const [i, n] of watchers.entries()) { const a = -0.9 + (1.8 * i) / (watchers.length - 1); await stand(n, -15 + Math.cos(a) * 6.2, 15 + Math.sin(a) * 6.2, -15, 15); } // a half circle on the east side
       await who('Omar').evaluate(() => window.__game.village.chess.ask('w'));
       await kit.sleep(500);
       await who('Sofia').evaluate(() => window.__game.village.chess.ask('b'));
