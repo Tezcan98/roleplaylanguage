@@ -55,6 +55,7 @@ import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminde
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, TestBilling, TEST_PURCHASES } from './services/monetization/Billing.js';
 import { SettingsPanel } from './ui/SettingsPanel.js';
+import { Animals } from './systems/Animals.js';
 import { el } from './ui/dom.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
@@ -388,7 +389,7 @@ effects
 const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st) => village.voiceState(st), relayOnly: params.has('relayonly') }),
-  remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS }),
+  remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS, horse: () => animals.mount() }), // others on horseback
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   // public places: the square, and the schoolyard for football (its own room: <city>-okul)
   places: { village: { suffix: '', balls: villageBalls, label: '' }, schoolyard: { suffix: '-okul', balls: [schoolBall], label: 'Okul bahçesi' } },
@@ -486,7 +487,12 @@ effects.register('my-garden', () => {
 });
 
 // --- interaction ---
+// farm animals: a cow, sheep and a dog in the yard; horses to ride on the square
+const animals = new Animals({ world, models, player, labels, toasts, vocab, clock: () => game.t, wallet, onShop: () => shop.open() });
+animals.build();
+bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') animals.leftPlace(); }); // the horse stays on the square
 const interactions = new InteractionSystem([
+  animals, // pet an animal, get on / off a horse
   library, // sitting with a book in hand: read it
   chess, // on the giant board: take a piece, put it down
   village, // "voice chat with X" next to another player in the square
@@ -622,6 +628,8 @@ const menu = new MainMenu(host, {
   hasSave: () => !!saved,
   onHelp: () => intro.show(),
   onStart: async () => { await introFirst(); startNew(); },
+  onStartAt: (i) => startNew(null, i), // test mode: a new game from any chapter
+  chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onContinue: () => continueGame(),
   onSquare: (server) => playOnline(server),
   onProfile: () => { menu.hide(); editProfile(); },
@@ -699,13 +707,13 @@ effects.register('street', async () => {
   else if (pick === 'square') travel.go('village', 'yardRoad');
 });
 
-function startNew(then) {
+function startNew(then, chapter = null) { // chapter: start from there (testers, ⚙️ in the menu)
   fader.run(() => {
     saves.clear();
     const requestedDay = Number(params.get('day'));
-    const dayIndex = Number.isInteger(requestedDay) && requestedDay > 0
+    const dayIndex = chapter ?? (Number.isInteger(requestedDay) && requestedDay > 0
       ? STORY.chapters.findIndex((ch) => ch.day === requestedDay)
-      : 0;
+      : 0);
     hud.setCredits(wallet.balance); hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setMoney(inventory.count('para'));
     story.startChapter(dayIndex >= 0 ? dayIndex : 0, () => {
       enterPlay();

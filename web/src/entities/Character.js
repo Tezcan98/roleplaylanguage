@@ -4,6 +4,8 @@ import { fitToBox } from '../engine/ModelLibrary.js';
 import { sitPose } from './Behaviors.js';
 import { addHeadscarf, addDress, paintOutfit, addShoes, paintLook, addLookExtras, facingZ } from './hdClothes.js';
 
+/** The jacket's colour (the blocky one's, CharacterRig.js). */
+const JACKET = 0xB5482E;
 const wrapAngle = (d) => { while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
 /** Anything with a body in the world: the player and every NPC. */
@@ -33,7 +35,40 @@ export class Character {
   set visible(v) { this.group.visible = v; }
 
   place({ x, z, rot = 0 }) { this.group.position.set(x, 0, z); this.group.rotation.y = rot; }
-  showProp(name, on) { if (this.rig.props[name]) this.rig.props[name].visible = on; }
+  showProp(name, on) {
+    if (this.rig.props[name]) this.rig.props[name].visible = on;
+    if (name === 'jacket') { this.jacketOn = on; this.#hdJacket(); }
+  }
+
+  /** The jacket on the HD body too: its top (shirt and sleeves) in the jacket's colour, a gold zip down the front. */
+  #hdJacket() {
+    const hd = this.#hd;
+    if (!hd || hd === 'loading') return;
+    hd.scene.traverse((o) => {
+      if (!o.isMesh) return;
+      for (const m of [o.material].flat()) {
+        if (!['Shirt', 'Clothes', 'Main'].includes(m.name)) continue;
+        m.userData.own ??= m.color.getHex();
+        m.color.setHex(this.jacketOn ? JACKET : m.userData.own);
+      }
+    });
+    if (this.jacketOn && !hd.zip) { // a thin gold line on the chest, fixed to the upper body
+      const chest = hd.scene.getObjectByName('Chest') ?? hd.scene.getObjectByName('Torso') ?? hd.scene.getObjectByName('Abdomen');
+      if (chest) {
+        const box = new THREE.Box3(); hd.scene.traverse((o) => { if (o.isMesh && [o.material].flat().some((m) => m.name === 'Shirt')) box.expandByObject(o, true); });
+        if (!box.isEmpty()) {
+          const ws = this.group.getWorldScale(new THREE.Vector3()).x, h = (box.max.y - box.min.y) * 0.55;
+          const zip = new THREE.Mesh(new THREE.BoxGeometry(0.035 / ws, h / ws, 0.02 / ws), new THREE.MeshStandardMaterial({ color: 0xE0B04A, roughness: 0.5 }));
+          const facing = this.group.rotation.y; this.group.rotation.y = 0; this.group.updateMatrixWorld(true);
+          zip.position.copy(this.group.worldToLocal(new THREE.Vector3((box.min.x + box.max.x) / 2, box.max.y - h * 0.55, box.max.z + 0.005)));
+          this.group.add(zip); chest.attach(zip);
+          this.group.rotation.y = facing;
+          hd.zip = zip;
+        }
+      }
+    }
+    if (hd.zip) hd.zip.visible = !!this.jacketOn;
+  }
 
   turnTo(angle, k) { this.group.rotation.y += wrapAngle(angle - this.group.rotation.y) * k; }
   faceTowards(p, k = 0.15) { this.turnTo(Math.atan2(p.x - this.position.x, p.z - this.position.z), k); }
@@ -86,8 +121,26 @@ export class Character {
     if (!on) { this.current = null; this.#playClip(this.seated ? 'sit' : 'idle'); }
   }
 
+  /**
+   * On horseback (`mount` = { group, seat, play(name), update(dt) }, see systems/Animals.js) or off
+   * (null). The horse goes where the character goes; the rider sits on its back, legs astride.
+   */
+  setMount(mount) {
+    this.mount = mount;
+    const r = this.rig;
+    if (mount) {
+      this.seated = false;
+      r.legL.rotation.set(-1.25, 0, 0.35); r.legR.rotation.set(-1.25, 0, -0.35); r.armL.rotation.x = r.armR.rotation.x = -0.8;
+      if (this.mixer) { this.current = null; this.#playClip('sit'); }
+    } else {
+      this.group.position.y = 0;
+      r.legL.rotation.set(0, 0, 0); r.legR.rotation.set(0, 0, 0); r.armL.rotation.x = r.armR.rotation.x = 0;
+      if (this.mixer) { this.current = null; this.#playClip('idle'); }
+    }
+  }
+
   walk(t, amount) {
-    if (this.seated || this.posed) return;
+    if (this.seated || this.posed || this.mount) return;
     const r = this.rig, s = Math.sin(t * 10) * 0.6 * amount;
     r.legL.rotation.x = s; r.legR.rotation.x = -s; r.armL.rotation.x = -s * 0.8; r.armR.rotation.x = s * 0.8;
     this.#playClip(amount > 0.05 ? 'walk' : 'idle');
@@ -111,6 +164,14 @@ export class Character {
   }
 
   update(dt) {
+    if (this.mount) { // the horse under the rider: same place and heading; it runs while we move
+      const m = this.mount, p = this.group.position;
+      const speed = this.#lastPos && dt > 0 ? Math.hypot(p.x - this.#lastPos.x, p.z - this.#lastPos.z) / dt : 0;
+      m.group.position.set(p.x, 0, p.z); m.group.rotation.y = this.group.rotation.y;
+      p.y = m.seat;
+      m.play(speed > 4 ? 'run' : speed > 0.4 ? 'walk' : 'idle');
+      m.update(dt);
+    }
     const hdWalk = this.#hd?.stride && this.mixer === this.#hd.mixer && this.current === 'walk' ? this.clips.walk : null;
     if (hdWalk && dt > 0) { // the steps keep up with the real speed
       const p = this.group.position, moved = this.#lastPos ? Math.hypot(p.x - this.#lastPos.x, p.z - this.#lastPos.z) / dt : 0;
@@ -190,6 +251,7 @@ export class Character {
         });
         const { scarfParts, skirt } = extras;
         this.#hd = { scene, mixer, clips, skirt, stride, ...(scarfParts.length ? { scarf: scarfParts, hair } : {}) };
+        if (this.jacketOn) this.#hdJacket(); // put on before the HD body had loaded
         if (this.covered === false) this.#hdCover(false); // already at home: hair open
       } catch (e) { console.warn('[models] hd:', e.message); this.#hd = null; return; }
     }

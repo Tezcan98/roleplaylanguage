@@ -1,3 +1,5 @@
+import { playVoice, stopVoice } from './voiceAudio.js';
+
 /**
  * Turkish speech generated on the village server (Gemini voices, Piper, server/src/Tts.js). Each line is a
  * cached WAV, so playback starts quickly and nothing big is downloaded on the phone.
@@ -34,24 +36,19 @@ export class ServerTTS {
 
   speak(text, { voice, rate = 1, fresh = false }) {
     this.cancel();
-    return new Promise((resolve, reject) => {
-      const a = this.#audio = new Audio(this.src(text, voice, fresh));
-      a.preservesPitch = false;
-      a.playbackRate = (voice.pitch ?? 1) * rate;
-      a.onended = () => resolve();
-      let played = false;
-      a.onerror = () => {
+    this.#audio = true;
+    let played = false;
+    return playVoice(this.src(text, voice, fresh), (voice.pitch ?? 1) * rate, { // the shared element (voiceAudio.js: phones)
+      onError: () => {
         // the server works but this voice keeps failing (3 in a row): skip it, her lines go to the fallback
         const n = (this.#voiceFails.get(voice.id) ?? 0) + 1;
         this.#voiceFails.set(voice.id, n);
         if (!this.#worked.size) this.#failures++; // nothing has worked yet: the server may be unreachable
         else if (n >= 3) this.#badVoices.add(voice.id);
-        reject(new Error('server tts failed'));
-      };
-      a.onplaying = () => { if (!played) { played = true; this.#failures = 0; this.#voiceFails.delete(voice.id); this.#worked.add(voice.id); } };
-      a.play().catch((e) => { if (e?.name !== 'AbortError') reject(e); });
+      },
+      onPlaying: () => { if (!played) { played = true; this.#failures = 0; this.#voiceFails.delete(voice.id); this.#worked.add(voice.id); } },
     });
   }
 
-  cancel() { if (this.#audio) { this.#audio.pause(); this.#audio.onerror = null; this.#audio = null; } }
+  cancel() { if (this.#audio) { stopVoice(); this.#audio = null; } }
 }

@@ -6,7 +6,10 @@ export class Joystick {
     this.onMove = () => {};
     this.knob = el('div', { attrs: { id: 'knob' } });
     this.root = el('div', { attrs: { id: 'joy', 'aria-hidden': 'true' } }, [this.knob]);
-    host.append(this.root);
+    // 🏃 above the stick: tap to run, tap again to walk (Shift on a keyboard)
+    this.running = false;
+    this.runBtn = el('button', { attrs: { id: 'run', type: 'button', 'aria-label': 'Koş', 'aria-pressed': 'false' }, text: '🏃', on: { click: () => { this.running = !this.running; this.runBtn.setAttribute('aria-pressed', String(this.running)); } } });
+    host.append(this.root, this.runBtn);
     let id = null;
     const move = (e) => {
       const r = this.root.getBoundingClientRect();
@@ -22,5 +25,5 @@ export class Joystick {
     this.root.addEventListener('pointerup', end);
     this.root.addEventListener('pointercancel', end);
   }
-  set visible(v) { this.root.hidden = !v; }
+  set visible(v) { this.root.hidden = !v; this.runBtn.hidden = !v; }
 }

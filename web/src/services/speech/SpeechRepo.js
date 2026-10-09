@@ -1,3 +1,4 @@
+import { playVoice, stopVoice } from './voiceAudio.js';
 /**
  * The game's own voice library: every fixed line, made once (Gemini / Piper on the village
  * server) by tools/build-voices.mjs and kept in the repository as assets/speech/<key>.mp3.
@@ -42,11 +43,9 @@ export class SpeechRepo {
 
   play(url, rate = 1) {
     this.cancel();
-    const a = this.#audio = new Audio(url);
-    a.preservesPitch = false;
-    a.playbackRate = rate;
-    return new Promise((resolve, reject) => { a.onended = resolve; a.onerror = () => reject(new Error('speech file')); a.play().catch((e) => { if (e?.name !== 'AbortError') reject(e); }); });
+    this.#audio = true;
+    return playVoice(url, rate); // the shared element (voiceAudio.js: phones)
   }
 
-  cancel() { if (this.#audio) { this.#audio.pause(); this.#audio.onerror = null; this.#audio = null; } }
+  cancel() { if (this.#audio) { stopVoice(); this.#audio = null; } }
 }

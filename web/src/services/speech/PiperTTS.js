@@ -1,3 +1,4 @@
+import { playVoice, stopVoice } from './voiceAudio.js';
 /**
  * Open-source neural Turkish TTS (Piper voices, ONNX in a Web Worker).
  * Each voice model is ~60 MB, downloaded once and kept in the browser cache.
@@ -62,12 +63,9 @@ export class PiperTTS {
     const token = this.#audio = {};
     const url = await this.#clip(text, voice.id);
     if (this.#audio !== token) return; // cancelled or superseded meanwhile
-    const a = new Audio(url);
-    a.preservesPitch = false;
-    a.playbackRate = (voice.pitch ?? 1) * rate;
-    this.#audio = a;
-    await a.play();
+    this.#audio = 'playing';
+    await playVoice(url, (voice.pitch ?? 1) * rate); // the shared element (voiceAudio.js: phones)
   }
 
-  cancel() { if (this.#audio instanceof Audio) this.#audio.pause(); this.#audio = null; }
+  cancel() { if (this.#audio === 'playing') stopVoice(); this.#audio = null; }
 }

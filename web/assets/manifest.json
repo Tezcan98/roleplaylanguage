@@ -10,7 +10,11 @@
     "hd.elder.boy": "assets/models/hd_elder_boy.glb",
     "hd.dark.girl": "assets/models/hd_dark_girl.glb",
     "hd.brown.girl": "assets/models/hd_brown_girl.glb",
-    "hd.elder.girl": "assets/models/hd_elder_girl.glb"
+    "hd.elder.girl": "assets/models/hd_elder_girl.glb",
+    "animal.horse": "assets/models/animal_horse.glb",
+    "animal.cow": "assets/models/animal_cow.glb",
+    "animal.sheep": "assets/models/animal_sheep.glb",
+    "animal.dog": "assets/models/animal_dog.glb"
   },
   "textures": {
     "grass": {

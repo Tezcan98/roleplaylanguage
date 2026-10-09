@@ -14,8 +14,8 @@ import { fullscreenPossible, goFullscreen, fullscreenIcon, canInstall, installAp
 export class MainMenu {
   #view = 'home'; // home | city | settings
 
-  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop }) {
-    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop });
+  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, chapters = [] }) {
+    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, chapters });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => settings.set('serverRegion', id) });
     this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
     this.root = el('div', { class: 'overlay main-menu' });
@@ -29,6 +29,18 @@ export class MainMenu {
   #whereText() {
     const n = this.servers.count();
     return `${this.servers.label} meydanı · ${n ? `${n} kişi var` : 'şimdilik boş'}`;
+  }
+
+  #taps = 0;
+
+  /** Test mode: a new game from the chosen chapter (day, time and title of each). */
+  #chapterPicker(go) {
+    const pick = el('select', { attrs: { id: 'testChapter' } }, this.chapters.map((c) => el('option', { text: c.text, attrs: { value: String(c.i) } })));
+    return el('div', { class: 'test-start' }, [
+      el('b', { text: '🧪 Test: bölümden başla' }),
+      pick,
+      el('button', { class: 'btn sm', text: 'Bu bölümden yeni oyun', attrs: { type: 'button' }, on: { click: go(() => this.onStartAt(Number(pick.value))) } }),
+    ]);
   }
 
   show(view = 'home') {
@@ -62,11 +74,13 @@ export class MainMenu {
       quality.addEventListener('change', () => { s.set('quality', quality.value); location.reload(); });
       body = [
         back,
-        el('h2', { class: 'ctitle', text: '⚙️ Ayarlar' }),
+        // five taps on the title: test mode (start the story from any chapter) — for the people testing the game
+        el('h2', { class: 'ctitle', text: '⚙️ Ayarlar', on: { click: () => { this.#taps = (this.#taps ?? 0) + 1; if (this.#taps >= 5) { this.#taps = 0; s.set('testerMode', !s.get('testerMode', false)); this.show('settings'); } } } }),
         btn('Nasıl oynanır?', 'btn alt', () => this.onHelp?.()),
         save && btn('Yeni oyun (baştan başla)', 'btn alt', go(this.onStart)),
         el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler' })]),
         el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
+        s.get('testerMode', false) && this.onStartAt && this.#chapterPicker(go),
       ];
     } else {
       const gender = s.get('gender', 'boy'), [, , icon, name] = characterOf(gender, s.get('look', ''));

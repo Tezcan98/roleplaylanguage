@@ -9,6 +9,7 @@ export class InputSystem {
 
   constructor(joystick) {
     this.joystick = joystick;
+    this.joystick = joystick;
     joystick.onMove = (x, y) => { this.#joy.x = x; this.#joy.y = y; };
     addEventListener('keydown', (e) => {
       if (document.activeElement?.tagName === 'INPUT') return;
@@ -20,6 +21,9 @@ export class InputSystem {
   }
 
   onKey(fn) { this.#listeners.add(fn); return () => this.#listeners.delete(fn); }
+
+  /** Running: Shift held, or 🏃 on (phones). */
+  get running() { return !!this.#keys.shift || !!this.joystick?.running; }
 
   /** @returns {{x:number, z:number}} unclamped movement intent */
   axis() {

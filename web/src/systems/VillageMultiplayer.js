@@ -366,7 +366,7 @@ export class VillageMultiplayer {
     this.#since = 0;
     this.#rolling.forEach((b) => { if (!b.moving) { this.#rolling.delete(b); const n = this.balls.indexOf(b); if (n >= 0) this.net.send({ type: 'ball', n, ...b.state() }); } });
     const P = this.player.position;
-    const s = { x: +P.x.toFixed(2), z: +P.z.toFixed(2), rot: +this.player.group.rotation.y.toFixed(2), moving: !!this.player.moving, sit: !!this.player.seated };
+    const s = { x: +P.x.toFixed(2), z: +P.z.toFixed(2), rot: +this.player.group.rotation.y.toFixed(2), moving: !!this.player.moving, sit: !!this.player.seated, ...(this.player.mount ? { ride: 1 } : {}) };
     const key = JSON.stringify(s);
     const now = performance.now();
     if (key === this.#last && now - this.#sentAt < KEEPALIVE * 1000) return;
