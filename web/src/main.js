@@ -56,6 +56,7 @@ import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, TestBilling, TEST_PURCHASES } from './services/monetization/Billing.js';
 import { SettingsPanel } from './ui/SettingsPanel.js';
 import { Animals } from './systems/Animals.js';
+import { Bicycle } from './systems/Bicycle.js';
 import { el } from './ui/dom.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
@@ -493,8 +494,13 @@ setTimeout(() => world.warmUp(ctx.renderer, ctx.camera), 1200); // every place r
 const animals = new Animals({ world, models, player, labels, toasts, vocab, clock: () => game.t, wallet, onShop: () => shop.open() });
 animals.build();
 bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') animals.leftPlace(); }); // the horse stays on the square
+// the bicycle in the yard (riding it is a skill bought with credits)
+const bicycle = new Bicycle({ world, mf, player, wallet, toasts, vocab, choice: new ChoiceCard(host, modes), onShop: () => shop.open() });
+bicycle.build();
+bus.on(EV.LOCATION, ({ id }) => { if (id !== 'yard') bicycle.leftPlace(); });
 const interactions = new InteractionSystem([
   animals, // pet an animal, get on / off a horse
+  bicycle,
   library, // sitting with a book in hand: read it
   chess, // on the giant board: take a piece, put it down
   village, // "voice chat with X" next to another player in the square
@@ -791,4 +797,4 @@ setInterval(() => {
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) window.__progs = () => ctx.renderer.info.programs?.length ?? 0; // (tests: shaders compiled so far)
-if (params.has('debug')) window.__game = { market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { animals, bicycle, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

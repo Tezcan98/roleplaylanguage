@@ -336,6 +336,25 @@ try {
   await page.click('.market.open .mk-buy'); await sleep(300);
   check('…a toast for twenty-five lira', (await bag('tost')) === 1 && (await bag('para')) === lira - 25);
   await ev(() => window.__game.market.close());
+
+  // --- the bicycle in the yard: a skill bought with credits -------------------------------
+  await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(500);
+  await ev(() => { const b = window.__game.bicycle.bike.group.position; window.__game.player.position.set(b.x, 0, b.z + 1.2); }); await sleep(400);
+  check('bicycle: "Bisiklete bin" with its price before you can ride', (await ev(() => document.getElementById('act').textContent)).includes('Bisiklete bin · 🪙'));
+  const bikeCredits = await ev(() => window.__game.wallet.balance);
+  await page.keyboard.press('e');
+  await waitFor(() => page.$('.overlay.open .card .btn'), 3000);
+  check('…"Bisiklet sürmeyi bilmiyorsun": learn it?', (await page.textContent('.overlay.open .ctitle')).includes('bilmiyorsun'));
+  await page.click('.overlay.open .card .btn:not(.alt)'); await sleep(600);
+  check('…learnt for credits, now riding', (await ev(() => window.__game.wallet.balance)) === bikeCredits - 10 && (await ev(() => window.__game.player.mount?.kind)) === 'bike');
+  check('…"Bisikletten in" (not "Attan in")', (await ev(() => document.getElementById('act').textContent)).includes('Bisikletten in'));
+  await page.keyboard.press('e'); await sleep(300);
+  check('…off again, and next time no price', !(await ev(() => window.__game.player.mount)) && !(await ev(() => document.getElementById('act').textContent)).includes('🪙'));
+
+  // --- the groom by the horses ------------------------------------------------------------
+  await ev(() => window.__game.travel.place('village', 'yardRoad', { force: true })); await sleep(800);
+  await ev(() => window.__game.player.position.set(-4.2, 0, -21)); await sleep(400);
+  check('the square: Hamdi the groom by the horses', (await ev(() => document.getElementById('act').textContent)).includes('Hamdi Amca'));
   await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
 
   // --- word practice -------------------------------------------------------------------

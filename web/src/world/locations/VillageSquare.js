@@ -131,6 +131,7 @@ export class VillageSquare extends Location {
     this.#chessBenches(mf, C);
     this.#kahvehane(mf, C);
     this.#library(mf, C);
+    this.#stable(mf, C);
 
     this.writeScore = buildPitch(this, mf, { ...SQUARE_PITCH, board: { x: (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, z: 13.3, rot: Math.PI } });
     add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.035))
@@ -400,6 +401,40 @@ export class VillageSquare extends Location {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 96 / 512), new THREE.MeshBasicMaterial({ map: tex }));
     m.position.set(x, y, z);
     return this.add(m);
+  }
+
+  /**
+   * The horses' place by the north fence (systems/Animals.js ties three there): a hitching rail,
+   * a little open stable with hay, a water trough and a fence on the sides; Hamdi the groom (seyis,
+   * content/addons/seyis.js) stands at the corner.
+   */
+  #stable(mf, C) {
+    const add = (m) => this.add(m), x0 = -3.4, x1 = 7.8, zb = -28.3, zf = -23;
+    // the stable: back and side walls of planks, a sloping roof, hay inside
+    add(mf.at(mf.box(x1 - x0 + 0.6, 2.6, 0.2, WOOD), (x0 + x1) / 2, 1.3, zb - 1.4));
+    [x0 - 0.2, x1 + 0.2].forEach((x) => add(mf.at(mf.box(0.2, 2.6, 1.6, WOOD), x, 1.3, zb - 0.7)));
+    const roof = add(mf.at(mf.box(x1 - x0 + 1.2, 0.12, 2.6, { tex: 'roof', repeat: [4, 1] }), (x0 + x1) / 2, 2.85, zb - 0.6)); roof.rotation.x = -0.18;
+    C.addBox(x0 - 0.4, x1 + 0.4, zb - 1.6, zb);
+    const bale = (x, y, z, ry = 0) => { const b = add(mf.at(mf.box(1.1, 0.5, 0.6, 0xD8B65A), x, y, z)); b.rotation.y = ry; add(mf.at(mf.box(1.12, 0.04, 0.62, 0xB0892E), x, y + 0.1, z)).rotation.y = ry; };
+    bale(-2.2, 0.25, zb - 0.6); bale(-1.0, 0.25, zb - 0.6); bale(-1.6, 0.75, zb - 0.6, 0.2); bale(6.6, 0.25, zb - 0.5, 0.4);
+    // the hitching rail behind the horses
+    [-2.4, 2.2, 6.6].forEach((x) => add(mf.at(mf.box(0.16, 1.1, 0.16, WOOD), x, 0.55, -26.7)));
+    add(mf.at(mf.box(9.2, 0.12, 0.12, WOOD), 2.1, 1.0, -26.7));
+    C.addBox(-2.5, 6.7, -26.8, -26.6);
+    // side fences
+    const rail = (x, z0, z1) => {
+      for (let z = z0; z <= z1 + 0.01; z += 1.8) add(mf.at(mf.box(0.14, 1.1, 0.14, WOOD), x, 0.55, z));
+      [0.45, 0.9].forEach((y) => add(mf.at(mf.box(0.08, 0.08, z1 - z0, WOOD), x, y, (z0 + z1) / 2)));
+      C.addBox(x - 0.1, x + 0.1, z0, z1);
+    };
+    rail(x0 - 0.2, zb, zf); rail(x1 + 0.2, zb, zf);
+    // a stone water trough and a bucket of carrots
+    add(mf.at(mf.box(2.2, 0.6, 0.7, STONE), 4.6, 0.3, zf + 0.9));
+    add(mf.at(mf.box(2.0, 0.04, 0.5, 0x5FA8C8), 4.6, 0.58, zf + 0.9));
+    C.addBox(3.5, 5.7, zf + 0.55, zf + 1.25);
+    add(mf.at(mf.cyl(0.22, 0.18, 0.4, { tex: 'metal' }, 10), -2.5, 0.2, zf + 0.6));
+    [-0.08, 0, 0.08].forEach((o, i) => { const c = add(mf.at(mf.cone(0.04, 0.22, 0xE67E22, 6), -2.5 + o, 0.46, zf + 0.6 + (i - 1) * 0.05)); c.rotation.x = Math.PI; });
+    this.anchor('seyis', x0 - 1.1, zf + 0.4, 0.3);
   }
 
   /** Stool (+ anchor and hotspot when someone may sit there). */

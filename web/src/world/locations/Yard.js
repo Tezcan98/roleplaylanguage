@@ -11,6 +11,57 @@ export class Yard extends Location {
     super({ id: 'yard', name: 'Avlu', spawn: 'houseDoor', bounds: { x: [-23, 23], z: [-23, 23] } });
   }
 
+  /** House front at z = -11, 19 m × 8 m (the rooms inside are 25 m long: a little magic, but close). */
+  #house(mf, C) {
+    const add = (m) => this.add(m), W = 19, D = 8, H = 4.2, z = -15, front = z + D / 2;
+    add(mf.at(mf.box(W, H, D, { tex: 'whiteWall', repeat: [6, 1] }), 0, H / 2, z));
+    add(mf.at(mf.box(W + 0.3, 0.45, D + 0.3, { tex: 'stone', repeat: [8, 1] }), 0, 0.22, z)); // stone plinth
+    add(mf.at(mf.hipRoof(W + 1.4, D + 1.4, 2.6, { tex: 'roof', repeat: [10, 3] }), 0, H, z));
+    add(mf.at(mf.box(W + 1.5, 0.2, D + 1.5, DARK), 0, H - 0.05, z)); // fascia
+    [[-5, -1.5], [5.5, 1.2]].forEach(([x, dz]) => add(mf.at(mf.box(0.75, 2.1, 0.75, { tex: 'brick' }), x, H + 1.6, z + dz))); // chimneys
+    // the front door under a little porch roof on two posts, two steps up
+    add(mf.at(mf.box(1.4, 2.4, 0.14, DARK), 0, 1.2 + 0.25, front + 0.04));
+    add(mf.at(mf.box(1.7, 2.6, 0.1, 0xF4F1EA), 0, 1.3 + 0.2, front + 0.01)); // door frame
+    add(mf.at(mf.sphere(0.05, 0xD4AF37, 8), 0.5, 1.3, front + 0.14)); // knob
+    add(mf.at(mf.box(2.6, 0.2, 1.4, { tex: 'stone' }), 0, 0.1, front + 0.7));
+    add(mf.at(mf.box(2.2, 0.2, 0.8, { tex: 'stone' }), 0, 0.3, front + 0.4));
+    const porch = add(mf.at(mf.box(3.4, 0.12, 2.0, { tex: 'roof', repeat: [2, 1] }), 0, 3.05, front + 0.95)); porch.rotation.x = 0.18;
+    [-1.45, 1.45].forEach((x) => add(mf.at(mf.box(0.14, 2.9, 0.14, DARK), x, 1.45, front + 1.75)));
+    C.addCircle(-1.45, front + 1.75, 0.12); C.addCircle(1.45, front + 1.75, 0.12);
+    // windows: white frame and cross, green shutters, a sill with geraniums; they glow warm at night
+    const glass = mf.uniqueMat(0x8EC5FF, { emissive: 0x000000, roughness: 0.25 });
+    this.glows.push(glass);
+    const win = (x, y, wz, ry) => {
+      const g = new THREE.Group();
+      g.add(mf.at(new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.5, 0.1), glass), 0, 0, 0));
+      g.add(mf.at(mf.box(1.5, 0.12, 0.16, 0xF4F1EA), 0, 0.81, 0.02));
+      g.add(mf.at(mf.box(0.12, 1.7, 0.16, 0xF4F1EA), -0.71, 0, 0.02));
+      g.add(mf.at(mf.box(0.12, 1.7, 0.16, 0xF4F1EA), 0.71, 0, 0.02));
+      g.add(mf.at(mf.box(0.07, 1.5, 0.14, 0xF4F1EA), 0, 0, 0.03));
+      g.add(mf.at(mf.box(1.3, 0.07, 0.14, 0xF4F1EA), 0, 0.2, 0.03));
+      [-1, 1].forEach((side) => { // shutters, open
+        const sh = mf.box(0.62, 1.6, 0.06, 0x2E7D5B); sh.position.set(side * 1.1, 0, 0.06); g.add(sh);
+        for (let k = -2; k <= 2; k++) g.add(mf.at(mf.box(0.5, 0.04, 0.03, 0x24664A), side * 1.1, k * 0.28, 0.1));
+      });
+      g.add(mf.at(mf.box(1.6, 0.1, 0.3, 0xE8E2D4), 0, -0.82, 0.12)); // sill
+      g.add(mf.at(mf.box(1.3, 0.22, 0.26, 0x9A5B3A), 0, -0.66, 0.2)); // flower box
+      for (let k = 0; k < 5; k++) {
+        g.add(mf.at(mf.sphere(0.11, { tex: 'leaves' }, 6), -0.5 + k * 0.25, -0.5, 0.2));
+        g.add(mf.at(mf.sphere(0.06, k % 2 ? 0xE4574A : 0xF06292, 6), -0.5 + k * 0.25, -0.4, 0.26));
+      }
+      g.position.set(x, y, wz); g.rotation.y = ry;
+      return add(g);
+    };
+    [-7.6, -3.6, 3.6, 7.6].forEach((x) => win(x, 2.2, front + 0.05, 0));
+    [-2.2, 2.2].forEach((dz) => { win(W / 2 + 0.05, 2.2, z + dz, Math.PI / 2); win(-W / 2 - 0.05, 2.2, z + dz, -Math.PI / 2); });
+    // a bench by the wall, a lamp over the door
+    add(mf.at(mf.box(1.8, 0.08, 0.45, { tex: 'lightWood' }), -2.6, 0.48, front + 0.35));
+    [-3.35, -1.85].forEach((x) => add(mf.at(mf.box(0.08, 0.46, 0.4, DARK), x, 0.23, front + 0.35)));
+    C.addBox(-W / 2 - 0.15, W / 2 + 0.15, z - D / 2 - 0.15, front + 0.15);
+    C.addBox(-1.3, 1.3, front, front + 1.4); // the steps
+    C.addBox(-3.5, -1.7, front, front + 0.6);
+  }
+
   build(kit) {
     const { mf } = kit, C = this.collision, add = (m) => this.add(m);
 
@@ -18,37 +69,22 @@ export class Yard extends Location {
     add(mf.ground(2.4, 16, { tex: 'dirt', repeat: [1, 6] }, 0.02)).position.z = -3;
     add(mf.disc(5, { tex: 'dirt', repeat: [3, 3] }, 0.015)).position.set(-3, 0.015, -5);
 
-    // house front
-    this.prop(kit, 'prop.house', 0, 0, -14, 0, () => {
-      const g = mf.group(mf.at(mf.box(10, 4, 6, { tex: 'whiteWall', repeat: [3, 1] }), 0, 2, 0));
-      // hip roof with 0.6 m eaves all round, plus a fascia board along the edge
-      g.add(mf.at(mf.hipRoof(11.2, 7.2, 2.3, { tex: 'roof', repeat: [6, 2] }), 0, 4, 0));
-      g.add(mf.at(mf.box(11.3, 0.18, 7.3, DARK), 0, 3.95, 0));
-      g.add(mf.at(mf.box(1.3, 2.3, 0.12, DARK), 0, 1.15, 3.05));
-      g.add(mf.at(mf.box(0.7, 1.9, 0.7, { tex: 'brick' }), 3, 5.4, -1.2)); // chimney through the roof
-      return g;
-    });
-    // windows glow warm at night
-    [-3, 3].forEach((x) => {
-      const glass = mf.uniqueMat(0x8EC5FF, { emissive: 0x000000 });
-      this.glows.push(glass);
-      add(mf.at(new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.2, 0.12), glass), x, 2.3, -10.95));
-      add(mf.at(mf.box(1.6, 0.15, 0.2, DARK), x, 1.65, -10.9));
-    });
-    C.addBox(-5.1, 5.1, -17.1, -10.9);
+    // the house: as long as the rooms inside (living room, kitchen, bedrooms), one storey under a
+    // hip roof, a porch over the door, windows with shutters and flower boxes
+    this.#house(mf, C);
     this.hotspot('yard.door', 0, -10.2);
     // addTrashBin(this, mf, C, 'yard.trash', -3.2, -10.45);
     this.anchor('houseDoor', 0, -9.4, 0);
 
     // fountain (çeşme)
-    this.prop(kit, 'prop.cesme', 6.3, 0, -11.3, 0, () => {
+    this.prop(kit, 'prop.cesme', 5.6, 0, -10.75, 0, () => {
       const g = mf.group(mf.at(mf.box(0.8, 1.2, 0.5, { tex: 'stone' }), 0, 0.6, 0));
       const tap = mf.cyl(0.05, 0.05, 0.35, { tex: 'metal' }, 6); tap.rotation.x = Math.PI / 2;
       g.add(mf.at(tap, 0, 1, 0.35));
       return g;
     });
-    C.addBox(5.9, 6.7, -11.6, -11);
-    this.hotspot('yard.tap', 6.9, -10.4, 1.2);
+    C.addBox(5.2, 6.0, -11.05, -10.45);
+    this.hotspot('yard.tap', 5.6, -9.8, 1.2);
 
     // vine pergola with breakfast table
     const P = this.prop(kit, 'prop.pergola', -8, 0, -4, 0, () => {

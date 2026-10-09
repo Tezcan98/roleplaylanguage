@@ -3,7 +3,7 @@ import { gloss } from '../i18n/Gloss.js';
 
 /**
  * Farm animals (Quaternius "Farm Animals", CC0 — assets/models/animal_*.glb): a cow and sheep
- * grazing in the yard, a dog by the door, and horses tied up on the village square that you can
+ * grazing in the yard, and horses tied up on the village square that you can
  * ride (others see you on horseback). Animals wander a little round their spot; going near one
  * offers to pet it (its name: "inek · cow"), near a free horse "Ata bin", on one "Attan in".
  */
@@ -18,9 +18,12 @@ export const HERD = [
   { kind: 'horse', where: 'village', x: 5.4, z: -25.5, rot: 0, ride: true },
 ];
 
-/** Height (m) and words of each kind; `seat`: where a rider sits (horses). */
+/**
+ * Height (m) and words of each kind; `seat`: the height of the back, where a rider sits (horses);
+ * `pace`: the speed (m/s) each clip was made for — played faster or slower to match the real speed.
+ */
 const KINDS = {
-  horse: { height: 1.8, tr: 'at', en: 'horse', pet: 'Atı sev', seat: 0.62 },
+  horse: { height: 1.8, tr: 'at', en: 'horse', pet: 'Atı sev', seat: 1.28, pace: { walk: 1.0, run: 4.2 } },
   cow: { height: 1.5, tr: 'inek', en: 'cow', pet: 'İneği sev' },
   sheep: { height: 0.95, tr: 'koyun', en: 'sheep', pet: 'Koyunu sev' },
   dog: { height: 0.65, tr: 'köpek', en: 'dog', pet: 'Köpeği sev' },
@@ -69,7 +72,9 @@ export class Animals {
     scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; for (const m of [o.material].flat()) { m.metalness = 0; m.roughness = 0.85; } } });
     const group = new THREE.Group(); group.add(scene);
     let current = 'idle';
-    const play = (name) => {
+    const pace = KINDS[kind].pace ?? {};
+    const play = (name, speed) => { // `speed` (m/s): the legs keep up with it
+      if (clips[name] && pace[name] && speed != null) clips[name].timeScale = Math.min(2.6, Math.max(0.6, speed / pace[name]));
       if (!clips[name] || name === current) return;
       clips[current]?.fadeOut(0.25); clips[name].reset().fadeIn(0.25).play(); current = name;
     };
@@ -98,7 +103,7 @@ export class Animals {
         const step = Math.min(d, 1.0 * dt);
         g.x += dx / d * step; g.z += dz / d * step;
         a.group.rotation.y += wrap(Math.atan2(dx, dz) - a.group.rotation.y) * Math.min(1, dt * 4);
-        a.play('walk');
+        a.play('walk', 1.0);
       }
     }
     a.update(dt);
@@ -107,7 +112,7 @@ export class Animals {
   /** Interaction provider: get off, get on a free horse, or pet an animal. */
   find(pos) {
     const p = this.player;
-    if (p.mount) return { label: 'Attan in', dist: 0, priority: 3, run: () => this.dismount() };
+    if (p.mount) return p.mount.kind === 'horse' ? { label: 'Attan in', dist: 0, priority: 3, run: () => this.dismount() } : null;
     const here = this.world.current?.id;
     let best = null;
     for (const a of this.#list) {

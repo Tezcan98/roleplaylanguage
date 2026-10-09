@@ -4,10 +4,6 @@ Sıradakiler yukarıdan aşağıya. Biten bir iş buradan silinir (ayrıntısı 
 
 ## Sırada
 
-3. **Ev**: dış cephe içi kadar büyük olsun; pencereler güzelleşsin.
-4. **At binme grafikleri**: binici atın içine giriyor; atın bacakları hıza göre yavaş kalıyor.
-5. **Atların yeri**: etrafına bir şeyler (yemlik, çit, saman) ve bir seyis.
-6. **Bahçede bisiklet**: "Bisiklet sürmeyi bilmiyorsun" — yetenek krediyle açılsın.
 7. **Simitçi** (meydanda): soğuk espriler; yabancıların anlayacağı şekilde, deyim/kalıp öğretsin.
 8. **Satranç alanı**: ilk gelişte kart — İsmail Dede burayı düzenliyor, dedeyle oynanabilir, beraberlik için dedeyle konuşulur.
 9. **Bahçedeki çimen**: takılmaya sebep oluyorsa yoğunluğu ve hareketi azaltılsın (önce ölç).

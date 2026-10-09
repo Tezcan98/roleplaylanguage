@@ -9,6 +9,21 @@ const JACKET = 0xB5482E;
 const wrapAngle = (d) => { while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
 /** Anything with a body in the world: the player and every NPC. */
+/** HD rider's thighs: the direction from hip to knee (out to the side, down; forward is 0.45). */
+const RIDE_LEG = { out: 0.75, down: 0.55 };
+const V1 = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), Q1 = new THREE.Quaternion(), Q2 = new THREE.Quaternion(), Q3 = new THREE.Quaternion();
+/** Turns `bone` so the line from it to the point `tip` (world) points along `dirLocal` (in `frame`'s space). */
+function aim(bone, tip, dirLocal, frame) {
+  const from = bone.getWorldPosition(new THREE.Vector3()), cur = tip.clone().sub(from);
+  if (!cur.lengthSq()) return;
+  cur.normalize();
+  const want = dirLocal.clone().normalize().transformDirection(frame.matrixWorld);
+  const turn = Q1.setFromUnitVectors(cur, want);
+  const world = bone.getWorldQuaternion(Q2), parent = bone.parent.getWorldQuaternion(Q3);
+  bone.quaternion.copy(parent.invert().multiply(turn).multiply(world));
+  bone.updateMatrixWorld(true);
+}
+
 export class Character {
   #hd = null;
   #aura = null;
@@ -16,6 +31,9 @@ export class Character {
   #hdWanted = false;
   #lastPos = null;
   #kick = null; // { t, dur, power }: a kick of the ball, the right leg swings
+  #rideSpeed = 0; // smoothed speed on horseback (the horse's gait follows it)
+  #shins = null; // per leg on horseback: { len, dir } of the shin, measured once when getting on
+  #tmp = new THREE.Vector3();
   constructor(id, appearance, { mf, models }) {
     this.id = id;
     this.appearance = appearance;
@@ -123,14 +141,16 @@ export class Character {
 
   /**
    * On horseback (`mount` = { group, seat, play(name), update(dt) }, see systems/Animals.js) or off
-   * (null). The horse goes where the character goes; the rider sits on its back, legs astride.
+   * (null). The horse goes where the character goes; the rider sits on its back (`mount.seat`: the
+   * height of the horse's back), legs astride down its sides, hands forward on the reins.
    */
   setMount(mount) {
-    this.mount = mount;
+    this.mount = mount; this.#rideSpeed = 0; this.#shins = null;
     const r = this.rig;
     if (mount) {
       this.seated = false;
-      r.legL.rotation.set(-1.25, 0, 0.35); r.legR.rotation.set(-1.25, 0, -0.35); r.armL.rotation.x = r.armR.rotation.x = -0.8;
+      const spread = mount.legs === 'pedal' ? 0.1 : 0.6; // a bicycle: knees forward to the pedals
+      r.legL.rotation.set(-0.7, 0, spread); r.legR.rotation.set(-0.7, 0, -spread); r.armL.rotation.x = r.armR.rotation.x = -0.8;
       if (this.mixer) { this.current = null; this.#playClip('sit'); }
     } else {
       this.group.position.y = 0;
@@ -145,6 +165,48 @@ export class Character {
     r.legL.rotation.x = s; r.legR.rotation.x = -s; r.armL.rotation.x = -s * 0.8; r.armR.rotation.x = s * 0.8;
     this.#playClip(amount > 0.05 ? 'walk' : 'idle');
     this.#kickPose();
+  }
+
+  /** The hips relative to the feet on the ground: height and how far forward (HD: the Hips bone, blocky: the leg joints). */
+  #hips() {
+    const hd = this.#hd, bone = hd && hd !== 'loading' && hd.scene.visible ? hd.scene.getObjectByName('Hips') : this.rig.legL;
+    if (!bone) return { up: 0.6, fwd: 0 };
+    const p = this.group.position, v = bone.getWorldPosition(this.#tmp), rot = this.group.rotation.y;
+    return { up: v.y - p.y, fwd: (v.x - p.x) * Math.sin(rot) + (v.z - p.z) * Math.cos(rot) };
+  }
+
+  /**
+   * HD on horseback: from the sitting pose, each thigh is turned down and out round the horse's
+   * side and the shin hangs down from the knee. (The rig's feet are IK targets under the root,
+   * not children of the shins, so they are put at the end of the shin.)
+   */
+  #astride() {
+    const hd = this.#hd;
+    if (!hd || hd === 'loading' || this.mixer !== hd.mixer) return;
+    this.group.updateMatrixWorld(true);
+    const pedal = this.mount.legs === 'pedal' ? this.mount.pedal : null;
+    for (const [s, side] of [['L', 1], ['R', -1]]) {
+      const thigh = hd.scene.getObjectByName(`UpperLeg${s}`), shin = hd.scene.getObjectByName(`LowerLeg${s}`), foot = hd.scene.getObjectByName(`Foot${s}`);
+      if (!thigh || !shin || !foot) continue;
+      // where the foot is, seen from the shin, measured on the first frame (the sitting clip leaves the foot where it was)
+      this.#shins ??= {};
+      if (!this.#shins[s]) {
+        const knee0 = shin.getWorldPosition(new THREE.Vector3()), foot0 = foot.getWorldPosition(new THREE.Vector3());
+        this.#shins[s] = { len: foot0.distanceTo(knee0), dir: foot0.sub(knee0).normalize().applyQuaternion(shin.getWorldQuaternion(Q2).invert()) };
+      }
+      const { len: shinLen, dir: shinDir } = this.#shins[s];
+      const out = Math.sign(this.group.worldToLocal(thigh.getWorldPosition(V1)).x) || side;
+      // a horse: thighs out round its sides, shins hanging; a bicycle: knees forward, going round with the pedals
+      const ph = pedal == null ? 0 : pedal + (side > 0 ? 0 : Math.PI);
+      const thighDir = pedal == null ? [out * RIDE_LEG.out, -RIDE_LEG.down, 0.45] : [out * 0.12, -(0.4 + 0.3 * Math.sin(ph)), 0.8];
+      const shinTo = pedal == null ? [out * 0.15, -1, -0.15] : [out * 0.04, -1, 0.2 * Math.cos(ph)];
+      aim(thigh, shin.getWorldPosition(V3), V2.set(...thighDir), this.group);
+      const tipNow = shin.getWorldPosition(new THREE.Vector3()).addScaledVector(shinDir.clone().applyQuaternion(shin.getWorldQuaternion(Q2)), shinLen);
+      aim(shin, tipNow, V2.set(...shinTo), this.group);
+      const knee = shin.getWorldPosition(V1);
+      const at = knee.clone().addScaledVector(V2.set(...shinTo).normalize().transformDirection(this.group.matrixWorld), shinLen);
+      foot.position.copy(foot.parent.worldToLocal(at)); foot.updateMatrixWorld(true);
+    }
   }
 
   /** Kick the ball: the right leg swings back and through (`power` 0–1: a hard shot swings more). */
@@ -164,13 +226,18 @@ export class Character {
   }
 
   update(dt) {
-    if (this.mount) { // the horse under the rider: same place and heading; it runs while we move
-      const m = this.mount, p = this.group.position;
+    if (this.mount) { // the horse under the rider: its back under the hips, same heading; its gait and pace follow ours
+      const m = this.mount, p = this.group.position, rot = this.group.rotation.y;
       const speed = this.#lastPos && dt > 0 ? Math.hypot(p.x - this.#lastPos.x, p.z - this.#lastPos.z) / dt : 0;
-      m.group.position.set(p.x, 0, p.z); m.group.rotation.y = this.group.rotation.y;
-      p.y = m.seat;
-      m.play(speed > 4 ? 'run' : speed > 0.4 ? 'walk' : 'idle');
+      this.#rideSpeed += (speed - this.#rideSpeed) * Math.min(1, dt * 6);
+      const hip = this.#hips(); // (the sitting pose puts them a little behind the feet)
+      p.y = m.seat - hip.up + 0.08;
+      const f = hip.fwd - (m.saddle ?? 0); // the seat (a horse's back, a bike's saddle) under the hips
+      m.group.position.set(p.x + Math.sin(rot) * f, 0, p.z + Math.cos(rot) * f); m.group.rotation.y = rot;
+      const v = this.#rideSpeed;
+      m.play(v > 2.6 ? 'run' : v > 0.3 ? 'walk' : 'idle', v);
       m.update(dt);
+      if (m.legs === 'pedal') { const a = Math.sin(m.pedal) * 0.45; this.rig.legL.rotation.x = -1.1 + a; this.rig.legR.rotation.x = -1.1 - a; }
     }
     const hdWalk = this.#hd?.stride && this.mixer === this.#hd.mixer && this.current === 'walk' ? this.clips.walk : null;
     if (hdWalk && dt > 0) { // the steps keep up with the real speed
@@ -180,6 +247,7 @@ export class Character {
     }
     this.#lastPos = { x: this.group.position.x, z: this.group.position.z };
     this.mixer?.update(dt);
+    if (this.mount) this.#astride();
     if (this.#kick) { if (!this.#kick.hold) this.#kick.t += dt; this.#kickPose(); if (this.#kick.t >= this.#kick.dur) { this.#kick = null; this.rig.legR.rotation.x = 0; } }
     const skirt = this.#hd?.skirt;
     if (skirt) { skirt.skirt.visible = this.#hd.scene.visible && !this.seated; if (skirt.skirt.visible) skirt.follow(); } // seated: the legs, in the dress's colour
