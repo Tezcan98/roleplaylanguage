@@ -63,11 +63,21 @@ export async function startVillageServer() {
  */
 export async function openBrowser(extraArgs = []) {
   const channel = process.env.PLAYTEST_CHANNEL;
-  return chromium.launch({
+  const browser = await chromium.launch({
     ...(channel ? { channel } : {}),
     headless: !process.env.PLAYTEST_HEADED,
     args: ['--ignore-gpu-blocklist', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required', ...extraArgs],
   });
+  // PLAYTEST_SLOW=6: every page's CPU six times slower — like the CI machine (checks that pass on a
+  // fast computer and fail there: low frame rates, long frames)
+  const slow = Number(process.env.PLAYTEST_SLOW || 0);
+  if (slow > 1) {
+    const throttle = async (page) => { try { const cdp = await page.context().newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: slow }); } catch { /* not Chromium */ } };
+    const newContext = browser.newContext.bind(browser);
+    browser.newContext = async (...a) => { const ctx = await newContext(...a); ctx.on('page', throttle); return ctx; };
+    browser.newPage = async (...a) => { const ctx = await browser.newContext(...a); const page = await ctx.newPage(); return page; };
+  }
+  return browser;
 }
 
 /** Collects uncaught exceptions and console errors (a play-test fails on any of them). */

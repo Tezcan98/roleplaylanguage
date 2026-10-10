@@ -167,10 +167,10 @@ try {
   await A.evaluate(() => window.__game.travel.go('schoolyard', 'squareRoad')); await B.evaluate(() => window.__game.travel.go('schoolyard', 'squareRoad'));
   const meet = await waitFor(async () => (await A.evaluate(() => window.__game.village.joinedAt === 'schoolyard' && window.__game.village.remotes.count)) === 1 && (await B.evaluate(() => window.__game.village.remotes.count)) === 1, 15000);
   check('schoolyard: a public place with its own room', !!meet);
-  await A.evaluate(async () => {
+  await A.evaluate(() => { // a shot at the goal (not dribbled: on a slow machine the dribble's pace varies)
     const g = window.__game, b = g.toys.toys.find((t) => t.toy.location.id === 'schoolyard').toy;
-    b.setState({ x: 8.8, z: -2, vx: 0, vz: 0 });
-    for (let i = 0; i < 25; i++) { g.player.position.set(7.4 + i * 0.07, 0, -2); await new Promise((r) => requestAnimationFrame(r)); }
+    b.setState({ x: 8.8, z: -2, vx: 8, vz: 0 });
+    g.village.ballKicked(b);
   });
   const goal = await waitFor(() => B.evaluate(() => window.__game.football?.score.a === 1), 8000);
   check('football: a goal counts on both screens', !!goal && (await A.evaluate(() => window.__game.football.score.a)) === 1);

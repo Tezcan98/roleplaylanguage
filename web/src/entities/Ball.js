@@ -30,7 +30,7 @@ export class Ball {
   dribble(dirX, dirZ, from, runSpeed) {
     const n = Math.hypot(dirX, dirZ) || 1, cx = this.position.x - from.x, cz = this.position.z - from.z, c = Math.hypot(cx, cz) || 1;
     const x = dirX / n * 0.9 + cx / c * 0.1, z = dirZ / n * 0.9 + cz / c * 0.1, m = Math.hypot(x, z) || 1;
-    const speed = runSpeed * 1.3 + 0.7;
+    const speed = Math.max(2.5, runSpeed * 1.3 + 0.7); // a touch always moves it (slow phones: short frames, low measured speed)
     this.vel.set(x / m * speed, 0, z / m * speed);
     this.hopVel = 0;
   }
