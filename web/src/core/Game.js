@@ -27,7 +27,7 @@ export class Game {
     ambient.forEach((a) => a.update(dt, t)); // villagers chatting among themselves
     world.current.update(dt, t);
 
-    actionButton.show(interactions.update(player.position));
+    actionButton.show(interactions.update(player.position), interactions.others);
     shotButton?.show(modes.is('play') && !player.seated && (!!toys.shotBall() || !!village.onPitch?.(player.position))); // on a pitch: always there
     joystick.visible = modes.is('play');
     help.visible = modes.is('play');

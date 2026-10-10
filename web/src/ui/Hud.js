@@ -1,4 +1,5 @@
 import { el } from './dom.js';
+import { coin } from './coin.js';
 
 /** Top bar: clock, word book and bag counters (and `extra` buttons on the right, e.g. full screen). */
 export class Hud {
@@ -14,7 +15,7 @@ export class Hud {
       el('div', { class: 'grp' }, [
         el('button', { class: 'pill', attrs: { type: 'button' }, on: { click: onBook } }, ['Defter ', this.words]),
         this.textbook,
-        el('button', { class: 'pill credits-btn', attrs: { type: 'button', title: 'Dükkan · krediler' }, on: { click: () => onShop?.() } }, ['🪙 ', this.credits]), // the shop
+        el('button', { class: 'pill credits-btn', attrs: { type: 'button', title: 'Dükkan · krediler' }, on: { click: () => onShop?.() } }, [coin(), ' ', this.credits]), // the shop
         el('button', { class: 'pill money', attrs: { type: 'button', title: 'Paran · game money' }, on: { click: onBag } }, ['💰 ', this.money, ' ₺']), // game money: lira in the bag
       ]),
       el('div', { class: 'grp' }, [

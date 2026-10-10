@@ -2,6 +2,11 @@ import { FREE_ACTIONS } from './freeActions.js';
 import { looseGoods } from './goods.js';
 
 const free = (id) => ({ label: FREE_ACTIONS[id].label, use: [`free:${id}`] });
+/**
+ * Things that only show a thought bubble (nothing happens in the world): offered only when a quest
+ * asks for them (the chores on day 2…), not in free play — they were clutter.
+ */
+const questOnly = (id, hotspot) => ({ ...free(id), available: (c) => c.targetHotspot === hotspot });
 /** A school day of the story (not a visit, not paused for practice). */
 export const schoolDay = (c) => String(c.chapter ?? '').endsWith('-school') && !c.story?.paused;
 
@@ -31,7 +36,7 @@ export const HOTSPOTS = {
   // online play from the main menu: leaving the square goes back to the menu, not home
   'village.menu': { label: 'Ana menüye dön', use: ['main-menu'], available: (c) => c.online },
   'village.fountain': free('village_fountain'),
-  'village.well': free('village_well'),
+  'village.well': questOnly('village_well', 'village.well'),
   ...Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`village.bench${i + 1}`, { label: 'Banka otur', use: [`sit:bench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])), // BENCH_SEATS in VillageSquare
   'village.bakkalCounter': { label: 'Alışveriş yap', use: ['market:bakkal'] }, // shop windows (ui/MarketView.js)
   'village.manavStall': { label: 'Meyve sebze al', use: ['market:manav'] },
@@ -59,16 +64,16 @@ export const HOTSPOTS = {
   'house.tableGoods': { label: 'Masaya koy', use: ['table-goods'], available: (c) => looseGoods(c.state).length > 0 || c.state.table?.length > 0 },
   // rubbish bins: off for now (world/trashBin.js, TableAndBins.atBin)
   // ...Object.fromEntries(['house.trash', 'yard.trash', ...Array.from({ length: 7 }, (_, i) => `village.trash${i + 1}`), 'school.trash1', 'school.trash2'].map((id) => [id, { label: 'Çöpe at', use: ['trash'] }])), // TRASH bins (world/trashBin.js)
-  'house.tea': free('make_tea'),
-  'house.table': free('set_table'),
-  'house.dishes': free('wash_dishes'),
-  'house.sweep': free('sweep_house'),
-  'house.plant': free('water_plant'),
+  'house.tea': questOnly('make_tea', 'house.tea'),
+  'house.table': questOnly('set_table', 'house.table'),
+  'house.dishes': questOnly('wash_dishes', 'house.dishes'),
+  'house.sweep': questOnly('sweep_house', 'house.sweep'),
+  'house.plant': questOnly('water_plant', 'house.plant'),
   'house.tv': free('tv'),
-  'house.kitchen': free('water'),
-  'house.shelf': free('read'),
-  'house.window': free('window'),
-  'yard.tap': free('wash'),
+  'house.kitchen': questOnly('water', 'house.kitchen'),
+  'house.shelf': questOnly('read', 'house.shelf'),
+  'house.window': questOnly('window', 'house.window'),
+  'yard.tap': questOnly('wash', 'yard.tap'),
   'yard.garden': free('water_garden'),
   // school days: the lesson (open for it, and afterwards whenever the quest leads back
   // inside to talk to the teacher); other days: a practice lesson for 1 credit

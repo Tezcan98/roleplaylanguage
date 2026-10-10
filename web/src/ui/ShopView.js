@@ -3,11 +3,12 @@ import { gloss } from '../i18n/Gloss.js';
 import { SHOP, outfitPicture } from '../content/shop.js';
 import { PACKS } from '../services/monetization/Billing.js';
 import { AD_REWARD } from '../services/monetization/CreditWallet.js';
+import { coin } from './coin.js';
 
 const hm = (ms) => { const m = Math.ceil(ms / 60000); return m >= 60 ? `${Math.floor(m / 60)} sa ${m % 60} dk` : `${m} dk`; };
 
 /**
- * The shop (🪙 in the HUD, and on the main menu): earn credits (daily reward, a rewarded video
+ * The shop (the coin in the HUD, and on the main menu): earn credits (daily reward, a rewarded video
  * every 3 hours), buy credit packs (Google Play, in the app), spend credits (ad-free mode,
  * outfits). Lessons and practice also cost credits, at the school.
  */
@@ -21,7 +22,7 @@ export class ShopView {
     this.balance = el('b', { class: 'shop-balance' });
     this.root = el('div', { class: 'overlay dim shop' }, [el('div', { class: 'card' }, [
       el('div', { class: 'shop-head' }, [
-        el('h2', { class: 'ctitle', text: '🪙 Dükkan' }), this.balance,
+        el('h2', { class: 'ctitle' }, [coin(), ' Dükkan']), this.balance,
         el('button', { class: 'iconbtn light', html: ICONS.close, attrs: { type: 'button', 'aria-label': 'Kapat' }, on: { click: () => this.close() } }),
       ]),
       this.body,
@@ -42,7 +43,7 @@ export class ShopView {
 
   render() {
     const w = this.wallet;
-    this.balance.textContent = `🪙 ${w.balance}`;
+    this.balance.replaceChildren(coin(), ` ${w.balance}`);
     const card = (cls, top, name, sub, action, subTr = false) => el('div', { class: `shop-card ${cls}` }, [
       top instanceof Node ? top : el('span', { class: 'shop-card-top', text: top }), el('b', { class: 'shop-card-name', text: name }), sub ? el('small', { class: subTr ? 'shop-sub' : 'shop-sub en-t', text: sub }) : null, action,
     ].filter(Boolean));
@@ -60,7 +61,7 @@ export class ShopView {
           if (await this.ads.showRewarded()) { w.adWatched(); this.toasts.show(`+${AD_REWARD} kredi`, 'Credits earned'); }
           this.render();
         }), true),
-      ...PACKS.map((p, i) => card(`pack pack${i}`, ['🪙', '💰', '💎'][i] ?? '🪙', `${p.credits}`, 'kredi',
+      ...PACKS.map((p, i) => card(`pack pack${i}`, [el('span', { class: 'shop-card-top' }, [coin()]), '💰', '💎'][i] ?? '💎', `${p.credits}`, 'kredi',
         btn(this.#prices[p.id] ?? p.price, 'buy', async (e) => {
           if (!this.billing.available) { this.toasts.show('Altın paketleri Android uygulamasında satılır', 'Credit packs are sold in the Android app'); return; }
           e.target.disabled = true;
@@ -75,7 +76,7 @@ export class ShopView {
       const owned = w.owns(i.id), worn = i.slot && w.equipped(i.slot) === i.id && (!i.needs || w.equipped(i.needs) === i.needs);
       let action;
       if (i.needs && !w.owns(i.needs)) action = btn('Önce HD karakter', '', () => {}, true); // outfits are for the HD character
-      else if (!owned) action = btn(`🪙 ${i.price}`, 'buy', () => this.#buy(i), w.balance < i.price);
+      else if (!owned) { action = btn(` ${i.price}`, 'buy', () => this.#buy(i), w.balance < i.price); action.prepend(coin()); }
       else if (!i.slot) action = btn('Alındı ✓', '', () => {}, true);
       else action = worn ? btn('Çıkar', 'worn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Giy', 'go', () => { this.#wear(i); this.onOutfit(); });
       // what the character will look like (no icons): the outfit picture, a glowing ring

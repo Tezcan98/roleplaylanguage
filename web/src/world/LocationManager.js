@@ -10,7 +10,7 @@ export class LocationManager {
 
   register(location) {
     location.build(this.kit);
-    location.baked = bakeStatic(location.group); // its unchanging meshes: one per material (draw calls)
+    location.baked = bakeStatic(location.group, 'static'); // its unchanging meshes: one per material (draw calls)
     this.scene.add(location.group);
     this.#locations.set(location.id, location);
     return this;

@@ -71,17 +71,21 @@ export class HotspotInteractions {
  * New kinds of interaction = new provider; nothing else changes.
  */
 export class InteractionSystem {
-  constructor(providers, modes) { this.providers = providers; this.modes = modes; this.current = null; }
+  constructor(providers, modes) { this.providers = providers; this.modes = modes; this.current = null; this.others = []; }
 
   update(playerPos) {
     this.current = null;
+    this.others = [];
     if (!this.modes.is('play')) return null;
+    const all = [];
     for (const p of this.providers) {
       const a = p.find(playerPos);
-      if (!a) continue;
-      const c = this.current, pa = a.priority ?? 0, pc = c?.priority ?? 0;
-      if (!c || pa > pc || (pa === pc && a.dist < c.dist)) this.current = a;
+      if (a) all.push(a);
     }
+    all.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.dist - b.dist);
+    this.current = all[0] ?? null;
+    // the next things you could do here too (another person came up while you talk to someone…): their own buttons
+    this.others = all.slice(1).filter((a, i, list) => a.label !== this.current.label && list.findIndex((b) => b.label === a.label) === i).slice(0, 2);
     return this.current;
   }
 

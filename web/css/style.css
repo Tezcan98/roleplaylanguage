@@ -42,11 +42,15 @@ body.hide-en .en-t{display:none!important}
 #act{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 50px);pointer-events:auto;background:var(--gold);color:var(--ink);border:3px solid var(--wood);border-radius:18px;padding:0 20px;min-height:60px;font:700 18px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
 #act:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
 #act[hidden],#joy[hidden],#run[hidden]{display:none}
+/* other things within reach: smaller buttons stacked above the action button */
+#act-more{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 122px);display:flex;flex-direction:column-reverse;align-items:flex-end;gap:8px;pointer-events:none}
+.act-alt{pointer-events:auto;background:var(--parch);color:var(--ink);border:3px solid var(--wood);border-radius:16px;padding:0 16px;min-height:48px;font:700 16px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 3px 0 var(--wood2)}
+.act-alt:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wood2)}
 #shot{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 54px);pointer-events:auto;background:#E4574A;color:#fff;border:3px solid var(--wood);border-radius:18px;padding:0 16px;min-height:52px;font:700 17px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
 #shot:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
 #shot[hidden]{display:none}
 body.menu #shot{display:none!important}
-body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{display:none!important}
+body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #act-more,body.menu #labels{display:none!important}
 
 /* ---------- overlays ---------- */
 .overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;pointer-events:auto;padding:20px;padding-top:calc(env(safe-area-inset-top,0px) + 20px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 20px)}
@@ -291,6 +295,7 @@ body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
   .btn{min-height:46px}
   #joy{width:140px;height:140px;left:max(16px,env(safe-area-inset-left));bottom:14px}
   #act{bottom:18px;right:max(14px,env(safe-area-inset-right));min-height:52px}
+  #act-more{bottom:136px;right:max(14px,env(safe-area-inset-right))} /* (above the help button, which moves here on small screens) */
   .help-btn{left:auto;right:max(14px,env(safe-area-inset-right));bottom:84px;min-height:42px;font-size:18px}
   #shot{right:max(14px,env(safe-area-inset-right));bottom:18px;min-height:44px}
 }
@@ -508,3 +513,7 @@ body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.op
 body.menu #run{display:none!important}
 .test-start{display:grid;gap:8px;padding:10px;border:2px dashed var(--wood);border-radius:12px;background:rgba(255,255,255,.5)}
 .test-start select{font:600 15px Nunito,sans-serif;padding:6px;border-radius:10px;border:2px solid var(--wood)}
+
+/* the credit coin (ui/coin.js): an SVG the size of the text */
+.coin{display:inline-flex;vertical-align:-0.14em}.coin svg{display:block}
+.iconbtn .coin{font-size:26px;vertical-align:middle}

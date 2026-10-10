@@ -11,7 +11,7 @@ const ray = new THREE.Raycaster(), DOWN = new THREE.Vector3(0, -1, 0), FROM = ne
  */
 export function seatAt(location, spot) {
   const { x, z } = spot;
-  const furniture = location?.group?.getObjectByName('static');
+  const furniture = location?.group?.children.find((c) => c.name === 'static'); // (the place's own batch, not a car's or a chess piece's)
   if (!furniture) return { x, z, h: 0 };
   ray.set(FROM.set(x, 0.8, z), DOWN); ray.far = 0.8;
   const hit = ray.intersectObject(furniture, true)[0];

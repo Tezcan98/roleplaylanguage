@@ -3,6 +3,7 @@ import { gloss, glossInfo } from '../i18n/Gloss.js';
 import { ServerPicker, SERVERS } from './ServerPicker.js';
 import { characterOf } from './CharacterSetup.js';
 import { fullscreenPossible, goFullscreen, fullscreenIcon, canInstall, installApp } from './Landscape.js';
+import { COIN_HTML } from './coin.js';
 
 
 /**
@@ -86,7 +87,7 @@ export class MainMenu {
       body = [
         el('div', { class: 'menu-top' }, [
           fullscreenPossible() && el('button', { class: 'iconbtn light', html: fullscreenIcon(), attrs: { type: 'button', 'aria-label': 'Tam ekran', title: 'Tam ekran' }, on: { click: () => goFullscreen().finally(() => this.show()) } }), // iPhone: the home-screen guide
-          btn('🪙', 'iconbtn light', () => this.onShop?.(), { 'aria-label': 'Dükkan', title: 'Dükkan · krediler' }),
+          el('button', { class: 'iconbtn light', html: COIN_HTML, attrs: { type: 'button', 'aria-label': 'Dükkan', title: 'Dükkan · krediler' }, on: { click: () => this.onShop?.() } }),
           btn('⚙️', 'iconbtn light', () => this.show('settings'), { 'aria-label': 'Ayarlar', title: 'Ayarlar' }),
         ]),
         el('h1', { class: 'big', text: 'Anadolu Ailesi' }),

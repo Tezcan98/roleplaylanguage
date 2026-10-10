@@ -1,5 +1,5 @@
-const SEE = 20;   // m: closer than this the talk goes on (speech bubbles over their heads)
-const PAUSE = 7;  // s between two conversations
+const SEE = 7;    // m: only this close the talk goes on (speech bubbles over their heads covered the screen from afar)
+const PAUSE = 30; // s between two conversations (seldom: it is background, not the game)
 
 /**
  * People who talk among themselves (the uncles in the kahvehane). Their conversations show

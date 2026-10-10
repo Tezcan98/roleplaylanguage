@@ -127,7 +127,6 @@ import { gloss, wordNote, loadGlossLang, glossLang } from './i18n/Gloss.js';
 import { man } from './content/characters.js';
 import { schoolDay } from './content/hotspots.js';
 import { setPlayerGender, setPlayerLook, playerGender, playerName, personalizeContent, setTeacher, teacherInfo } from './i18n/Persona.js';
-import { NpcChatClient } from './services/ai/NpcChatClient.js';
 import { CharacterSetup } from './ui/CharacterSetup.js';
 import {
   STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, TEACHER_MAN, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
@@ -263,13 +262,10 @@ const dialogueView = new DialogueView(host, {
   onToggleEn: () => dialogueView.setEnPressed(!document.body.classList.toggle('hide-en')),
   onChat: () => dialogue.startChat(),
 });
-// free conversation with village characters (Gemini behind the village server; off without a key)
-const npcChat = new NpcChatClient({ url: manifest.npcChat || NpcChatClient.urlFor(villageServer), lang: glossLang, player: playerName,
-  ids: () => ({ pid: settings.get('deviceId') || undefined, gid: settings.get('playGamesId') || undefined }) }); // who wrote it, for the safety log
 const chatRecognizer = params.has('fakemic') ? new ScriptedRecognizer() : (native ? new nativeKit.NativeSpeechRecognizer('tr-TR') : new WebSpeechRecognizer('tr-TR'));
 const dialogue = new DialogueController({
   dialogues: DIALOGUES, cast, view: dialogueView, activities, effects, vocab, tts, modes, bus, input,
-  chat: npcChat, recognizer: chatRecognizer,
+  chat: null, recognizer: chatRecognizer, // (free typed chat with the characters is off: services/ai/NpcChatClient.js to turn it back on)
   chatAllowed: (npc) => story.target()?.npc !== npc, // quest conversations come first
 });
 dialogue.setContext(gameCtx);
@@ -429,7 +425,7 @@ const chess = new ChessGame({
   // İsmail Dede announces the games: a bubble over his head (no voice)
   onSay: (line) => {
     const dede = cast.get('ismail');
-    if (dede?.location === 'village' && world.current.id === 'village') labels.bubble(dede, line, null, 5);
+    if (dede?.location === 'village' && world.current.id === 'village' && Math.hypot(player.position.x - dede.position.x, player.position.z - dede.position.z) < 10) labels.bubble(dede, line, null, 5); // only near: bubbles from afar covered the screen
   },
   onAskDede: () => dialogue.open('ismail'), // touching a piece when not playing: Dede decides who plays
 });
@@ -589,7 +585,7 @@ const hud = new Hud(host, {
   onShop: () => shop.open(),
   onBookOpen: () => textbook.open(),
   onBook: () => openWords(),
-  onBag: () => list.open('Çanta', inventory.entries().map(([kind, n]) => {
+  onBag: () => list.open('Çanta', inventory.entries().filter(([kind]) => kind !== 'para').map(([kind, n]) => { // (the money is in the HUD: 💰)
     const i = items.info(kind);
     return n > 1 ? [`${n} ${i.tr}`, `${n} ${gloss(i.en)}`] : [i.tr, gloss(i.en)];
   }), 'Çantan boş.'),
@@ -798,7 +794,7 @@ setInterval(() => {
   const kid = cast.get('kardes');
   if (!kid || kid.location !== 'house' || world.current.id !== 'house' || dialogue.talking || modes.top !== 'play') return;
   const t = game.t, anne = cast.get('anne');
-  if (kid.roam.jumping && anne?.location === 'house' && t - kidScoldAt > 45) {
+  if (kid.roam.jumping && anne?.location === 'house' && t - kidScoldAt > 150 && kid.position.distanceTo(player.position) < 8) { // seldom, and only when you are near
     kidScoldAt = t;
     labels.bubble(anne, 'Ali, yatakta zıplama!', null, 3, "Ali, don't jump on the bed!");
     tts.speak('Ali, yatakta zıplama!', { speaker: 'anne' });

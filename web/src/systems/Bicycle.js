@@ -59,6 +59,7 @@ export class Bicycle {
     let spin = 0;
     return {
       kind: 'bike', group, seat: 0.84, saddle: -0.24, speed: 1.5, legs: 'pedal',
+      hands: [new THREE.Vector3(0.26, 0.98, 0.32), new THREE.Vector3(-0.26, 0.98, 0.32)], // on the grips (left, right)
       play: (name, v = 0) => { spin = v; },
       update: (dt) => { const a = spin * dt / WHEEL; front.rotation.x += a; back.rotation.x += a; pedals.rotation.x += a * 0.5; },
       get pedal() { return pedals.rotation.x; },
@@ -83,7 +84,7 @@ export class Bicycle {
         title: 'Bisiklet sürmeyi bilmiyorsun',
         text: `Babanla bir tur öğrenmeye ne dersin? Bisiklet sürmeyi öğrenmek ${BIKE_PRICE} kredi.`,
         en: "You don't know how to ride a bicycle. Learning it costs credits.",
-        yes: `Öğren · 🪙 ${BIKE_PRICE}`, no: 'Şimdi değil',
+        yes: `Öğren · ${BIKE_PRICE} kredi`, no: 'Şimdi değil',
       });
       if (!learn) return;
       if (!this.wallet.buy({ id: BIKE_SKILL, price: BIKE_PRICE })) {

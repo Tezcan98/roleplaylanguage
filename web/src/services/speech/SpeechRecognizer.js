@@ -9,6 +9,9 @@ export class SpeechRecognizer {
   cancel() {}
 }
 
+/** Longest time one listen may take (ms). */
+const LISTEN_MAX = 9000;
+
 /** Browser Web Speech API (Chrome, Edge, Safari). Transcribes as Turkish. */
 export class WebSpeechRecognizer extends SpeechRecognizer {
   #active = null;
@@ -33,8 +36,13 @@ export class WebSpeechRecognizer extends SpeechRecognizer {
         const alts = [...e.results[0]];
         resolve({ transcript: alts[0].transcript, alternatives: alts.map((a) => a.transcript), confidence: alts[0].confidence });
       };
-      r.onerror = (e) => { done = true; reject(new Error(e.error)); };
-      r.onend = () => { if (!done) resolve({ transcript: '', alternatives: [], confidence: 0 }); this.#active = null; };
+      r.onerror = (e) => { done = true; clearTimeout(limit); reject(new Error(e.error)); };
+      r.onend = () => { clearTimeout(limit); if (!done) resolve({ transcript: '', alternatives: [], confidence: 0 }); this.#active = null; };
+      // some phones never end the session (the mic stayed on "Dinliyorum…" for good): give up after a while
+      const limit = setTimeout(() => {
+        try { r.stop(); } catch { /* already over */ }
+        setTimeout(() => { if (!done) { done = true; try { r.abort(); } catch { /* */ } this.#active = null; resolve({ transcript: '', alternatives: [], confidence: 0 }); } }, 1500);
+      }, LISTEN_MAX);
       this.#active = r;
       r.start();
     });

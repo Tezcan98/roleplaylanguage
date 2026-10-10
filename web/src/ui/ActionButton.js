@@ -1,15 +1,30 @@
 import { el } from './dom.js';
 
+/**
+ * The action button (the most important thing you can do here) and, above it, smaller buttons
+ * for the other things within reach — e.g. talking to Hasan Amca while another player comes up.
+ */
 export class ActionButton {
+  #key = '';
+
   constructor(host, onPress) {
     this.root = el('button', { attrs: { id: 'act', type: 'button' }, on: { click: onPress } });
     this.root.hidden = true;
-    host.append(this.root);
+    this.more = el('div', { attrs: { id: 'act-more' } });
+    host.append(this.more, this.root);
   }
-  show(action) {
+
+  /** @param action the main one  @param others [{ label, run }] */
+  show(action, others = []) {
     this.root.hidden = !action;
     if (action && this.root.textContent !== action.label) this.root.textContent = action.label;
+    const list = action ? others : [], key = list.map((a) => a.label).join('|');
+    if (key === this.#key) { this.#runs = list.map((a) => a.run); return; }
+    this.#key = key; this.#runs = list.map((a) => a.run);
+    this.more.replaceChildren(...list.map((a, i) => el('button', { class: 'act-alt', text: a.label, attrs: { type: 'button' }, on: { click: () => this.#runs[i]?.() } })));
   }
+
+  #runs = [];
 }
 
 /** ⚡ Hard shot: next to the action button (left of it) while a ball is at your feet. */

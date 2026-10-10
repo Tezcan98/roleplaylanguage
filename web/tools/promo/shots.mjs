@@ -79,7 +79,7 @@ const CSS = `
   .promo-cap.side{left:3vw;top:30vh;transform:none;max-width:22vw;text-align:start}.promo-cap.side b{font-size:32px}.promo-cap.side small{font-size:18px}
   .promo-cap b{display:block;font-size:40px;font-weight:600;line-height:1.15}
   .promo-cap small{display:block;font-size:21px;opacity:.88;margin-top:4px}
-  .promo-hide #joy,.promo-hide .help-btn,.promo-hide #quest,.promo-hide #toasts,.promo-hide .ptt-wrap,.promo-hide #shot,.promo-hide #act,.promo-hide .net-status{visibility:hidden!important}`;
+  .promo-hide #joy,.promo-hide .help-btn,.promo-hide #quest,.promo-hide #toasts,.promo-hide .ptt-wrap,.promo-hide #shot,.promo-hide #act,.promo-hide #act-more,.promo-hide .net-status{visibility:hidden!important}`;
 
 async function open(params = '') {
   const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE, permissions: ['microphone'] });

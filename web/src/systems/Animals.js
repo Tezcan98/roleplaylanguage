@@ -23,7 +23,7 @@ export const HERD = [
  * `pace`: the speed (m/s) each clip was made for — played faster or slower to match the real speed.
  */
 const KINDS = {
-  horse: { height: 1.8, tr: 'at', en: 'horse', pet: 'Atı sev', seat: 1.28, pace: { walk: 1.0, run: 4.2 } },
+  horse: { height: 1.8, tr: 'at', en: 'horse', pet: 'Atı sev', seat: 1.28, pace: { walk: 1.0, run: 4.2 }, hands: [new THREE.Vector3(0.13, 1.5, 0.42), new THREE.Vector3(-0.13, 1.5, 0.42)] }, // hands: on the reins above the withers
   cow: { height: 1.5, tr: 'inek', en: 'cow', pet: 'İneği sev' },
   sheep: { height: 0.95, tr: 'koyun', en: 'sheep', pet: 'Koyunu sev' },
   dog: { height: 0.65, tr: 'köpek', en: 'dog', pet: 'Köpeği sev' },
@@ -84,7 +84,7 @@ export class Animals {
       if (!clips[name] || name === current) return;
       clips[current]?.fadeOut(0.25); clips[name].reset().fadeIn(0.25).play(); current = name;
     };
-    return { kind, group, play, update: (dt) => mixer.update(dt), seat: KINDS[kind].seat ?? 0 };
+    return { kind, group, play, update: (dt) => mixer.update(dt), seat: KINDS[kind].seat ?? 0, hands: KINDS[kind].hands };
   }
 
   /** A horse for another player who rides in the square (RemotePlayers). */
@@ -129,7 +129,7 @@ export class Animals {
     if (!best) return null;
     const { a, d } = best, k = KINDS[a.kind], task = TASKS[a.kind];
     if (task && this.story?.quest?.id === task.quest) return { label: task.label, dist: d, priority: 2, run: () => this.#chore(task) };
-    if (a.def.ride) return { label: `Ata bin · 🪙 ${RIDE_PRICE}`, dist: d, priority: 1, run: () => this.ride(a) };
+    if (a.def.ride) return { label: `Ata bin · ${RIDE_PRICE} kredi`, dist: d, priority: 1, run: () => this.ride(a) };
     return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) };
   }
 

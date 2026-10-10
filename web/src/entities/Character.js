@@ -17,11 +17,28 @@ const SEAT_MIN = 0.2;
 const SEAT_PAD = 0.07;
 const V1 = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), Q1 = new THREE.Quaternion(), Q2 = new THREE.Quaternion(), Q3 = new THREE.Quaternion();
 /** Turns `bone` so the line from it to the point `tip` (world) points along `dirLocal` (in `frame`'s space). */
-function aim(bone, tip, dirLocal, frame) {
+function aim(bone, tip, dirLocal, frame) { aimWorld(bone, tip, dirLocal.clone().transformDirection(frame.matrixWorld)); }
+
+/** Two bones (upper arm, forearm) so that `hand` reaches `target` (world), the elbow bending towards `pole`. */
+function reach(upper, lower, hand, target, pole) {
+  const S = upper.getWorldPosition(new THREE.Vector3()), E0 = lower.getWorldPosition(new THREE.Vector3()), H0 = hand.getWorldPosition(new THREE.Vector3());
+  const a = S.distanceTo(E0), b = E0.distanceTo(H0), u = target.clone().sub(S);
+  const d = Math.min(u.length(), (a + b) * 0.999);
+  if (!a || !b || !d) return;
+  u.normalize();
+  const cos = Math.max(-1, Math.min(1, (a * a + d * d - b * b) / (2 * a * d))), sin = Math.sqrt(1 - cos * cos);
+  const n = pole.clone().sub(u.clone().multiplyScalar(pole.dot(u))).normalize();
+  const elbow = S.clone().addScaledVector(u, a * cos).addScaledVector(n, a * sin);
+  aimWorld(upper, E0, elbow.sub(S));
+  aimWorld(lower, hand.getWorldPosition(new THREE.Vector3()), target.clone().sub(lower.getWorldPosition(new THREE.Vector3())));
+}
+
+/** Turns `bone` so the line from it to the point `tip` (world) points along `want` (world). */
+function aimWorld(bone, tip, wantWorld) {
   const from = bone.getWorldPosition(new THREE.Vector3()), cur = tip.clone().sub(from);
-  if (!cur.lengthSq()) return;
+  if (!cur.lengthSq() || !wantWorld.lengthSq()) return;
   cur.normalize();
-  const want = dirLocal.clone().normalize().transformDirection(frame.matrixWorld);
+  const want = wantWorld.clone().normalize();
   const turn = Q1.setFromUnitVectors(cur, want);
   const world = bone.getWorldQuaternion(Q2), parent = bone.parent.getWorldQuaternion(Q3);
   bone.quaternion.copy(parent.invert().multiply(turn).multiply(world));
@@ -62,10 +79,14 @@ export class Character {
     if (name === 'jacket') { this.jacketOn = on; this.#hdJacket(); }
   }
 
-  /** The jacket on the HD body too: its top (shirt and sleeves) in the jacket's colour, a gold zip down the front. */
+  /**
+   * The jacket on the HD body too: its top (shirt and sleeves) in the jacket's colour, a gold zip down
+   * the front. Not on the suit: it is a jacket already — painting it made a red suit with a zip.
+   */
   #hdJacket() {
     const hd = this.#hd;
     if (!hd || hd === 'loading') return;
+    if (/\.suit\./.test(this.#hdKey ?? '')) { if (hd.zip) hd.zip.visible = false; return; }
     hd.scene.traverse((o) => {
       if (!o.isMesh) return;
       for (const m of [o.material].flat()) {
@@ -226,6 +247,17 @@ export class Character {
       const knee = shin.getWorldPosition(V1);
       const at = knee.clone().addScaledVector(V2.set(...shinTo).normalize().transformDirection(this.group.matrixWorld), shinLen);
       foot.position.copy(foot.parent.worldToLocal(at)); foot.updateMatrixWorld(true);
+    }
+    // hands on the handlebars / the reins (`mount.hands`: left and right, in the mount's own space)
+    const hands = this.mount.hands;
+    if (!hands) return;
+    this.mount.group.updateMatrixWorld(true);
+    for (const [s, i, side] of [['L', 0, 1], ['R', 1, -1]]) {
+      const up = hd.scene.getObjectByName(`UpperArm${s}`), lo = hd.scene.getObjectByName(`LowerArm${s}`), fist = hd.scene.getObjectByName(`Fist${s}`);
+      if (!up || !lo || !fist) continue;
+      const target = this.mount.group.localToWorld(hands[i].clone());
+      const pole = V2.set(side * 0.6, -1, -0.3).transformDirection(this.group.matrixWorld); // elbows down and a little out
+      reach(up, lo, fist, target, pole.clone());
     }
   }
 

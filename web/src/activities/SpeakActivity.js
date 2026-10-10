@@ -12,7 +12,7 @@ const FEEDBACK = {
 
 /**
  * Say it out loud. Uses the SpeechEvaluator service (speech-to-text + Turkish detection +
- * answer matching). After two misses a "skip" appears so nobody gets stuck; without a
+ * answer matching). After a miss a "skip" appears so nobody gets stuck; without a
  * microphone API the player reads aloud and confirms.
  * Activities marked `exam: true` are behind the credit / rewarded-ad gate (opt-in, so the
  * story and paid lessons never ask again).
@@ -55,7 +55,7 @@ export class SpeakActivity extends Activity {
               fb.className = 'fb bad';
               fb.textContent = /not-allowed|denied/i.test(e.message) ? 'Mikrofon izni gerekli.' : 'Mikrofon çalışmadı, tekrar dene.';
             } finally { this.mic?.classList.remove('rec'); }
-            if (++misses >= 2) skip.style.display = '';
+            if (++misses >= 1) skip.style.display = ''; // "Geç" after one miss: nobody gets stuck
           },
         },
       });

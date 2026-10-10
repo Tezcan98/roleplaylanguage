@@ -10,9 +10,10 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
  * Left as they are: hidden subtrees (shown later), anything marked `userData.live` (moved, shown
  * or hidden, swapped for a model later), skinned and instanced meshes, transparent materials,
  * vertex colours and multi-material meshes.
+ * `name`: of the group holding the merged meshes (a place's own: 'static', world/seats.js looks there).
  * @returns {{ before: number, after: number }} mesh counts
  */
-export function bakeStatic(root) {
+export function bakeStatic(root, name = 'batched') {
   root.updateMatrixWorld(true);
   const toRoot = new THREE.Matrix4().copy(root.matrixWorld).invert();
   const groups = new Map(), taken = [];
@@ -33,7 +34,7 @@ export function bakeStatic(root) {
   for (const c of [...root.children]) walk(c);
   if (taken.length < 2) return { before: taken.length, after: taken.length };
   for (const o of taken) o.parent.remove(o);
-  const out = new THREE.Group(); out.name = 'static';
+  const out = new THREE.Group(); out.name = name;
   for (const { mat, cast, receive, geos } of groups.values()) {
     const merged = geos.length === 1 ? geos[0] : mergeGeometries(geos);
     if (!merged) continue;

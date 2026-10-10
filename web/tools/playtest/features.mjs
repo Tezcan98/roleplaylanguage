@@ -49,7 +49,7 @@ try {
   await page.click('text=Hikayeye başla'); await sleep(1200);
   await ev(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(500);
   await page.click('.credits-btn'); await sleep(400);
-  check('the 🪙 credits in the HUD open the shop', !!(await page.$('.shop.open')));
+  check('the credits (coin) in the HUD open the shop', !!(await page.$('.shop.open')));
   await page.evaluate(() => window.__game.shop.close());
   check('a new game starts with 50 credits', (await ev(() => window.__game.wallet.balance)) === 50);
 
@@ -91,26 +91,10 @@ try {
   check('next visit: something else (which surahs do you know?)', second.includes('Hangi sureleri'), second);
   await drainUi(page);
 
-  // --- free chat (dev server: canned answers) ------------------------------------------
+  // --- no typed chat with the characters (switched off) -----------------------------------
   await talkTo('dede');
-  const chatBtn = await waitFor(() => page.$('#dlg .chat-btn:not([hidden])'), 5000);
-  check('💬 free chat offered with a character who is not the quest target', !!chatBtn);
-  if (chatBtn) {
-    await chatBtn.click();
-    await waitFor(() => ev(() => document.querySelector('#dlg .line').textContent.includes('Merhaba')), 5000);
-    await page.fill('#dlg .chat-in', 'Bugün hava çok güzel');
-    await page.click('#dlg .chatbox button:has-text("Gönder")');
-    const line = await waitFor(() => ev(() => { const t = document.querySelector('#dlg .line').textContent; return t.includes('hava') ? t : null; }), 5000);
-    check('chat: the character answers what you wrote', !!line, line);
-    check('chat: words from the answer go into the notebook', await ev(() => window.__game.vocab.entries().some(([w]) => w === 'bugün')));
-  }
+  check('no 💬 free-chat button in conversations', !(await waitFor(() => page.$('#dlg .chat-btn:not([hidden])'), 1500)));
   await ev(() => window.__game.dialogue.close());
-  const anneChat = await ev(() => { const g = window.__game; return g.story.target()?.npc; });
-  if (anneChat) {
-    await talkTo(anneChat); await sleep(500);
-    check('no chat button with the quest target (story comes first)', !(await page.$('#dlg .chat-btn:not([hidden])')));
-    await ev(() => window.__game.dialogue.close());
-  }
 
   // --- ball in the yard ----------------------------------------------------------------
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(400);
@@ -341,7 +325,7 @@ try {
   // --- the bicycle in the yard: a skill bought with credits -------------------------------
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(500);
   await ev(() => { const b = window.__game.bicycle.bike.group.position; window.__game.player.position.set(b.x, 0, b.z + 1.2); }); await sleep(400);
-  check('bicycle: "Bisiklete bin" (no price on the button)', !!(await waitFor(() => ev(() => { const t = document.getElementById('act').textContent; return t.includes('Bisiklete bin') && !t.includes('🪙'); }), 4000)));
+  check('bicycle: "Bisiklete bin" (no price on the button)', !!(await waitFor(() => ev(() => { const t = document.getElementById('act').textContent; return t.includes('Bisiklete bin') && !t.includes('kredi'); }), 4000)));
   const bikeCredits = await ev(() => window.__game.wallet.balance);
   await page.keyboard.press('e');
   await waitFor(() => page.$('.overlay.open .card .btn'), 3000);
