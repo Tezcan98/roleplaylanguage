@@ -323,11 +323,12 @@ try {
   check('…and you sit down', await ev(() => !!window.__game.player.seated));
   await ev(() => window.__game.player.sit(false));
   await ev(() => window.__game.player.position.set(-13.6, 0, -5.6)); await sleep(400);
-  check('the canteen: "Hasan Amca ile konuş"', (await ev(() => document.getElementById('act').textContent)).includes('Hasan Amca'));
+  check('the canteen: "Hasan Amca ile konuş"', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Hasan Amca')), 4000)));
   await page.keyboard.press('e'); await sleep(600);
   check('…first you greet him (say "Kolay gelsin")', (await ev(() => window.__game.dialogue.node?.ask)) === 'speak');
-  await ev(() => document.querySelector('#dlg .mic')?.click()); await sleep(1500);
-  check('…then he asks what you will have', (await ev(() => window.__game.dialogue.node?.say ?? '')).includes('Ne alırsın') && await ev(() => !!window.__game.story.state.flags['met-kantinci']));
+  await ev(() => document.querySelector('#dlg .mic')?.click());
+  const asked = await waitFor(() => ev(() => (window.__game.dialogue.node?.say ?? '').includes('Ne alırsın') && !!window.__game.story.state.flags['met-kantinci']), 8000); // (slow machines: the answer takes a while)
+  check('…then he asks what you will have', !!asked, await ev(() => window.__game.dialogue.node?.say));
   await ev(() => document.querySelectorAll('#dlg .choice')[1]?.click()); // "Neler var?"
   await waitFor(() => page.$('.market.open'), 3000);
   check('…"Neler var?" opens the canteen shelf', (await page.$$('.market.open .mk-slot:not(.mk-none)')).length === 6);
@@ -340,21 +341,21 @@ try {
   // --- the bicycle in the yard: a skill bought with credits -------------------------------
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(500);
   await ev(() => { const b = window.__game.bicycle.bike.group.position; window.__game.player.position.set(b.x, 0, b.z + 1.2); }); await sleep(400);
-  check('bicycle: "Bisiklete bin" with its price before you can ride', (await ev(() => document.getElementById('act').textContent)).includes('Bisiklete bin · 🪙'));
+  check('bicycle: "Bisiklete bin" with its price before you can ride', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Bisiklete bin · 🪙')), 4000)));
   const bikeCredits = await ev(() => window.__game.wallet.balance);
   await page.keyboard.press('e');
   await waitFor(() => page.$('.overlay.open .card .btn'), 3000);
   check('…"Bisiklet sürmeyi bilmiyorsun": learn it?', (await page.textContent('.overlay.open .ctitle')).includes('bilmiyorsun'));
-  await page.click('.overlay.open .card .btn:not(.alt)'); await sleep(600);
-  check('…learnt for credits, now riding', (await ev(() => window.__game.wallet.balance)) === bikeCredits - 10 && (await ev(() => window.__game.player.mount?.kind)) === 'bike');
-  check('…"Bisikletten in" (not "Attan in")', (await ev(() => document.getElementById('act').textContent)).includes('Bisikletten in'));
-  await page.keyboard.press('e'); await sleep(300);
-  check('…off again, and next time no price', !(await ev(() => window.__game.player.mount)) && !(await ev(() => document.getElementById('act').textContent)).includes('🪙'));
+  await page.click('.overlay.open .card .btn:not(.alt)');
+  check('…learnt for credits, now riding', !!(await waitFor(() => ev((c) => window.__game.wallet.balance === c - 10 && window.__game.player.mount?.kind === 'bike', bikeCredits), 5000)));
+  check('…"Bisikletten in" (not "Attan in")', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Bisikletten in')), 3000)));
+  await page.keyboard.press('e');
+  check('…off again, and next time no price', !!(await waitFor(() => ev(() => !window.__game.player.mount && !document.getElementById('act').textContent.includes('🪙')), 3000)));
 
   // --- the groom by the horses ------------------------------------------------------------
   await ev(() => window.__game.travel.place('village', 'yardRoad', { force: true })); await sleep(800);
   await ev(() => window.__game.player.position.set(-4.2, 0, -21)); await sleep(400);
-  check('the square: Hamdi the groom by the horses', (await ev(() => document.getElementById('act').textContent)).includes('Hamdi Amca'));
+  check('the square: Hamdi the groom by the horses', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Hamdi Amca')), 5000)));
   await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
 
   // --- word practice -------------------------------------------------------------------
