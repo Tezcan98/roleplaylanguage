@@ -34,14 +34,14 @@ export class MainMenu {
   #taps = 0;
   #tapAt = 0;
 
-  /** Five quick taps on the settings title: test mode on / off (the title counts them down). */
-  #tap(title) {
+  /** Five quick taps on the settings title (on / off) or the game's name on the home screen (on): test mode; the title counts them down. */
+  #tap(title, label = '⚙️ Ayarlar') {
     const now = Date.now();
     this.#taps = now - this.#tapAt < 1500 ? this.#taps + 1 : 1; this.#tapAt = now;
     const s = this.settings;
-    if (this.#taps < 5) { if (this.#taps >= 2) title.textContent = `⚙️ Ayarlar · ${5 - this.#taps}`; return; }
+    if (this.#taps < 5) { if (this.#taps >= 2) title.textContent = `${label} · ${5 - this.#taps}`; return; }
     this.#taps = 0;
-    s.set('testerMode', !s.get('testerMode', false));
+    s.set('testerMode', label === '⚙️ Ayarlar' ? !s.get('testerMode', false) : true); // (from the home screen: always on)
     this.show('settings');
   }
 
@@ -103,7 +103,7 @@ export class MainMenu {
           btn('🪙', 'iconbtn light', () => this.onShop?.(), { 'aria-label': 'Dükkan', title: 'Dükkan · krediler' }),
           btn('⚙️', 'iconbtn light', () => this.show('settings'), { 'aria-label': 'Ayarlar', title: 'Ayarlar' }),
         ]),
-        el('h1', { class: 'big', text: 'Anadolu Ailesi' }),
+        el('h1', { class: 'big ctitle-tap', text: 'Anadolu Ailesi', on: { click: (e) => this.#tap(e.currentTarget, 'Anadolu Ailesi') } }), // five quick taps: test mode, straight to its chapter picker
         el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
         btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(save ? this.onContinue : this.onStart)),
         btn('🏘️ Meydana gir', 'btn alt menu-main', go(() => this.onSquare(this.servers.value))),

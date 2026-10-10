@@ -60,6 +60,7 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #labels{
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood)}
 .chap{font:600 15px Fredoka,sans-serif;color:#8A5A12;margin:0}
 .ctitle{font:700 34px/1.05 Fredoka,sans-serif;margin:0;color:var(--wood);touch-action:manipulation;user-select:none;-webkit-user-select:none} /* (quick taps on the settings title: test mode) */
+.ctitle-tap{touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .ctext{font-size:17px;font-weight:700;margin:0;line-height:1.45}
 .cen{font-size:14px;color:var(--muted);font-weight:700;margin:0;font-style:italic}
 .help{font-size:15px;font-weight:700;line-height:1.5;margin:0;padding-left:18px}
