@@ -102,6 +102,7 @@ import { Toasts } from './ui/Toasts.js';
 import { LabelLayer } from './ui/LabelLayer.js';
 import { Joystick } from './ui/Joystick.js';
 import { ActionButton, ShotButton } from './ui/ActionButton.js';
+import { InventoryView } from './ui/InventoryView.js';
 import { Fader } from './ui/Fader.js';
 import { CardOverlay } from './ui/CardOverlay.js';
 import { MainMenu } from './ui/MainMenu.js';
@@ -522,7 +523,10 @@ const interactions = new InteractionSystem([
 ], modes);
 const actionButton = new ActionButton(host, () => interactions.trigger());
 const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root);
-input.onKey((e) => { if (modes.is('play') && ['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); interactions.trigger(); } });
+input.onKey((e) => {
+  if (modes.is('play') && ['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); interactions.trigger(); }
+  else if (['i', 'I'].includes(e.key) && (modes.is('play') || inventoryView.isOpen) && !e.target?.closest?.('input,textarea')) { e.preventDefault(); inventoryView.toggle(); } // the inventory
+});
 const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, player });
 
 // word notebook with "practice" (a quick quiz over the learned words)
@@ -580,15 +584,13 @@ const settingsPanel = new SettingsPanel(host, {
   },
 });
 const settingsBtn = el('button', { class: 'pill', attrs: { type: 'button', 'aria-label': 'Ayarlar', title: 'Ayarlar · settings' }, on: { click: () => settingsPanel.open() } }, ['⚙️']);
+const inventoryView = new InventoryView(host, { modes, inventory, items, wallet, speak: (tr) => tts.speak(tr, { speaker: 'ahmet' }) });
 const hud = new Hud(host, {
   extra: [settingsBtn, fullscreenBtn],
   onShop: () => shop.open(),
   onBookOpen: () => textbook.open(),
   onBook: () => openWords(),
-  onBag: () => list.open('Çanta', inventory.entries().filter(([kind]) => kind !== 'para').map(([kind, n]) => { // (the money is in the HUD: 💰)
-    const i = items.info(kind);
-    return n > 1 ? [`${n} ${i.tr}`, `${n} ${gloss(i.en)}`] : [i.tr, gloss(i.en)];
-  }), 'Çantan boş.'),
+  onBag: () => inventoryView.toggle(), // the game inventory (I on a keyboard)
 });
 
 // --- event wiring (UI reacts to the model) ---
