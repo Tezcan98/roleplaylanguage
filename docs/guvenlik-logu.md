@@ -37,7 +37,7 @@ yer (meydan:oda / sohbet:karakter), kullanıcı adı, cihaz kimliği, Play Games
 
 1. Play Console → uygulama → **Play Games Services → Kurulum ve yönetim → Yapılandırma** → "Hayır, oyunum
    Google API'lerini kullanmıyor" ile yeni bir Games Services projesi oluştur.
-2. **Kimlik bilgileri** → Android kimlik bilgisi ekle: paket adı `com.anadoluailesi.app`, SHA-1 olarak hem
+2. **Kimlik bilgileri** → Android kimlik bilgisi ekle: paket adı `com.anadolu`, SHA-1 olarak hem
    **uygulama imzalama anahtarının** SHA-1'ini (Play Console → Uygulama bütünlüğü) hem de yükleme anahtarının
    SHA-1'ini (`keytool -list -v -keystore ~/AnadoluAilesi-imza/upload.jks -alias anadolu`) ekle.
 3. Yapılandırmadaki **proje kimliğini** (rakamlar) `mobile/android/app/src/main/res/values/strings.xml` içindeki

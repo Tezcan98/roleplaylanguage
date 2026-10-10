@@ -9,7 +9,7 @@ android {
     namespace = "com.anadoluailesi.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.anadoluailesi.app"
+        applicationId "com.anadolu" // the Play Console app record (the Java package, `namespace`, stays com.anadoluailesi.app)
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 16
