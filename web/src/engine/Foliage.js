@@ -21,13 +21,13 @@ export class Foliage {
 
   static #tuftGeometry() {
     const blades = [];
-    for (let i = 0; i < 5; i++) {
-      const g = new THREE.PlaneGeometry(0.07, 0.42, 1, 2);
+    for (let i = 0; i < 4; i++) {
+      const g = new THREE.PlaneGeometry(0.08, 0.42, 1, 2);
       const pos = g.attributes.position;
       for (let v = 0; v < pos.count; v++) if (pos.getY(v) > 0.1) pos.setX(v, pos.getX(v) * 0.15); // pointy tip
       g.translate(0, 0.21, 0);
       g.rotateZ((Math.random() - 0.5) * 0.5);
-      g.rotateY(i / 5 * Math.PI + Math.random() * 0.4);
+      g.rotateY(i / 4 * Math.PI + Math.random() * 0.4);
       g.translate((Math.random() - 0.5) * 0.12, 0, (Math.random() - 0.5) * 0.12);
       blades.push(g);
     }
@@ -43,10 +43,22 @@ export class Foliage {
   }
 
   /**
-   * Scatter grass and flowers inside `area` avoiding `blocked(x, z)`.
+   * Scatter grass and flowers inside `area` avoiding `blocked(x, z)`. A big area is cut into
+   * cells of about `cell` metres, each its own instanced mesh, so what the camera doesn't see
+   * isn't drawn (one mesh for a whole yard was drawn in full from anywhere).
    * @returns {THREE.Group}
    */
-  static meadow({ area, count = 5000, flowers = 400, blocked = () => false }) {
+  static meadow({ area, count = 5000, flowers = 400, blocked = () => false, cell = 16 }) {
+    const W = area.x[1] - area.x[0], D = area.z[1] - area.z[0];
+    const nx = Math.max(1, Math.round(W / cell)), nz = Math.max(1, Math.round(D / cell));
+    if (nx * nz > 1) {
+      const g = new THREE.Group();
+      for (let i = 0; i < nx; i++) for (let k = 0; k < nz; k++) {
+        const sub = { x: [area.x[0] + W * i / nx, area.x[0] + W * (i + 1) / nx], z: [area.z[0] + D * k / nz, area.z[0] + D * (k + 1) / nz] };
+        g.add(Foliage.meadow({ area: sub, count: Math.round(count / (nx * nz)), flowers: Math.round(flowers / (nx * nz)), blocked, cell: Infinity }));
+      }
+      return g;
+    }
     const g = new THREE.Group();
     const place = (n, mesh, scale) => {
       const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = new THREE.Vector3(), p = new THREE.Vector3();
@@ -60,6 +72,7 @@ export class Foliage {
       }
       mesh.count = i;
       mesh.instanceMatrix.needsUpdate = true;
+      mesh.computeBoundingSphere?.(); // (for frustum culling: only this cell's tufts)
       mesh.receiveShadow = true;
       g.add(mesh);
       return mesh;

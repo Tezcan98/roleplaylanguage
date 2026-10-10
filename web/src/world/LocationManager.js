@@ -1,4 +1,5 @@
 import { EV } from '../core/events.js';
+import { bakeStatic } from '../engine/StaticBatch.js';
 
 /** Holds all locations and switches the active one. */
 export class LocationManager {
@@ -9,6 +10,7 @@ export class LocationManager {
 
   register(location) {
     location.build(this.kit);
+    location.baked = bakeStatic(location.group); // its unchanging meshes: one per material (draw calls)
     this.scene.add(location.group);
     this.#locations.set(location.id, location);
     return this;

@@ -130,7 +130,7 @@ export class SchoolYard extends Location {
     C.addCircle(12.6, -8.6, 0.2);
     const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 1.2, 12, 1), mf.mat({ tex: 'flag' }, { side: THREE.DoubleSide }));
     flag.position.set(13.5, 6.3, -8.6);
-    add(flag);
+    add(this.live(flag)); // waves (vertex animation)
     const base = flag.geometry.attributes.position.array.slice();
     this.animated.push((dt, t) => {
       const p = flag.geometry.attributes.position;

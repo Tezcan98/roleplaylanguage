@@ -10,9 +10,11 @@ import bahce from './bahce.js';
 import zarf from './zarf.js';
 import kantin from './kantin.js';
 import seyis from './seyis.js';
+import simitci from './simitci.js';
+import ciftlik from './ciftlik.js';
 
 /** Teaching add-ons applied on top of the base story (see core/ContentComposer.js). */
-export const ADDONS = [prayer, market, nine, kardes, meydan, kahvehane, kutuphane, satranc, bahce, zarf, kantin, seyis];
+export const ADDONS = [prayer, market, nine, kardes, meydan, kahvehane, kutuphane, satranc, bahce, zarf, kantin, seyis, simitci, ciftlik];
 
 /** Which meal is on the sini in which chapter (the evening chore "set the table" adds dinner). */
 export const MEALS = { 'd1-breakfast': 'breakfast', 'd1-dinner': 'dinner' };

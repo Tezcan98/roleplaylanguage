@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { bakeStatic } from '../engine/StaticBatch.js';
 import { Chess } from 'chess.js';
 import { chessSquare, CHESS } from '../world/locations/VillageSquare.js';
 import { el } from '../ui/dom.js';
@@ -453,7 +454,9 @@ export class ChessGame {
         ...[0, 1, 2, 3, 4, 5].map((i) => mf.at(mf.box(0.07, 0.18, 0.07, 0xE0B04A), Math.cos(i * Math.PI / 3) * 0.2, 1.6, Math.sin(i * Math.PI / 3) * 0.2)),
         mf.at(mf.sphere(0.1, 0xE0B04A, 10), 0, 1.66, 0)],
     };
-    return mf.group(...parts[type]());
+    const g = mf.group(...parts[type]());
+    bakeStatic(g); // one mesh per colour (32 pieces were ~130 draw calls)
+    return g;
   }
 }
 

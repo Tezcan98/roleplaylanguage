@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { bakeStatic } from '../engine/StaticBatch.js';
 
 /**
  * Town scenery beyond the edge of a place — walls, roads with a few cars driving by, houses,
@@ -148,6 +149,7 @@ export class Townscape {
       const car = this.#car(this.#pick(CAR_COLOURS)), dir = i % 2 ? -1 : 1, lane = dir * 1.1, speed = 5 + this.#rnd() * 3;
       let s = from + (to - from) * (i + this.#rnd() * 0.5) / n;
       car.rotation.y = axis === 'x' ? (dir > 0 ? Math.PI / 2 : -Math.PI / 2) : (dir > 0 ? 0 : Math.PI);
+      car.userData.live = true; // drives (not batched)
       this.place.add(car);
       this.place.animated.push((dt) => {
         s += dir * speed * dt;
@@ -164,6 +166,7 @@ export class Townscape {
     g.add(mf.at(new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.36, 1.7), this.glass), 0, 1.07, -0.2));
     [[-0.8, 1.2], [0.8, 1.2], [-0.8, -1.2], [0.8, -1.2]].forEach(([x, z]) => { const w = mf.cyl(0.32, 0.32, 0.22, 0x222222, 12); w.rotation.z = Math.PI / 2; g.add(mf.at(w, x, 0.32, z)); });
     [-0.55, 0.55].forEach((x) => g.add(mf.at(mf.box(0.3, 0.14, 0.05, 0xFFF6DA), x, 0.62, 1.9))); // lights
+    bakeStatic(g); // one mesh per material
     return g;
   }
 

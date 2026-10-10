@@ -165,11 +165,11 @@ export class HouseInterior extends Location {
       mf.at(mf.sphere(0.05, 0x2A1E15, 8), 0, 0.6, 0)));
     this.prop(kit, 'prop.dishpan', 9.85, 0.98, -4.18, 0, () => mf.cyl(0.28, 0.34, 0.09, 0x8EC5FF, 16));
     // small tea tray at the edge of the sini (the bread goes in the middle)
-    this.teaTray = this.prop(kit, 'prop.teaTray', -1.2, 0, -0.1, 0, () => mf.group(
+    this.teaTray = this.live(this.prop(kit, 'prop.teaTray', -1.2, 0, -0.1, 0, () => mf.group(
       mf.at(mf.cyl(0.24, 0.24, 0.03, 0xB5482E, 20), 0, 0.34, 0),
       mf.at(mf.cyl(0.05, 0.04, 0.12, 0xE8D6A8, 10), -0.09, 0.41, 0),
       mf.at(mf.cyl(0.05, 0.04, 0.12, 0xE8D6A8, 10), 0.09, 0.41, 0)
-    ));
+    )));
     C.addBox(6.65, 10.4, -4.6, -3.7);
     this.anchor('kitchen', 8.0, -3.3, Math.PI);
     this.hotspot('house.kitchen', 7.05, -3.35, 1.0); // water from the fridge

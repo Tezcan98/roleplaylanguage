@@ -63,6 +63,7 @@ export class PropFactory {
     const fallback = buildFallback();
     holder.add(fallback);
     if (!this.models.has(id)) return holder;
+    holder.userData.live = true; // swapped for the model when it loads (not batched)
     fallback.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(fallback);
     this.models.load(id).then(({ scene }) => {

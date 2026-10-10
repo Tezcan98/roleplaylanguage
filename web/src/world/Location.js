@@ -27,6 +27,8 @@ export class Location {
   build(kit) { throw new Error(`${this.constructor.name}.build() not implemented`); }
 
   add(obj) { this.group.add(obj); return obj; }
+  /** Something that changes after building (moved, shown / hidden): kept out of the static batch (engine/StaticBatch.js). */
+  live(obj) { obj.userData.live = true; return obj; }
 
   /** Add a swappable prop (procedural now, GLB later) at x,y,z with rotation ry. */
   prop(kit, id, x, y, z, ry, build) {

@@ -14,7 +14,7 @@ export default {
       face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#E8D9B0"/><circle cx="32" cy="36" r="16" fill="#D9A77E"/><path d="M16 31q4-13 16-13t16 13q-5-5-16-5t-16 5z" fill="#3A2E26"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M23 43q9-6 18 0q-9 3-18 0z" fill="#3A2E26"/></svg>',
     },
   },
-  voices: { seyis: man('Gacrux', M2) },
+  voices: { seyis: man('Algieba', M2) },
   castAll: { seyis: ['village', 'seyis', 'stand'] },
   dialogues: {
     seyis: {

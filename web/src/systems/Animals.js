@@ -28,6 +28,11 @@ const KINDS = {
   sheep: { height: 0.95, tr: 'koyun', en: 'sheep', pet: 'Koyunu sev' },
   dog: { height: 0.65, tr: 'köpek', en: 'dog', pet: 'Köpeği sev' },
 };
+/** Chores with an animal during a quest (content/addons/ciftlik.js): the action next to it and what it does. */
+const TASKS = {
+  cow: { quest: 'cow-milk', label: 'İneği sağ', do: ['give:sut', 'flag:cow-milked'], words: [['sağmak', 'to milk'], ['kova', 'bucket']], think: 'Kova sütle doldu!', en: 'The bucket is full of milk!' },
+  sheep: { quest: 'sheep-feed', label: 'Koyunlara saman ver', do: ['flag:sheep-fed'], words: [['saman', 'hay'], ['yem', 'feed']], think: 'Koyunlar samanı çok sevdi!', en: 'The sheep love the hay!' },
+};
 const RIDE_SPEED = 1.9; // × walking speed on horseback
 /** Credits for a ride (paid when you get on; you ride as long as you like). */
 export const RIDE_PRICE = 3;
@@ -37,8 +42,8 @@ const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 export class Animals {
   #list = [];
 
-  constructor({ world, models, player, labels, toasts, vocab, clock, wallet, onShop }) {
-    Object.assign(this, { world, models, player, labels, toasts, vocab, clock, wallet, onShop });
+  constructor({ world, models, player, labels, toasts, vocab, clock, wallet, onShop, story = null, effects = null }) {
+    Object.assign(this, { world, models, player, labels, toasts, vocab, clock, wallet, onShop, story, effects });
   }
 
   /** Loads and places every animal (the game runs on while they load). */
@@ -51,7 +56,8 @@ export class Animals {
       Object.assign(a, { def, home: { x: def.x, z: def.z }, target: null, wait: 2 + Math.random() * 4, rider: null });
       a.group.position.set(def.x, 0, def.z); a.group.rotation.y = def.rot;
       loc.group.add(a.group);
-      loc.animated.push((dt) => this.#tick(a, dt));
+      const spot = loc.hotspots.get(`${def.where}.${def.kind}`); // the quest arrow follows it (yard.cow, yard.sheep)
+      loc.animated.push((dt) => { this.#tick(a, dt); if (spot) spot.pos.set(a.group.position.x, 0, a.group.position.z); });
       this.#list.push(a);
     }));
   }
@@ -121,9 +127,17 @@ export class Animals {
       if (d < (a.kind === 'horse' ? 2.4 : 2) && (!best || d < best.d)) best = { a, d };
     }
     if (!best) return null;
-    const { a, d } = best, k = KINDS[a.kind];
+    const { a, d } = best, k = KINDS[a.kind], task = TASKS[a.kind];
+    if (task && this.story?.quest?.id === task.quest) return { label: task.label, dist: d, priority: 2, run: () => this.#chore(task) };
     if (a.def.ride) return { label: `Ata bin · 🪙 ${RIDE_PRICE}`, dist: d, priority: 1, run: () => this.ride(a) };
     return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) };
+  }
+
+  #chore(task) {
+    task.words.forEach(([tr, en]) => this.vocab.learn(tr, en));
+    this.labels.think(task.think, 2.5, this.clock());
+    this.toasts.show(task.think, gloss(task.en));
+    this.effects?.run(task.do);
   }
 
   pet(a) {

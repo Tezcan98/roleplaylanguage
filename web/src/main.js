@@ -28,7 +28,7 @@ import { Classroom } from './world/locations/Classroom.js';
 import { VillageSquare, SQUARE_PITCH } from './world/locations/VillageSquare.js';
 
 import { Player } from './entities/Player.js';
-import { Npc, HD_VILLAGERS } from './entities/Npc.js';
+import { Npc, HD_VILLAGERS, HD_PLACES } from './entities/Npc.js';
 
 import { TimeSystem } from './systems/TimeSystem.js';
 import { DayNightLighting } from './systems/DayNightLighting.js';
@@ -410,6 +410,8 @@ const village = new VillageMultiplayer({
 });
 village.autoName = () => `${playerName()}${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question
 village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // others see them too
+// trying it out: HD villagers everywhere, not just on the square (?allhd; docs/TODO.md "Herkes 3D")
+if (params.has('allhd')) ['house', 'yard', 'schoolyard', 'classroom'].forEach((p) => HD_PLACES.add(p));
 // the HD character from the shop: everywhere once bought — home too (prayer poses use the blocky body for a moment)
 const playerHd = () => {
   player.setAura(auraOn(wallet)); const o = outfitOn(wallet);
@@ -431,6 +433,18 @@ const chess = new ChessGame({
   onAskDede: () => dialogue.open('ismail'), // touching a piece when not playing: Dede decides who plays
 });
 gameCtx.chess = chess; // İsmail Dede's dialogue asks the board who plays (content/addons/satranc.js)
+// the first time you come near the board: a card says how it works
+world.get('village').animated.push(() => {
+  if (settings.get('chessCardSeen', false) || (params.has('nointro') && !params.has('cards')) || !modes.is('play') || world.current.id !== 'village') return; // (tests: ?nointro, unless &cards)
+  if (Math.hypot(player.position.x - CHESS.cx, player.position.z - CHESS.cz) > 7.5) return;
+  settings.set('chessCardSeen', true);
+  cards.show({
+    num: 'Dev satranç', title: 'İsmail Dede’nin satranç tahtası',
+    text: 'Bu tahtayı İsmail Dede düzenliyor. Oynamak için Dede ile konuş: beyaz ya da siyah olursun, rakip yoksa Dede seninle oynar. Taşı almak için üstüne yürü, götürmek için yeşil kareye git. Beraberlik teklif etmek ya da oyunu bırakmak için yine Dede ile konuş.',
+    en: 'İsmail Dede runs this board. To play, talk to him: you get white or black, and if nobody else is playing, Dede plays you. Walk onto a piece to take it, walk to a green square to move it. To offer a draw or stop playing, talk to Dede again.',
+    button: 'Anladım',
+  });
+});
 // playing chess near the board: the camera looks at it from your side (white sits at +z)
 {
   let viewFor = null;
@@ -491,7 +505,7 @@ effects.register('my-garden', () => {
 // --- interaction ---
 // farm animals: a cow, sheep and a dog in the yard; horses to ride on the square
 setTimeout(() => world.warmUp(ctx.renderer, ctx.camera), 1200); // every place ready on the GPU before you walk in (no stutter on first entry)
-const animals = new Animals({ world, models, player, labels, toasts, vocab, clock: () => game.t, wallet, onShop: () => shop.open() });
+const animals = new Animals({ world, models, player, labels, toasts, vocab, clock: () => game.t, wallet, onShop: () => shop.open(), story, effects });
 animals.build();
 bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') animals.leftPlace(); }); // the horse stays on the square
 // the bicycle in the yard (riding it is a skill bought with credits)
@@ -796,5 +810,5 @@ setInterval(() => {
 }, 1000);
 
 // Debug handle for automated play-throughs: open with ?debug
-if (params.has('debug')) window.__progs = () => ctx.renderer.info.programs?.length ?? 0; // (tests: shaders compiled so far)
+if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
 if (params.has('debug')) window.__game = { animals, bicycle, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

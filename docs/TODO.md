@@ -4,13 +4,9 @@ Sıradakiler yukarıdan aşağıya. Biten bir iş buradan silinir (ayrıntısı 
 
 ## Sırada
 
-7. **Simitçi** (meydanda): soğuk espriler; yabancıların anlayacağı şekilde, deyim/kalıp öğretsin.
-8. **Satranç alanı**: ilk gelişte kart — İsmail Dede burayı düzenliyor, dedeyle oynanabilir, beraberlik için dedeyle konuşulur.
-9. **Bahçedeki çimen**: takılmaya sebep oluyorsa yoğunluğu ve hareketi azaltılsın (önce ölç).
-10. **İnek ve koyun görevleri**: ilerleyen günlere (süt sağma, koyunları otlatma vb.).
-11. **Herkes 3D**: oyuncu 3D olunca bütün karakterler 3D olsun mu — dene, ekran görüntüsüyle göster (yemek, bahçe, tamir, yerde oturma hareketleri sadece köşeli gövdede var).
-
-12. **Hepsi bitince**: sunucunun önüne ücretsiz bir CDN; Play Store girişi (TR, EN, RU, AR: ad, kısa ve tam açıklama,
+1. **Herkes 3D** (karar bekliyor): `?allhd` ile denendi, ekran görüntüsü `~/Desktop/AnadoluAilesi-release/denemeler/herkes-3d.png`.
+    Meydan, avlu, ev çalışıyor; yer sofrası, sedirde oturma, bahçe/tamir pozları köşeli gövdeye dönüyor (o pozlar 3D gövdede yok).
+2. **Hepsi bitince**: sunucunun önüne ücretsiz bir CDN; Play Store girişi (TR, EN, RU, AR: ad, kısa ve tam açıklama,
     simge 512, özellik grafiği 1024×500, 9:16 telefon ekran görüntüleri) ve yeni bir AAB.
 
 ## Bekleyen (karar / dış iş)

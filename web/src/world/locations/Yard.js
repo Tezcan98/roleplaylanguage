@@ -136,6 +136,9 @@ export class Yard extends Location {
     add(mf.at(mf.box(0.08, 0.9, 0.08, DARK), 11.2, 0.45, 3.9));
     add(mf.at(mf.box(0.9, 0.45, 0.05, { tex: 'myGardenSign' }), 11.2, 0.95, 3.94));
     this.hotspot('yard.myGarden', 12.4, 4.4, 1.3);
+    // where the cow and the sheep graze (quest arrows; the chores themselves are next to the animal: systems/Animals.js)
+    this.hotspot('yard.cow', 14, -10, 0.01);
+    this.hotspot('yard.sheep', -12.4, 14.5, 0.01);
 
     // dad's old car (a classic Turkish sedan) with a flat tyre
     this.prop(kit, 'prop.car', -11, 0, 7, 0, () => oldCar(mf));
@@ -163,7 +166,7 @@ export class Yard extends Location {
     const blocked = (x, z) => (x + 3) ** 2 + (z + 5) ** 2 < 27
       || clear.some(([x0, x1, z0, z1]) => x > x0 && x < x1 && z > z0 && z < z1)
       || C2.boxes.some(([x0, x1, z0, z1]) => x > x0 - 0.3 && x < x1 + 0.3 && z > z0 - 0.3 && z < z1 + 0.3);
-    add(Foliage.meadow({ area: { x: [-23.5, 23.5], z: [-23.5, 23.5] }, count: kit.quality === 'low' ? 2500 : 9000, flowers: kit.quality === 'low' ? 200 : 600, blocked }));
+    add(Foliage.meadow({ area: { x: [-23.5, 23.5], z: [-23.5, 23.5] }, count: kit.quality === 'low' ? 1600 : 5000, flowers: kit.quality === 'low' ? 160 : 450, blocked }));
 
     // fence with a garden gate on the south side (the road to school)
     const post = (x, z) => add(mf.at(mf.box(0.18, 1, 0.18, DARK), x, 0.5, z));

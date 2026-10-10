@@ -132,6 +132,7 @@ export class VillageSquare extends Location {
     this.#kahvehane(mf, C);
     this.#library(mf, C);
     this.#stable(mf, C);
+    this.#simitCart(mf, C);
 
     this.writeScore = buildPitch(this, mf, { ...SQUARE_PITCH, board: { x: (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, z: 13.3, rot: Math.PI } });
     add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.035))
@@ -372,7 +373,7 @@ export class VillageSquare extends Location {
       add(tile);
     }
     this.chessPieces = new THREE.Group();
-    add(this.chessPieces);
+    add(this.live(this.chessPieces));
   }
   /** Walls on three sides and a low wall in front with a doorway — no roof. */
   #openRoom(mf, C, { x, z, w, d }, wall) {
@@ -435,6 +436,25 @@ export class VillageSquare extends Location {
     add(mf.at(mf.cyl(0.22, 0.18, 0.4, { tex: 'metal' }, 10), -2.5, 0.2, zf + 0.6));
     [-0.08, 0, 0.08].forEach((o, i) => { const c = add(mf.at(mf.cone(0.04, 0.22, 0xE67E22, 6), -2.5 + o, 0.46, zf + 0.6 + (i - 1) * 0.05)); c.rotation.x = Math.PI; });
     this.anchor('seyis', x0 - 1.1, zf + 0.4, 0.3);
+  }
+
+  /** Cemal's simit cart west of the fountain: a red cart on two wheels with a glass case full of simits, a sunshade. */
+  #simitCart(mf, C) {
+    const add = (m) => this.add(m), x = -9, z = 2.2, red = 0xC0392B;
+    add(mf.at(mf.box(1.7, 0.7, 0.9, red), x, 0.75, z));
+    add(mf.at(mf.box(1.75, 0.06, 0.95, 0xF4F1EA), x, 1.12, z));
+    const glass = new THREE.MeshStandardMaterial({ color: 0xDDF1FF, transparent: true, opacity: 0.25, roughness: 0.1 });
+    add(mf.at(new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.55, 0.75), glass), x, 1.43, z));
+    for (let i = 0; i < 12; i++) { // simits stacked in the case
+      const t = mf.torus(0.11, 0.035, 0xB7793A, 12); t.rotation.x = Math.PI / 2;
+      add(mf.at(t, x - 0.55 + (i % 4) * 0.36, 1.2 + Math.floor(i / 8) * 0.06, z - 0.15 + (Math.floor(i / 4) % 2) * 0.3));
+    }
+    [-0.75, 0.75].forEach((o) => { const w = mf.cyl(0.32, 0.32, 0.08, 0x2B2B2B, 14); w.rotation.z = Math.PI / 2; add(mf.at(w, x + o * 1.15, 0.32, z)); });
+    add(mf.at(mf.box(0.06, 0.06, 1.3, { tex: 'metal' }), x + 0.95, 0.9, z)); // handle
+    add(mf.at(mf.cyl(0.03, 0.03, 1.5, { tex: 'metal' }, 6), x - 0.7, 1.9, z - 0.3)); // sunshade pole
+    add(mf.at(mf.cone(1.1, 0.45, { tex: 'awning' }, 10), x - 0.7, 2.75, z - 0.3));
+    C.addBox(x - 1.1, x + 1.1, z - 0.5, z + 0.5);
+    this.anchor('simitci', x - 0.2, z - 0.95, 0);
   }
 
   /** Stool (+ anchor and hotspot when someone may sit there). */
