@@ -354,10 +354,10 @@ const toys = new ToySystem({ world, player, free, tts });
 const yard = world.get('yard');
 // balls are kicked by running into them; the square's two (on its pitch) and the school's are shared online
 toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true });
-const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, quiet: true, onKick: (b) => { football.assist(b); village.ballKicked(b); } }); // aim assist, then shared
+const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, quiet: true, onKick: (b, kind) => { football.assist(b, kind); village.ballKicked(b); } }); // aim assist, then shared
 const pitchMid = (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2;
 const villageBalls = [{ x: pitchMid, z: SQUARE_PITCH.cz }, { x: pitchMid - 4, z: SQUARE_PITCH.cz - 2 }]
-  .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, quiet: true, onKick: (b) => { squareFootball.assist(b); village.ballKicked(b); } }));
+  .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, quiet: true, onKick: (b, kind) => { squareFootball.assist(b, kind); village.ballKicked(b); } }));
 // ⚡ hard shot next to a ball: button (see the action button below) or key F
 input.onKey((e) => { if (modes.is('play') && (e.key === 'f' || e.key === 'F')) toys.shoot(); });
 // C: another camera view (normal, close, far, from above)

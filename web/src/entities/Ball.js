@@ -23,6 +23,18 @@ export class Ball {
     this.hopVel = power > 0.6 ? 2 + Math.random() * 2 : 0;
   }
 
+  /**
+   * Dribbling: running into the ball pushes it the way you run (a little of the contact side mixed
+   * in), a bit faster than you, so it stays just ahead of your feet instead of flying off.
+   */
+  dribble(dirX, dirZ, from, runSpeed) {
+    const n = Math.hypot(dirX, dirZ) || 1, cx = this.position.x - from.x, cz = this.position.z - from.z, c = Math.hypot(cx, cz) || 1;
+    const x = dirX / n * 0.9 + cx / c * 0.1, z = dirZ / n * 0.9 + cz / c * 0.1, m = Math.hypot(x, z) || 1;
+    const speed = runSpeed * 1.3 + 0.7;
+    this.vel.set(x / m * speed, 0, z / m * speed);
+    this.hopVel = 0;
+  }
+
   /** A hard shot in a direction (the way the player faces): fast and off the ground. */
   shoot(dirX, dirZ, speed = 12.5) {
     const n = Math.hypot(dirX, dirZ) || 1;

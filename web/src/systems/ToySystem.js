@@ -2,7 +2,8 @@ const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const PLAYER_R = 0.35;
 const KICK_COOLDOWN = 0.25;   // s between two kicks of the same ball
 const WORDS_EVERY = 45;       // s: the "top / vurmak / gol" words and thought at most this often
-const SHOT_RANGE = 1.6;       // m: a hard shot reaches a ball this close
+const SHOT_RANGE = 2.6;       // m: a hard shot reaches a ball this close
+const SHOT_WAIT = 0.8;        // s: pressed with the ball a little too far, the shot goes off when it comes in range
 
 /**
  * Moving things the player can play with. The cat is petted with the action button
@@ -12,6 +13,8 @@ export class ToySystem {
   #last = null;
   #wordsAt = -Infinity;
   #dt = 0;
+  #shotWant = 0;
+  #vel = { x: 0, z: 0 }; // the player's own velocity (for dribbling)
 
   constructor({ world, player, free, tts }) {
     Object.assign(this, { world, player, free, tts });
@@ -34,15 +37,16 @@ export class ToySystem {
     return this.toys.find((e) => e.touch && e.toy.location === this.world.current && dist(e.toy.position, p) < SHOT_RANGE) ?? null;
   }
 
-  /** Hard shot (⚡ button / F key): the ball flies the way the player faces. */
+  /** Hard shot (⚡ button / F key): the ball flies the way the player faces (towards the goal: Football.assist). */
   shoot() {
     const entry = this.shotBall();
-    if (!entry) return false;
+    if (!entry) { this.#shotWant = SHOT_WAIT; return false; } // not quite there yet: as soon as it is
+    this.#shotWant = 0;
     const rot = this.player.group.rotation.y;
     entry.toy.shoot(Math.sin(rot), Math.cos(rot));
     this.player.kick?.(1);
     entry.cool = KICK_COOLDOWN * 2;
-    entry.onKick?.(entry.toy);
+    entry.onKick?.(entry.toy, 'shot');
     return true;
   }
 
@@ -70,7 +74,9 @@ export class ToySystem {
     this.#dt = dt;
     const p = this.player.position;
     const speed = this.#last && dt > 0 ? dist(p, this.#last) / dt : 0;
+    if (this.#last && dt > 0) this.#vel = { x: (p.x - this.#last.x) / dt, z: (p.z - this.#last.z) / dt };
     this.#last = { x: p.x, z: p.z };
+    if (this.#shotWant > 0) { this.#shotWant -= dt; if (this.shotBall()) this.shoot(); }
     for (const entry of this.toys) {
       const { toy } = entry;
       if (!toy.location.group.visible) continue;
@@ -88,10 +94,10 @@ export class ToySystem {
     entry.swing = (entry.swing ?? 0) - this.#dt;
     if (d >= reach) return;
     if (speed > 0.5 && entry.cool <= 0) {
-      toy.kick(p, Math.min(1, speed / 6));
+      if (toy.dribble) toy.dribble(this.#vel.x, this.#vel.z, p, speed); else toy.kick(p, Math.min(1, speed / 6));
       if ((entry.swing ?? 0) <= 0) { this.player.kick?.(Math.min(1, speed / 6)); entry.swing = 0.5; }
       entry.cool = KICK_COOLDOWN;
-      entry.onKick?.(toy);
+      entry.onKick?.(toy, 'dribble');
       if (!entry.quiet && t - this.#wordsAt > WORDS_EVERY) { this.#wordsAt = t; this.free.perform(entry.action); }
     } else if (d > 1e-4) { // standing still against it: nudge it out of the way instead of walking through
       toy.position.x = p.x + (toy.position.x - p.x) / d * reach;

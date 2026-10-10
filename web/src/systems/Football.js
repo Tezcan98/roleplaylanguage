@@ -70,7 +70,12 @@ export class Football {
    * Help for both teams: a kick that goes roughly towards a goal bends to its middle (and is never
    * too weak to get there). Kicks the other way, or across the pitch, stay as they were.
    */
-  assist(ball) {
+  /**
+   * Aim assist (`kind`: 'shot' — the ⚡ hard shot, 'dribble' — running into the ball). A shot going
+   * roughly towards a goal goes at it; dribbling is only bent a little towards it close to the goal
+   * (and not sped up), so the ball stays at your feet.
+   */
+  assist(ball, kind = 'shot') {
     if (!this.has(ball.position)) return;
     const v = ball.vel, speed = Math.hypot(v.x, v.z);
     if (speed < 0.5) return;
@@ -79,9 +84,11 @@ export class Football {
     let tx = gx - p.x, tz = cz - p.z;
     const d = Math.hypot(tx, tz); tx /= d; tz /= d;
     const ux = v.x / speed, uz = v.z / speed;
-    if (ux * tx + uz * tz < 0.35) return; // not towards that goal
-    const k = 0.65, nx = ux * (1 - k) + tx * k, nz = uz * (1 - k) + tz * k, n = Math.hypot(nx, nz);
-    const s = Math.max(speed, Math.min(9, 3 + d * 0.5)); // strong enough to arrive
+    const dribble = kind === 'dribble';
+    if (ux * tx + uz * tz < (dribble ? 0.5 : 0.2)) return; // not towards that goal
+    if (dribble && d > 9) return; // far from the goal: just your touch
+    const k = dribble ? 0.35 : 0.75, nx = ux * (1 - k) + tx * k, nz = uz * (1 - k) + tz * k, n = Math.hypot(nx, nz);
+    const s = dribble ? speed : Math.max(speed, Math.min(13, 3 + d * 0.6)); // a shot strong enough to arrive
     v.x = nx / n * s; v.z = nz / n * s;
   }
 
