@@ -34,7 +34,7 @@ export class Bicycle {
       const w = new THREE.Group();
       const tyre = mf.torus(WHEEL, 0.035, dark, 20); tyre.rotation.y = Math.PI / 2; w.add(tyre);
       for (let k = 0; k < 6; k++) { const s = mf.box(0.012, WHEEL * 2, 0.012, 0xC8CDD2); s.rotation.x = k * Math.PI / 6; w.add(s); }
-      w.add(mf.at(mf.cyl(0.04, 0.04, 0.08, metal, 8), 0, 0, 0)).rotation.z = Math.PI / 2;
+      const hub = mf.cyl(0.04, 0.04, 0.08, metal, 8); hub.rotation.z = Math.PI / 2; w.add(hub); // along the axle (x)
       w.position.set(0, WHEEL + 0.035, z); group.add(w);
       return w;
     };
@@ -48,7 +48,7 @@ export class Bicycle {
     bar(crank, seat); bar(crank, head); bar(seat, head); bar([0, hub, -0.5], crank); bar([0, hub, -0.5], seat);
     bar(head, [0, hub, 0.5], 0.022, metal); bar(head, [0, 0.98, 0.34], 0.02, metal);
     bar([-0.28, 0.98, 0.32], [0.28, 0.98, 0.32], 0.018, metal); // handlebars
-    [-0.28, 0.28].forEach((x) => group.add(mf.at(mf.cyl(0.03, 0.03, 0.1, dark, 8), x, 0.98, 0.32)).rotation.z = Math.PI / 2);
+    [-0.28, 0.28].forEach((x) => { const grip = mf.at(mf.cyl(0.03, 0.03, 0.1, dark, 8), x, 0.98, 0.32); grip.rotation.z = Math.PI / 2; group.add(grip); });
     group.add(mf.at(mf.box(0.16, 0.05, 0.26, dark), 0, 0.81, -0.24)); // saddle
     group.add(mf.at(mf.box(0.14, 0.12, 0.02, 0xF4F1EA), 0, 0.88, 0.42)); // a little basket plate
     const pedals = new THREE.Group(); pedals.position.set(...crank); group.add(pedals);
@@ -73,8 +73,7 @@ export class Bicycle {
     if (p.mount || this.world.current?.id !== HOME.where) return null;
     const d = Math.hypot(b.group.position.x - pos.x, b.group.position.z - pos.z);
     if (d > 1.8) return null;
-    const label = this.wallet.owns(BIKE_SKILL) ? 'Bisiklete bin' : `Bisiklete bin · 🪙 ${BIKE_PRICE}`;
-    return { label, dist: d, priority: 1, run: () => this.getOn() };
+    return { label: 'Bisiklete bin', dist: d, priority: 1, run: () => this.getOn() }; // the price shows on the "learn it" card
   }
 
   async getOn() {

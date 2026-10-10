@@ -62,6 +62,19 @@ export const NPCS = {
     name: 'Hüseyin Dede', short: 'Dede', role: 'dede · grandpa',
     look: { shirt: 0xE8E0CF, vest: 0x6B4F3A, pants: 0x555B66, skin: 0xE9B98F, sides: 0xC9CED6, mustache: 0xEEF1F5, cap: 0x3B3F46, glasses: true, props: ['hoe'] },
     face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#B9E3C6"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M16 38q1-10 5-13v12zM48 38q-1-10-5-13v12z" fill="#C9CED6"/><path d="M15 26q17-10 34 0v-3q-17-9-34 0z" fill="#3B3F46"/><circle cx="26" cy="35" r="4.5" fill="none" stroke="#1B2440" stroke-width="1.8"/><circle cx="38" cy="35" r="4.5" fill="none" stroke="#1B2440" stroke-width="1.8"/><path d="M30.5 35h3" stroke="#1B2440" stroke-width="1.8"/><circle cx="26" cy="35" r="1.4" fill="#1B2440"/><circle cx="38" cy="35" r="1.4" fill="#1B2440"/><path d="M24 43q8-5 16 0q-8 3-16 0z" fill="#EEF1F5"/></svg>',
+    // round the vegetable garden in the yard (plants in rows at x 6.9…11.1, z −4.8…−1.8; the paths between
+    // them at x 7.6 / 9 / 10.4 and z −2.55 / −4.05): a different job at each stop (Behaviors.garden)
+    gardenRoute: [
+      { x: 9, z: 0.2, rot: Math.PI, pose: 'hoe', wait: 7 },
+      { x: 7.6, z: -0.6 },
+      { x: 7.6, z: -2.55, rot: Math.PI / 2, pose: 'pick', wait: 5 },
+      { x: 10.4, z: -2.55 },
+      { x: 10.4, z: -4.05, rot: -Math.PI / 2, pose: 'plant', wait: 6 },
+      { x: 12.6, z: -4.05 },
+      { x: 12.6, z: -2.4, rot: -Math.PI / 2, pose: 'water', wait: 6 },
+      { x: 12.2, z: 0.4 },
+      { x: 10.2, z: 0.6, rot: Math.PI * 0.8, pose: 'rest', wait: 4 },
+    ],
   },
   baba: {
     name: 'Mehmet Baba', short: 'Baba', role: 'baba · dad',

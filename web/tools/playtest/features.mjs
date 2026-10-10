@@ -341,16 +341,16 @@ try {
   // --- the bicycle in the yard: a skill bought with credits -------------------------------
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(500);
   await ev(() => { const b = window.__game.bicycle.bike.group.position; window.__game.player.position.set(b.x, 0, b.z + 1.2); }); await sleep(400);
-  check('bicycle: "Bisiklete bin" with its price before you can ride', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Bisiklete bin · 🪙')), 4000)));
+  check('bicycle: "Bisiklete bin" (no price on the button)', !!(await waitFor(() => ev(() => { const t = document.getElementById('act').textContent; return t.includes('Bisiklete bin') && !t.includes('🪙'); }), 4000)));
   const bikeCredits = await ev(() => window.__game.wallet.balance);
   await page.keyboard.press('e');
   await waitFor(() => page.$('.overlay.open .card .btn'), 3000);
-  check('…"Bisiklet sürmeyi bilmiyorsun": learn it?', (await page.textContent('.overlay.open .ctitle')).includes('bilmiyorsun'));
+  check('…"Bisiklet sürmeyi bilmiyorsun": learn it for 10 credits', (await page.textContent('.overlay.open .ctitle')).includes('bilmiyorsun') && (await page.textContent('.overlay.open .card .btn:not(.alt)')).includes('10'));
   await page.click('.overlay.open .card .btn:not(.alt)');
   check('…learnt for credits, now riding', !!(await waitFor(() => ev((c) => window.__game.wallet.balance === c - 10 && window.__game.player.mount?.kind === 'bike', bikeCredits), 5000)));
   check('…"Bisikletten in" (not "Attan in")', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Bisikletten in')), 3000)));
   await page.keyboard.press('e');
-  check('…off again, and next time no price', !!(await waitFor(() => ev(() => !window.__game.player.mount && !document.getElementById('act').textContent.includes('🪙')), 3000)));
+  check('…off again', !!(await waitFor(() => ev(() => !window.__game.player.mount), 3000)));
 
   // --- the groom by the horses ------------------------------------------------------------
   await ev(() => window.__game.travel.place('village', 'yardRoad', { force: true })); await sleep(800);

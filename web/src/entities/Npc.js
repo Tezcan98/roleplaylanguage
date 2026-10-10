@@ -1,5 +1,6 @@
 import { Character } from './Character.js';
 import { Behaviors } from './Behaviors.js';
+import { seatAt } from '../world/seats.js';
 
 /**
  * Villagers are HD characters on the square (Character.setHd), blocky everywhere else — only for
@@ -42,6 +43,9 @@ export class Npc extends Character {
 
   get name() { return this.def.name; }
 
+  /** Seated by the behaviour (sitBench…) even when the blocky body is posed by it rather than `sit`. */
+  get sitting() { return this.seated || !!this.behavior?.seated; }
+
   /** Seated characters turn only their head towards the player. */
   #headTowards(player) {
     let d = Math.atan2(player.position.x - this.position.x, player.position.z - this.position.z) - this.group.rotation.y;
@@ -58,6 +62,8 @@ export class Npc extends Character {
     if (!this.home) throw new Error(`${this.id}: unknown anchor ${location.id}.${anchor}`);
     this.place(this.home);
     this.setBehavior(behaviorName);
+    this.seatSpot = this.behavior.seated ? seatAt(location, this.home) : null; // hips on the bench / chair (Character)
+    if (!this.seatSpot) this.position.y = 0;
     this.#hdFor(location.id);
   }
 

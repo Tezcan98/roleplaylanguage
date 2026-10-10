@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { seatAt } from '../world/seats.js';
 import { playerName } from '../i18n/Persona.js';
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -50,7 +51,7 @@ export class LessonController {
     const room = this.world.get('classroom');
     this.bots.forEach((b) => this.cast.move(b.id, 'classroom', b.seat, 'sitBench'));
     this.player.place(room.anchors.get('seat4'));
-    this.player.sit(true);
+    this.player.sit(true, seatAt(room, room.anchors.get('seat4')));
     this.camera.setFixed(new THREE.Vector3(3.4, 3.4, 6.6), new THREE.Vector3(2.9, 1.0, -2.2)); // board, teacher and classmates on the left; the lesson panel on the right
     this.#pop = this.modes.push('lesson');
     const run = this.run = {}; // identity of this lesson run (closing it stops the stages)

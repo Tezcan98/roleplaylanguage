@@ -39,12 +39,27 @@ export const PRAYER_POSES = {
 /** Current posture of the family prayer, set by PrayerScene. */
 export const prayerState = { pose: 'kiyam' };
 
+const hoe = (r, on) => { if (r.props?.hoe) r.props.hoe.visible = on; };
+
 export const Behaviors = {
   stand: { pose(r) { r.armL.rotation.x = r.armR.rotation.x = 0; r.body.rotation.x = 0; } },
+  /**
+   * Grandpa in the vegetable garden: walks round it along `def.gardenRoute` and at each stop does
+   * another job — hoeing, picking tomatoes, kneeling to firm the soil, watering, a rest to wipe his brow.
+   */
   garden: {
     props: ['hoe'],
-    pose(r, t) { const s = (Math.sin(t * 2.4) + 1) / 2; r.armR.rotation.x = r.armL.rotation.x = -0.3 - 1.2 * s; r.body.rotation.x = 0.15 * s; },
-    talk(r) { r.armR.rotation.x = r.armL.rotation.x = -0.3; r.body.rotation.x = 0; },
+    roam: true,
+    routeKey: 'gardenRoute',
+    pose(r) { r.body.rotation.x = 0; r.body.position.set(0, 0, 0); r.armR.rotation.z = r.armL.rotation.z = 0; hoe(r, true); },
+    poses: { // (the hoe is in his hand only for hoeing and walking)
+      hoe(r, t) { hoe(r, true); const s = (Math.sin(t * 2.4) + 1) / 2; lean(r, 0.15 * s); r.armR.rotation.x = r.armL.rotation.x = -0.3 - 1.2 * s; },
+      pick(r, t) { hoe(r, false); lean(r, 0.85); r.armR.rotation.x = -1.0 + Math.sin(t * 3) * 0.35; r.armL.rotation.x = -1.0 - Math.sin(t * 3) * 0.35; },
+      plant(r, t) { hoe(r, false); lean(r, 0.45, 0.55, 1.57); r.armR.rotation.x = -1.35 + Math.abs(Math.sin(t * 5)) * 0.3; r.armL.rotation.x = -1.2; },
+      water(r, t) { hoe(r, false); lean(r, 0.1); r.armR.rotation.x = -1.15 + Math.sin(t * 1.5) * 0.12; r.armR.rotation.z = Math.sin(t * 1.5) * 0.15; r.armL.rotation.x = -0.35; },
+      rest(r, t) { hoe(r, false); lean(r, -0.12); r.armR.rotation.x = -2.5 + Math.sin(t * 4) * 0.2; r.armR.rotation.z = -0.3; r.armL.rotation.x = 0.25; },
+    },
+    talk(r) { r.body.rotation.x = 0; r.body.position.set(0, 0, 0); r.armR.rotation.x = r.armL.rotation.x = -0.3; r.armR.rotation.z = 0; r.legL.rotation.x = r.legR.rotation.x = 0; },
   },
   /**
    * Dad and his old car: walks round it along `def.carRoute` and at each stop works on

@@ -11,6 +11,10 @@ const wrapAngle = (d) => { while (d > Math.PI) d -= Math.PI * 2; while (d < -Mat
 /** Anything with a body in the world: the player and every NPC. */
 /** HD rider's thighs: the direction from hip to knee (out to the side, down; forward is 0.45). */
 const RIDE_LEG = { out: 0.75, down: 0.55 };
+/** Seats lower than this are the floor (cushions, a rug): the old floor-sitting poses, no lifting. */
+const SEAT_MIN = 0.2;
+/** From the hip joint down to what it sits on (the thigh's half thickness). */
+const SEAT_PAD = 0.07;
 const V1 = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), Q1 = new THREE.Quaternion(), Q2 = new THREE.Quaternion(), Q3 = new THREE.Quaternion();
 /** Turns `bone` so the line from it to the point `tip` (world) points along `dirLocal` (in `frame`'s space). */
 function aim(bone, tip, dirLocal, frame) {
@@ -91,9 +95,15 @@ export class Character {
   turnTo(angle, k) { this.group.rotation.y += wrapAngle(angle - this.group.rotation.y) * k; }
   faceTowards(p, k = 0.15) { this.turnTo(Math.atan2(p.x - this.position.x, p.z - this.position.z), k); }
 
-  /** Sit down on a chair at the current spot (or stand up). */
-  sit(on) {
+  /**
+   * Sit down (or stand up). `seat` (world/seats.js seatAt): where the seat is and how high — then the
+   * hips are put on it, over its middle, each frame (the sitting pose alone sank children into
+   * chairs, and the HD body sat back into the chair's back). Without it, or on the floor, as before.
+   */
+  sit(on, seat = null) {
     this.seated = on;
+    this.seatSpot = on && seat?.h >= SEAT_MIN ? seat : null;
+    if (!on && !this.mount) this.group.position.y = 0;
     const r = this.rig;
     if (on) { sitPose(0.38)(r); r.armL.rotation.x = r.armR.rotation.x = -0.5; } else { r.body.position.y = 0; r.legL.rotation.x = r.legR.rotation.x = 0; }
     if (this.mixer) { this.current = null; this.#playClip(on ? 'sit' : 'idle'); }
@@ -166,6 +176,16 @@ export class Character {
     this.#playClip(amount > 0.05 ? 'walk' : 'idle');
     this.#kickPose();
   }
+
+  /** Seated: the hips on the seat's surface, above its middle (the body keeps its heading). */
+  #onSeat() {
+    const s = this.seatSpot, p = this.group.position, rot = this.group.rotation.y, hip = this.#hips();
+    p.y = s.h + SEAT_PAD - hip.up;
+    p.x = s.x - Math.sin(rot) * hip.fwd; p.z = s.z - Math.cos(rot) * hip.fwd;
+  }
+
+  /** Whether the body is in a sitting pose now (an NPC also through its behaviour: Npc). */
+  get sitting() { return this.seated; }
 
   /** The hips relative to the feet on the ground: height and how far forward (HD: the Hips bone, blocky: the leg joints). */
   #hips() {
@@ -248,6 +268,7 @@ export class Character {
     this.#lastPos = { x: this.group.position.x, z: this.group.position.z };
     this.mixer?.update(dt);
     if (this.mount) this.#astride();
+    else if (this.seatSpot && this.sitting) this.#onSeat();
     if (this.#kick) { if (!this.#kick.hold) this.#kick.t += dt; this.#kickPose(); if (this.#kick.t >= this.#kick.dur) { this.#kick = null; this.rig.legR.rotation.x = 0; } }
     const skirt = this.#hd?.skirt;
     if (skirt) { skirt.skirt.visible = this.#hd.scene.visible && !this.seated; if (skirt.skirt.visible) skirt.follow(); } // seated: the legs, in the dress's colour

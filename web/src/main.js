@@ -26,6 +26,7 @@ import { Yard } from './world/locations/Yard.js';
 import { SchoolYard, PITCH } from './world/locations/SchoolYard.js';
 import { Classroom } from './world/locations/Classroom.js';
 import { VillageSquare, SQUARE_PITCH } from './world/locations/VillageSquare.js';
+import { seatAt } from './world/seats.js';
 
 import { Player } from './entities/Player.js';
 import { Npc, HD_VILLAGERS, HD_PLACES } from './entities/Npc.js';
@@ -295,8 +296,8 @@ effects
   })
   .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); })
   .register('sit', (anchor) => { // a seat in the current place (sofra at home, tea-garden stools…)
-    const a = world.current.anchors.get(anchor) ?? world.get('house').anchors.get(anchor);
-    if (a) { player.place(a); player.sit(true); }
+    const here = world.current.anchors.has(anchor) ? world.current : world.get('house'), a = here.anchors.get(anchor);
+    if (a) { player.place(a); player.sit(true, seatAt(here, a)); } // the hips on the seat (world/seats.js)
     // how to get up again: always at the sofra (meals), the first two times on other seats
     const told = settings.get('sitHints', 0);
     if (anchor.startsWith('sofra') || told < 2) {
@@ -572,6 +573,8 @@ story.beforeNewDay = () => (wallet.adFree ? Promise.resolve() : ads.showIntersti
 // ⚙️ in the HUD: voices and music, picture quality, how to play, back to the main menu
 const settingsPanel = new SettingsPanel(host, {
   modes, settings,
+  onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
+  chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onHelp: () => intro.show(),
   onSound: (key, on) => { if (key === 'voicesOn' && !on) tts.cancel(); },
   onMenu: ({ resume = false } = {}) => {
