@@ -1,9 +1,13 @@
 /**
  * Records the Play Store promo video from the game itself: every scene is played by script,
  * captions are drawn in the page (Turkish, with the meaning underneath, like in the game),
- * frames come from the browser's screencast, ffmpeg joins the scenes with short fades.
- *   node tools/promo/record.mjs [outDir] [--only=title,house]
- * Needs a GPU for smooth 1080p (headless Chromium with ANGLE on OpenGL).
+ * ffmpeg joins the scenes with short fades.
+ *   node tools/promo/record.mjs [outDir] [--only=title,house] [--lang=en|ar --piper=<bin> --voice=<model.onnx>]
+ * Frames are taken in virtual time: the page's clock (requestAnimationFrame, performance.now,
+ * timers) stands still and moves 1/30 s per frame, so the video is smooth however slowly the
+ * machine renders (the screencast used to drop two frames in three).
+ * --lang: captions in English or Arabic (Turkish underneath), the meanings in the game in that
+ * language, and a voice-over (Piper TTS, `--piper` the binary, `--voice` the voice model).
  */
 import { chromium } from 'playwright';
 import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
@@ -16,6 +20,8 @@ const out = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'promo-out
 const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
 const JOIN = process.argv.includes('--join'); // --join: only join the scene clips already recorded (after re-recording one with --only)
 const CLEAN = process.argv.includes('--clean'); // --clean: no interface, no captions (a background loop for the website)
+const opt = (k) => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
+const LANG = opt('lang') ?? null; // en | ar: captions, meanings and voice-over in that language
 const FPS = 30, W = 1280, H = 720, SCALE = 1.5; // 1920×1080 frames, UI the size of a tablet's
 mkdirSync(out, { recursive: true });
 
@@ -23,13 +29,56 @@ const server = await startServer();
 const village = await startVillageServer();
 const browser = await chromium.launch({ args: ['--use-angle=gl', '--ignore-gpu-blocklist', '--enable-gpu', '--autoplay-policy=no-user-gesture-required'] });
 
+/**
+ * The page's clock, frozen and moved by hand while a scene is recorded (window.__vclock): every
+ * frame is rendered at exactly 1/30 s after the one before. Off, everything runs in real time.
+ */
+const VCLOCK = `(() => {
+  const real = { raf: requestAnimationFrame.bind(window), caf: cancelAnimationFrame.bind(window), now: performance.now.bind(performance), dnow: Date.now,
+    st: setTimeout.bind(window), ct: clearTimeout.bind(window), si: setInterval.bind(window), ci: clearInterval.bind(window) };
+  let on = false, vt = 0, base = 0, dbase = 0, id = 1e7;
+  const rafs = new Map(), timers = new Map();
+  window.requestAnimationFrame = (cb) => { if (!on) return real.raf(cb); rafs.set(++id, cb); return id; };
+  window.cancelAnimationFrame = (i) => { rafs.delete(i); real.caf(i); };
+  performance.now = () => (on ? vt : real.now());
+  Date.now = () => (on ? dbase + (vt - base) : real.dnow());
+  window.setTimeout = (cb, ms = 0, ...a) => { if (!on) return real.st(cb, ms, ...a); timers.set(++id, { at: vt + Math.max(0, +ms || 0), cb, a }); return id; };
+  window.setInterval = (cb, ms = 0, ...a) => { if (!on) return real.si(cb, ms, ...a); timers.set(++id, { at: vt + Math.max(1, +ms || 1), every: Math.max(1, +ms || 1), cb, a }); return id; };
+  window.clearTimeout = (i) => { timers.delete(i); real.ct(i); };
+  window.clearInterval = (i) => { timers.delete(i); real.ci(i); };
+  const call = (f, a) => { try { if (typeof f === 'function') f(...a); } catch (e) { console.error(e); } };
+  window.__vclock = {
+    start() { vt = base = real.now(); dbase = real.dnow(); on = true; },
+    advance(ms) {
+      const end = vt + ms;
+      for (;;) { // the timers due by then, in order
+        let next = null;
+        for (const [i, t] of timers) if (t.at <= end && (!next || t.at < next[1].at)) next = [i, t];
+        if (!next) break;
+        const [i, t] = next; vt = Math.max(vt, t.at);
+        if (t.every) t.at += t.every; else timers.delete(i);
+        call(t.cb, t.a);
+      }
+      vt = end;
+      const due = [...rafs.values()]; rafs.clear();
+      due.forEach((cb) => call(cb, [vt]));
+    },
+    stop() { // back to real time: the waiting frame callbacks and timers go on from there
+      on = false;
+      const due = [...rafs.values()]; rafs.clear(); due.forEach((cb) => real.raf(cb));
+      for (const [i, t] of timers) { timers.delete(i); if (t.every) real.si(t.cb, t.every, ...t.a); else real.st(t.cb, Math.max(0, t.at - vt), ...t.a); }
+    },
+  };
+})();`;
+
 /** A player in the game: its own browser context (own storage), already past the menu if `story`. */
 async function open(params = '', { extra = false } = {}) { // extra: a player only there for the others to see (not filmed): small and cheap
   const ctx = await browser.newContext({ viewport: extra ? { width: 480, height: 270 } : { width: W, height: H }, deviceScaleFactor: extra ? 1 : SCALE, permissions: ['microphone'] });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.warn('[page]', e.message));
-  await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=${extra ? 'low&norender' : 'high'}&mockads&gloss=en&mp=${encodeURIComponent(village.url)}${params}`);
-  await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  if (!extra) await page.addInitScript(VCLOCK); // the filmed page: its clock is ours while recording
+  await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=${extra ? 'low&norender' : 'high'}&mockads&gloss=${LANG ?? 'en'}&mp=${encodeURIComponent(village.url)}${params}`);
+  await page.waitForFunction(() => window.__game, null, { timeout: 120000 }); // (a dozen pages open at once on the square: slow)
   await page.addStyleTag({ content: PROMO_CSS });
   return page;
 }
@@ -53,57 +102,87 @@ const PROMO_CSS = `
   @keyframes promoIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1}}
   .promo-card{animation-name:promoCard}@keyframes promoCard{from{opacity:0}to{opacity:1}}`;
 
+/** While a scene is recorded: its virtual time (ms) and who waits for it (kit.sleep in the scene). */
+let rec = null;
+const vsleep = (ms) => (rec ? new Promise((r) => rec.waiters.push({ at: rec.t + ms, r })) : sleep(ms));
+
+/** Captions and cards in the video's language (Turkish underneath). */
+const LOCAL = {
+  'Dünyadan arkadaşlarla buluş': { en: 'Meet friends from all over the world', ar: 'التقِ بأصدقاء من كل أنحاء العالم' },
+  'Birlikte Türkçe konuşun': { en: 'Speak Turkish together', ar: 'تحدّثوا التركية معًا' },
+  'Köyü birlikte gez': { en: 'Explore the village together', ar: 'استكشفوا القرية معًا' },
+  'Dev satranç, futbol, kütüphane': { en: 'Giant chess, football, a library', ar: 'شطرنج عملاق، كرة قدم، مكتبة' },
+  'Bakkalda Türkçe alışveriş': { en: 'Shop at the grocer’s in Turkish', ar: 'تسوّق من البقالة بالتركية' },
+  'Kocaman bir ev, bütün bir köy': { en: 'A family home, a whole village', ar: 'بيت عائلة، وقرية كاملة' },
+  'Köyü keşfet': { en: 'Explore the village', ar: 'استكشف القرية' },
+  'Konuş, seni anlasın': { en: 'Speak — the game listens', ar: 'تكلّم، واللعبة تفهمك' },
+  'Okulda dersler': { en: 'Lessons at school, from A1', ar: 'دروس في المدرسة، من A1' },
+  'Karakterini giydir': { en: 'Dress up your character', ar: 'ألبِس شخصيتك' },
+};
+const CARDS = {
+  en: ['Learn Turkish by living it', 'in an Anatolian village', 'Learn Turkish'],
+  ar: ['تعلّم التركية بالعيش فيها', 'في قرية أناضولية', 'تعلّم التركية'],
+};
+const localCard = (html) => {
+  if (!LANG) return html;
+  const [a, b, c] = CARDS[LANG];
+  return html.replace(/<p>Türkçeyi köyde yaşayarak öğren<\/p><small>[^<]*<\/small>/, `<p dir="auto">${a}</p><small dir="auto">${b} · Türkçeyi köyde yaşayarak öğren</small>`)
+    .replace(/<p>Türkçe Öğren<\/p><small>[^<]*<\/small>/, `<p dir="auto">${c}</p><small>Türkçe Öğren</small>`);
+};
+
 /** Helpers the scenes use. */
 const kit = {
-  open, sleep,
-  caption: (page, tr, en, { bottom = false, side = false } = {}) => CLEAN ? null : page.evaluate(([tr, en, bottom, side]) => {
+  open, sleep: vsleep,
+  caption: (page, tr0, en0, { bottom = false, side = false } = {}) => CLEAN ? null : page.evaluate(([tr, en, bottom, side]) => {
     document.querySelector('.promo-cap')?.remove();
     if (!tr) return;
     const d = document.createElement('div'); d.className = `promo-cap${bottom ? ' bottom' : ''}${side ? ' side' : ''}`;
-    d.innerHTML = `<b></b><small></small>`; d.querySelector('b').textContent = tr; d.querySelector('small').textContent = en;
+    d.innerHTML = `<b dir="auto"></b><small dir="auto"></small>`; d.querySelector('b').textContent = tr; d.querySelector('small').textContent = en;
     document.body.append(d);
-  }, [tr, en, bottom, side]),
-  card: (page, html) => CLEAN ? null : page.evaluate((html) => {
+  }, LANG && tr0 ? [LOCAL[tr0]?.[LANG] ?? en0, tr0, bottom, side] : [tr0, en0, bottom, side]),
+  card: (page, html0) => CLEAN ? null : page.evaluate((html) => {
     document.querySelector('.promo-card')?.remove();
     if (!html) return;
     const d = document.createElement('div'); d.className = 'promo-card'; d.innerHTML = html; document.body.append(d);
-  }, html),
+  }, localCard(html0)),
   hideHud: async (page, on = true) => {
     await page.evaluate((on) => document.body.classList.toggle('promo-hide', on), on);
     if (CLEAN && on) await page.addStyleTag({ content: 'body > div > *:not(canvas){visibility:hidden!important}' }); // only the game world
   },
   /** Hold a movement key for `ms` (w a s d). */
-  walk: async (page, key, ms) => { await page.keyboard.down(key); await sleep(ms); await page.keyboard.up(key); },
+  walk: async (page, key, ms) => { await page.keyboard.down(key); await vsleep(ms); await page.keyboard.up(key); },
   /** Camera closer (z < 1) or further, like the mouse wheel. */
   zoom: async (page, notches) => { await page.mouse.move(W / 2, H / 2); for (let i = 0; i < Math.abs(notches); i++) { await page.mouse.wheel(0, notches < 0 ? -100 : 100); await sleep(30); } },
   closeCards: (page) => page.evaluate(() => document.querySelectorAll('.overlay.open .card .btn').forEach((b) => b.click())),
 };
 
-/** Record `seconds` of `page` while `act()` runs; returns the clip's path. `still`: also a store screenshot that many seconds in. */
+/**
+ * Record `seconds` of `page` while `act()` runs; returns the clip's path. `still`: also a store
+ * screenshot that many seconds in. Frame by frame in the page's virtual time (VCLOCK): move the
+ * clock 1/30 s, take the picture, let the scene's script (its kit.sleep is virtual too) go on.
+ */
 async function record(page, name, seconds, act, still = null, shotName = null) {
   const dir = join(out, `frames-${name}`); rmSync(dir, { recursive: true, force: true }); mkdirSync(dir);
-  const cdp = await page.context().newCDPSession(page);
-  const frames = [];
-  cdp.on('Page.screencastFrame', async ({ data, metadata, sessionId }) => {
-    frames.push({ t: metadata.timestamp, file: join(dir, `${String(frames.length).padStart(5, '0')}.jpg`) });
-    writeFileSync(frames.at(-1).file, Buffer.from(data, 'base64'));
-    cdp.send('Page.screencastFrameAck', { sessionId }).catch(() => {});
-  });
-  await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 92, maxWidth: W * SCALE, maxHeight: H * SCALE, everyNthFrame: 1 });
-  const t0 = Date.now();
-  let quiet = null; // while the screenshot is taken the screencast sends shrunken frames: those are left out
-  const shot = still == null ? null : sleep(still * 1000).then(() => { quiet = [Date.now() / 1000 - 0.05, Infinity]; }).then(() => page.screenshot({ path: join(out, 'screens', `${shotName ?? `${String(++shots).padStart(2, '0')}-${name}`}.png`) }));
-  await Promise.all([act(), sleep(seconds * 1000), shot?.then(() => { quiet[1] = Date.now() / 1000 + 0.15; })]);
-  while (Date.now() - t0 < seconds * 1000) await sleep(50);
-  await cdp.send('Page.stopScreencast'); await sleep(200);
-  if (quiet) frames.splice(0, frames.length, ...frames.filter((f) => f.t < quiet[0] || f.t > quiet[1]));
-  // each frame lasts until the next one (the screencast only sends changed frames)
-  const list = frames.map((f, i) => `file '${f.file.split('/').pop()}'\nduration ${Math.max(0.001, ((frames[i + 1]?.t ?? frames[0].t + seconds) - f.t)).toFixed(4)}`).join('\n');
-  writeFileSync(join(dir, 'list.txt'), `${list}\nfile '${frames.at(-1).file.split('/').pop()}'\n`);
+  const frames = Math.round(seconds * FPS), step = 1000 / FPS, stillAt = still == null ? -1 : Math.round(still * FPS);
+  await page.evaluate(() => window.__vclock.start());
+  rec = { t: 0, waiters: [] };
+  let acting = true;
+  const acted = Promise.resolve().then(act).catch((e) => console.warn(`[${name}]`, e.message)).finally(() => { acting = false; });
+  for (let f = 0; f < frames; f++) {
+    await page.evaluate((ms) => window.__vclock.advance(ms), step);
+    rec.t += step;
+    rec.waiters = rec.waiters.filter((w) => (w.at <= rec.t ? (w.r(), false) : true));
+    await page.screenshot({ path: join(dir, `${String(f).padStart(5, '0')}.jpg`), type: 'jpeg', quality: 92 });
+    if (f === stillAt) await page.screenshot({ path: join(out, 'screens', `${shotName ?? `${String(++shots).padStart(2, '0')}-${name}`}.png`) });
+    for (let k = 0; k < 4 && acting; k++) await new Promise((r) => setImmediate(r)); // the scene's script takes its turn
+  }
+  rec.waiters.forEach((w) => w.r()); rec = null; // a script still waiting goes on (and ends) in real time
+  await Promise.race([acted, sleep(3000)]);
+  await page.evaluate(() => window.__vclock.stop());
   const clip = join(out, `${name}.mp4`);
-  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', join(dir, 'list.txt'), '-t', String(seconds),
-    '-vf', `fps=${FPS},scale=1920:1080:flags=lanczos,format=yuv420p`, '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', clip]);
-  console.log(`${name}: ${frames.length} frames in ${seconds}s → ${clip}`);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', join(dir, '%05d.jpg'), '-t', String(seconds),
+    '-vf', 'scale=1920:1080:flags=lanczos,format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', clip]);
+  console.log(`${name}: ${frames} frames → ${clip}`);
   return clip;
 }
 
@@ -136,6 +215,61 @@ async function featureGraphic() {
   await page.context().close();
 }
 
+/** What the voice says over each scene (it starts a moment after the scene does). */
+const NARRATION = {
+  en: {
+    title: 'Learn Turkish by living it, with Anadolu Ailesi.',
+    mpFountain: 'Meet Turkish learners from all over the world in the village square, and talk to them in Turkish.',
+    grocer: 'Go shopping at the grocer’s, with Turkish lira.',
+    mpTea: 'Sit down for a glass of tea, and chat together.',
+    speak: 'Speak out loud. The game listens to you.',
+    mpWalk: 'Explore the village with your friends.',
+    school: 'Learn step by step at school, from A1.',
+    mpChess: 'Play giant chess, football, read in the library, and much more.',
+    shop: 'Dress up your character.',
+    end: 'Anadolu Ailesi. Learn Turkish by living it.',
+  },
+  ar: {
+    title: 'تعلّم التركية بالعيش فيها.',
+    mpFountain: 'تعرّف على متعلمي التركية من كل أنحاء العالم في ساحة القرية، وتحدّث معهم بالتركية.',
+    grocer: 'تسوّق من البقالة بالليرة التركية.',
+    mpTea: 'اجلس لكوب من الشاي، وتحدّثوا معًا.',
+    speak: 'تكلّم بصوت عالٍ، واللعبة تسمعك.',
+    mpWalk: 'استكشف القرية مع أصدقائك.',
+    school: 'تعلّم خطوة بخطوة في المدرسة، من المستوى الأول.',
+    mpChess: 'العب الشطرنج العملاق وكرة القدم، واقرأ في المكتبة، وأكثر.',
+    shop: 'ألبِس شخصيتك.',
+    end: 'أناضولو آيلسي. تعلّم التركية بالعيش فيها.',
+  },
+};
+
+/** The voice-over (Piper TTS) laid over the joined video: each line at its scene, a little faster if it would run into the next. */
+function voiceOver(video, clips, fade) {
+  const piper = opt('piper'), voice = opt('voice');
+  if (!piper || !voice) { console.warn('voice-over: --piper and --voice are needed'); return; }
+  const lines = NARRATION[LANG] ?? {}, dir = join(out, `voice-${LANG}`); mkdirSync(dir, { recursive: true });
+  let start = 0; const parts = [];
+  clips.forEach((c, i) => {
+    const name = CUT?.[i], text = name && lines[name];
+    const room = c.seconds - (i < clips.length - 1 ? fade : 0) - 0.6; // until the next scene begins
+    if (text) {
+      const wav = join(dir, `${String(i).padStart(2, '0')}-${name}.wav`);
+      execFileSync(piper, ['-m', voice, '-f', wav, '--length-scale', LANG === 'ar' ? '0.85' : '0.95', '--sentence-silence', '0.1'], { input: text, stdio: ['pipe', 'ignore', 'ignore'] });
+      const len = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', wav]).toString());
+      const tempo = Math.min(1.35, Math.max(1, len / room));
+      parts.push({ wav, at: start + 0.4, tempo });
+      if (len / tempo > room) console.warn(`voice-over: "${name}" is ${len.toFixed(1)} s for ${room.toFixed(1)} s`);
+    }
+    start += c.seconds - fade;
+  });
+  const inputs = parts.flatMap((p) => ['-i', p.wav]);
+  const filters = parts.map((p, i) => `[${i + 1}:a]atempo=${p.tempo.toFixed(3)},adelay=${Math.round(p.at * 1000)}|${Math.round(p.at * 1000)},volume=1.6[a${i}]`);
+  const mix = `${filters.join(';')};${parts.map((_, i) => `[a${i}]`).join('')}amix=inputs=${parts.length}:normalize=0,alimiter=limit=0.95,apad[a]`;
+  const final = video.replace(/\.mp4$/, `-${LANG}.mp4`);
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, ...inputs, '-filter_complex', mix, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-shortest', '-movflags', '+faststart', final]);
+  console.log(`→ ${final} (voice-over: ${LANG})`);
+}
+
 const clips = [];
 let shots = 0;
 mkdirSync(join(out, 'screens'), { recursive: true });
@@ -163,6 +297,7 @@ try {
     const final = join(out, 'anadolu-ailesi-promo.mp4');
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...inputs, '-filter_complex', chain.replace(/;$/, ''), '-map', '[v]', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', final]);
     console.log(`→ ${final}`);
+    if (LANG) voiceOver(final, clips, F);
   }
   if (!CLEAN && !JOIN) await featureGraphic();
 } finally {

@@ -263,6 +263,7 @@ body.gloss-rtl .choice .e{text-align:left}
 .chat-row{display:flex;gap:6px;align-items:center}
 .chat-in{flex:1;min-width:0;min-height:46px;border-radius:10px;border:2px solid var(--wood);padding:0 10px;font:700 16px Nunito,sans-serif;background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
 .iconbtn.chat-btn{font-size:18px}
+.iconbtn[hidden]{display:none} /* (display:flex above outranked the hidden attribute: hidden icon buttons showed) */
 body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
 .list-action{margin:8px 12px 0}
 .list-action[hidden]{display:none}

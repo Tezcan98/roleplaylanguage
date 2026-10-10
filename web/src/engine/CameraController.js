@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+const RAY = new THREE.Raycaster();
+
 const UI_GESTURE_BLOCKERS = '#joy, #act, #shot, button, input, textarea, select, .overlay, .card, .ptt, .callbar';
 /** Views the C key steps through: distance factor, and straight from above. */
 const VIEWS = [{ k: 1 }, { k: 0.62 }, { k: 1.55 }, { k: 1.25, top: true }];
@@ -114,7 +116,33 @@ export class CameraController {
   setFixed(pos, look) { this.fixed = { pos: pos.clone(), look: look.clone() }; }
   clearFixed() { this.fixed = null; }
 
+  /**
+   * Where the camera stands for a conversation outdoors: beside the two people, on the side whose
+   * view is clear (a ray from between them to the camera, against the place's buildings), or the
+   * usual view from behind when both sides are blocked (it went into the grocer's wall).
+   * Worked out once per conversation.
+   */
+  #talk = { key: null, sign: 1, view: 'side' };
+  #talkView(partner, P, location, portrait) {
+    const key = `${partner.id ?? ''}|${location.id}`;
+    if (this.#talk.key === key) return this.#talk.view;
+    const N = partner.position, mid = new THREE.Vector3((P.x + N.x) / 2, 1.3, (P.z + N.z) / 2);
+    const side = new THREE.Vector3(N.z - P.z, 0, -(N.x - P.x)).normalize(), dd = portrait ? 6 : 4.5;
+    const walls = location.group.children.find((c) => c.name === 'static');
+    const clear = (sign) => {
+      const to = mid.clone().addScaledVector(side, dd * sign).setY(2.6), dir = to.clone().sub(mid), len = dir.length();
+      if (!walls) return true;
+      RAY.set(mid, dir.normalize()); RAY.far = len;
+      return RAY.intersectObject(walls, true).length === 0;
+    };
+    const first = mid.clone().addScaledVector(side, dd).z >= mid.z ? 1 : -1; // the side towards the usual camera first
+    const sign = clear(first) ? first : clear(-first) ? -first : 0;
+    this.#talk = { key, sign: sign || 1, view: sign ? 'side' : 'behind' };
+    return this.#talk.view;
+  }
+
   update(t, { menu, player, partner, location }) {
+    if (!partner) this.#talk.key = null;
     const cam = this.camera;
     if (this.fixed) {
       cam.position.lerp(this.fixed.pos, 0.08);
@@ -146,13 +174,12 @@ export class CameraController {
         this.#pos.set(P.x * 0.7, 7.2 * k, Math.min(P.z + 7.5 * k, maxZ));
         this.#look.lerp(this.#tmp.set(P.x * 0.85, 0.8, P.z - 0.5), 0.1);
       }
-    } else if (partner) {
+    } else if (partner && this.#talkView(partner, P, location, portrait) !== 'behind') {
       const N = partner.position;
       const mid = this.#tmp.copy(P).add(N).multiplyScalar(0.5);
       const side = new THREE.Vector3(N.z - P.z, 0, -(N.x - P.x)).normalize();
       const dd = portrait ? 6 : 4.5;
-      this.#pos.copy(mid).addScaledVector(side, dd);
-      if (this.#pos.z < mid.z) this.#pos.copy(mid).addScaledVector(side, -dd);
+      this.#pos.copy(mid).addScaledVector(side, dd * this.#talk.sign);
       this.#pos.y = 2.6;
       this.#look.lerp(new THREE.Vector3(mid.x, portrait ? 0.6 : 1.3, mid.z), 0.08);
     } else {

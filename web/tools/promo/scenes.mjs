@@ -29,7 +29,7 @@ const square = async (kit, name, { params = '', outfit = null, aura = false, ext
   await kit.sleep(1500);
   const input = await page.$('.overlay.open input');
   if (input) { await input.fill(name); await page.click('.overlay.open button:has-text("Meydana gir")'); }
-  await page.waitForFunction(() => window.__game.village.net.connected, null, { timeout: 15000 });
+  await page.waitForFunction(() => window.__game.village.net.connected, null, { timeout: 60000 });
   await kit.sleep(1500); await kit.closeCards(page); await kit.hideHud(page);
   return page;
 };
@@ -182,7 +182,7 @@ export const SCENES = [
       const page = await story(kit);
       await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
       await kit.sleep(4500); await kit.closeCards(page); await kit.hideHud(page);
-      await page.evaluate(() => { const g = window.__game, n = g.cast.get('bakkal'); g.player.position.set(n.position.x - 0.4, 0, n.position.z + 1.8); g.camera.snap(g.player.position, false); });
+      await page.evaluate(() => { const g = window.__game, n = g.cast.get('bakkal'); g.player.position.set(n.position.x - 0.4, 0, n.position.z + 3.4); g.camera.snap(g.player.position, false); }); // out from under the awning (the talking camera went into it)
       await kit.sleep(1500);
       return page;
     },
@@ -233,7 +233,7 @@ export const SCENES = [
     },
     act: async (kit, page) => {
       await kit.caption(page, 'Konuş, seni anlasın', 'Speak Turkish out loud, the game listens');
-      await page.evaluate(() => window.__game.dialogue.open('cayci', 'zc1'));
+      await page.evaluate(() => window.__game.dialogue.open('cayci', 'c3')); // the spoken answer ("Eline sağlık, çok güzel olmuş!") with the microphone
       await kit.sleep(2800);
       await page.click('#dlg .mic').catch(() => {});
     },

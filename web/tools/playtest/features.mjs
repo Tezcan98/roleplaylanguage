@@ -93,7 +93,7 @@ try {
 
   // --- no typed chat with the characters (switched off) -----------------------------------
   await talkTo('dede');
-  check('no 💬 free-chat button in conversations', !(await waitFor(() => page.$('#dlg .chat-btn:not([hidden])'), 1500)));
+  check('no 💬 free-chat button in conversations', !(await waitFor(() => ev(() => { const b = document.querySelector('#dlg .chat-btn'); return !!b && getComputedStyle(b).display !== 'none'; }), 1500)));
   await ev(() => window.__game.dialogue.close());
 
   // --- ball in the yard ----------------------------------------------------------------

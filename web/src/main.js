@@ -261,7 +261,6 @@ const dialogueView = new DialogueView(host, {
   onClose: () => dialogue.close(),
   onSpeak: () => dialogue.speak(),
   onToggleEn: () => dialogueView.setEnPressed(!document.body.classList.toggle('hide-en')),
-  onChat: () => dialogue.startChat(),
 });
 const chatRecognizer = params.has('fakemic') ? new ScriptedRecognizer() : (native ? new nativeKit.NativeSpeechRecognizer('tr-TR') : new WebSpeechRecognizer('tr-TR'));
 const dialogue = new DialogueController({
