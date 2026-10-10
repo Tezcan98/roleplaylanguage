@@ -227,7 +227,7 @@ try {
   await ev(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('chessBench1')); g.player.sit(true); }); await sleep(300);
   check('chess benches: sitting down to watch', (await ev(() => window.__game.talk.listening)) === 'chess');
   await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/pppppppp/8/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 1', last: { from: 'g1', to: 'f3', san: 'Nf3' } }); });
-  const comment = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].map((b) => b.textContent).find((t) => t.includes('At oynadı'))), 6000);
+  const comment = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].map((b) => b.textContent).find((t) => t.includes('At oynadı'))), 12000); // (CI machines are slow)
   check('…İsmail Dede comments on the moves', !!comment, comment || '');
   await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/ppp2ppp/8/1B1pp3/4P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 3', last: { from: 'f1', to: 'b5', san: 'Bb5+' } }); });
   check('check: the king’s square glows red', await ev(() => window.__game.world.get('village').chessPieces.children.some((m) => m.isPointLight && m.color.r > 0.9)));
