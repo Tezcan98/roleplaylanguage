@@ -31,20 +31,6 @@ export class MainMenu {
     return `${this.servers.label} meydanı · ${n ? `${n} kişi var` : 'şimdilik boş'}`;
   }
 
-  #taps = 0;
-  #tapAt = 0;
-
-  /** Five quick taps on the settings title (on / off) or the game's name on the home screen (on): test mode; the title counts them down. */
-  #tap(title, label = '⚙️ Ayarlar') {
-    const now = Date.now();
-    this.#taps = now - this.#tapAt < 1500 ? this.#taps + 1 : 1; this.#tapAt = now;
-    const s = this.settings;
-    if (this.#taps < 5) { if (this.#taps >= 2) title.textContent = `${label} · ${5 - this.#taps}`; return; }
-    this.#taps = 0;
-    s.set('testerMode', label === '⚙️ Ayarlar' ? !s.get('testerMode', false) : true); // (from the home screen: always on)
-    this.show('settings');
-  }
-
   /** Test mode: a new game from the chosen chapter (day, time and title of each). */
   #chapterPicker(go) {
     const pick = el('select', { attrs: { id: 'testChapter' } }, this.chapters.map((c) => el('option', { text: c.text, attrs: { value: String(c.i) } })));
@@ -86,9 +72,9 @@ export class MainMenu {
       quality.addEventListener('change', () => { s.set('quality', quality.value); location.reload(); });
       body = [
         back,
-        // five taps on the title: test mode (start the story from any chapter) — for the people testing the game
-        el('h2', { class: 'ctitle', text: s.get('testerMode', false) ? '⚙️ Ayarlar · 🧪' : '⚙️ Ayarlar', on: { click: (e) => this.#tap(e.currentTarget) } }),
-        s.get('testerMode', false) && this.onStartAt && this.#chapterPicker(go), // right under the title: seen without scrolling
+        el('h2', { class: 'ctitle', text: '⚙️ Ayarlar' }),
+        // start the story from any day (testing): "🧪 Bölüm seç", the list opens in its place
+        this.onStartAt && (s.get('testerMode', false) ? this.#chapterPicker(go) : btn('🧪 Bölüm seç (gün seç)', 'btn alt', () => { s.set('testerMode', true); this.show('settings'); })),
         btn('Nasıl oynanır?', 'btn alt', () => this.onHelp?.()),
         save && btn('Yeni oyun (baştan başla)', 'btn alt', go(this.onStart)),
         el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler' })]),
@@ -103,7 +89,7 @@ export class MainMenu {
           btn('🪙', 'iconbtn light', () => this.onShop?.(), { 'aria-label': 'Dükkan', title: 'Dükkan · krediler' }),
           btn('⚙️', 'iconbtn light', () => this.show('settings'), { 'aria-label': 'Ayarlar', title: 'Ayarlar' }),
         ]),
-        el('h1', { class: 'big ctitle-tap', text: 'Anadolu Ailesi', on: { click: (e) => this.#tap(e.currentTarget, 'Anadolu Ailesi') } }), // five quick taps: test mode, straight to its chapter picker
+        el('h1', { class: 'big', text: 'Anadolu Ailesi' }),
         el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
         btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(save ? this.onContinue : this.onStart)),
         btn('🏘️ Meydana gir', 'btn alt menu-main', go(() => this.onSquare(this.servers.value))),

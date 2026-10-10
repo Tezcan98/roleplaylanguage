@@ -4,18 +4,16 @@ import { gloss } from '../i18n/Gloss.js';
 /**
  * In-game settings (⚙️ in the HUD): voices and music on / off, picture quality, how to play,
  * and back to the main menu (the game is saved first; "Devam et" goes on from there).
- * Five taps on the title: test mode — a new game from any chapter (as in the main menu's settings).
+ * "🧪 Bölüm seç": a new game from any chapter (testing; as in the main menu's settings).
  */
 export class SettingsPanel {
   #pop = null;
-  #taps = 0;
-  #tapAt = 0;
 
   constructor(host, { modes, settings, onHelp, onMenu, onSound, onStartAt = null, chapters = [] }) {
     Object.assign(this, { modes, settings, onHelp, onMenu, onSound, onStartAt, chapters });
     this.body = el('div', { class: 'settings-body' });
     this.root = el('div', { class: 'overlay dim settings-panel' }, [el('div', { class: 'card' }, [
-      this.title = el('h2', { class: 'ctitle', text: '⚙️ Ayarlar', on: { click: () => this.#tap() } }),
+      el('h2', { class: 'ctitle', text: '⚙️ Ayarlar' }),
       el('p', { class: 'cen en-t', text: gloss('Settings') }),
       this.body,
     ])]);
@@ -32,16 +30,6 @@ export class SettingsPanel {
   }
 
   close() { this.root.classList.remove('open'); this.#pop?.(); this.#pop = null; }
-
-  /** Five quick taps on the title: test mode on / off (the title counts them down). */
-  #tap() {
-    const now = Date.now();
-    this.#taps = now - this.#tapAt < 1500 ? this.#taps + 1 : 1; this.#tapAt = now;
-    if (this.#taps < 5) { if (this.#taps >= 2) this.title.textContent = `⚙️ Ayarlar · ${5 - this.#taps}`; return; }
-    this.#taps = 0;
-    this.settings.set('testerMode', !this.settings.get('testerMode', false));
-    this.render();
-  }
 
   /** Test mode: the chapters (day · time · title) and "a new game from here". */
   #chapterPicker() {
@@ -69,10 +57,9 @@ export class SettingsPanel {
     quality.value = s.get('quality', 'medium');
     quality.addEventListener('change', () => { s.set('quality', quality.value); this.onMenu({ resume: true }); }); // takes effect on a fresh start: saved, reloaded, and on where you were
     const btn = (text, cls, fn) => el('button', { class: cls, text, attrs: { type: 'button' }, on: { click: fn } });
-    const tester = s.get('testerMode', false);
-    this.title.textContent = tester ? '⚙️ Ayarlar · 🧪' : '⚙️ Ayarlar';
     this.body.replaceChildren(
-      tester && this.onStartAt && this.#chapterPicker(), // at the top: seen without scrolling
+      // start the story from any day (testing): a button, the list opens in its place
+      this.onStartAt && (s.get('testerMode', false) ? this.#chapterPicker() : btn('🧪 Bölüm seç (gün seç)', 'btn alt', () => { s.set('testerMode', true); this.render(); })),
       toggle('voicesOn', 'Karakter sesleri', 'Characters speak out loud'),
       toggle('musicOn', 'Müzik', 'Music'),
       el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
