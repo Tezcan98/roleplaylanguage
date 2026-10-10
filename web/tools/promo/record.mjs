@@ -14,7 +14,7 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { startServer, startVillageServer, sleep } from '../playtest/lib.mjs';
-import { SCENES, CUT } from './scenes.mjs'; // SCENES: recording order; CUT: the order in the video
+import { SCENES as LONG_SCENES, CUT as LONG_CUT, SHORT_SCENES, SHORT_CUT } from './scenes.mjs'; // SCENES: recording order; CUT: the order in the video
 
 const out = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'promo-out';
 const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
@@ -22,7 +22,9 @@ const JOIN = process.argv.includes('--join'); // --join: only join the scene cli
 const CLEAN = process.argv.includes('--clean'); // --clean: no interface, no captions (a background loop for the website)
 const opt = (k) => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const LANG = opt('lang') ?? null; // en | ar: captions, meanings and voice-over in that language
-const FPS = 30, W = 1280, H = 720, SCALE = 1.5; // 1920×1080 frames, UI the size of a tablet's
+const SHORT = process.argv.includes('--short'); // --short: the vertical YouTube Short (9:16, 1080×1920)
+const FPS = 30, W = SHORT ? 540 : 1280, H = SHORT ? 960 : 720, SCALE = SHORT ? 2 : 1.5; // 1920×1080 frames (a Short: 1080×1920), UI the size of a tablet's / a phone's
+const SCENES = SHORT ? SHORT_SCENES : LONG_SCENES, CUT = SHORT ? SHORT_CUT : LONG_CUT;
 mkdirSync(out, { recursive: true });
 
 const server = await startServer();
@@ -76,10 +78,12 @@ async function open(params = '', { extra = false } = {}) { // extra: a player on
   const ctx = await browser.newContext({ viewport: extra ? { width: 480, height: 270 } : { width: W, height: H }, deviceScaleFactor: extra ? 1 : SCALE, permissions: ['microphone'] });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => console.warn('[page]', e.message));
-  if (!extra) await page.addInitScript(VCLOCK); // the filmed page: its clock is ours while recording
+  await page.addInitScript(VCLOCK); // every page's clock is ours while recording (the others too: they move in step, no rushing or jumping)
+  clocked.add(page); page.on('close', () => clocked.delete(page));
   await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=${extra ? 'low&norender' : 'high'}&mockads&gloss=${LANG ?? 'en'}&mp=${encodeURIComponent(village.url)}${params}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 120000 }); // (a dozen pages open at once on the square: slow)
   await page.addStyleTag({ content: PROMO_CSS });
+  if (SHORT) await page.evaluate(() => document.body.classList.add('short'));
   return page;
 }
 
@@ -88,6 +92,9 @@ const PROMO_CSS = `
     background:rgba(27,36,64,.78);color:#fff;border-radius:18px;padding:14px 30px 12px;font-family:Fredoka,system-ui,sans-serif;
     box-shadow:0 8px 30px rgba(0,0,0,.25);animation:promoIn .45s ease-out both;max-width:80vw}
   .promo-cap.bottom{top:auto;bottom:4vh}
+  body.short .promo-cap{top:8vh;left:5vw;right:5vw;transform:none;max-width:none;padding:16px 20px 14px;border-radius:22px;animation-name:promoCard}body.short .hud,body.short .net-status{visibility:hidden!important}body.short #toasts{top:26vh!important}body.short .promo-cap b{font-size:40px}body.short .promo-cap small{font-size:20px}
+  body.short .promo-card h1{font-size:54px}body.short .promo-card p{font-size:30px;padding:0 20px}body.short .promo-card img{width:170px;height:170px}
+  .promo-badges{display:flex;gap:12px;justify-content:center;margin-top:16px}.promo-badges span{background:#000;color:#fff;border:2px solid #fff6;border-radius:12px;padding:10px 16px;font:600 20px system-ui,sans-serif}
   .promo-cap.side{left:3vw;top:38vh;transform:none;max-width:21vw;text-align:left;animation-name:promoSide}.promo-cap.side b{font-size:32px}.promo-cap.side small{font-size:18px}
   @keyframes promoSide{from{opacity:0}to{opacity:1}}
   .promo-cap b{display:block;font-size:40px;font-weight:600;line-height:1.15}
@@ -101,6 +108,10 @@ const PROMO_CSS = `
   .promo-hide #joy,.promo-hide .help-btn,.promo-hide #quest,.promo-hide #toasts,.promo-hide .ptt-wrap,.promo-hide #shot,.promo-hide #act,.promo-hide #act-more{visibility:hidden!important}
   @keyframes promoIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1}}
   .promo-card{animation-name:promoCard}@keyframes promoCard{from{opacity:0}to{opacity:1}}`;
+
+/** The open pages (all on the virtual clock while a scene is recorded). */
+const clocked = new Set();
+const allClocks = (fn, arg) => Promise.all([...clocked].map((p) => p.evaluate(fn, arg).catch(() => {})));
 
 /** While a scene is recorded: its virtual time (ms) and who waits for it (kit.sleep in the scene). */
 let rec = null;
@@ -164,12 +175,12 @@ const kit = {
 async function record(page, name, seconds, act, still = null, shotName = null) {
   const dir = join(out, `frames-${name}`); rmSync(dir, { recursive: true, force: true }); mkdirSync(dir);
   const frames = Math.round(seconds * FPS), step = 1000 / FPS, stillAt = still == null ? -1 : Math.round(still * FPS);
-  await page.evaluate(() => window.__vclock.start());
+  await allClocks(() => window.__vclock.start());
   rec = { t: 0, waiters: [] };
   let acting = true;
   const acted = Promise.resolve().then(act).catch((e) => console.warn(`[${name}]`, e.message)).finally(() => { acting = false; });
   for (let f = 0; f < frames; f++) {
-    await page.evaluate((ms) => window.__vclock.advance(ms), step);
+    await allClocks((ms) => window.__vclock.advance(ms), step);
     rec.t += step;
     rec.waiters = rec.waiters.filter((w) => (w.at <= rec.t ? (w.r(), false) : true));
     await page.screenshot({ path: join(dir, `${String(f).padStart(5, '0')}.jpg`), type: 'jpeg', quality: 92 });
@@ -178,10 +189,10 @@ async function record(page, name, seconds, act, still = null, shotName = null) {
   }
   rec.waiters.forEach((w) => w.r()); rec = null; // a script still waiting goes on (and ends) in real time
   await Promise.race([acted, sleep(3000)]);
-  await page.evaluate(() => window.__vclock.stop());
+  await allClocks(() => window.__vclock.stop());
   const clip = join(out, `${name}.mp4`);
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', join(dir, '%05d.jpg'), '-t', String(seconds),
-    '-vf', 'scale=1920:1080:flags=lanczos,format=yuv420p', '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', clip]);
+    '-vf', `scale=${SHORT ? '1080:1920' : '1920:1080'}:flags=lanczos,format=yuv420p`, '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', clip]);
   console.log(`${name}: ${frames} frames → ${clip}`);
   return clip;
 }
@@ -228,6 +239,13 @@ const NARRATION = {
     mpChess: 'Play giant chess, football, read in the library, and much more.',
     shop: 'Dress up your character.',
     end: 'Anadolu Ailesi. Learn Turkish by living it.',
+    sOpen: 'Coming soon…',
+    sFamily: 'Live with a Turkish family.',
+    sQuest: 'Learn Turkish by doing tasks with them.',
+    sSpeak: 'Speak, and the game understands you.',
+    sSquare: 'Meet learners from all over the world.',
+    sVoice: 'Push to talk, or call them by voice.',
+    sEnd: 'Anadolu Ailesi. Coming soon to Google Play and the App Store.',
   },
   ar: {
     title: 'تعلّم التركية بالعيش فيها.',
@@ -240,6 +258,13 @@ const NARRATION = {
     mpChess: 'العب الشطرنج العملاق وكرة القدم، واقرأ في المكتبة، وأكثر.',
     shop: 'ألبِس شخصيتك.',
     end: 'أناضولو آيلسي. تعلّم التركية بالعيش فيها.',
+    sOpen: 'قريبًا جدًا…',
+    sFamily: 'عِش مع عائلة تركية.',
+    sQuest: 'وتعلّم التركية بإنجاز المهام معهم.',
+    sSpeak: 'تكلّم، واللعبة تفهمك.',
+    sSquare: 'التقِ بمتعلّمين من كل العالم.',
+    sVoice: 'اضغط وتكلّم، أو اتصل بهم صوتيًا.',
+    sEnd: 'أناضولو آيلسي. قريبًا على غوغل بلاي وآب ستور.',
   },
 };
 
@@ -294,12 +319,12 @@ try {
       chain += `${last}[${i + 1}:v]xfade=transition=fade:duration=${F}:offset=${offset.toFixed(2)}${label};`;
       last = label;
     });
-    const final = join(out, 'anadolu-ailesi-promo.mp4');
+    const final = join(out, SHORT ? 'anadolu-ailesi-short.mp4' : 'anadolu-ailesi-promo.mp4');
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...inputs, '-filter_complex', chain.replace(/;$/, ''), '-map', '[v]', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', final]);
     console.log(`→ ${final}`);
     if (LANG) voiceOver(final, clips, F);
   }
-  if (!CLEAN && !JOIN) await featureGraphic();
+  if (!CLEAN && !JOIN && !SHORT) await featureGraphic();
 } finally {
   await browser.close(); server.stop(); village.stop();
 }

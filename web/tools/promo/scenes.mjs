@@ -278,3 +278,126 @@ export const SCENES = [
 
 /** The video: multiplayer scenes with single-player play in between. */
 export const CUT = ['title', 'mpFountain', 'grocer', 'mpTea', 'speak', 'mpWalk', 'school', 'mpChess', 'shop', 'end'];
+
+/**
+ * The YouTube Short (Arabic captions, Turkish underneath; record.mjs --short --lang=ar): the game
+ * is coming to phones — a family, tasks that teach Turkish, speaking, the square full of learners,
+ * push-to-talk and voice calls. 3D bodies everywhere.
+ */
+const show = (page, sel) => page.evaluate((sel) => document.querySelectorAll(sel).forEach((e) => e.style.setProperty('visibility', 'visible', 'important')), sel);
+const SHORT_CROWD = CROWD.slice(0, 6);
+const SHORT_ALL = [...SHORT_CROWD.map((c) => c.name), 'Hakan'];
+export const SHORT_SCENES = [
+  {
+    name: 'sOpen', seconds: 3.4,
+    setup: async (kit) => {
+      const page = await story(kit, '', { outfit: 'casual' });
+      await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
+      await kit.sleep(4500); await kit.closeCards(page); await kit.hideHud(page);
+      await page.addStyleTag({ content: '#labels,.hud,#quest{visibility:hidden!important}' }); // only the world (and the caption)
+      await page.evaluate(() => { const g = window.__game, V = g.player.position.constructor; g.player.position.set(0, 0, 12); g.camera.setFixed(new V(0, 34, 40), new V(0, 0, 0)); });
+      await kit.sleep(2500);
+      return page;
+    },
+    act: async (kit, page) => {
+      await page.evaluate(() => { const g = window.__game, V = g.player.position.constructor; g.camera.setFixed(new V(2, 7, 17), new V(0, 1, 2)); }); // a dive down into the square
+      await kit.sleep(500);
+      await kit.caption(page, 'Çok yakında…', 'قريبًا جدًا… 🔥');
+    },
+  },
+  {
+    name: 'sFamily', seconds: 5,
+    setup: async (kit) => {
+      const page = await story(kit, '', { outfit: 'casual' });
+      await page.evaluate(() => { const g = window.__game, a = g.cast.get('anne'); g.player.position.set(a.position.x - 1.2, 0, a.position.z + 1.4); g.camera.snap(g.player.position, true); });
+      await kit.sleep(1500);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Bir Türk ailesiyle yaşa', 'عِش مع عائلة تركية');
+      await kit.sleep(400);
+      await page.evaluate(() => window.__game.dialogue.open('anne'));
+    },
+  },
+  {
+    name: 'sQuest', seconds: 5,
+    setup: async (kit) => {
+      const page = await story(kit, '', { outfit: 'casual' });
+      await page.evaluate(() => { const g = window.__game; g.cast.move('dede', 'yard', 'garden', 'garden'); g.travel.go('yard', 'houseDoor'); });
+      await kit.sleep(4000); await kit.closeCards(page);
+      await page.evaluate(() => { const g = window.__game, V = g.player.position.constructor; g.player.position.set(8.4, 0, 1.6); g.player.group.rotation.y = Math.PI; g.camera.setFixed(new V(9.4, 3.6, 7.2), new V(9.2, 0.8, -1.6)); });
+      await kit.sleep(1500);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Görev yaparak Türkçe öğren', 'تعلّم التركية بإنجاز المهام');
+      await kit.sleep(1800);
+      await show(page, '#toasts');
+      await page.evaluate(() => { const g = window.__game; g.toasts.show('Görev tamamlandı! ✓', 'Quest complete'); g.vocab.learn('sulamak', 'to water'); });
+    },
+  },
+  {
+    name: 'sSpeak', seconds: 4.4,
+    setup: async (kit) => {
+      const page = await story(kit, '', { outfit: 'casual' });
+      await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
+      await kit.sleep(4500); await kit.closeCards(page); await kit.hideHud(page);
+      await page.evaluate(() => { const g = window.__game, n = g.cast.get('cayci'); g.player.position.set(n.position.x - 1.5, 0, n.position.z + 1.2); g.camera.snap(g.player.position, false); });
+      await kit.sleep(1500);
+      return page;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Konuş, oyun seni anlasın', 'تكلّم… واللعبة تفهمك');
+      await page.evaluate(() => window.__game.dialogue.open('cayci', 'c3'));
+      await kit.sleep(2600);
+      await page.click('#dlg .mic').catch(() => {});
+    },
+  },
+  {
+    name: 'sSquare', seconds: 5.4,
+    setup: async (kit) => {
+      for (const c of SHORT_CROWD) crowd.pages[c.name] = await square(kit, c.name, { ...c, extra: true });
+      crowd.me = await square(kit, 'Hakan', { params: '&look=strong', outfit: 'casual' });
+      await ring(SHORT_ALL, 0.6, 6.4, 2.2);
+      await camera(0.6, 4.4, 12.6, 0.6, 1.0, 6.2);
+      await kit.sleep(2500);
+      return crowd.me;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Dünyanın her yerinden öğrencilerle tanış', 'التقِ بمتعلّمين من كل العالم');
+      await kit.sleep(300);
+      await lines(kit, [['Leyla', 'Merhaba! Ben Leyla, Mısırlıyım.', 1100], ['Sofia', 'Ben Sofia, İspanya’danım!', 1100], ['Omar', 'Selam! Türkçe öğreniyorum.', 1000], ['Hakan', 'Hoş geldiniz!', 0]]);
+    },
+    cleanup: async () => {}, // the crowd stays for the next scene
+  },
+  {
+    name: 'sVoice', seconds: 4.6,
+    setup: async (kit) => {
+      await kit.caption(crowd.me, null);
+      await stand('Leyla', 1.6, 7.4, 0.6, 9); await stand('Hakan', 0.6, 9, 1.6, 7.4);
+      await camera(-0.6, 3.2, 12.4, 1.1, 1.1, 8.2);
+      await show(crowd.me, '.ptt-wrap');
+      await kit.sleep(1500);
+      return crowd.me;
+    },
+    act: async (kit, page) => {
+      await kit.caption(page, 'Bas, konuş ya da sesli ara', 'اضغط وتكلّم… أو اتصل صوتيًا');
+      await say('Hakan', 'Leyla, sesli konuşalım mı?');
+      await kit.sleep(1200);
+      page.evaluate(() => window.__game.village.calls.ask('Leyla')); // the voice-chat request card (accepted below)
+      await kit.sleep(1600);
+      await page.click('.overlay.open button:has-text("Kabul et")').catch(() => {});
+      await page.evaluate(() => window.__game.village.calls.showCall('Leyla', { onMute: () => {}, onEnd: () => {} }));
+      await say('Leyla', 'Tabii! Merhaba! 👋');
+    },
+    cleanup: async () => { for (const p of [crowd.me, ...Object.values(crowd.pages)]) await p.context().close(); },
+  },
+  {
+    name: 'sEnd', seconds: 4,
+    setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2500); return page; },
+    act: async (kit, page) => {
+      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Anadolu Ailesi</h1><p dir="rtl">قريبًا على Google Play و App Store</p><small>Yakında Google Play ve App Store’da</small><div class="promo-badges"><span>▶ Google Play</span><span> App Store</span></div>');
+    },
+  },
+];
+export const SHORT_CUT = SHORT_SCENES.map((s) => s.name);
