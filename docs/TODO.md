@@ -6,11 +6,11 @@ Sıradakiler yukarıdan aşağıya. Biten bir iş buradan silinir (ayrıntısı 
 
 1. **Herkes 3D** (karar bekliyor): `?allhd` ile denendi, ekran görüntüsü `~/Desktop/AnadoluAilesi-release/denemeler/herkes-3d.png`.
     Meydan, avlu, ev çalışıyor; yer sofrası, sedirde oturma, bahçe/tamir pozları köşeli gövdeye dönüyor (o pozlar 3D gövdede yok).
-2. **Hepsi bitince**: sunucunun önüne ücretsiz bir CDN; Play Store girişi (TR, EN, RU, AR: ad, kısa ve tam açıklama,
-    simge 512, özellik grafiği 1024×500, 9:16 telefon ekran görüntüleri) ve yeni bir AAB.
 
 ## Bekleyen (karar / dış iş)
 
+- **Cloudflare önbellek kuralı**: modeller ve çeviriler için panelde tek bir Cache Rule (`docs/cdn.md`); sunucu tarafı hazır.
+- **Play Store 1.0.10**: AAB, metinler (tr/en/ru/ar), görseller ve sürüm notları `~/Desktop/AnadoluAilesi-release/` içinde; yükleme Play Console'dan.
 - **Play Store veri beyanı**: konuşmaların saklandığı belirtildi; Play Console "Veri güvenliği" formu ve
   gizlilik politikası adresi son haline getirilecek (`docs/store/data-safety.md`, `docs/store/privacy-policy.md`).
 - **Play Games girişi**: Play Console'da kurulum, sonra proje numarası `game_services_project_id`'ye (`docs/guvenlik-logu.md`).
