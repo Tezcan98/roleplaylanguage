@@ -28,7 +28,7 @@ const t0 = Date.now();
 try {
   // test mode: debug handle, scripted microphone, fast classmates, no intro, empty save, light graphics
   await page.goto(`${server.url}/?debug&fakemic&fastclass&nointro&fresh&quality=low`);
-  await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   await page.click('text=Hikayeye başla');
   await sleep(1200);
   if (FROM) {

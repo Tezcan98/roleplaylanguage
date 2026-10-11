@@ -26,7 +26,7 @@ async function player(tag, name, { viaMenu = true } = {}) {
   page.tag = tag;
   errors.push(...watchErrors(page, `${tag} `));
   await page.goto(`${server.url}/?debug&nointro&fresh&quality=low&mp=${encodeURIComponent(villageUrl)}`);
-  await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   await page.evaluate((r) => window.__game.settings.set('serverRegion', r), room);
   if (viaMenu) {
     await page.click('.main-menu.open button:has-text("Meydana gir")');

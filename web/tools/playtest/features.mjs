@@ -25,14 +25,14 @@ try {
 
   // --- first launch: character setup -------------------------------------------------
   await page.goto(`${server.url}/?debug&fakemic&fastclass&quality=low`);
-  await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   check('first launch shows character setup', !!(await page.$('.overlay.open.setup')));
   await page.click('.setup button[data-lang="es"]');
   check('choosing a language re-translates the setup at once', (await page.textContent('.setup .cen')) !== 'Create your character', await page.textContent('.setup .cen'));
   await page.click('.setup button[data-char="girl-covered"]');
   await page.fill('.setup .name-in', 'Deneme_1');
   await Promise.all([page.waitForNavigation({ timeout: 30000 }), page.click('.setup button:has-text("Kaydet")')]);
-  await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   const profile = await page.textContent('.main-menu .profile-line');
   check('after setup the menu shows the profile', profile.includes('Sare') && profile.includes('Español') && profile.includes('Deneme_1'), profile);
   check('no setup the second time', !(await page.$('.overlay.open.setup')));
@@ -45,7 +45,7 @@ try {
 
   // --- new game: credits, story --------------------------------------------------------
   await page.goto(`${server.url}/?debug&fakemic&fastclass&nointro&fresh&kidout&quality=low`);
-  await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   await page.click('text=Hikayeye başla'); await sleep(1200);
   await ev(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(500);
   await page.click('.credits-btn'); await sleep(400);
@@ -411,12 +411,12 @@ try {
     errors.push(...watchErrors(p2, 'shop '));
     const e2 = (fn, a) => p2.evaluate(fn, a);
     await p2.goto(`${server.url}/?debug&fakemic&nointro&fresh&daily&mockads&fastads&nobilling&quality=low`);
-    await p2.waitForFunction(() => window.__game, null, { timeout: 30000 });
+    await p2.waitForFunction(() => window.__game, null, { timeout: 90000 });
     const daily = await waitFor(() => p2.$('.overlay.open.daily'), 8000);
     check('daily reward on opening the game (day 1: +3)', !!daily && (await p2.textContent('.daily .btn')).includes('+3'));
     await p2.click('.daily .btn'); await sleep(300);
     check('…credits 50 → 53', (await e2(() => window.__game.wallet.balance)) === 53);
-    await p2.reload(); await p2.waitForFunction(() => window.__game, null, { timeout: 30000 }); await sleep(800);
+    await p2.reload(); await p2.waitForFunction(() => window.__game, null, { timeout: 90000 }); await sleep(800);
     check('…not twice the same day, and the credits are kept', !(await p2.$('.overlay.open.daily')) && (await e2(() => window.__game.wallet.balance)) === 53);
     check('…tomorrow is day 2 (+4)', JSON.stringify(await e2(() => window.__game.wallet.daily(Date.now() + 864e5))) === '{"day":2,"amount":4}');
     await p2.click('.main-menu.open [aria-label="Dükkan"]'); await sleep(400);

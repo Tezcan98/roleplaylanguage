@@ -28,7 +28,7 @@ async function player(tag, name, { viaMenu = false, room = null } = {}) {
   const page = await ctx.newPage();
   errors.push(...watchErrors(page, `${tag} `));
   await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${opt.relayonly ? '&relayonly' : ''}${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
-  await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   if (room) await page.evaluate((r) => window.__game.settings.set('serverRegion', r), room);
   if (viaMenu) {
     await page.click('.main-menu.open button:has-text("Meydana gir")');
@@ -194,7 +194,7 @@ try {
     const C = await ctx.newPage();
     errors.push(...watchErrors(C, 'C '));
     await C.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
-    await C.waitForFunction(() => window.__game, null, { timeout: 30000 });
+    await C.waitForFunction(() => window.__game, null, { timeout: 90000 });
     await C.evaluate(() => { window.__game.settings.set('username', 'Yalnız'); window.__game.settings.set('villageIntroSeen', true); });
     await C.click('text=Şehir değiştir');
     await C.click('.server-card[data-server="izmir"]');

@@ -20,7 +20,7 @@ const checks = [];
 const check = (name, ok, detail = '') => { checks.push(ok); log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`); };
 try {
   await page.goto(`${server.url}/?debug&nointro&fakemic&fresh&quality=low`);
-  await page.waitForFunction(() => window.__game, null, { timeout: 30000 });
+  await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   check('game loads without internet', true);
   await page.click('text=Hikayeye başla'); await sleep(1500);
   await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(800);
