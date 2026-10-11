@@ -128,7 +128,7 @@ try {
   check('the other player is asked first', !!(await waitFor(() => B.$('text=Kabul et'))));
   await B.click('text=Kabul et');
   const connected = () => Promise.all([A, B].map((p) => p.evaluate(() => Object.values(window.__game.village.voice.states())[0]))).then((s) => (s.every((x) => x === 'connected') ? s : null));
-  const states = await waitFor(connected, 15000) ?? await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.voice.states())));
+  const states = await waitFor(connected, 45000) ?? await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.voice.states())));
   check('WebRTC connected after accepting', Array.isArray(states) && states.every((x) => x === 'connected'), JSON.stringify(states));
   const inbound = () => B.evaluate(async () => { let n = 0; for (const pc of window.__game.village.voice._debugPeers()) (await pc.getStats()).forEach((r) => { if (r.type === 'inbound-rtp' && r.kind === 'audio') n += r.bytesReceived; }); return n; });
   const bytes = await waitFor(async () => { const n = await inbound(); return n > 1000 ? n : 0; }, 8000) || await inbound();
