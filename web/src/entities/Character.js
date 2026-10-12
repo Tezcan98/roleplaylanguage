@@ -53,6 +53,7 @@ export class Character {
   #lastPos = null;
   #kick = null; // { t, dur, power }: a kick of the ball, the right leg swings
   #rideSpeed = 0; // smoothed speed on horseback (the horse's gait follows it)
+  #push = { t: -1, wait: 0, a: 0 }; // on a scooter: a push off the ground with the right foot (`a` 0–1)
   #shins = null; // per leg on horseback: { len, dir } of the shin, measured once when getting on
   #tmp = new THREE.Vector3();
   constructor(id, appearance, { mf, models }) {
@@ -176,7 +177,7 @@ export class Character {
    * height of the horse's back), legs astride down its sides, hands forward on the reins.
    */
   setMount(mount) {
-    this.mount = mount; this.#rideSpeed = 0; this.#shins = null;
+    this.mount = mount; this.#rideSpeed = 0; this.#shins = null; this.#push = { t: -1, wait: 0, a: 0 };
     const r = this.rig;
     if (mount) {
       this.seated = false;
@@ -228,6 +229,7 @@ export class Character {
     if (!hd || hd === 'loading' || this.mixer !== hd.mixer) return;
     this.group.updateMatrixWorld(true);
     const pedal = this.mount.legs === 'pedal' ? this.mount.pedal : null;
+    if (this.mount.stand && this.#push.a) hd.scene.getObjectByName('UpperLegR')?.rotateX(0.8 * this.#push.a); // pushing off
     for (const [s, side] of this.mount.stand ? [] : [['L', 1], ['R', -1]]) { // (standing on a scooter: the legs as they are)
       const thigh = hd.scene.getObjectByName(`UpperLeg${s}`), shin = hd.scene.getObjectByName(`LowerLeg${s}`), foot = hd.scene.getObjectByName(`Foot${s}`);
       if (!thigh || !shin || !foot) continue;
@@ -263,6 +265,21 @@ export class Character {
     }
   }
 
+  /**
+   * On a scooter: while going, the right foot pushes back along the ground now and then — often
+   * while picking up speed, seldom at full speed; the body dips a little with each push.
+   */
+  #pushOff(dt, m) {
+    const k = this.#push, top = 5.2 * (m.speed ?? 1);
+    if (k.t >= 0) {
+      k.t += dt;
+      if (k.t > 0.5) { k.t = -1; k.wait = this.#rideSpeed < top * 0.8 ? 0.25 : 1.8; }
+    } else if (this.moving && (k.wait -= dt) <= 0) k.t = 0;
+    k.a = k.t >= 0 ? Math.sin(k.t / 0.5 * Math.PI) : 0;
+    this.rig.legR.rotation.x = 0.8 * k.a; this.rig.legL.rotation.x = -0.1 * k.a;
+    this.group.position.y -= 0.05 * k.a;
+  }
+
   /** Kick the ball: the right leg swings back and through (`power` 0–1: a hard shot swings more). */
   kick(power = 0.6, hold = null) { // `hold` (0–1): stop at that moment of the swing (tools: pictures of the pose)
     if (!this.seated && !this.posed) this.#kick = { t: (hold ?? 0) * 0.3, dur: 0.3, power: 0.6 + 0.5 * power, hold: hold != null };
@@ -291,6 +308,7 @@ export class Character {
       const v = this.#rideSpeed;
       m.play(v > 2.6 ? 'run' : v > 0.3 ? 'walk' : 'idle', v);
       m.update(dt);
+      if (m.stand) this.#pushOff(dt, m);
       if (m.legs === 'pedal') { const a = Math.sin(m.pedal) * 0.45; this.rig.legL.rotation.x = -1.1 + a; this.rig.legR.rotation.x = -1.1 - a; }
     }
     const hdWalk = this.#hd?.stride && this.mixer === this.#hd.mixer && this.current === 'walk' ? this.clips.walk : null;

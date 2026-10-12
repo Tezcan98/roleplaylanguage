@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import { gloss } from '../i18n/Gloss.js';
 
 /**
- * Scooters at the square's entrance, a stand on each side of the road from the yard: free to ride,
- * standing on the deck, twice as fast as walking. Others see you on one (VillageMultiplayer sends `ride: 'scooter'`). Getting off
+ * Five scooters on a stand by the fence at the square's entrance: free to ride (each player has the
+ * stand's five on their own screen, so everyone can take one), standing on the deck and pushing off
+ * with a foot; it picks up speed, rolls on when let go and turns in curves (PlayerController `glide`). Others see you on one (VillageMultiplayer sends `ride: 'scooter'`). Getting off
  * leaves it where it is; leaving the square puts it back at the stand.
  */
-const STAND = { where: 'village', x: -46.5, zs: [2.6, 3.3, 4.0, 4.7, 5.4], rot: Math.PI / 2 }; // facing into the square; mirrored to -z
+const STAND = { where: 'village', x: -50.6, zs: [3.4, 4.2, 5.0, 5.8, 6.6], rot: Math.PI / 2 }; // along the fence, facing into the square
 const COLOURS = [0xE4574A, 0x2F6FDB, 0x3E8E4A];
 const WHEEL = 0.085;
 
@@ -29,7 +30,7 @@ export function scooterMount(mf, colour = COLOURS[0]) {
   const { group, wheels } = scooterMesh(mf, colour);
   let spin = 0;
   return {
-    kind: 'scooter', group, seat: WHEEL + 0.07, stand: true, speed: 2.1,
+    kind: 'scooter', group, seat: WHEEL + 0.07, stand: true, glide: true, speed: 1.7,
     hands: [new THREE.Vector3(0.21, 0.97, 0.39), new THREE.Vector3(-0.21, 0.97, 0.39)], // on the grips (left, right)
     play: (name, v = 0) => { spin = v; },
     update: (dt) => wheels.forEach((w) => { w.rotation.x += spin * dt / WHEEL; }),
@@ -44,8 +45,8 @@ export class Scooters {
   build() {
     const loc = this.world.get(STAND.where);
     if (!loc) return;
-    const zs = [...STAND.zs, ...STAND.zs.map((z) => -z)];
-    [1, -1].forEach((side) => loc.group.add(this.mf.at(this.mf.box(1.2, 0.08, 3.6, 0x6B4F3A), STAND.x, 0.04, side * 4))); // the stands
+    const zs = STAND.zs, mid = (zs[0] + zs[zs.length - 1]) / 2;
+    loc.group.add(this.mf.at(this.mf.box(1.2, 0.08, zs[zs.length - 1] - zs[0] + 0.9, 0x6B4F3A), STAND.x, 0.04, mid)); // the stand
     zs.forEach((z, i) => {
       const mount = scooterMount(this.mf, COLOURS[i % COLOURS.length]);
       mount.home = { x: STAND.x, z };

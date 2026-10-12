@@ -89,7 +89,7 @@ export class RemotePlayers {
       if (char.mount) char.mount.group.visible = visible;
       if (!visible) return;
       char.turnTo(target.rot, 0.2);
-      char.walk(t, moving ? 1 : 0);
+      char.moving = moving; char.walk(t, moving ? 1 : 0);
       char.update(dt);
     });
   }
