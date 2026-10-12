@@ -2,16 +2,19 @@ import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { buildPitch } from '../Pitch.js';
 import { Townscape } from '../Townscape.js';
+import { SQUARE_HALF, TEA_COLS, TEA_ROWS, KAHVE_TABLES, READ_TABLES } from '../../content/square.js';
 // import { addTrashBin } from '../trashBin.js';
 
 const WOOD = { tex: 'darkWood' };
 const LIGHT_WOOD = { tex: 'lightWood' };
 const STONE = { tex: 'stone' };
-const HALF = 34; // the fence runs at ±34 m
+const HALF = SQUARE_HALF; // the fence (content/square.js: sized for a crowd)
 
 /** Open-air coffeehouse (north-east) and open library (north-west): walls, no roof. */
-export const KAHVEHANE = { x: 22, z: -24, w: 12, d: 9 };
-export const LIBRARY = { x: -22, z: -24, w: 12, d: 9 };
+export const KAHVEHANE = { x: 34, z: -36, w: 24, d: 14 };
+export const LIBRARY = { x: -34, z: -36, w: 24, d: 14 };
+/** Where the uncles sit (their talk is heard from here: systems/AmbientTalk.js). */
+export const KAHVE_UNCLES = { x: KAHVEHANE.x - 8, z: KAHVEHANE.z - 1 };
 
 /** Chess board in the square: square size, centre and which way the ranks run. */
 export const CHESS = { cx: -15, cz: 15, size: 1.1 };
@@ -23,30 +26,30 @@ export function chessSquare(sq) {
 
 /** Football pitch in the south of the square, fenced with wire (doors on the north side). */
 export const SQUARE_PITCH = {
-  x0: 4.5, x1: 26.5, z0: 15, z1: 27, goalHalf: 2, cz: 21, // wide goals: easier to score
-  fence: { x0: 3.2, x1: 27.8, z0: 14, z1: 28, gaps: [[7.4, 9.2], [21.8, 23.6]] },
+  x0: 6, x1: 46, z0: 20, z1: 44, goalHalf: 3, cz: 32, // a full-size pitch for a crowd; wide goals: easier to score
+  fence: { x0: 4.5, x1: 47.5, z0: 19, z1: 45, gaps: [[9.6, 12], [40, 42.4]] },
 };
 
-/** Tea garden tables (3 columns × 4 rows) and how many free chairs they have (the regulars keep two). */
-const TEA_TABLES = [9.2, 12, 14.8].flatMap((x) => [1.5, 4.5, 7.5, 10.5].map((z) => [x, z]));
-const REGULARS_TABLE = 5; // (12, 4.5): Hüseyin and Kemal play tavla here
-export const TEA_SEATS = TEA_TABLES.length * 2 - 2;
+/** Tea garden tables (content/square.js: columns × rows); the regulars keep two chairs. */
+const TEA_TABLES = Array.from({ length: TEA_COLS }, (_, c) => 9.2 + c * 2.8).flatMap((x) => Array.from({ length: TEA_ROWS }, (_, r) => [x, 1.5 + r * 3]));
+const REGULARS_TABLE = TEA_TABLES.findIndex(([x, z]) => x === 12 && z === 4.5); // Hüseyin and Kemal play tavla here
 
 /** Benches to watch the chess from: [x, z, facing], two seats each (north: Dede's score board, east: his own bench). */
-const CHESS_BENCHES = [[-17.5, 21.4, Math.PI], [-12.5, 21.4, Math.PI], [-21.4, 13, Math.PI / 2], [-21.4, 17, Math.PI / 2]];
-export const CHESS_SEATS = CHESS_BENCHES.length * 2;
+const CHESS_BENCHES = [[-17.5, 21.4, Math.PI], [-12.5, 21.4, Math.PI], [-21.4, 13, Math.PI / 2], [-21.4, 17, Math.PI / 2]]; // (content/square.js CHESS_SEATS)
 
 /** Benches round the square: [x, z, facing, seat kept for a story character]. */
-const SQUARE_BENCHES = [
+const SQUARE_BENCHES = [ // (content/square.js BENCHES)
   [-5.8, 5, Math.PI, 'benchWest'], [5.8, 5, Math.PI, 'benchEast'], // facing the fountain
-  [-25.5, -16.6, Math.PI], [-18.5, -16.6, Math.PI], // in front of the library
+  [-38, -26, Math.PI], [-30, -26, Math.PI], // in front of the library
   [-18, -4, Math.PI / 2], [-18, 4, Math.PI / 2], // west side, facing the fountain
+  [30, -26, Math.PI], [38, -26, Math.PI], // in front of the kahvehane
+  [-40, 6, Math.PI / 2], [-40, -6, Math.PI / 2], // far west
+  [-30, 34, Math.PI], // south-west, under the trees
 ];
-export const BENCH_SEATS = 10;
 
 /** Places where people sit and talk; sitting in one lets you listen in (TalkAreas). */
 export const TALK_SPOTS = {
-  cay: { x: 12, z: 6, r: 7.5 },
+  cay: { x: 15, z: 7.5, r: 10 },
   chess: { x: CHESS.cx, z: CHESS.cz, r: 8 },
 };
 
@@ -134,15 +137,17 @@ export class VillageSquare extends Location {
     this.#stable(mf, C);
     this.#simitCart(mf, C);
 
-    this.writeScore = buildPitch(this, mf, { ...SQUARE_PITCH, board: { x: (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, z: 13.3, rot: Math.PI } });
+    this.writeScore = buildPitch(this, mf, { ...SQUARE_PITCH, board: { x: (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, z: SQUARE_PITCH.fence.z0 - 0.7, rot: Math.PI } });
     add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.035))
       .position.set((SQUARE_PITCH.fence.x0 + SQUARE_PITCH.fence.x1) / 2, 0.035, (SQUARE_PITCH.fence.z0 + SQUARE_PITCH.fence.z1) / 2);
     this.anchor('kickoff', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, SQUARE_PITCH.cz - 2.5, 0);
-    this.hotspot('village.scoreReset', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, 12.7, 1.3); // under the score board
+    this.hotspot('village.scoreReset', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, SQUARE_PITCH.fence.z0 - 1.3, 1.3); // under the score board
 
     // trees, each in a ring of stones with soil inside (none on the pitch)
     [[-5, 12], [6, 12], [14, -14], [-4, -14], [-21, -6], [-21, 6], [30, -12], [-30, -12], [-6, 22], [-3.5, 25], [-22, 25], [22, -6],
-      [-30, 30], [30, 30], [12, 31], [-10, 29], [31, 12], [-30, 2], [8, -30], [-8, -30], [31, -31], [-31, -31]].forEach(([x, z]) => {
+      [-30, 30], [-10, 29], [33, 12], [-30, 2], [8, -30], [-8, -30],
+      // the outer ring of the bigger square
+      [-48, -48], [48, -48], [-48, 48], [0, -48], [-18, -48], [18, -48], [-48, -20], [-48, 20], [50, 10], [50, -20], [-40, 42], [-20, 46], [50, 50]].forEach(([x, z]) => {
       this.prop(kit, 'prop.tree', x, 0, z, Math.random() * 6, () => mf.group(
         mf.at(mf.cyl(0.22, 0.3, 1.8, { tex: 'bark' }), 0, 0.9, 0),
         mf.at(mf.ico(1.55, { tex: 'leaves', repeat: [2, 2] }), 0, 2.7, 0)));
@@ -252,7 +257,7 @@ export class VillageSquare extends Location {
   /** Çay ocağı: a small kiosk with a samovar and tables with stools where people can sit. */
   #teaGarden(kit, mf, C) {
     const add = (m) => this.add(m);
-    const kx = 19, kz = 7;
+    const kx = 25.5, kz = 7.5;
     this.prop(kit, 'prop.cayOcagi', kx, 0, kz, Math.PI / 2, () => mf.group( // counter faces the square (west)
       mf.at(mf.box(3.6, 2.8, 2.6, { tex: 'whiteWall' }), 0, 1.4, 0),
       mf.at(mf.box(4.4, 0.18, 3.4, { tex: 'roof', repeat: [2, 1] }), 0, 2.95, -0.2),
@@ -484,19 +489,22 @@ export class VillageSquare extends Location {
       add(mf.at(mf.cyl(0.06, 0.08, 0.72, WOOD, 8), x, 0.36, z));
       C.addCircle(x, z, 0.55);
     };
-    const tx = K.x - 1.5, tz = K.z + 0.5;
+    const tx = KAHVE_UNCLES.x, tz = KAHVE_UNCLES.z;
     table(tx, tz);
     add(mf.at(mf.box(0.6, 0.05, 0.42, 0x8B5A2B), tx, 0.8, tz)); // tavla
     add(mf.at(mf.cyl(0.04, 0.03, 0.1, 0xC8451F, 8), tx + 0.4, 0.82, tz + 0.35));
     this.#stool(mf, 'amca1', tx - 0.9, tz, Math.PI / 2, false);
     this.#stool(mf, 'amca2', tx + 0.9, tz, -Math.PI / 2, false);
     this.#stool(mf, 'amca3', tx, tz - 0.9, 0, false);
-    [[K.x + 3, K.z - 1.6, 1], [K.x + 3, K.z + 2, 3]].forEach(([x, z, n]) => {
+    // guest tables in a grid (content/square.js KAHVE_TABLES), two stools each
+    const cols = 4, rows = Math.ceil(KAHVE_TABLES / cols);
+    for (let i = 0; i < KAHVE_TABLES; i++) {
+      const x = K.x - 3 + (i % cols) * 3.2, z = K.z - 3.5 + Math.floor(i / cols) * (7 / Math.max(1, rows - 1)), n = i * 2 + 1;
       table(x, z);
       add(mf.at(mf.cyl(0.04, 0.03, 0.1, 0xC8451F, 8), x + 0.2, 0.82, z));
       this.#stool(mf, `kahve${n}`, x - 0.9, z, Math.PI / 2);
       this.#stool(mf, `kahve${n + 1}`, x + 0.9, z, -Math.PI / 2);
-    });
+    }
     this.anchor('kahveci', K.x - 2.5, K.z - K.d / 2 + 1.6, 0);
   }
 
@@ -514,8 +522,8 @@ export class VillageSquare extends Location {
       g.position.set(x, 0, z); g.rotation.y = rot;
       return add(g);
     };
-    shelf(L.x - 3, L.z - L.d / 2 + 0.4, 4.6, 0); shelf(L.x + 3, L.z - L.d / 2 + 0.4, 4.6, 0);
-    C.addBox(L.x - 5.4, L.x + 5.4, L.z - L.d / 2, L.z - L.d / 2 + 0.7);
+    [-8.5, -3, 3, 8.5].forEach((dx) => shelf(L.x + dx, L.z - L.d / 2 + 0.4, 4.6, 0));
+    C.addBox(L.x - 10.9, L.x + 10.9, L.z - L.d / 2, L.z - L.d / 2 + 0.7);
     shelf(L.x - L.w / 2 + 0.4, L.z + 0.2, 5, Math.PI / 2); C.addBox(L.x - L.w / 2, L.x - L.w / 2 + 0.7, L.z - 2.4, L.z + 2.8);
     shelf(L.x + L.w / 2 - 0.4, L.z + 0.2, 5, -Math.PI / 2); C.addBox(L.x + L.w / 2 - 0.7, L.x + L.w / 2, L.z - 2.4, L.z + 2.8);
     // a book from any shelf (wide spots: easy to hit on a phone)
@@ -530,11 +538,11 @@ export class VillageSquare extends Location {
     [0, 1, 2].forEach((i) => add(mf.at(mf.box(0.42, 0.09, 0.3, colors[i * 2]), L.x + 0.5, 0.9 + i * 0.09, L.z - 1.6)).rotation.y = i * 0.3);
     C.addBox(L.x - 1.1, L.x + 1.1, L.z - 2.05, L.z - 1.15);
     this.anchor('aslanBey', L.x, L.z - 2.5, 0);
-    // two reading tables
-    [[L.x - 3, L.z + 1.8, 1], [L.x + 3, L.z + 1.8, 3]].forEach(([x, z, n]) => {
+    // reading tables (content/square.js READ_TABLES): two rows in front of the desk
+    Array.from({ length: READ_TABLES }, (_, i) => [L.x + (i % 3 - 1) * 6.5, L.z + 1.8 + Math.floor(i / 3) * 2.8, i * 2 + 1]).forEach(([x, z, n]) => {
       add(mf.at(mf.box(1.6, 0.06, 0.9, LIGHT_WOOD), x, 0.74, z));
       add(mf.at(mf.box(0.1, 0.72, 0.1, WOOD), x, 0.36, z));
-      add(mf.at(mf.box(0.4, 0.05, 0.3, colors[n]), x - 0.2, 0.79, z)).rotation.y = 0.4; // an open book
+      add(mf.at(mf.box(0.4, 0.05, 0.3, colors[n % colors.length]), x - 0.2, 0.79, z)).rotation.y = 0.4; // an open book
       C.addBox(x - 0.8, x + 0.8, z - 0.45, z + 0.45);
       this.#stool(mf, `kitap${n}`, x - 0.4, z - 0.85, 0);
       this.#stool(mf, `kitap${n + 1}`, x + 0.4, z - 0.85, 0);

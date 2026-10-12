@@ -1,5 +1,6 @@
 import { FREE_ACTIONS } from './freeActions.js';
 import { looseGoods } from './goods.js';
+import { BENCH_SEATS, TEA_SEATS, CHESS_SEATS, KAHVE_SEATS, READ_SEATS } from './square.js';
 
 const free = (id) => ({ label: FREE_ACTIONS[id].label, use: [`free:${id}`] });
 /**
@@ -37,16 +38,16 @@ export const HOTSPOTS = {
   'village.menu': { label: 'Ana menüye dön', use: ['main-menu'], available: (c) => c.online },
   'village.fountain': free('village_fountain'),
   'village.well': questOnly('village_well', 'village.well'),
-  ...Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`village.bench${i + 1}`, { label: 'Banka otur', use: [`sit:bench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])), // BENCH_SEATS in VillageSquare
+  ...Object.fromEntries(Array.from({ length: BENCH_SEATS }, (_, i) => [`village.bench${i + 1}`, { label: 'Banka otur', use: [`sit:bench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])), // (content/square.js)
   'village.bakkalCounter': { label: 'Alışveriş yap', use: ['market:bakkal'] }, // shop windows (ui/MarketView.js)
   'village.manavStall': { label: 'Meyve sebze al', use: ['market:manav'] },
   // giant chess on the square (ChessGame), and the stools of the tea garden
-  // seats in the tea garden and on the benches round the chess board (counts: TEA_SEATS / CHESS_SEATS in VillageSquare)
-  ...Object.fromEntries(Array.from({ length: 22 }, (_, i) => [`village.cay${i + 1}`, { label: 'Çay bahçesinde otur', use: [`sit:cay${i + 1}`, 'free:village_tea'], available: (c) => !c.seated }])),
-  ...Object.fromEntries(Array.from({ length: 8 }, (_, i) => [`village.chessBench${i + 1}`, { label: 'Banka otur, maçı izle', use: [`sit:chessBench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])),
+  // seats in the tea garden and on the benches round the chess board (counts: content/square.js)
+  ...Object.fromEntries(Array.from({ length: TEA_SEATS }, (_, i) => [`village.cay${i + 1}`, { label: 'Çay bahçesinde otur', use: [`sit:cay${i + 1}`, 'free:village_tea'], available: (c) => !c.seated }])),
+  ...Object.fromEntries(Array.from({ length: CHESS_SEATS }, (_, i) => [`village.chessBench${i + 1}`, { label: 'Banka otur, maçı izle', use: [`sit:chessBench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])),
   // the open-air kahvehane and the open library (VillageSquare)
-  ...Object.fromEntries([1, 2, 3, 4].map((n) => [`village.kahve${n}`, { label: 'Kahvehanede otur', use: [`sit:kahve${n}`, 'free:village_coffee'], available: (c) => !c.seated }])),
-  ...Object.fromEntries([1, 2, 3, 4].map((n) => [`village.kitap${n}`, { label: 'Otur, kitap oku', use: [`sit:kitap${n}`, 'free:village_read'], available: (c) => !c.seated }])),
+  ...Object.fromEntries(Array.from({ length: KAHVE_SEATS }, (_, i) => i + 1).map((n) => [`village.kahve${n}`, { label: 'Kahvehanede otur', use: [`sit:kahve${n}`, 'free:village_coffee'], available: (c) => !c.seated }])),
+  ...Object.fromEntries(Array.from({ length: READ_SEATS }, (_, i) => i + 1).map((n) => [`village.kitap${n}`, { label: 'Otur, kitap oku', use: [`sit:kitap${n}`, 'free:village_read'], available: (c) => !c.seated }])),
   // under a pitch's score board: back to 0 - 0 (for everyone there)
   'village.scoreReset': { label: 'Skoru sıfırla', use: ['score-reset'] },
   'school.scoreReset': { label: 'Skoru sıfırla', use: ['score-reset'] },

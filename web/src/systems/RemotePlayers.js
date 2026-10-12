@@ -5,6 +5,9 @@ import { Character } from '../entities/Character.js';
  * Other players in the multiplayer village square: one blocky character each, smoothly
  * following the positions the server sends.
  */
+/** At most this many other players drawn at once, the nearest, within this distance (m). */
+const MAX_SHOWN = 40, SHOW_DIST = 45;
+
 export class RemotePlayers {
   #players = new Map();
 
@@ -65,17 +68,34 @@ export class RemotePlayers {
 
   setTalking(id, on) { const p = this.#players.get(id); if (p) p.char.voice = on; }
 
-  update(dt, t) {
+  /**
+   * `near` (the player's position): only the closest MAX_SHOWN players within SHOW_DIST are drawn and
+   * animated — a square of a hundred would cost a phone its frame rate; the others still move (cheaply).
+   */
+  update(dt, t, near = null) {
     const k = Math.min(1, dt * 10);
-    this.#players.forEach(({ char, target, moving }) => {
-      const pos = char.position;
+    let shown = null;
+    if (near && this.#players.size > MAX_SHOWN) {
+      shown = new Set([...this.#players.values()]
+        .map((p) => [p, Math.hypot(p.target.x - near.x, p.target.z - near.z)])
+        .filter(([, d]) => d < SHOW_DIST).sort((a, b) => a[1] - b[1]).slice(0, MAX_SHOWN).map(([p]) => p));
+    }
+    this.#players.forEach((p) => {
+      const { char, target, moving } = p, pos = char.position;
       pos.x += (target.x - pos.x) * k;
       pos.z += (target.z - pos.z) * k;
+      const visible = !shown || shown.has(p) || (near && Math.hypot(pos.x - near.x, pos.z - near.z) < 8); // (someone right next to you always)
+      char.group.visible = visible;
+      if (char.mount) char.mount.group.visible = visible;
+      if (!visible) return;
       char.turnTo(target.rot, 0.2);
       char.walk(t, moving ? 1 : 0);
       char.update(dt);
     });
   }
+
+  /** The players being drawn (for their name labels). */
+  visible() { return this.list().filter((c) => c.group.visible); }
 }
 
 /** What a player rides from the network: 'scooter', 'horse' (also `true` / 1 from older games), or null. */

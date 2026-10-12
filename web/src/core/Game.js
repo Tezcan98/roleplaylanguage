@@ -35,7 +35,7 @@ export class Game {
 
     const partner = dialogue.talking ? cast.get(dialogue.talking) : null;
     camera.update(t, { menu: !playing, player, partner, location: world.current });
-    labels.update({ npcs: [...cast.present(), ...(world.current.id === village.locationId ? village.remotes.list() : [])], target: story.target()?.npc ?? null, show: modes.is('play'), player, now: t });
+    labels.update({ npcs: [...cast.present(), ...(world.current.id === village.locationId ? village.remotes.visible() : [])], target: story.target()?.npc ?? null, show: modes.is('play'), player, now: t });
     ctx.render();
   }
 }

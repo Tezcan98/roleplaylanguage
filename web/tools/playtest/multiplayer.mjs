@@ -208,7 +208,7 @@ try {
   }
 
   // online from the menu: the square's exit leads back to the main menu, not home
-  const exitLabel = await A.evaluate(() => { const g = window.__game; g.player.position.set(-32.6, 0, 0); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });
+  const exitLabel = await A.evaluate(() => { const g = window.__game; const h = g.world.current.hotspots.get('village.menu').pos; g.player.position.set(h.x + 0.2, 0, h.z); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });
   check('online exit says "Ana menüye dön"', exitLabel.includes('Ana menüye dön'), exitLabel);
   await A.keyboard.press('e');
   check('…and returns to the main menu', !!(await waitFor(() => A.$('.main-menu.open'), 8000)) && (await A.evaluate(() => window.__game.world.current.id)) === 'yard');

@@ -135,10 +135,11 @@ try {
   for (const key of ['ArrowRight', 'ArrowUp', 'ArrowLeft', 'ArrowDown']) {
     await ev(() => window.__game.player.position.set(24, 0, -1.5)); await sleep(150);
     await page.keyboard.down(key);
-    for (let i = 0; i < 36; i++) { await sleep(250); edge = Math.max(edge, await ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); })); }
+    for (let i = 0; i < 48; i++) { await sleep(250); edge = Math.max(edge, await ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); })); }
     await page.keyboard.up(key);
   }
-  check('the square fence stops the player', edge > 32.5 && edge <= 33.7, `furthest ${edge.toFixed(2)} m from the centre (fence at 34)`);
+  const half = await ev(() => window.__game.world.get('village').collision.bounds.x[1] + 0.4); // the fence (content/square.js)
+  check('the square fence stops the player', edge > half - 1.5 && edge <= half - 0.3, `furthest ${edge.toFixed(2)} m from the centre (fence at ${half})`);
 
   // --- chess on the giant board, on foot (İsmail Dede runs the table) -----------------
   const stand = (sq) => ev((sq) => { const g = window.__game, f = sq.charCodeAt(0) - 97, r = Number(sq[1]) - 1; g.player.position.set(-15 + (f - 3.5) * 1.1, 0, 15 - (r - 3.5) * 1.1); }, sq);
@@ -177,23 +178,25 @@ try {
   // --- the square's fenced pitch, the tea garden and the chess benches ------------------
   const sqBalls = () => ev(() => window.__game.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball').map((t) => t.toy));
   check('square pitch: two balls', (await ev(() => window.__game.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball').length)) === 2);
-  await ev(() => { const b = window.__game.squareFootball.balls[0]; b.setState({ x: 8.3, z: 15, vx: 0, vz: -8 }); }); // straight at the door in the fence (8.3: between 7.4 and 9.2)
+  const P = await ev(() => window.__game.squareFootball.pitch); // the square's pitch (VillageSquare SQUARE_PITCH)
+  const door = (P.fence.gaps[0][0] + P.fence.gaps[0][1]) / 2;
+  await ev(([x, z]) => { const b = window.__game.squareFootball.balls[0]; b.setState({ x, z, vx: 0, vz: -8 }); }, [door, P.fence.z0 + 1]); // straight at a door in the fence
   await sleep(1500);
   const bz = await ev(() => window.__game.squareFootball.balls[0].position.z);
-  check('square pitch: through a door (no wire) the ball rolls out onto the square', bz < 14, `z = ${bz.toFixed(2)}`);
-  await ev(() => { const b = window.__game.squareFootball.balls[0]; b.setState({ x: 14, z: 15, vx: 0, vz: -8 }); }); // at the wire
+  check('square pitch: through a door (no wire) the ball rolls out onto the square', bz < P.fence.z0, `z = ${bz.toFixed(2)}`);
+  await ev(([x, z]) => { const b = window.__game.squareFootball.balls[0]; b.setState({ x, z, vx: 0, vz: -8 }); }, [P.fence.gaps[0][1] + 6, P.fence.z0 + 1]); // at the wire
   await sleep(1500);
   const bz2 = await ev(() => window.__game.squareFootball.balls[0].position.z);
-  check('…where there is wire it bounces back in', bz2 > 14, `z = ${bz2.toFixed(2)}`);
-  await ev(() => { const b = window.__game.squareFootball.balls[0]; b.setState({ x: 15.5, z: 21, vx: 0, vz: 0 }); });
+  check('…where there is wire it bounces back in', bz2 > P.fence.z0, `z = ${bz2.toFixed(2)}`);
+  await ev(([x, z]) => { const b = window.__game.squareFootball.balls[0]; b.setState({ x, z, vx: 0, vz: 0 }); }, [(P.x0 + P.x1) / 2, P.cz]);
   // goals: in over the line from the pitch counts, from behind the goal does not
   const sqScore = () => ev(() => window.__game.squareFootball.score.a + window.__game.squareFootball.score.b);
   const score0 = await sqScore();
-  await ev(() => { const P = { x1: 26.5, cz: 21 }, b = window.__game.squareFootball.balls[0]; b.setState({ x: P.x1 + 0.7, z: P.cz, vx: -3, vz: 0 }); }); // rolling into the net from behind
+  await ev((P) => { const b = window.__game.squareFootball.balls[0]; b.setState({ x: P.x1 + 0.7, z: P.cz, vx: -3, vz: 0 }); }, P); // rolling into the net from behind
   await sleep(1200);
   check('a ball going in from behind the goal is no goal', (await sqScore()) === score0);
   await sleep(2600); // the cool-down after a (non-)goal
-  await ev(() => { const g = window.__game, b = g.squareFootball.balls[0]; g.village.lastKick = Date.now(); b.setState({ x: 24.5, z: 21, vx: 7, vz: 0 }); }); // a shot from the pitch (online: my kick)
+  await ev((P) => { const g = window.__game, b = g.squareFootball.balls[0]; g.village.lastKick = Date.now(); b.setState({ x: P.x1 - 2, z: P.cz, vx: 7, vz: 0 }); }, P); // a shot from the pitch (online: my kick)
   const scoredNow = await waitFor(async () => (await sqScore()) === score0 + 1, 4000);
   check('…a shot from the pitch is', !!scoredNow);
   await ev(() => { const g = window.__game, h = g.world.current.hotspots.get('village.scoreReset'); g.player.position.set(h.pos.x, 0, h.pos.z); }); await sleep(500);

@@ -360,7 +360,7 @@ export class VillageMultiplayer {
     if (!this.net.connected) return;
     const onPitch = !!this.onPitch?.(this.player.position); // a match: the hard-shot button there, not the talk button
     if (onPitch === !this.ptt.root.hidden) this.ptt.show(!onPitch);
-    this.remotes.update(dt, t);
+    this.remotes.update(dt, t, this.player.position); // (only the nearest are drawn: a crowd of a hundred)
     this.#since += dt;
     if (this.#since < SEND_EVERY) return;
     this.#since = 0;

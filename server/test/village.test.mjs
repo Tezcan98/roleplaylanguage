@@ -311,3 +311,35 @@ test('the same device back while its old connection still hangs: same name, same
   assert.equal(s.phase, 'playing');
   await again.close(); await b.close(); await w.close().catch(() => {});
 });
+
+test('a crowd: players far away are sent less often, near ones every tick', async () => {
+  const h = createServer(), v = new VillageServer({ server: h, log: () => {}, allowOrigin: () => true, maxPerIp: 100 });
+  await new Promise((r) => h.listen(0, '127.0.0.1', r));
+  const at = `ws://127.0.0.1:${h.address().port}/ws/village`;
+  const joinAt = async (name) => {
+    const ws = new WebSocket(at, { origin: 'http://localhost:1' }), inbox = [];
+    ws.on('message', (d) => inbox.push(JSON.parse(d)));
+    await new Promise((res, rej) => { ws.once('open', res); ws.once('error', rej); });
+    ws.send(JSON.stringify({ type: 'hello', name, room: 'crowd' }));
+    while (!inbox.some((m) => m.type === 'welcome')) await silence(10);
+    return { ws, inbox, id: inbox.find((m) => m.type === 'welcome').id, send: (m) => ws.send(JSON.stringify(m)) };
+  };
+  const crowd = [];
+  for (let i = 0; i < 31; i++) crowd.push(await joinAt(`Kalabalik${i}`));
+  const [me, near, far] = crowd;
+  me.send({ type: 'state', x: 0, z: 0, rot: 0 });
+  await silence(300);
+  me.inbox.length = 0;
+  for (let k = 0; k < 15; k++) {
+    near.send({ type: 'state', x: 10 + k * 0.1, z: 0, rot: 0, moving: true });
+    far.send({ type: 'state', x: -51 - k * 0.1, z: 40, rot: 0, moving: true });
+    await silence(100);
+  }
+  await silence(600);
+  const seen = (id) => me.inbox.filter((m) => m.type === 'states' && m.players.some((p) => p.id === id)).length;
+  assert.ok(seen(near.id) >= 10, `near seen ${seen(near.id)} times`);
+  assert.ok(seen(far.id) >= 2 && seen(far.id) <= 5, `far seen ${seen(far.id)} times`);
+  const last = me.inbox.filter((m) => m.type === 'states').flatMap((m) => m.players).filter((p) => p.id === far.id).pop();
+  assert.ok(last.x < -51.5, 'the far one still ends up where it is');
+  crowd.forEach((c) => c.ws.close()); v.close(); h.close();
+});

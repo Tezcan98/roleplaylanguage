@@ -115,7 +115,7 @@ import { Library } from './systems/Library.js';
 import { NeyMusic } from './systems/NeyMusic.js';
 import { BookReader } from './ui/BookReader.js';
 import { AmbientTalk } from './systems/AmbientTalk.js';
-import { KAHVEHANE, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
+import { KAHVE_UNCLES, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
@@ -489,7 +489,7 @@ effects
   .register('chess-draw-accept', () => chess.answerDraw(true))
   .register('chess-draw-decline', () => chess.answerDraw(false));
 // the uncles in the kahvehane talk among themselves; come close and you hear them
-const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { location: 'village', x: KAHVEHANE.x, z: KAHVEHANE.z }, talks: KAHVE_TALKS });
+const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { location: 'village', x: KAHVE_UNCLES.x, z: KAHVE_UNCLES.z }, talks: KAHVE_TALKS });
 
 // your own garden bed: planting comes later — grandpa says you are still a bit young
 effects.register('my-garden', () => {
