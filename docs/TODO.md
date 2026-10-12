@@ -4,6 +4,7 @@ Sıradakiler yukarıdan aşağıya. Biten bir iş buradan silinir (ayrıntısı 
 
 ## Sırada
 
+0. **Meydanı büyüt** (~100 kişi): meydan, kahvehane, çay bahçesi, halı saha ve diğer alanlar daha geniş; sunucuda oda kapasitesi.
 1. **YouTube Shorts (Arapça)**: 9:16, 3D karakter. Oyun henüz yok: "yakında Play Store ve App Store'da".
    Odak: aileyle görevler yaparak dil öğrenmek, meydanda sosyalleşmek, "Bas, konuş", birebir sesli
    sohbet, toplu konuşma odaları. Kantin, bisiklet, alışveriş yok. Başlık ve açıklama Arapça + İngilizce.

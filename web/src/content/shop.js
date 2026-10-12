@@ -10,7 +10,7 @@ export const outfitPicture = (item, gender, look) => `assets/shop/hd_${item.outf
 
 export const SHOP = [
   { id: 'adFree', title: 'Reklamsız mod', en: 'No more ads between the days of the story', price: 100, icon: '🚫' },
-  { id: 'hd', slot: 'hd', look: 'casual', title: '⭐ HD karakter', en: 'A detailed, animated character instead of the blocky one', price: 120 },
+  { id: 'hd', slot: 'hd', look: 'casual', title: '⭐ HD karakter', en: 'A detailed, animated character instead of the blocky one', price: 40 }, // the starting credits (50) are enough: offered at the start (main.js)
   outfit('casual', 'Günlük kıyafet', 'Everyday clothes'),
   outfit('suit', 'Takım elbise', 'Suit', 'boy'),
   outfit('dress', 'Elbise', 'Dress', 'girl'),

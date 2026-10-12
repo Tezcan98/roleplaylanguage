@@ -8,7 +8,7 @@ import { Character } from '../entities/Character.js';
 export class RemotePlayers {
   #players = new Map();
 
-  constructor({ mf, models = null, baseLook, looks = {}, horse = null }) { Object.assign(this, { mf, models, baseLook, looks, horse }); } // horse(): a horse to ride (systems/Animals.js)
+  constructor({ mf, models = null, baseLook, looks = {}, horse = null, scooter = null }) { Object.assign(this, { mf, models, baseLook, looks, horse, scooter }); } // horse(), scooter(): what another player rides (systems/Animals.js, Scooter.js)
 
   list() { return [...this.#players.values()].map((p) => p.char); }
   ids() { return [...this.#players.keys()]; }
@@ -26,19 +26,20 @@ export class RemotePlayers {
     if (look?.aura) char.setAura(true);
     if (look?.outfit) char.setHd(this.models, outfitModel(look.outfit, look.gender, look.style), true, { covered: look.style === 'covered', dress: look.outfit === 'dress' }); // bought in the shop
     this.#players.set(id, { char, target: { x, z, rot }, moving: false, location });
-    if (ride) this.#ride(id, true);
+    if (ride) this.#ride(id, rideKind(ride));
   }
 
-  /** Another player gets on (a horse appears under them) or off. */
-  async #ride(id, on) {
+  /** Another player gets on (a horse or a scooter appears under them: `kind`) or off (null). */
+  async #ride(id, kind) {
     const p = this.#players.get(id);
     if (!p) return;
-    p.riding = on;
-    if (!on) { if (p.char.mount) { p.char.mount.group.removeFromParent(); p.char.setMount(null); } return; }
-    const h = await this.horse?.();
-    if (!h || !p.riding || this.#players.get(id) !== p) return;
-    p.location.group.add(h.group);
-    p.char.setMount(h);
+    p.riding = kind;
+    if (p.char.mount) { p.char.mount.group.removeFromParent(); p.char.setMount(null); }
+    if (!kind) return;
+    const m = kind === 'scooter' ? this.scooter?.() : await this.horse?.();
+    if (!m || p.riding !== kind || this.#players.get(id) !== p) return;
+    p.location.group.add(m.group);
+    p.char.setMount(m);
   }
 
   remove(id) {
@@ -57,7 +58,8 @@ export class RemotePlayers {
       if (!p) return;
       p.target = { x, z, rot }; p.moving = moving;
       if (p.char.seated !== sit) p.char.sit(sit); // at a tea table or on a bench
-      if (!!p.riding !== !!ride) this.#ride(id, !!ride); // on horseback
+      const kind = rideKind(ride);
+      if ((p.riding ?? null) !== kind) this.#ride(id, kind); // on horseback, on a scooter
     });
   }
 
@@ -75,3 +77,6 @@ export class RemotePlayers {
     });
   }
 }
+
+/** What a player rides from the network: 'scooter', 'horse' (also `true` / 1 from older games), or null. */
+const rideKind = (ride) => (ride === 'scooter' ? 'scooter' : ride ? 'horse' : null);

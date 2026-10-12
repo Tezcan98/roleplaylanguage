@@ -8,6 +8,9 @@ import { el } from '../../ui/dom.js';
 export class AdProvider {
   async showRewarded() { return false; }
   async showInterstitial() {}
+  /** A banner at the bottom of the screen (the square's menu); nothing on the website. */
+  async showBanner() {}
+  async hideBanner() {}
 }
 
 /**

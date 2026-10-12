@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { gloss } from '../i18n/Gloss.js';
+import { BIKE_PRICE } from '../content/rides.js';
+
+export { BIKE_PRICE };
 
 /**
  * The bicycle in the yard, leaning by the house. The first time Ahmet doesn't know how to ride
@@ -7,7 +10,6 @@ import { gloss } from '../i18n/Gloss.js';
  * new game keeps it). Then "Bisiklete bin": he rides round the yard, pedalling, the wheels turning
  * with the speed; "Bisikletten in" (or leaving the yard) leaves it where it is / back at the wall.
  */
-export const BIKE_PRICE = 10;
 export const BIKE_SKILL = 'skill.bike';
 const HOME = { where: 'yard', x: -11.2, z: -10.3, rot: Math.PI / 2 };
 const WHEEL = 0.33;

@@ -29,7 +29,7 @@ import { VillageSquare, SQUARE_PITCH } from './world/locations/VillageSquare.js'
 import { seatAt } from './world/seats.js';
 
 import { Player } from './entities/Player.js';
-import { Npc, HD_VILLAGERS, HD_PLACES } from './entities/Npc.js';
+import { Npc, HD_VILLAGERS } from './entities/Npc.js';
 
 import { TimeSystem } from './systems/TimeSystem.js';
 import { DayNightLighting } from './systems/DayNightLighting.js';
@@ -58,10 +58,11 @@ import { PlayBilling, NoBilling, TestBilling, TEST_PURCHASES } from './services/
 import { SettingsPanel } from './ui/SettingsPanel.js';
 import { Animals } from './systems/Animals.js';
 import { Bicycle } from './systems/Bicycle.js';
+import { Scooters, scooterMount } from './systems/Scooter.js';
 import { el } from './ui/dom.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
-import { outfitOn, outfitModel, auraOn, migrateWallet } from './content/shop.js';
+import { SHOP, outfitOn, outfitModel, auraOn, migrateWallet } from './content/shop.js';
 import { LocalClassroomSession, WebSocketClassroomSession } from './services/multiplayer/ClassroomSession.js';
 import { ClassroomView } from './ui/ClassroomView.js';
 import { VillageNetwork } from './services/multiplayer/VillageNetwork.js';
@@ -246,7 +247,7 @@ const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
   : native ? new nativeKit.NativeSpeechRecognizer('tr-TR')
   : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
-const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId })
+const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId, bannerId: manifest.admob?.bannerId })
   : new MockAdProvider(host, modes, params.has('fastads') ? 1 : 5, { interstitials: params.has('mockads') });
 const billing = params.has('nobilling') ? new NoBilling() // ?nobilling: the website without test payments (tests)
   : TEST_PURCHASES ? new TestBilling() : native ? new PlayBilling(nativeKit.NativePurchases, nativeKit.PURCHASE_TYPE) : new NoBilling();
@@ -388,7 +389,7 @@ effects
 const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st) => village.voiceState(st), relayOnly: params.has('relayonly') }),
-  remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS, horse: () => animals.mount() }), // others on horseback
+  remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS, horse: () => animals.mount(), scooter: () => scooterMount(mf) }), // others on horseback or a scooter
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   // public places: the square, and the schoolyard for football (its own room: <city>-okul)
   places: { village: { suffix: '', balls: villageBalls, label: '' }, schoolyard: { suffix: '-okul', balls: [schoolBall], label: 'Okul bahçesi' } },
@@ -407,13 +408,11 @@ const village = new VillageMultiplayer({
 });
 village.autoName = () => `${playerName()}${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question
 village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // others see them too
-// trying it out: HD villagers everywhere, not just on the square (?allhd; docs/TODO.md "Herkes 3D")
-if (params.has('allhd')) ['house', 'yard', 'schoolyard', 'classroom'].forEach((p) => HD_PLACES.add(p));
 // the HD character from the shop: everywhere once bought — home too (prayer poses use the blocky body for a moment)
 const playerHd = () => {
   player.setAura(auraOn(wallet)); const o = outfitOn(wallet);
   player.setHd(models, outfitModel(o ?? 'casual', playerGender(), playerLook.split('-')[1]), !!o, { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: o === 'dress' });
-  // an HD player (credits spent in the shop) sees the villagers on the square in HD too
+  // an HD player (credits spent in the shop) sees the villagers in HD too, everywhere (entities/Npc.js)
   if (HD_VILLAGERS.on !== !!o) { HD_VILLAGERS.on = !!o; npcs.forEach((n) => n.refreshHd()); }
 };
 bus.on(EV.LOCATION, playerHd);
@@ -505,6 +504,10 @@ setTimeout(() => world.warmUp(ctx.renderer, ctx.camera), 1200); // every place r
 const animals = new Animals({ world, models, player, labels, toasts, vocab, clock: () => game.t, wallet, onShop: () => shop.open(), story, effects });
 animals.build();
 bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') animals.leftPlace(); }); // the horse stays on the square
+// scooters on the square (free)
+const scooters = new Scooters({ world, mf, player, toasts, vocab });
+scooters.build();
+bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') scooters.leftPlace(); });
 // the bicycle in the yard (riding it is a skill bought with credits)
 const bicycle = new Bicycle({ world, mf, player, wallet, toasts, vocab, choice: new ChoiceCard(host, modes), onShop: () => shop.open() });
 bicycle.build();
@@ -512,6 +515,7 @@ bus.on(EV.LOCATION, ({ id }) => { if (id !== 'yard') bicycle.leftPlace(); });
 const interactions = new InteractionSystem([
   animals, // pet an animal, get on / off a horse
   bicycle,
+  scooters,
   library, // sitting with a book in hand: read it
   chess, // on the giant board: take a piece, put it down
   village, // "voice chat with X" next to another player in the square
@@ -646,6 +650,7 @@ const introFirst = async () => {
 const setup = new CharacterSetup(host, { modes, settings, villageServer });
 const menu = new MainMenu(host, {
   settings,
+  onBanner: (on) => { if (on && !wallet.adFree) ads.showBanner(); else ads.hideBanner(); }, // a banner on the square's menu (none with ad-free)
   villageServer,
   hasSave: () => !!saved,
   onHelp: () => intro.show(),
@@ -664,9 +669,27 @@ async function editProfile({ cancellable = true } = {}) {
   if (p && (p.lang !== before.lang || p.gender !== before.gender || p.look !== before.look)) { location.reload(); return; }
   menu.show();
 }
+/**
+ * Once, at the start (after the character is made): the 3D character is recommended — the game
+ * looks far better and everyone in the village turns 3D too; the starting credits pay for it.
+ */
+async function offerHd() {
+  const hd = SHOP.find((i) => i.id === 'hd');
+  if (!hd || settings.get('hdOffered', false) || wallet.owns('hd') || params.has('nointro')) return;
+  settings.set('hdOffered', true);
+  const yes = await new ChoiceCard(host, modes).ask({
+    title: '⭐ 3D karakter ister misin?',
+    text: `Oyun 3D karakterle çok daha güzel görünür; köydeki herkes de 3D olur. Başlangıç kredin buna yeter: ${hd.price} kredi. (Çok eski telefonlarda oyunu yavaşlatabilir.)`,
+    en: 'The game looks much better with the 3D character, and everyone in the village turns 3D too. Your starting credits are enough.',
+    yes: `3D olsun · ${hd.price} kredi`, no: 'Şimdilik böyle kalsın',
+  });
+  if (yes && wallet.buy(hd)) { wallet.equip(hd); playerHd(); toasts.show('Artık 3D\'sin! ⭐', gloss('You are 3D now!')); }
+}
+
 // first launch: create the character before anything else (tests skip it with ?nointro)
-if (!setup.done && !params.has('nointro')) { menu.hide(); editProfile({ cancellable: false }); }
+if (!setup.done && !params.has('nointro')) { menu.hide(); editProfile({ cancellable: false }).then(() => setTimeout(offerHd, 400)); }
 else {
+  setTimeout(offerHd, 600); // (the menu first)
   // back from changing the outfit: straight on where you were
   let again = false;
   try { again = sessionStorage.getItem('autoContinue') === '1'; sessionStorage.removeItem('autoContinue'); } catch { /* ignore */ }
@@ -811,4 +834,4 @@ setInterval(() => {
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { toasts, animals, bicycle, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

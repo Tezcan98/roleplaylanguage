@@ -15,8 +15,8 @@ import { COIN_HTML } from './coin.js';
 export class MainMenu {
   #view = 'home'; // home | city | settings
 
-  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, chapters = [] }) {
-    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, chapters });
+  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [] }) {
+    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, onBanner, chapters });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => settings.set('serverRegion', id) });
     this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
     this.root = el('div', { class: 'overlay main-menu' });
@@ -44,6 +44,7 @@ export class MainMenu {
 
   show(view = 'home') {
     this.#view = view;
+    this.onBanner?.(view === 'city'); // the square's menu carries a banner ad (gone when you go in)
     const s = this.settings;
     const save = this.hasSave();
     this.servers.value = s.get('serverRegion', 'ankara');
@@ -107,7 +108,7 @@ export class MainMenu {
     this.servers.start();
   }
 
-  hide() { this.root.classList.remove('open'); this.servers.stop(); }
+  hide() { this.root.classList.remove('open'); this.servers.stop(); this.onBanner?.(false); }
 }
 
 export { SERVERS };

@@ -432,9 +432,9 @@ try {
     check('…on the web a pack says it is sold in the Android app', await e2(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('Android uygulamasında'))));
     check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
     check('outfits need the HD character first', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Günlük kıyafet')).querySelector('button').disabled));
-    await e2(() => { window.__game.wallet.add(125); window.__game.shop.render(); }); // 181
+    await e2(() => { window.__game.wallet.add(45); window.__game.shop.render(); }); // 101
     await p2.click('.shop.open .shop-card:has-text("HD karakter") button'); await sleep(300);
-    check('the HD character (120 credits): bought and on, in its everyday clothes', (await e2(() => window.__game.wallet.equipped('hd'))) === 'hd' && (await e2(() => window.__game.wallet.balance)) === 61);
+    check('the HD character (40 credits): bought and on, in its everyday clothes', (await e2(() => window.__game.wallet.equipped('hd'))) === 'hd' && (await e2(() => window.__game.wallet.balance)) === 61);
     check('…and the villagers on the square are HD for you now', await waitFor(() => e2(() => window.__game.cast.get('manav').hdOn === true), 4000));
     await p2.click('.shop.open .shop-card:has-text("Günlük kıyafet") button'); await sleep(300);
     check('an outfit (30 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 31);

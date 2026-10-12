@@ -79,7 +79,8 @@
   "villageServer": "wss://sehem2.com.tr/ws/village",
   "admob": {
     "rewardedId": "",
-    "interstitialId": ""
+    "interstitialId": "",
+    "bannerId": "ca-app-pub-8546179762858286/3915451354"
   },
   "sttEndpoint": ""
 }

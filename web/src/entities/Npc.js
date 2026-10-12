@@ -6,7 +6,7 @@ import { seatAt } from '../world/seats.js';
  * Villagers are HD characters on the square (Character.setHd), blocky everywhere else — only for
  * a player who is HD too (bought in the shop): `HD_VILLAGERS.on`, set by main.js.
  */
-export const HD_PLACES = new Set(['village']);
+export const HD_PLACES = new Set(['village', 'house', 'yard', 'schoolyard', 'classroom']); // an HD player sees everyone in HD, everywhere
 export const HD_VILLAGERS = { on: false };
 /**
  * Which HD body each villager has (assets/models/hd_*.glb), so the square isn't full of twins:
@@ -70,9 +70,13 @@ export class Npc extends Character {
   /** After the player became HD (or stopped being): the villagers follow. */
   refreshHd() { if (this.location) this.#hdFor(this.location); }
 
-  /** HD on the square, blocky elsewhere; sitting behaviours sit the HD body down. */
+  /**
+   * HD when the player is (everywhere); sitting behaviours sit the HD body down. Behaviours made of
+   * poses the HD body doesn't have (gardening, the car repair, prayer, the floor cushion) keep the
+   * blocky body while they last — the HD one would only stand there.
+   */
   #hdFor(place) {
-    const on = HD_VILLAGERS.on && HD_PLACES.has(place);
+    const on = HD_VILLAGERS.on && HD_PLACES.has(place) && !this.behavior.blockyPoses;
     if (!on && !this.hdOn) return;
     this.hdOn = on;
     const { key, opts } = villagerHd(this.appearance, this.id);
@@ -92,6 +96,7 @@ export class Npc extends Character {
     this.behavior = Behaviors[name] ?? Behaviors.stand;
     (this.behavior.props || []).forEach((p) => this.showProp(p, true));
     if (this.hdOn) { this.seated = !!this.behavior.seated; this.replayHd(); }
+    if (this.location && (this.hdOn ?? false) !== (HD_VILLAGERS.on && HD_PLACES.has(this.location) && !this.behavior.blockyPoses)) this.#hdFor(this.location); // into / out of a pose-only behaviour
   }
 
   /**

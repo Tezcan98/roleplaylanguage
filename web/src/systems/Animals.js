@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { gloss } from '../i18n/Gloss.js';
+import { RIDE_PRICE, RIDE_SECONDS } from '../content/rides.js';
 
 /**
  * Farm animals (Quaternius "Farm Animals", CC0 — assets/models/animal_*.glb): a cow and sheep
@@ -34,13 +35,13 @@ const TASKS = {
   sheep: { quest: 'sheep-feed', label: 'Koyunlara saman ver', do: ['flag:sheep-fed'], words: [['saman', 'hay'], ['yem', 'feed']], think: 'Koyunlar samanı çok sevdi!', en: 'The sheep love the hay!' },
 };
 const RIDE_SPEED = 1.9; // × walking speed on horseback
-/** Credits for a ride (paid when you get on; you ride as long as you like). */
-export const RIDE_PRICE = 3;
+export { RIDE_PRICE }; // (content/rides.js: credits for a ride of RIDE_SECONDS)
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
 export class Animals {
   #list = [];
+  #rent = null; // { horse, until }: the horse is yours till then (get off and on as you like; it waits)
 
   constructor({ world, models, player, labels, toasts, vocab, clock, wallet, onShop, story = null, effects = null }) {
     Object.assign(this, { world, models, player, labels, toasts, vocab, clock, wallet, onShop, story, effects });
@@ -92,7 +93,9 @@ export class Animals {
 
   /** Grazing: stand a while, walk a few steps somewhere near home, stand again. A horse left somewhere walks back to its post. */
   #tick(a, dt) {
+    if (this.#rent?.horse === a && this.clock() >= this.#rent.until) this.#timeUp();
     if (a.rider) return; // the rider's character moves and animates it
+    if (this.#rent?.horse === a) { a.play('idle'); a.update(dt); return; } // yours for a while: it waits where you left it
     const g = a.group.position, home = a.home;
     const away = dist(g, home);
     if (!a.target && (a.def.roam || away > 0.3)) {
@@ -118,7 +121,7 @@ export class Animals {
   /** Interaction provider: get off, get on a free horse, or pet an animal. */
   find(pos) {
     const p = this.player;
-    if (p.mount) return p.mount.kind === 'horse' ? { label: 'Attan in', dist: 0, priority: 3, run: () => this.dismount() } : null;
+    if (p.mount) return p.mount.kind === 'horse' ? { label: `Attan in · ${this.#left()}`, dist: 0, priority: 3, run: () => this.dismount() } : null;
     const here = this.world.current?.id;
     let best = null;
     for (const a of this.#list) {
@@ -129,7 +132,11 @@ export class Animals {
     if (!best) return null;
     const { a, d } = best, k = KINDS[a.kind], task = TASKS[a.kind];
     if (task && this.story?.quest?.id === task.quest) return { label: task.label, dist: d, priority: 2, run: () => this.#chore(task) };
-    if (a.def.ride) return { label: `Ata bin · ${RIDE_PRICE} kredi`, dist: d, priority: 1, run: () => this.ride(a) };
+    if (a.def.ride) {
+      const mine = this.#rent?.horse === a;
+      if (!mine && this.#rent) return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) }; // one horse at a time
+      return { label: mine ? `Ata bin · ${this.#left()} kaldı` : `Ata bin · ${RIDE_SECONDS / 60} dk · ${RIDE_PRICE} kredi`, dist: d, priority: 1, run: () => this.ride(a) };
+    }
     return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) };
   }
 
@@ -147,26 +154,44 @@ export class Animals {
     this.labels.think(`${capital(k.tr)} ne kadar sevimli!`, 2.5, this.clock());
   }
 
+  /** Time left on the rented horse, "2:41". */
+  #left() {
+    const s = Math.max(0, Math.ceil((this.#rent?.until ?? 0) - this.clock()));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }
+
+  /** The ride is over: off the horse (if on it), and it walks back to its post. */
+  #timeUp() {
+    const a = this.#rent.horse;
+    this.#rent = null;
+    if (a.rider === this.player) this.dismount();
+    a.target = null; a.wait = 2;
+    this.toasts.show('At binme süren doldu. At yerine dönüyor.', gloss('Your ride is over. The horse goes back to its post.'));
+  }
+
   ride(a) {
     const p = this.player;
-    if (this.wallet && !this.wallet.trySpend(RIDE_PRICE)) { // not enough credits: the shop
-      this.toasts.show(`Ata binmek ${RIDE_PRICE} kredi. Kredin yetmiyor.`, gloss('A ride costs credits. Get some in the shop.'));
-      this.onShop?.();
-      return;
+    if (this.#rent?.horse !== a) { // a new ride: pay for RIDE_SECONDS
+      if (this.wallet && !this.wallet.trySpend(RIDE_PRICE)) { // not enough credits: the shop
+        this.toasts.show(`Ata binmek ${RIDE_PRICE} kredi. Kredin yetmiyor.`, gloss('A ride costs credits. Get some in the shop.'));
+        this.onShop?.();
+        return;
+      }
+      this.#rent = { horse: a, until: this.clock() + RIDE_SECONDS };
     }
     if (p.seated) p.sit(false);
     a.rider = p;
     a.play('idle');
     p.setMount(a);
     this.vocab.learn('at', 'horse'); this.vocab.learn('ata binmek', 'to ride a horse');
-    this.toasts.show('Ata bindin! Gezmek için yürü.', gloss('You are on horseback! Walk to ride around.'));
+    this.toasts.show(`Ata bindin! ${RIDE_SECONDS / 60} dakika senin.`, gloss('You are on horseback! It is yours for a few minutes; get off and it waits for you.'));
   }
 
   dismount() {
     const p = this.player, a = this.#list.find((x) => x.rider === p);
     p.setMount(null);
     if (!a) return;
-    a.rider = null; a.target = null; a.wait = 6; // stands a moment, then walks back to its post
+    a.rider = null; a.target = null; a.wait = 6; // still yours: it waits here; when the time is up it walks back to its post
     // the rider steps down beside the horse
     const r = a.group.rotation.y;
     p.position.x = a.group.position.x + Math.cos(r) * 1.0; p.position.z = a.group.position.z - Math.sin(r) * 1.0;

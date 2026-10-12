@@ -48,6 +48,7 @@ export const Behaviors = {
    * another job — hoeing, picking tomatoes, kneeling to firm the soil, watering, a rest to wipe his brow.
    */
   garden: {
+    blockyPoses: true, // (the HD body has no such poses: Npc keeps the blocky one)
     props: ['hoe'],
     roam: true,
     routeKey: 'gardenRoute',
@@ -66,6 +67,7 @@ export const Behaviors = {
    * another part — under the bonnet, the flat tyre, lying under the car, the boot, a window.
    */
   repair: {
+    blockyPoses: true,
     roam: true,
     routeKey: 'carRoute',
     pose(r) { r.body.rotation.x = 0; r.body.position.set(0, 0, 0); },
@@ -97,6 +99,7 @@ export const Behaviors = {
     talk(r) { r.armR.rotation.x = -0.6; r.armL.rotation.x = -0.2; },
   },
   pray: {
+    blockyPoses: true,
     ownsHead: true,
     seated: true, // don't turn towards the player
     pose(r) { PRAYER_POSES[prayerState.pose](r); },
@@ -123,7 +126,7 @@ export const Behaviors = {
     talk(r) { r.armL.rotation.x = r.armR.rotation.x = 0; r.legL.rotation.x = r.legR.rotation.x = 0; },
   },
   /** On a floor cushion at the sofra: lower, and talks with the people around. */
-  sitFloor: { ...sitting(0.62), turnToPlayerWithin: 0, seated: true },
+  sitFloor: { ...sitting(0.62), turnToPlayerWithin: 0, seated: true, blockyPoses: true },
   /** On a bench or sedir. */
   sitBench: { ...sitting(0.38), seated: true },
   watchTv: { ...sitting(0.38, (r) => { r.armL.rotation.x = r.armR.rotation.x = -0.1; }), seated: true },

@@ -1,5 +1,5 @@
 import { man, M2 } from '../characters.js';
-import { RIDE_PRICE } from '../../systems/Animals.js';
+import { RIDE_PRICE, RIDE_SECONDS } from '../rides.js';
 /**
  * Hamdi the groom (seyis) by the horses on the village square (world/locations/VillageSquare.js
  * #stable): he looks after them and teaches the words of riding — saddle, reins, mane, horseshoe —
@@ -27,7 +27,7 @@ export default {
             { tr: 'Atlar ne yer?', en: 'What do horses eat?', next: 'sEat' },
             { tr: 'Bu ne? (eyer)', en: 'What is this? (saddle)', next: 'sWords' },
           ] },
-        sRide: { say: `Bir atın yanına git, "Ata bin" de. Bir binişi ${RIDE_PRICE} kredi. Dizginleri sıkı tut!`, en: 'Go next to a horse and choose "Ride". A ride costs credits. Hold the reins tight!',
+        sRide: { say: `Bir atın yanına git, "Ata bin" de. ${RIDE_PRICE} krediye ${RIDE_SECONDS / 60} dakika senin. İnersen seni bekler. Dizginleri sıkı tut!`, en: 'Go next to a horse and choose "Ride". For a few credits it is yours for a few minutes; get off and it waits for you. Hold the reins tight!',
           words: [['dizgin', 'reins'], ['sıkı tutmak', 'to hold tight']],
           options: [{ tr: 'Tamam, teşekkürler Hamdi Amca!', en: 'Okay, thank you Uncle Hamdi!' }] },
         sEat: { say: 'Atlar saman, arpa ve havuç yer. Bol bol da su içer. Bak, yalak orada.', en: 'Horses eat hay, barley and carrots. And they drink lots of water. Look, the trough is there.',

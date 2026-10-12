@@ -35,7 +35,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *
  * client → server
  *   { type: 'hello', name, room?, gender?, style? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open')
- *   { type: 'state', x, z, rot, moving, sit?, ride? }  own position (~10/s); sit = on a chair or bench, ride = on horseback
+ *   { type: 'state', x, z, rot, moving, sit?, ride? }  own position (~10/s); sit = on a chair or bench, ride = 'horse' | 'scooter' (true / 1: horse, older games)
  *   { type: 'talk', on }                  push-to-talk pressed / released (🎙️ marker)
  *   { type: 'say', text }                 recognised speech (public text bubble)
  *   { type: 'call-request', to }          ask a nearby player for a voice chat
@@ -175,7 +175,7 @@ export class VillageServer {
     switch (msg.type) {
       case 'state':
         if (msg.ka) c.ws.keepalive = true; // this page sends its state at least every 10 s
-        if ([msg.x, msg.z, msg.rot].every(Number.isFinite)) Object.assign(c, { x: msg.x, z: msg.z, rot: msg.rot, moving: !!msg.moving, sit: !!msg.sit, ride: !!msg.ride, dirty: true });
+        if ([msg.x, msg.z, msg.rot].every(Number.isFinite)) Object.assign(c, { x: msg.x, z: msg.z, rot: msg.rot, moving: !!msg.moving, sit: !!msg.sit, ride: msg.ride === 'scooter' ? 'scooter' : msg.ride ? 'horse' : false, dirty: true });
         break;
       case 'talk':
         c.talking = !!msg.on;
@@ -333,7 +333,7 @@ export class VillageServer {
 
   #broadcastStates() {
     for (const members of this.#rooms.values()) {
-      const players = [...members.values()].filter((m) => m.dirty).map(({ id, x, z, rot, moving, sit, ride }) => ({ id, x, z, rot, moving, sit, ...(ride ? { ride: true } : {}) }));
+      const players = [...members.values()].filter((m) => m.dirty).map(({ id, x, z, rot, moving, sit, ride }) => ({ id, x, z, rot, moving, sit, ...(ride ? { ride } : {}) }));
       if (!players.length) continue;
       members.forEach((m) => { m.dirty = false; });
       const msg = JSON.stringify({ type: 'states', players });
@@ -342,7 +342,7 @@ export class VillageServer {
   }
 
   #dist(a, b) { return Math.hypot(a.x - b.x, a.z - b.z); }
-  #public({ id, name, look, x, z, rot, talking, sit, ride }) { return { id, name, look, x, z, rot, talking, sit, ...(ride ? { ride: true } : {}) }; }
+  #public({ id, name, look, x, z, rot, talking, sit, ride }) { return { id, name, look, x, z, rot, talking, sit, ...(ride ? { ride } : {}) }; }
   #table(room) {
     if (!this.#chess.has(room)) this.#chess.set(room, new ChessTable({ scores: this.chessScores, onScore: this.onChessScore }));
     return this.#chess.get(room);

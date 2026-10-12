@@ -181,8 +181,10 @@ export class Character {
     if (mount) {
       this.seated = false;
       const spread = mount.legs === 'pedal' ? 0.1 : 0.6; // a bicycle: knees forward to the pedals
-      r.legL.rotation.set(-0.7, 0, spread); r.legR.rotation.set(-0.7, 0, -spread); r.armL.rotation.x = r.armR.rotation.x = -0.8;
-      if (this.mixer) { this.current = null; this.#playClip('sit'); }
+      if (mount.stand) { r.legL.rotation.set(0, 0, 0); r.legR.rotation.set(0, 0, 0); } // a scooter: standing on the deck
+      else { r.legL.rotation.set(-0.7, 0, spread); r.legR.rotation.set(-0.7, 0, -spread); }
+      r.armL.rotation.x = r.armR.rotation.x = -0.8;
+      if (this.mixer) { this.current = null; this.#playClip(mount.stand ? 'idle' : 'sit'); }
     } else {
       this.group.position.y = 0;
       r.legL.rotation.set(0, 0, 0); r.legR.rotation.set(0, 0, 0); r.armL.rotation.x = r.armR.rotation.x = 0;
@@ -226,7 +228,7 @@ export class Character {
     if (!hd || hd === 'loading' || this.mixer !== hd.mixer) return;
     this.group.updateMatrixWorld(true);
     const pedal = this.mount.legs === 'pedal' ? this.mount.pedal : null;
-    for (const [s, side] of [['L', 1], ['R', -1]]) {
+    for (const [s, side] of this.mount.stand ? [] : [['L', 1], ['R', -1]]) { // (standing on a scooter: the legs as they are)
       const thigh = hd.scene.getObjectByName(`UpperLeg${s}`), shin = hd.scene.getObjectByName(`LowerLeg${s}`), foot = hd.scene.getObjectByName(`Foot${s}`);
       if (!thigh || !shin || !foot) continue;
       // where the foot is, seen from the shin, measured on the first frame (the sitting clip leaves the foot where it was)
@@ -282,8 +284,8 @@ export class Character {
       const m = this.mount, p = this.group.position, rot = this.group.rotation.y;
       const speed = this.#lastPos && dt > 0 ? Math.hypot(p.x - this.#lastPos.x, p.z - this.#lastPos.z) / dt : 0;
       this.#rideSpeed += (speed - this.#rideSpeed) * Math.min(1, dt * 6);
-      const hip = this.#hips(); // (the sitting pose puts them a little behind the feet)
-      p.y = m.seat - hip.up + 0.08;
+      const hip = m.stand ? { up: 0, fwd: 0 } : this.#hips(); // (the sitting pose puts them a little behind the feet)
+      p.y = m.stand ? m.seat : m.seat - hip.up + 0.08; // standing (a scooter): the feet on the deck
       const f = hip.fwd - (m.saddle ?? 0); // the seat (a horse's back, a bike's saddle) under the hips
       m.group.position.set(p.x + Math.sin(rot) * f, 0, p.z + Math.cos(rot) * f); m.group.rotation.y = rot;
       const v = this.#rideSpeed;
