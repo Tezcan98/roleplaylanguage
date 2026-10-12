@@ -78,9 +78,9 @@
   "iceServers": [],
   "villageServer": "wss://sehem2.com.tr/ws/village",
   "admob": {
-    "rewardedId": "",
-    "interstitialId": "",
-    "bannerId": "ca-app-pub-8546179762858286/3915451354"
+    "rewardedId": "ca-app-pub-8546179762858286/4402361503",
+    "interstitialId": "ca-app-pub-8546179762858286/7938281832",
+    "bannerId": "ca-app-pub-8546179762858286/5648914431"
   },
   "sttEndpoint": ""
 }

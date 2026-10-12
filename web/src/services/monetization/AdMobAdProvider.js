@@ -13,15 +13,14 @@ export class AdMobAdProvider extends AdProvider {
   constructor({ rewardedId, interstitialId, bannerId } = {}) {
     super();
     this.ids = { rewarded: rewardedId || TEST.rewarded, interstitial: interstitialId || TEST.interstitial, banner: bannerId || TEST.banner };
-    this.testing = this.ids.rewarded === TEST.rewarded;
-    this.bannerTesting = this.ids.banner === TEST.banner;
+    this.testing = Object.fromEntries(Object.keys(TEST).map((k) => [k, this.ids[k] === TEST[k]])); // test mode only for Google's test ids
     this.bannerOn = false;
     this.ready = null;
   }
 
   #init() {
     this.ready ??= (async () => {
-      await AdMob.initialize({ initializeForTesting: this.testing });
+      await AdMob.initialize({ initializeForTesting: Object.values(this.testing).some(Boolean) });
       try {
         const info = await AdMob.requestConsentInfo();
         if (info.isConsentFormAvailable && info.status === 'REQUIRED') await AdMob.showConsentForm();
@@ -33,7 +32,7 @@ export class AdMobAdProvider extends AdProvider {
   async showRewarded() {
     try {
       await this.#init();
-      await AdMob.prepareRewardVideoAd({ adId: this.ids.rewarded, isTesting: this.testing });
+      await AdMob.prepareRewardVideoAd({ adId: this.ids.rewarded, isTesting: this.testing.rewarded });
       const reward = await AdMob.showRewardVideoAd();
       return !!reward && Number(reward.amount ?? 0) > 0;
     } catch (e) {
@@ -49,7 +48,7 @@ export class AdMobAdProvider extends AdProvider {
     try {
       await this.#init();
       if (!this.bannerOn) return; // left the menu meanwhile
-      await AdMob.showBanner({ adId: this.ids.banner, adSize: BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0, isTesting: this.bannerTesting });
+      await AdMob.showBanner({ adId: this.ids.banner, adSize: BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0, isTesting: this.testing.banner });
     } catch (e) { console.warn('[admob] banner failed', e); }
   }
 
@@ -62,7 +61,7 @@ export class AdMobAdProvider extends AdProvider {
   async showInterstitial() {
     try {
       await this.#init();
-      await AdMob.prepareInterstitial({ adId: this.ids.interstitial, isTesting: this.testing });
+      await AdMob.prepareInterstitial({ adId: this.ids.interstitial, isTesting: this.testing.interstitial });
       await AdMob.showInterstitial();
     } catch (e) {
       console.warn('[admob] interstitial failed', e); // no ad this time: the story just goes on

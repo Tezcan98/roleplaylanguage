@@ -130,15 +130,24 @@ try {
   // --- square fence --------------------------------------------------------------------
   await ev(() => window.__game.travel.place('village', 'yardRoad', { force: true })); await sleep(1500);
   await drainUi(page); // first-visit card of the square
-  // walk towards each side for a while: the player must reach the fence but never pass it
+  // walk towards each side: the player must reach the fence but never pass it. After a second the
+  // player is put 6 m short of the fence in the direction walked (a slow test machine walks slowly).
   let edge = 0;
+  const half = await ev(() => window.__game.world.get('village').collision.bounds.x[1] + 0.4); // the fence (content/square.js)
+  const far = () => ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); });
   for (const key of ['ArrowRight', 'ArrowUp', 'ArrowLeft', 'ArrowDown']) {
     await ev(() => window.__game.player.position.set(24, 0, -1.5)); await sleep(150);
     await page.keyboard.down(key);
-    for (let i = 0; i < 48; i++) { await sleep(250); edge = Math.max(edge, await ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); })); }
+    await waitFor(() => ev(() => Math.hypot(window.__game.player.position.x - 24, window.__game.player.position.z + 1.5) > 0.5), 8000, 100);
+    await ev((h) => {
+      const p = window.__game.player.position, dx = p.x - 24, dz = p.z + 1.5, n = Math.hypot(dx, dz) || 1;
+      const k = Math.min(...[[24, dx / n], [-1.5, dz / n]].map(([c, d]) => (Math.abs(d) < 1e-3 ? Infinity : ((Math.sign(d) * (h - 6)) - c) / d)));
+      p.set(24 + dx / n * k, 0, -1.5 + dz / n * k);
+    }, half);
+    let last = -1, still = 0;
+    for (let i = 0; i < 80 && still < 4; i++) { await sleep(250); const f = await far(); edge = Math.max(edge, f); still = Math.abs(f - last) < 0.02 ? still + 1 : 0; last = f; }
     await page.keyboard.up(key);
   }
-  const half = await ev(() => window.__game.world.get('village').collision.bounds.x[1] + 0.4); // the fence (content/square.js)
   check('the square fence stops the player', edge > half - 1.5 && edge <= half - 0.3, `furthest ${edge.toFixed(2)} m from the centre (fence at ${half})`);
 
   // --- chess on the giant board, on foot (İsmail Dede runs the table) -----------------
