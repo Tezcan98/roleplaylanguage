@@ -16,7 +16,7 @@ export const VOICES = {
   default: man('Charon'),
   ahmet: man('Puck', M2),
   anne: WOMAN,
-  okuyucu: WOMAN, // reads library books aloud (on request)
+  okuyucu: man('Charon', M2), // reads library books aloud (a man's voice: when Gemini's daily cap is reached, Piper on our server reads on)
   baba: man('Orus', M2),
   dede: man('Algenib'),
   ogretmen: WOMAN,

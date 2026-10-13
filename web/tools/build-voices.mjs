@@ -10,6 +10,7 @@
  *   node tools/build-voices.mjs --server=https://sehem2.com.tr/api/tts
  *   options: --look=boy-modest|boy-strong|girl-covered|girl-open|all  (whose name the family says; default all)
  *            --limit=N   record at most N new lines this run
+ *            --who=okuyucu,kardes   only these speakers' lines (e.g. the library's books first)
  * Needs ffmpeg (WAV → MP3); without it the WAV is kept as is, under the same .mp3 name.
  */
 import { spawnSync } from 'node:child_process';
@@ -24,7 +25,7 @@ if (!opt.only) {
   const looks = !opt.look || opt.look === 'all' ? LOOKS : [opt.look];
   let budget = Number(opt.limit ?? Infinity), total = 0, stopped = false;
   for (const look of looks) {
-    const args = [fileURLToPath(import.meta.url), `--only=${look}`, ...(opt.server ? [`--server=${opt.server}`] : []), ...(Number.isFinite(budget) ? [`--limit=${budget}`] : [])];
+    const args = [fileURLToPath(import.meta.url), `--only=${look}`, ...(opt.server ? [`--server=${opt.server}`] : []), ...(opt.who ? [`--who=${opt.who}`] : []), ...(Number.isFinite(budget) ? [`--limit=${budget}`] : [])];
     const r = spawnSync(process.execPath, args, { stdio: ['ignore', 'pipe', 'inherit'], encoding: 'utf8' });
     process.stdout.write(r.stdout.replace(/^RESULT .*\n?/m, ''));
     const m = /^RESULT (\d+) (\d+) (\w+)/m.exec(r.stdout);
@@ -48,7 +49,8 @@ if (look.startsWith('girl')) C.VOICES.ahmet = { id: 'tr-kiz', female: true, pitc
 
 /** Every fixed line: [speaker, text]. */
 const lines = [];
-const add = (who, text) => { if (typeof text === 'string' && /\p{L}/u.test(text)) lines.push([who, text]); };
+const only = opt.who ? new Set(String(opt.who).split(',')) : null;
+const add = (who, text) => { if (typeof text === 'string' && /\p{L}/u.test(text) && (!only || only.has(who))) lines.push([who, text]); };
 for (const [who, d] of Object.entries(C.DIALOGUES)) for (const n of Object.values(d.nodes)) add(who, n.say);
 for (const list of Object.values(C.TALKS ?? {})) for (const talk of list) for (const l of talk) add(l.who, l.tr);
 for (const talk of C.KAHVE_TALKS ?? []) for (const l of talk) add(l.who, l.tr);
@@ -62,6 +64,8 @@ for (const l of Object.values(C.LESSONS)) {
 add('ogretmen', 'Aferin çocuklar! Bugünkü ders bitti.');
 add('anne', 'Ali, yatakta zıplama!');
 add('kardes', 'Tamam anne!');
+add('kardes', 'Çayınız, buyurun! Afiyet olsun.'); // the kahvehane's apprentice (systems/KahveCirak.js)
+for (const b of C.BOOKS ?? []) for (const p of b.pages) add('okuyucu', p.tr); // the library's books, read aloud page by page
 
 const OUT = fileURLToPath(new URL('../assets/speech/', import.meta.url));
 mkdirSync(OUT, { recursive: true });

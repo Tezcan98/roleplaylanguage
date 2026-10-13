@@ -268,6 +268,16 @@ try {
   check('a ney plays softly in the library', (await ev(() => window.__game.ney.level)) > 0.3, String(await ev(() => window.__game.ney.level)));
   await ev(() => window.__game.player.position.set(4, 0, 4)); await sleep(300);
   check('…and not by the fountain', (await ev(() => window.__game.ney.level)) === 0);
+  await page.keyboard.press('Shift'); // (a key press: the browser lets sound start)
+  const tune = await waitFor(() => ev(() => { const m = window.__game.music; return (m.levels()[m.current] ?? 0) > 0.05 ? m.current : null; }), 10000);
+  check('the square has its own background music', tune === 'assets/audio/meydan.mp3', String(tune));
+  await ev(() => window.__game.settings.set('musicOn', false));
+  check('…"Müzik" off in the settings: it fades out', !!(await waitFor(() => ev(() => Object.values(window.__game.music.levels()).every((v) => v < 0.01)), 8000)));
+  await ev(() => window.__game.settings.set('musicOn', true));
+  await ev(() => { const a = window.__game.ads; a._banner = []; a.showBanner = () => a._banner.push('show'); a.hideBanner = () => a._banner.push('hide'); window.__game.idleAd.idle = 88; });
+  check('standing still for a long while: a banner ad', !!(await waitFor(() => ev(() => window.__game.ads._banner.at(-1) === 'show'), 8000)));
+  await page.keyboard.down('ArrowUp'); await sleep(500); await page.keyboard.up('ArrowUp');
+  check('…the first step takes it away', !!(await waitFor(() => ev(() => window.__game.ads._banner.at(-1) === 'hide'), 4000)));
 
   // --- shopping: the bag, rubbish bins, the table at home -------------------------------
   const bag = (k) => ev((k) => window.__game.inventory.count(k), k);

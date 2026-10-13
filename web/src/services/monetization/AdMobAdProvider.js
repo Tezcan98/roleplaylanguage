@@ -41,7 +41,7 @@ export class AdMobAdProvider extends AdProvider {
     }
   }
 
-  /** The banner at the bottom of the screen (the square's menu); `hideBanner()` takes it away. */
+  /** The banner at the bottom of the screen (menus, a player standing still); `hideBanner()` takes it away. */
   async showBanner() {
     if (this.bannerOn) return;
     this.bannerOn = true;
@@ -49,6 +49,7 @@ export class AdMobAdProvider extends AdProvider {
       await this.#init();
       if (!this.bannerOn) return; // left the menu meanwhile
       await AdMob.showBanner({ adId: this.ids.banner, adSize: BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0, isTesting: this.testing.banner });
+      if (!this.bannerOn) await AdMob.removeBanner(); // taken away while it was coming up
     } catch (e) { console.warn('[admob] banner failed', e); }
   }
 

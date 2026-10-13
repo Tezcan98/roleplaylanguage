@@ -115,6 +115,7 @@ import { Football } from './systems/Football.js';
 import { TalkAreas } from './systems/TalkAreas.js';
 import { Library } from './systems/Library.js';
 import { NeyMusic } from './systems/NeyMusic.js';
+import { BackgroundMusic } from './systems/BackgroundMusic.js';
 import { BookReader } from './ui/BookReader.js';
 import { Subtitles } from './ui/Subtitles.js';
 import { AmbientTalk } from './systems/AmbientTalk.js';
@@ -487,7 +488,12 @@ const library = new Library({
 effects.register('library', () => library.atShelf());
 effects.register('library-read', () => library.readHere()); // a library seat: a book read aloud with subtitles
 // a ney plays quietly in the background in Aslan Bey's open library
-const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z }, muted: () => !settings.get('musicOn', true) });
+const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z }, src: 'assets/audio/kutuphane.mp3', muted: () => !settings.get('musicOn', true) });
+// each outdoor place its own tune; low under talk, and giving way to the library's music near it
+const music = new BackgroundMusic({
+  world, muted: () => !settings.get('musicOn', true),
+  duck: () => (modes.is('dialogue') || village.group.zone || village.voice.inCall || library.reading ? 0.3 : 1) * (1 - ney.level),
+});
 chess.onMove = (m) => talk.chessMoved(m);
 effects
   .register('chess-ask', (color) => chess.ask(color))
@@ -666,6 +672,17 @@ const introFirst = async () => {
   settings.set('introSeen', true);
 };
 const setup = new CharacterSetup(host, { modes, settings, villageServer });
+// a player standing still for a long while (in the game, no card open): a banner ad, gone at the first step
+const IDLE_BANNER = 90; // s
+const idleAd = {
+  idle: 0, on: false,
+  update(dt) {
+    if (menu.isOpen) { this.idle = 0; this.on = false; return; } // the menu decides its own banner
+    this.idle = modes.is('play') && !player.moving ? this.idle + dt : 0;
+    const want = this.idle > IDLE_BANNER && !wallet.adFree;
+    if (want !== this.on) { this.on = want; if (want) ads.showBanner(); else ads.hideBanner(); }
+  },
+};
 const menu = new MainMenu(host, {
   settings,
   onBanner: (on) => { if (on && !wallet.adFree) ads.showBanner(); else ads.hideBanner(); }, // a banner on the square's menu (none with ad-free)
@@ -797,7 +814,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ ambient: [kahveTalk, cirak, talk, ney, jumpShown, library], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, talk, ney, music, jumpShown, library, idleAd], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -850,4 +867,4 @@ setInterval(() => {
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

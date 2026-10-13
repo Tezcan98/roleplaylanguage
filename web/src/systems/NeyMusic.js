@@ -1,7 +1,7 @@
 /**
- * A ney taksim playing softly in the background of Aslan Bey's open library: a real recording
- * (assets/audio/ney.mp3, looped), louder the closer you are, silent elsewhere. Without the file
- * nothing plays.
+ * Soft oriental music in the background of Aslan Bey's open library (assets/audio/kutuphane.mp3,
+ * slow strings, CC0; a ney recording would fit even better), looped, louder the closer you are,
+ * silent elsewhere. Without the file nothing plays.
  */
 const HEAR = 14;     // metres from the library's middle
 const VOLUME = 0.55; // at the very middle
@@ -11,7 +11,7 @@ export class NeyMusic {
   #missing = false;
 
   /** @param {{ place: { location: string, x: number, z: number }, src?: string }} o */
-  constructor({ world, player, place, src = 'assets/audio/ney.mp3', muted = () => false }) {
+  constructor({ world, player, place, src = 'assets/audio/kutuphane.mp3', muted = () => false }) {
     Object.assign(this, { world, player, place, src, muted });
     // browsers start sound only after a tap / key press
     const unlock = () => { if (this.level > 0 && !this.muted()) this.#play(); };

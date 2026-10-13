@@ -162,8 +162,8 @@ try {
   await B.evaluate(() => window.__game.village.ptt.set(false));
   const vol = () => A.evaluate(() => Object.values(window.__game.village.group.volumes())[0] ?? -1);
   const near = await vol();
-  await at(B, K.x + 10, K.z + 3); await sleep(1500);
-  const far = await vol();
+  await at(B, K.x + 10, K.z + 3);
+  const far = await waitFor(async () => { const v = await vol(); return v > 0 && v < 0.35 ? v : 0; }, 10000) || await vol(); // (slow machines: B's new place takes a moment to arrive)
   check('…the further away, the quieter', near > 0.9 && far < 0.35 && far > 0, `1 m: ${near.toFixed(2)}, 6 m: ${far.toFixed(2)}`);
   await at(A, 0, 3);
   check('…walking out leaves the zone (the others no longer hear you)', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.group.zone)) === null && (await B.evaluate(() => window.__game.village.group.ids().length)) === 0, 6000))

@@ -12,8 +12,12 @@ import { COIN_HTML } from './coin.js';
  * settings (new game, how to play, voices, picture quality) open only when asked for.
  * It is shown again when the player leaves the online square.
  */
+/** How often the main menu shows a banner ad (when it opens). */
+const HOME_BANNER = 0.2;
+
 export class MainMenu {
   #view = 'home'; // home | city | settings
+  #homeAd = false; // this time the main menu carries a banner (HOME_BANNER of the times it opens)
 
   constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [] }) {
     Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, onBanner, chapters });
@@ -44,7 +48,8 @@ export class MainMenu {
 
   show(view = 'home') {
     this.#view = view;
-    this.onBanner?.(view === 'city'); // the square's menu carries a banner ad (gone when you go in)
+    if (!this.isOpen) this.#homeAd = Math.random() < HOME_BANNER; // decided as the menu opens
+    this.onBanner?.(view === 'city' || (view === 'home' && this.#homeAd)); // the square's menu carries a banner ad (gone when you go in), the main menu now and then
     const s = this.settings;
     const save = this.hasSave();
     this.servers.value = s.get('serverRegion', 'ankara');
@@ -107,6 +112,8 @@ export class MainMenu {
     this.root.classList.add('open');
     this.servers.start();
   }
+
+  get isOpen() { return this.root.classList.contains('open'); }
 
   hide() { this.root.classList.remove('open'); this.servers.stop(); this.onBanner?.(false); }
 }
