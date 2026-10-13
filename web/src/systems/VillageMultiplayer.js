@@ -4,6 +4,8 @@ const SEND_EVERY = 0.1; // seconds
 const KEEPALIVE = 10;   // seconds: my state goes out at least this often, even standing still (the server drops frozen pages)
 const AWAY_AFTER = 20000; // ms in the background before leaving the square
 const ASK_RANGE = 4;    // metres: "voice chat with X" appears this close
+/** In a talking zone: how loud someone is at `d` metres (1 m and nearer: full; 4 m: half; 7 m: a fifth). */
+export const zoneVolume = (d) => 1 / (1 + (Math.max(0, d - 1) / 3) ** 2);
 
 const DECLINE_TEXT = {
   declined: ['isteğini reddetti', 'declined'],
@@ -20,7 +22,9 @@ const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı t
 /**
  * The multiplayer village square:
  * - public speech is text: push-to-talk runs speech-to-text and shows a bubble for everyone;
- * - voice is one-to-one: walk up to someone, ask, and talk once they accept.
+ * - voice is one-to-one: walk up to someone, ask, and talk once they accept;
+ * - except in a talking zone (the kahvehane): there the talk button sends your voice to everyone
+ *   inside, and you hear them — the nearer, the louder (GroupVoice).
  * Also an interaction provider ("Voice chat with X") for InteractionSystem.
  */
 export class VillageMultiplayer {
@@ -38,8 +42,8 @@ export class VillageMultiplayer {
    * @param {Object<string, { suffix: string, balls?: object[], label: string }>} o.places
    *   public places: location id → room suffix (the city server + suffix is the room), its shared balls
    */
-  constructor({ bus, net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null }) {
-    Object.assign(this, { net, voice, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice });
+  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null }) {
+    Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice });
     this.locationId = 'village'; // the main square (chess, menu entry)
     this.joinedAt = null;
     this.chosenRoom = false; // true when the player picked the square on the main menu
@@ -245,15 +249,23 @@ export class VillageMultiplayer {
 
   #reset({ keepChess = false } = {}) {
     if (!keepChess) this.chess?.goOffline();
+    this.#setZone(null, { tell: false });
     this.#endCall(null);
     this.remotes.clear();
     this.ptt.show(false);
     this.player.voice = false;
   }
 
-  /** Public push-to-talk: speech becomes a text bubble for everyone (no open voice). */
+  /** Public push-to-talk: speech becomes a text bubble for everyone (no open voice) — in a talking zone, your voice. */
   talk(on) {
     if (!this.net.connected) { if (on) { this.ptt.set(false); this.toasts.show('Meydana bağlı değilsin', 'Not connected to the square'); } return; }
+    if (this.group?.zone) {
+      if (on && !this.group.micOk) { this.ptt.set(false); this.toasts.show('Mikrofon izni yok: sadece dinleyebilirsin', 'No microphone: you can listen only'); return; }
+      this.group.talk(on);
+      this.player.voice = on;
+      this.net.send({ type: 'talk', on });
+      return;
+    }
     if (!this.recognizer?.supported) { // no speech-to-text in this browser: type it
       if (on) { this.ptt.set(false); this.ptt.typeInstead(); }
       return;
@@ -356,8 +368,48 @@ export class VillageMultiplayer {
     if (message) this.toasts.show(message, 'Voice chat ended');
   }
 
+  // --- talking zones (the kahvehane) ----------------------------------------------------
+
+  /** Which talking zone the player stands in (a step of slack on the way out). */
+  #zoneAt(p) {
+    if (this.joinedAt !== 'village' || this.world.current?.id !== 'village') return null;
+    for (const [id, r] of Object.entries(this.zones)) {
+      const m = id === this.group.zone ? 0.8 : 0;
+      if (Math.abs(p.x - r.x) <= r.w / 2 + m && Math.abs(p.z - r.z) <= r.d / 2 + m) return id;
+    }
+    return null;
+  }
+
+  #setZone(zone, { tell = true } = {}) {
+    if (!this.group || (this.group.zone ?? null) === zone) return;
+    if (this.ptt.on) this.ptt.set(false);
+    if (zone) {
+      this.group.enter(zone);
+      this.ptt.setZone(this.zones[zone].name);
+      this.toasts.show(`${this.zones[zone].name}: toplu konuşma alanı 🎙️`, 'Everyone in here hears each other. Hold the talk button to speak.');
+    } else {
+      this.group.leave({ tell });
+      this.ptt.setZone(null);
+    }
+  }
+
+  /** How the zone's voices are doing (from GroupVoice). */
+  zoneState(st) {
+    if (st === 'full') { this.ptt.setZone(null); this.toasts.show('Burası şu an çok kalabalık, sesler kapalı', 'Too many people in here for voices right now'); }
+    else if (st === 'no-mic') this.toasts.show('Mikrofon izni yok: sadece dinleyebilirsin', 'No microphone: you can listen only');
+    else if (st === 'blocked-audio') this.toasts.show('Sesleri duymak için ekrana dokun', 'Tap the screen to hear the voices');
+  }
+
   update(dt, t) {
     if (!this.net.connected) return;
+    if (this.group) {
+      this.#setZone(this.#zoneAt(this.player.position));
+      for (const id of this.group.ids()) {
+        const c = this.remotes.get(id);
+        const d = c ? Math.hypot(c.position.x - this.player.position.x, c.position.z - this.player.position.z) : 99;
+        this.group.setVolume(id, c && !this.isBlocked(id, c.name) ? zoneVolume(d) : 0);
+      }
+    }
     const onPitch = !!this.onPitch?.(this.player.position); // a match: the hard-shot button there, not the talk button
     if (onPitch === !this.ptt.root.hidden) this.ptt.show(!onPitch);
     this.remotes.update(dt, t, this.player.position); // (only the nearest are drawn: a crowd of a hundred)

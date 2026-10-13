@@ -114,6 +114,18 @@ const GENERATORS = {
       g.beginPath(); g.ellipse(r() * s, r() * s, 12 + r() * 16, 9 + r() * 12, r() * 3, 0, Math.PI * 2); g.fill();
     }
   },
+  /** White and light grey marble slabs, laid like a chessboard, with faint veins (the mosque's courtyard). */
+  marble(g, s) {
+    const r = rng(14), n = 4, w = s / n;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      g.fillStyle = shade((x + y) % 2 ? '#C9CDD2' : '#F1F1EE', (r() - 0.5) * 0.04);
+      g.fillRect(x * w, y * w, w, w);
+      g.strokeStyle = 'rgba(120,125,135,0.25)'; g.lineWidth = 1;
+      for (let k = 0; k < 2; k++) { g.beginPath(); g.moveTo(x * w + r() * w, y * w); g.bezierCurveTo(x * w + r() * w, y * w + w * 0.4, x * w + r() * w, y * w + w * 0.6, x * w + r() * w, y * w + w); g.stroke(); }
+    }
+    g.fillStyle = 'rgba(150,150,150,0.6)';
+    for (let i = 0; i <= n; i++) { g.fillRect(i * w - 1, 0, 2, s); g.fillRect(0, i * w - 1, s, 2); }
+  },
   brick(g, s) {
     const r = rng(10), rows = 8, h = s / rows, w = s / 4;
     g.fillStyle = '#E9DCC6'; g.fillRect(0, 0, s, s);

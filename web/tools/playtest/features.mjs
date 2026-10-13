@@ -132,23 +132,29 @@ try {
   await drainUi(page); // first-visit card of the square
   // walk towards each side: the player must reach the fence but never pass it. After a second the
   // player is put 6 m short of the fence in the direction walked (a slow test machine walks slowly).
-  let edge = 0;
-  const half = await ev(() => window.__game.world.get('village').collision.bounds.x[1] + 0.4); // the fence (content/square.js)
-  const far = () => ev(() => { const p = window.__game.player.position; return Math.max(Math.abs(p.x), Math.abs(p.z)); });
+  // (The fence is further out in the east, past the mosque: content/square.js SQUARE_EAST.)
+  const bounds = await ev(() => window.__game.world.get('village').collision.bounds);
+  const fences = [];
   for (const key of ['ArrowRight', 'ArrowUp', 'ArrowLeft', 'ArrowDown']) {
     await ev(() => window.__game.player.position.set(24, 0, -1.5)); await sleep(150);
     await page.keyboard.down(key);
     await waitFor(() => ev(() => Math.hypot(window.__game.player.position.x - 24, window.__game.player.position.z + 1.5) > 0.5), 8000, 100);
-    await ev((h) => {
-      const p = window.__game.player.position, dx = p.x - 24, dz = p.z + 1.5, n = Math.hypot(dx, dz) || 1;
-      const k = Math.min(...[[24, dx / n], [-1.5, dz / n]].map(([c, d]) => (Math.abs(d) < 1e-3 ? Infinity : ((Math.sign(d) * (h - 6)) - c) / d)));
-      p.set(24 + dx / n * k, 0, -1.5 + dz / n * k);
-    }, half);
-    let last = -1, still = 0;
-    for (let i = 0; i < 80 && still < 4; i++) { await sleep(250); const f = await far(); edge = Math.max(edge, f); still = Math.abs(f - last) < 0.02 ? still + 1 : 0; last = f; }
+    const side = await ev((b) => { // which fence it walks to, and put it near that fence
+      const p = window.__game.player.position, dx = p.x - 24, dz = p.z + 1.5, alongX = Math.abs(dx) > Math.abs(dz);
+      const fence = alongX ? (dx > 0 ? b.x[1] : b.x[0]) : (dz > 0 ? b.z[1] : b.z[0]); // (the bounds are 0.4 m inside the fence)
+      if (alongX) p.set(fence - Math.sign(dx) * 6, 0, -27.5); else p.set(24, 0, fence - Math.sign(dz) * 6); // (z −27.5: clear of the mosque's courtyard, the kahvehane and the library)
+      return { alongX, fence, sign: alongX ? Math.sign(dx) : Math.sign(dz) };
+    }, bounds);
+    let last = null, still = 0, far = -1e9;
+    for (let i = 0; i < 80 && still < 4; i++) {
+      await sleep(250);
+      const v = await ev((alongX) => (alongX ? window.__game.player.position.x : window.__game.player.position.z), side.alongX);
+      far = Math.max(far, v * side.sign); still = last != null && Math.abs(v - last) < 0.02 ? still + 1 : 0; last = v;
+    }
     await page.keyboard.up(key);
+    fences.push({ ...side, far, gap: side.fence * side.sign + 0.4 - far });
   }
-  check('the square fence stops the player', edge > half - 1.5 && edge <= half - 0.3, `furthest ${edge.toFixed(2)} m from the centre (fence at ${half})`);
+  check('the square fence stops the player (all four sides)', fences.every((f) => f.gap >= 0.3 && f.gap < 1.5), fences.map((f) => `${f.alongX ? 'x' : 'z'}${f.sign > 0 ? '+' : '-'}: ${f.gap.toFixed(2)} m short of the fence`).join(', '));
 
   // --- chess on the giant board, on foot (İsmail Dede runs the table) -----------------
   const stand = (sq) => ev((sq) => { const g = window.__game, f = sq.charCodeAt(0) - 97, r = Number(sq[1]) - 1; g.player.position.set(-15 + (f - 3.5) * 1.1, 0, 15 - (r - 3.5) * 1.1); }, sq);

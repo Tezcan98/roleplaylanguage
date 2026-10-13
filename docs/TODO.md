@@ -4,8 +4,8 @@ Sıradakiler yukarıdan aşağıya. Biten bir iş buradan silinir (ayrıntısı 
 
 ## Sırada
 
-1. **Toplu konuşma odaları** (yeni özellik): meydanda birden fazla kişinin aynı anda sesli konuştuğu odalar
-   (şu an yalnızca birebir sesli sohbet ve "Bas, konuş" yazısı var).
+1. **Toplu konuşma alanları**: kahvehane ilk alan (içeridekiler birbirini duyar, yakındaki yüksek).
+   Sırada: başka alanlar (çay bahçesi, cami avlusu?) ve 16 kişiden kalabalıkta en yakındakiler.
 2. **Tanıtım videosu (yeniden)**:
    - Diğer oyuncuların hızlı gidip ışınlanması düzeldi (bütün sayfalar aynı sanal saatte, Shorts'ta denendi).
    - Bakkal / alışveriş tanıtılmasın; aile ve görevler ön planda olsun.

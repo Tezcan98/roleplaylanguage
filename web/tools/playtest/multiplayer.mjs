@@ -146,6 +146,30 @@ try {
   await A.click('.callbar .danger');
   await waitFor(async () => !(await inCall(A)) && !(await inCall(B)), 6000);
 
+  // the kahvehane: a talking zone — walk in and everyone there hears each other, the nearer the louder
+  const K = await A.evaluate(() => window.__game.village.zones.kahve);
+  await at(A, K.x + 4, K.z + 3); await at(B, K.x + 5, K.z + 3);
+  const inZone = await waitFor(async () => (await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.group.zone)))).every((z) => z === 'kahve'), 8000);
+  check('kahvehane: walking in joins its talking zone, and the screen says so', !!inZone && await A.evaluate(() => !document.querySelector('.pill.zone-note').hidden && document.querySelector('.ptt span').textContent.includes('ses')),
+    await A.evaluate(() => document.querySelector('.pill.zone-note')?.textContent));
+  const zoneUp = () => Promise.all([A, B].map((p) => p.evaluate(() => Object.values(window.__game.village.group.states())))).then((s) => (s.every((x) => x.length === 1 && x[0] === 'connected') ? s : null));
+  const zs = await waitFor(zoneUp, 45000) ?? await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.group.states())));
+  check('…the two hear each other (WebRTC connected)', Array.isArray(zs) && zs.length === 2 && zs.every((x) => Array.isArray(x)), JSON.stringify(zs));
+  await B.evaluate(() => window.__game.village.ptt.set(true));
+  const zoneBytes = () => A.evaluate(async () => { let n = 0; for (const pc of window.__game.village.group._debugPeers()) (await pc.getStats()).forEach((r) => { if (r.type === 'inbound-rtp' && r.kind === 'audio') n += r.bytesReceived; }); return n; });
+  const zb = await waitFor(async () => { const n = await zoneBytes(); return n > 1000 ? n : 0; }, 10000) || await zoneBytes();
+  check('…B holds the talk button: A gets B\'s voice, and sees the 🎙️', zb > 1000 && !!(await waitFor(() => A.evaluate(() => window.__game.village.remotes.list().some((c) => c.voice)), 4000)), `${zb} bytes`);
+  await B.evaluate(() => window.__game.village.ptt.set(false));
+  const vol = () => A.evaluate(() => Object.values(window.__game.village.group.volumes())[0] ?? -1);
+  const near = await vol();
+  await at(B, K.x + 10, K.z + 3); await sleep(1500);
+  const far = await vol();
+  check('…the further away, the quieter', near > 0.9 && far < 0.35 && far > 0, `1 m: ${near.toFixed(2)}, 6 m: ${far.toFixed(2)}`);
+  await at(A, 0, 3);
+  check('…walking out leaves the zone (the others no longer hear you)', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.group.zone)) === null && (await B.evaluate(() => window.__game.village.group.ids().length)) === 0, 6000))
+    && await A.evaluate(() => document.querySelector('.pill.zone-note').hidden));
+  await at(B, 0, 6);
+
   await at(A, 2, 4); await at(B, 3.5, 4); await sleep(500);
   await A.keyboard.press('e'); await waitFor(() => B.$('text=Engelle')); await B.click('text=Engelle'); await sleep(800);
   await A.keyboard.press('e'); await sleep(1500);

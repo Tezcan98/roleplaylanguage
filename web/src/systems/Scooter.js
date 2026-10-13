@@ -2,23 +2,27 @@ import * as THREE from 'three';
 import { gloss } from '../i18n/Gloss.js';
 
 /**
- * Five scooters on a stand by the fence at the square's entrance: free to ride (each player has the
- * stand's five on their own screen, so everyone can take one), standing on the deck and pushing off
- * with a foot; it picks up speed, rolls on when let go and turns in curves (PlayerController `glide`). Others see you on one (VillageMultiplayer sends `ride: 'scooter'`). Getting off
+ * Five electric scooters on a stand by the fence at the square's entrance: free to ride (each player
+ * has the stand's five on their own screen, so everyone can take one), standing on the deck; the
+ * motor picks up speed smoothly, it rolls on when let go and turns in curves (PlayerController `glide`). Others see you on one (VillageMultiplayer sends `ride: 'scooter'`). Getting off
  * leaves it where it is; leaving the square puts it back at the stand.
  */
 const STAND = { where: 'village', x: -50.6, zs: [3.4, 4.2, 5.0, 5.8, 6.6], rot: Math.PI / 2 }; // along the fence, facing into the square
 const COLOURS = [0xE4574A, 0x2F6FDB, 0x3E8E4A];
 const WHEEL = 0.085;
 
-/** A kick scooter facing +z (shared with RemotePlayers for the others' rides). */
+/** An electric scooter facing +z (shared with RemotePlayers for the others' rides). */
 export function scooterMesh(mf, colour = COLOURS[0]) {
   const group = new THREE.Group(), dark = 0x2B2B2B, metal = { tex: 'metal' };
   const wheels = [0.32, -0.32].map((z) => {
-    const w = mf.cyl(WHEEL, WHEEL, 0.05, dark, 12); w.rotation.z = Math.PI / 2; w.position.set(0, WHEEL, z); group.add(w); return w;
+    const w = mf.cyl(WHEEL, WHEEL, 0.06, dark, 12); w.rotation.z = Math.PI / 2; w.position.set(0, WHEEL, z); group.add(w); return w;
   });
-  group.add(mf.at(mf.box(0.15, 0.04, 0.72, colour), 0, WHEEL + 0.05, 0)); // the deck
-  group.add(mf.at(mf.box(0.13, 0.012, 0.6, dark), 0, WHEEL + 0.075, -0.03)); // grip tape
+  group.add(mf.at(mf.cyl(0.05, 0.05, 0.07, colour, 10), 0, WHEEL, -0.32)).rotation.z = Math.PI / 2; // the hub motor in the back wheel
+  group.add(mf.at(mf.box(0.17, 0.07, 0.74, dark), 0, WHEEL + 0.035, 0)); // the deck with the battery in it
+  group.add(mf.at(mf.box(0.175, 0.03, 0.7, colour), 0, WHEEL + 0.075, 0));
+  group.add(mf.at(mf.box(0.13, 0.008, 0.58, 0x1A1A1A), 0, WHEEL + 0.094, -0.03)); // grip tape
+  group.add(mf.at(mf.box(0.09, 0.05, 0.03, 0xFFF6D0), 0, 0.62, 0.41)); // the front light
+  group.add(mf.at(mf.box(0.1, 0.02, 0.06, 0x2E9BD6), 0, 0.99, 0.37)); // the little screen on the handlebar
   const stem = mf.cyl(0.02, 0.02, 0.9, metal, 8); stem.position.set(0, WHEEL + 0.47, 0.33); stem.rotation.x = -0.12; group.add(stem);
   const bar = mf.cyl(0.016, 0.016, 0.44, metal, 8); bar.rotation.z = Math.PI / 2; bar.position.set(0, 0.97, 0.39); group.add(bar);
   [-0.21, 0.21].forEach((x) => { const g = mf.cyl(0.022, 0.022, 0.09, dark, 8); g.rotation.z = Math.PI / 2; g.position.set(x, 0.97, 0.39); group.add(g); });
@@ -30,7 +34,7 @@ export function scooterMount(mf, colour = COLOURS[0]) {
   const { group, wheels } = scooterMesh(mf, colour);
   let spin = 0;
   return {
-    kind: 'scooter', group, seat: WHEEL + 0.07, stand: true, glide: true, speed: 1.7,
+    kind: 'scooter', group, seat: WHEEL + 0.1, stand: true, glide: true, speed: 1.7,
     hands: [new THREE.Vector3(0.21, 0.97, 0.39), new THREE.Vector3(-0.21, 0.97, 0.39)], // on the grips (left, right)
     play: (name, v = 0) => { spin = v; },
     update: (dt) => wheels.forEach((w) => { w.rotation.x += spin * dt / WHEEL; }),
@@ -76,8 +80,9 @@ export class Scooters {
     if (p.seated) p.sit(false);
     p.position.x = m.group.position.x; p.position.z = m.group.position.z; p.group.rotation.y = m.group.rotation.y;
     p.setMount(m);
-    this.vocab.learn('scooter', 'kick scooter'); this.vocab.learn('binmek', 'to get on, to ride');
-    this.toasts.show('Scooter\'a bindin! Gezmek için yürü.', gloss('You are on a scooter! Walk to ride around.'));
+    this.vocab.learn('scooter', 'electric scooter'); this.vocab.learn('binmek', 'to get on, to ride');
+    this.vocab.learn('elektrikli', 'electric');
+    this.toasts.show('Elektrikli scooter\'a bindin! Gezmek için yürü.', gloss('You are on a scooter! Walk to ride around.'));
   }
 
   getOff() {

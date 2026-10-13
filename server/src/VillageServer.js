@@ -12,6 +12,8 @@ const FAR_EVERY = 5;
 const CALL_RANGE = 6;   // metres: how close you must be to ask someone for a voice chat
 const CALL_DROP = 200;  // metres: practically never — a call ends when someone hangs up or leaves the square
 const REQUEST_TTL = 20000;
+const ZONES = new Set(['kahve']);           // places where everyone in them hears each other (the kahvehane)
+const MAX_ZONE = 16;                        // voices in one zone (each player connects to every other one)
 const ROOM = /^[a-z0-9-]{1,24}$/;
 /** Only known looks get through: boy modest / strong, girl covered / open. */
 const lookOf = (gender, style) => (gender === 'girl'
@@ -34,6 +36,9 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   (speech-to-text) and the server relays `say` bubbles. No open voice to strangers.
  * - Voice is one-to-one and needs consent: A asks B (`call-request`), B accepts, and only
  *   then the server relays WebRTC signalling between exactly those two.
+ * - Except in a talking zone (the kahvehane, shown on screen as one): whoever walks in hears the
+ *   others there and is heard while holding the talk button. Signalling only between two players
+ *   in the same zone; the newcomer calls everyone already there.
  *
  * client → server
  *   { type: 'hello', name, room?, gender?, style? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open')
@@ -46,6 +51,8 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'ball', n?, x, z, vx, vz }    kicked shared ball n (0 when left out; relayed, last state kept for newcomers)
  *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to your call partner
  *   { type: 'call-diag', state, detail? } how the voice connection went (logged, for support)
+ *   { type: 'zone', zone }                walked into a talking zone ('kahve') or out of it (null)
+ *   { type: 'zone-rtc', to, data }        WebRTC offer / answer (with its candidates) to someone in the same zone
  *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
  *   { type: 'chess-ask', color } | { type: 'chess-dede', color? } | { type: 'chess-leave' } | { type: 'chess-resign' }
  *   | { type: 'chess-move', from, to, promotion? }
@@ -61,6 +68,8 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
  *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
  *   { type: 'rtc', from, data }
+ *   { type: 'zone-peers', zone, ids } (call each of them) | { type: 'zone-join', id } | { type: 'zone-leave', id }
+ *   | { type: 'zone-full', zone } | { type: 'zone-rtc', from, data }
  *   { type: 'chess', v: 2, phase, fen, turn, check, last, over, result, seats, queue, clocks, running, limit, scores }
  *                                         the board, after every change and while clocks run out (also in welcome)
  */
@@ -132,7 +141,7 @@ export class VillageServer {
   }
 
   #connect(ws, ip) {
-    const client = { ws, ip, id: null, name: null, room: null, x: -14.8, z: 0, rot: Math.PI / 2, moving: false, sit: false, ride: false, talking: false, dirty: false, partner: null, requests: new Map(), tokens: RATE.burst, refilled: Date.now(), lastSay: 0 };
+    const client = { ws, ip, id: null, name: null, room: null, x: -14.8, z: 0, rot: Math.PI / 2, moving: false, sit: false, ride: false, talking: false, dirty: false, partner: null, zone: null, requests: new Map(), tokens: RATE.burst, refilled: Date.now(), lastSay: 0 };
     this.#perIp.set(ip, (this.#perIp.get(ip) ?? 0) + 1);
     ws.alive = true;
     ws.on('pong', () => { ws.alive = true; });
@@ -191,7 +200,7 @@ export class VillageServer {
         break;
       case 'ball': {
         const n = [msg.x, msg.z, msg.vx, msg.vz];
-        if (!n.every(Number.isFinite) || Math.abs(msg.x) > 40 || Math.abs(msg.z) > 40 || Math.hypot(msg.vx, msg.vz) > 15) return;
+        if (!n.every(Number.isFinite) || Math.abs(msg.x) > 120 || Math.abs(msg.z) > 120 || Math.hypot(msg.vx, msg.vz) > 15) return;
         const i = msg.n ?? 0;
         if (!Number.isInteger(i) || i < 0 || i >= MAX_BALLS) return;
         const ball = { x: msg.x, z: msg.z, vx: msg.vx, vz: msg.vz };
@@ -250,6 +259,14 @@ export class VillageServer {
       case 'call-end':
         this.#endCall(c, 'hangup');
         break;
+      case 'zone':
+        this.#zone(c, ZONES.has(msg.zone) ? msg.zone : null);
+        break;
+      case 'zone-rtc': {
+        const peer = members.get(msg.to);
+        if (c.zone && peer && peer !== c && peer.zone === c.zone) this.#send(peer, { type: 'zone-rtc', from: c.id, data: msg.data });
+        break;
+      }
       case 'rtc': {
         if (msg.to !== c.partner) return; // signalling only between the two who agreed
         const peer = members.get(msg.to);
@@ -305,6 +322,20 @@ export class VillageServer {
     this.#send(c, { type: 'say-blocked', reason: v.reason, ...(c.mutedUntil > now ? { until: c.mutedUntil } : {}) });
   }
 
+  /** Into a talking zone (or out: null). The newcomer gets who is there and calls each of them. */
+  #zone(c, zone) {
+    if (c.zone === zone) return;
+    const members = [...this.#room(c.room).values()];
+    if (c.zone) members.forEach((m) => { if (m !== c && m.zone === c.zone) this.#send(m, { type: 'zone-leave', id: c.id }); });
+    c.zone = null;
+    if (!zone) return;
+    const there = members.filter((m) => m !== c && m.zone === zone);
+    if (there.length >= MAX_ZONE) return this.#send(c, { type: 'zone-full', zone });
+    c.zone = zone;
+    this.#send(c, { type: 'zone-peers', zone, ids: there.map((m) => m.id) });
+    there.forEach((m) => this.#send(m, { type: 'zone-join', id: c.id }));
+  }
+
   #endCall(c, reason) {
     if (!c.partner) return;
     const peer = this.#room(c.room).get(c.partner);
@@ -319,6 +350,7 @@ export class VillageServer {
     const table = this.#chess.get(c.room);
     if (table?.disconnect(c.id, c.name)) this.#toAll(c.room, table.state(), c);
     this.#endCall(c, 'left');
+    this.#zone(c, null);
     const members = this.#room(c.room);
     if (!members.delete(c.id)) return;
     this.#toRoom(c, { type: 'leave', id: c.id });

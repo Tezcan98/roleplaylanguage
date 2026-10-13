@@ -2,13 +2,17 @@ import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { buildPitch } from '../Pitch.js';
 import { Townscape } from '../Townscape.js';
-import { SQUARE_HALF, TEA_COLS, TEA_ROWS, KAHVE_TABLES, READ_TABLES } from '../../content/square.js';
+import { SQUARE_HALF, SQUARE_EAST, TEA_COLS, TEA_ROWS, KAHVE_TABLES, READ_TABLES } from '../../content/square.js';
 // import { addTrashBin } from '../trashBin.js';
 
 const WOOD = { tex: 'darkWood' };
 const LIGHT_WOOD = { tex: 'lightWood' };
 const STONE = { tex: 'stone' };
 const HALF = SQUARE_HALF; // the fence (content/square.js: sized for a crowd)
+const EAST = SQUARE_EAST; // the east fence, past the mosque
+
+/** The mosque's courtyard (avlu) in the east: a low wall with a gate facing the square; the mosque itself at its east end. */
+export const MOSQUE = { x0: 52, x1: 96, z0: -24, z1: 24, gate: 2.6, hall: { x: 88, z: 0, w: 12 }, sadirvan: { x: 64, z: -12 } };
 
 /** Open-air coffeehouse (north-east) and open library (north-west): walls, no roof. */
 export const KAHVEHANE = { x: 34, z: -36, w: 24, d: 14 };
@@ -45,6 +49,11 @@ const SQUARE_BENCHES = [ // (content/square.js BENCHES)
   [30, -26, Math.PI], [38, -26, Math.PI], // in front of the kahvehane
   [-40, 6, Math.PI / 2], [-40, -6, Math.PI / 2], // far west
   [-30, 34, Math.PI], // south-west, under the trees
+  // the mosque's courtyard (MOSQUE): along its north and south walls, along the west wall facing the
+  // mosque, and four round the şadırvan facing it
+  ...[56, 62, 68, 74, 80, 86, 92].flatMap((x) => [[x, -22.6, 0], [x, 22.6, Math.PI]]),
+  ...[-20, -14, -8, 8, 14, 20].map((z) => [53.6, z, Math.PI / 2]),
+  [64, -16.5, 0], [64, -7.5, Math.PI], [59.5, -12, Math.PI / 2], [68.5, -12, -Math.PI / 2],
 ];
 
 /** Places where people sit and talk; sitting in one lets you listen in (TalkAreas). */
@@ -63,14 +72,15 @@ export const TALK_SPOTS = {
  */
 export class VillageSquare extends Location {
   constructor() {
-    super({ id: 'village', name: 'Köy Meydanı', spawn: 'yardRoad', bounds: { x: [-HALF + 0.4, HALF - 0.4], z: [-HALF + 0.4, HALF - 0.4] } });
+    super({ id: 'village', name: 'Köy Meydanı', spawn: 'yardRoad', bounds: { x: [-HALF + 0.4, EAST - 0.4], z: [-HALF + 0.4, HALF - 0.4] } });
+    this.fog = { near: 40, far: 110 }; // 150 m across: the mosque's minaret shows from the far side (DayNightLighting)
   }
 
   build(kit) {
     const { mf } = kit, C = this.collision, add = (m) => this.add(m);
     const low = kit.quality === 'low';
 
-    add(mf.ground(HALF * 2 + 2, HALF * 2 + 2, { tex: 'stone', repeat: [17, 17] }, 0.01));
+    add(mf.ground(HALF + EAST + 2, HALF * 2 + 2, { tex: 'stone', repeat: [Math.round(17 * (HALF + EAST) / (2 * HALF)), 17] }, 0.01)).position.x = (EAST - HALF) / 2;
     add(mf.ground(10, HALF * 2, { tex: 'dirt', repeat: [2, 16] }, 0.0)).position.x = -HALF - 5;
 
     this.#fountain(mf, low);
@@ -147,7 +157,9 @@ export class VillageSquare extends Location {
     [[-5, 12], [6, 12], [14, -14], [-4, -14], [-21, -6], [-21, 6], [30, -12], [-30, -12], [-6, 22], [-3.5, 25], [-22, 25], [22, -6],
       [-30, 30], [-10, 29], [33, 12], [-30, 2], [8, -30], [-8, -30],
       // the outer ring of the bigger square
-      [-48, -48], [48, -48], [-48, 48], [0, -48], [-18, -48], [18, -48], [-48, -20], [-48, 20], [50, 10], [50, -20], [-40, 42], [-20, 46], [50, 50]].forEach(([x, z]) => {
+      [-48, -48], [48, -48], [-48, 48], [0, -48], [-18, -48], [18, -48], [-48, -20], [-48, 20], [50, 10], [50, -20], [-40, 42], [-20, 46], [50, 50],
+      // round the mosque's courtyard
+      [64, -34], [84, -34], [64, 34], [84, 34], [64, -48], [80, -48], [96, -48], [64, 48], [80, 46], [96, 46]].forEach(([x, z]) => {
       this.prop(kit, 'prop.tree', x, 0, z, Math.random() * 6, () => mf.group(
         mf.at(mf.cyl(0.22, 0.3, 1.8, { tex: 'bark' }), 0, 0.9, 0),
         mf.at(mf.ico(1.55, { tex: 'leaves', repeat: [2, 2] }), 0, 2.7, 0)));
@@ -160,12 +172,15 @@ export class VillageSquare extends Location {
     const post = (x, z) => add(mf.at(mf.box(0.18, 1, 0.18, WOOD), x, 0.5, z));
     for (let i = -HALF; i <= HALF; i += 2) {
       if (Math.abs(i) > 2) post(-HALF, i);
-      post(HALF, i); post(i, -HALF);
+      post(EAST, i);
+    }
+    for (let i = -HALF; i <= EAST; i += 2) {
+      post(i, -HALF);
       if (Math.abs(i) > 2) post(i, HALF); // south gate: the road to the school
     }
     const rail = (x, z, w, d) => [0.75, 0.4].forEach((y) => add(mf.at(mf.box(w, 0.08, d, WOOD), x, y, z)));
-    rail(0, -HALF, HALF * 2, 0.08); rail(HALF, 0, 0.08, HALF * 2);
-    rail(-(HALF + 2) / 2, HALF, HALF - 2, 0.08); rail((HALF + 2) / 2, HALF, HALF - 2, 0.08);
+    rail((EAST - HALF) / 2, -HALF, HALF + EAST, 0.08); rail(EAST, 0, 0.08, HALF * 2);
+    rail(-(HALF + 2) / 2, HALF, HALF - 2, 0.08); rail((EAST + 2) / 2, HALF, EAST - 2, 0.08);
     rail(-HALF, -(HALF + 2) / 2, 0.08, HALF - 2); rail(-HALF, (HALF + 2) / 2, 0.08, HALF - 2);
 
     add(mf.ground(2.4, 8, { tex: 'dirt', repeat: [1, 3] }, 0.0)).position.set(0, 0, HALF + 3);
@@ -174,7 +189,118 @@ export class VillageSquare extends Location {
     this.anchor('yardRoad', -HALF + 2.2, 0, Math.PI / 2);
     this.hotspot('village.yard', -HALF + 0.8, 0, 2.2);
     this.hotspot('village.menu', -HALF + 0.8, 0, 2.2); // same exit when playing online from the menu
+    this.#mosque(mf, C, low);
     this.#town(mf);
+  }
+
+  /**
+   * A small Ottoman-style mosque in a walled courtyard, east of the square. Seen from outside only
+   * (its door stays shut, its walls stop you); in the courtyard: the şadırvan, cypresses and
+   * benches along the walls (SQUARE_BENCHES) to sit in the shade of the dome.
+   * Hall with one big lead-grey dome on an octagonal drum, four little turrets at its corners,
+   * a portico (son cemaat yeri) with three small domes on columns, and one minaret with a balcony
+   * (şerefe) and a pointed cap (külah) with a golden finial (alem).
+   */
+  #mosque(mf, C, low) {
+    const M = MOSQUE, add = (m) => this.add(m), WALL = 0xEDE4D0, LEAD = 0x8D97A1, GOLD = 0xD4A93A, DARK = 0x2E3A48;
+    const dome = (r, spec) => mf.mesh(new THREE.SphereGeometry(r, low ? 14 : 24, low ? 7 : 12, 0, Math.PI * 2, 0, Math.PI / 2), spec);
+    const alem = (x, y, z, s = 1) => {
+      add(mf.at(mf.cyl(0.04 * s, 0.04 * s, 0.9 * s, GOLD, 6), x, y + 0.45 * s, z));
+      [0.25, 0.5].forEach((h, i) => add(mf.at(mf.sphere((0.13 - i * 0.03) * s, GOLD, 8), x, y + h * s, z)));
+      const moon = add(mf.at(mf.torus(0.17 * s, 0.035 * s, GOLD, 12, Math.PI * 1.3), x, y + 0.95 * s, z));
+      moon.rotation.set(0, Math.PI / 2, Math.PI * 0.85); // the crescent
+    };
+
+    // the courtyard: stone paving, a low wall with a cap, a gate with an arch facing the square
+    add(mf.ground(M.x1 - M.x0, M.z1 - M.z0, { tex: 'marble', repeat: [(M.x1 - M.x0) / 4, (M.z1 - M.z0) / 4] }, 0.02)).position.set((M.x0 + M.x1) / 2, 0.02, (M.z0 + M.z1) / 2); // white and grey marble
+    const wall = (x0, z0, x1, z1) => {
+      const w = Math.max(0.45, x1 - x0), d = Math.max(0.45, z1 - z0), x = (x0 + x1) / 2, z = (z0 + z1) / 2;
+      add(mf.at(mf.box(w, 1.5, d, STONE), x, 0.75, z));
+      add(mf.at(mf.box(w + 0.12, 0.14, d + 0.12, 0xC9BFA8), x, 1.57, z));
+      C.addBox(x - w / 2, x + w / 2, z - d / 2, z + d / 2);
+    };
+    wall(M.x0, M.z0, M.x1, M.z0); wall(M.x0, M.z1, M.x1, M.z1); wall(M.x1, M.z0, M.x1, M.z1);
+    wall(M.x0, M.z0, M.x0, -M.gate); wall(M.x0, M.gate, M.x0, M.z1);
+    [-1, 1].forEach((s) => add(mf.at(mf.box(0.8, 3.2, 0.8, STONE), M.x0, 1.6, s * (M.gate + 0.2)))); // the gate's pillars
+    const arch = add(mf.at(mf.torus(M.gate + 0.2, 0.3, STONE, 16, Math.PI), M.x0, 3.2, 0)); arch.rotation.y = Math.PI / 2; arch.scale.y = 0.5;
+
+    // the hall
+    const H = M.hall, hw = H.w / 2, wallH = 6.4;
+    add(mf.at(mf.box(H.w, wallH, H.w, WALL), H.x, wallH / 2, H.z));
+    add(mf.at(mf.box(H.w + 0.3, 0.35, H.w + 0.3, 0xD8CDB4), H.x, wallH, H.z)); // cornice
+    C.addBox(H.x - hw, H.x + hw, H.z - hw, H.z + hw);
+    // arched windows in two rows on every side (dark glass, a stone frame round the top)
+    for (const side of [0, 1, 2, 3]) {
+      const a = side * Math.PI / 2, nx = Math.sin(a), nz = Math.cos(a), tx = Math.cos(a), tz = -Math.sin(a);
+      for (const [y, hgt] of [[1.9, 1.7], [4.4, 1.3]]) {
+        for (const o of [-3.6, 0, 3.6]) {
+          if (side === 3 && y < 3 && o === 0) continue; // the door is there (west)
+          const x = H.x + nx * (hw + 0.03) + tx * o, z = H.z + nz * (hw + 0.03) + tz * o;
+          const win = add(mf.at(mf.box(0.9, hgt, 0.06, DARK), x, y, z)); win.rotation.y = a;
+          add(mf.at(mf.cyl(0.45, 0.45, 0.06, DARK, 12), x, y + hgt / 2, z)).rotation.set(Math.PI / 2, a, 0, 'YXZ'); // the round top
+        }
+      }
+    }
+    // drum, dome, finial; little turrets at the corners
+    add(mf.at(mf.cyl(hw - 0.3, hw - 0.1, 1.3, WALL, 8), H.x, wallH + 0.65, H.z));
+    const big = add(mf.at(dome(hw - 0.5, LEAD), H.x, wallH + 1.3, H.z));
+    big.scale.y = 0.9;
+    alem(H.x, wallH + 1.3 + (hw - 0.5) * 0.9, H.z, 1.6);
+    [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([sx, sz]) => {
+      const x = H.x + sx * (hw - 0.5), z = H.z + sz * (hw - 0.5);
+      add(mf.at(mf.cyl(0.55, 0.6, 1.2, WALL, 8), x, wallH + 0.6, z));
+      add(mf.at(mf.cone(0.65, 0.9, LEAD, 8), x, wallH + 1.65, z));
+    });
+
+    // the portico (son cemaat yeri) on the west side: a raised floor, five columns, three small domes
+    const px0 = H.x - hw - 3.6, px1 = H.x - hw, pmid = (px0 + px1) / 2;
+    add(mf.at(mf.box(px1 - px0, 0.3, H.w, 0xD8CDB4), pmid, 0.15, H.z));
+    [-5.4, -2.7, 0, 2.7, 5.4].forEach((z) => {
+      add(mf.at(mf.cyl(0.24, 0.26, 3.6, 0xF2EEE4, 10), px0 + 0.4, 2.1, H.z + z));
+      add(mf.at(mf.box(0.6, 0.25, 0.6, 0xD8CDB4), px0 + 0.4, 4.0, H.z + z));
+    });
+    add(mf.at(mf.box(px1 - px0 + 0.2, 0.45, H.w, WALL), pmid, 4.35, H.z));
+    [-4, 0, 4].forEach((z) => { add(mf.at(dome(1.5, LEAD), pmid, 4.55, H.z + z)); alem(pmid, 6.05, H.z + z, 0.6); });
+    C.addBox(px0, px1, H.z - hw, H.z + hw);
+    // the door: carved walnut in a stone frame, shut
+    add(mf.at(mf.box(0.1, 3.2, 2.4, 0xC9BFA8), px1 - 0.03, 1.9, H.z));
+    add(mf.at(mf.box(0.12, 2.8, 1.8, 0x5B3A29), px1 - 0.08, 1.7, H.z));
+    add(mf.at(mf.box(0.14, 2.6, 0.05, 0x3E2718), px1 - 0.1, 1.7, H.z));
+    this.#sign('CAMİ', px0 - 0.13, 4.35, H.z, 2.2).rotation.y = -Math.PI / 2;
+    this.hotspot('village.mosque', px0 - 1.0, H.z, 2.0);
+
+    // the minaret at the north-west corner: a square base, a tall shaft, the balcony, the cap
+    const mx = H.x - hw + 0.2, mz = H.z - hw - 1.2;
+    add(mf.at(mf.box(2.0, 3.0, 2.0, WALL), mx, 1.5, mz));
+    add(mf.at(mf.cyl(0.8, 0.95, 1.2, WALL, 12), mx, 3.6, mz));
+    add(mf.at(mf.cyl(0.72, 0.8, 10.5, WALL, 12), mx, 9.45, mz));
+    add(mf.at(mf.cyl(1.2, 0.8, 0.5, 0xD8CDB4, 12), mx, 14.9, mz)); // the balcony (şerefe)
+    add(mf.at(mf.torus(1.1, 0.05, 0xF2EEE4, 16), mx, 15.55, mz)).rotation.x = Math.PI / 2; // its railing
+    add(mf.at(mf.cyl(0.66, 0.7, 2.6, WALL, 12), mx, 17.05, mz));
+    add(mf.at(mf.cone(0.8, 4.2, LEAD, 12), mx, 20.45, mz)); // the cap (külah)
+    alem(mx, 22.5, mz, 1.0);
+    C.addBox(mx - 1, mx + 1, mz - 1, mz + 1);
+
+    // the şadırvan in the middle of the courtyard: an octagonal basin with taps under a roof on eight columns
+    const { x: sx, z: sz } = M.sadirvan; // off the way from the gate to the door
+    add(mf.at(mf.cyl(1.5, 1.6, 0.9, 0xF2EEE4, 8), sx, 0.45, sz));
+    add(mf.at(mf.cyl(1.3, 1.3, 0.92, 0x5E7F8A, 8), sx, 0.47, sz));
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4 + Math.PI / 8;
+      add(mf.at(mf.cyl(0.07, 0.07, 2.6, 0xF2EEE4, 6), sx + Math.cos(a) * 2.1, 1.3, sz + Math.sin(a) * 2.1));
+      add(mf.at(mf.cyl(0.03, 0.03, 0.18, { tex: 'metal' }, 6), sx + Math.cos(a) * 1.58, 0.7, sz + Math.sin(a) * 1.58)).rotation.z = Math.PI / 2;
+    }
+    add(mf.at(mf.cyl(2.5, 2.5, 0.25, WALL, 8), sx, 2.7, sz));
+    add(mf.at(mf.cone(2.6, 1.4, LEAD, 8), sx, 3.5, sz));
+    alem(sx, 4.2, sz, 0.6);
+    C.addCircle(sx, sz, 1.8);
+
+    // cypresses in the corners
+    [[M.x0 + 1.6, M.z0 + 1.6], [M.x0 + 1.6, M.z1 - 1.6], [M.x1 - 1.6, M.z0 + 1.6], [M.x1 - 1.6, M.z1 - 1.6]].forEach(([x, z]) => {
+      add(mf.at(mf.cyl(0.12, 0.16, 0.8, { tex: 'bark' }, 6), x, 0.4, z));
+      const top = add(mf.at(mf.sphere(0.9, 0x2F5A36, 10), x, 3.1, z)); top.scale.set(1, 3.0, 1);
+      C.addCircle(x, z, 0.5);
+    });
   }
 
   /**
@@ -183,20 +309,21 @@ export class VillageSquare extends Location {
    * never reached (the fence stops you), so the square no longer ends at the edge of the world.
    */
   #town(mf) {
-    const T = new Townscape(mf, this, 5), R0 = HALF + 3.5, R1 = R0 + 6, B = R1 + 7.5;
-    T.ground(0, 0, 300, 300, { tex: 'grass', repeat: [70, 70] }, -0.02);
+    const T = new Townscape(mf, this, 5), R0 = HALF + 3.5, R1 = R0 + 6, B = R1 + 7.5, E0 = EAST + 3.5, E1 = E0 + 6, EB = E1 + 7.5;
+    T.ground(20, 0, 420, 420, { tex: 'grass', repeat: [98, 98] }, -0.02);
     T.road(-110, -R1, 110, -R0); // north
     T.road(-110, R0, 110, R1); // south (the school road crosses it)
-    T.road(R0, -110, R1, 110); // east
+    T.road(E0, -110, E1, 110); // east (past the mosque)
     T.traffic('x', -(R0 + R1) / 2, -110, 110, 3);
     T.traffic('x', (R0 + R1) / 2, -110, 110, 2);
-    T.traffic('z', (R0 + R1) / 2, -110, 110, 2);
+    T.traffic('z', (E0 + E1) / 2, -110, 110, 2);
     [['FIRIN', -30], ['KASAP', -20], ['ECZANE', -10], ['BERBER', 10], ['POSTANE', 20], ['KIRTASİYE', 30]].forEach(([name, x]) => T.shop(x, -B, 0, name, { w: 8 }));
-    [-40, 0, 40].forEach((x) => T.house(x, -B, 0));
+    [-40, 0, 40, 66, 78, 90].forEach((x) => T.house(x, -B, 0));
+    T.shop(56, -B, 0, 'ÇİÇEKÇİ', { w: 8 });
     [['LOKANTA', 20], ['TUHAFİYE', 30]].forEach(([name, x]) => T.shop(x, B, Math.PI, name, { w: 8 }));
-    [-36, -26, -16, -7, 9, 40].forEach((x) => T.house(x, B, Math.PI));
-    [['MANİFATURA', -24], ['HIRDAVAT', -12], ['KUAFÖR', 12], ['MUHTARLIK', 24]].forEach(([name, z]) => T.shop(B, z, -Math.PI / 2, name, { w: 8 }));
-    [-36, 0, 36].forEach((z) => T.house(B, z, -Math.PI / 2));
+    [-36, -26, -16, -7, 9, 40, 52, 64, 76, 88].forEach((x) => T.house(x, B, Math.PI));
+    [['MANİFATURA', -24], ['HIRDAVAT', -12], ['KUAFÖR', 12], ['MUHTARLIK', 24]].forEach(([name, z]) => T.shop(EB, z, -Math.PI / 2, name, { w: 8 }));
+    [-36, 0, 36].forEach((z) => T.house(EB, z, -Math.PI / 2));
     // west: past the lane, houses in gardens (our house is that way)
     [-28, -16, 14, 26].forEach((z) => T.house(-HALF - 16, z, Math.PI / 2, { w: 6.5 }));
     [[-HALF - 11, -6], [-HALF - 11, 7], [-HALF - 12, 20], [-HALF - 12, -21], [-HALF - 22, 0]].forEach(([x, z]) => T.tree(x, z, 1.2));
@@ -498,9 +625,11 @@ export class VillageSquare extends Location {
     this.#stool(mf, 'amca3', tx, tz - 0.9, 0, false);
     // guest tables in a grid (content/square.js KAHVE_TABLES), two stools each
     const cols = 4, rows = Math.ceil(KAHVE_TABLES / cols);
+    this.kahveTables = []; // (systems/KahveCirak.js brings tea to them)
     for (let i = 0; i < KAHVE_TABLES; i++) {
       const x = K.x - 3 + (i % cols) * 3.2, z = K.z - 3.5 + Math.floor(i / cols) * (7 / Math.max(1, rows - 1)), n = i * 2 + 1;
       table(x, z);
+      this.kahveTables.push({ x, z });
       add(mf.at(mf.cyl(0.04, 0.03, 0.1, 0xC8451F, 8), x + 0.2, 0.82, z));
       this.#stool(mf, `kahve${n}`, x - 0.9, z, Math.PI / 2);
       this.#stool(mf, `kahve${n + 1}`, x + 0.9, z, -Math.PI / 2);

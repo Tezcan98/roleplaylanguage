@@ -219,6 +219,31 @@ test('shared ball: kicks are relayed, newcomers get where it stopped; nonsense i
   await Promise.all([a, b, c].map((p) => p.close()));
 });
 
+test('talking zone (the kahvehane): the newcomer gets who is there, signalling only inside the zone', async () => {
+  const a = await join('Çaycı', 'zone'), b = await join('Misafir', 'zone'), c = await join('Dışarıda', 'zone');
+  a.send({ type: 'zone', zone: 'kahve' });
+  assert.deepEqual(await a.next('zone-peers'), { type: 'zone-peers', zone: 'kahve', ids: [] });
+  b.send({ type: 'zone', zone: 'kahve' });
+  assert.deepEqual(await b.next('zone-peers'), { type: 'zone-peers', zone: 'kahve', ids: [a.welcome.id] });
+  assert.deepEqual(await a.next('zone-join'), { type: 'zone-join', id: b.welcome.id });
+  b.send({ type: 'zone-rtc', to: a.welcome.id, data: { sdp: 'offer' } });
+  assert.deepEqual(await a.next('zone-rtc'), { type: 'zone-rtc', from: b.welcome.id, data: { sdp: 'offer' } });
+  c.send({ type: 'zone-rtc', to: a.welcome.id, data: { sdp: 'sneaky' } }); // not in the zone
+  c.send({ type: 'zone', zone: 'mosque' }); // no such zone
+  await silence();
+  assert.equal(a.inbox.some((m) => m.type === 'zone-rtc' || m.type === 'zone-join'), false);
+  b.send({ type: 'zone', zone: null });
+  assert.deepEqual(await a.next('zone-leave'), { type: 'zone-leave', id: b.welcome.id });
+  c.send({ type: 'zone', zone: 'kahve' });
+  await a.next('zone-join');
+  await c.close(); // leaving the square leaves the zone too
+  assert.deepEqual(await a.next('zone-leave'), { type: 'zone-leave', id: c.welcome.id });
+  // the bigger square: a ball on the far side of the pitch (x 45) counts
+  a.send({ type: 'ball', x: 45, z: 30, vx: 1, vz: 0 });
+  assert.equal((await b.next('ball')).x, 45);
+  await Promise.all([a, b].map((p) => p.close()));
+});
+
 test('gender travels in the look (anything else counts as boy)', async () => {
   const a = client(); await a.open();
   a.send({ type: 'hello', name: 'Meryem', room: 'look', gender: 'girl' });

@@ -12,13 +12,13 @@ export class AmbientTalk {
   #order = [];
 
   /** @param {{ place: { location: string, x: number, z: number }, talks: Array<Array<{ who, tr, en }>> }} o */
-  constructor({ world, player, cast, labels, place, talks }) {
-    Object.assign(this, { world, player, cast, labels, place, talks });
+  constructor({ world, player, cast, labels, place, talks, quiet = null }) {
+    Object.assign(this, { world, player, cast, labels, place, talks, quiet }); // quiet(): true while they keep their talk to themselves
   }
 
   update(dt) {
     const { place } = this, p = this.player.position;
-    if (this.world.current?.id !== place.location || Math.hypot(p.x - place.x, p.z - place.z) > SEE) return;
+    if (this.world.current?.id !== place.location || Math.hypot(p.x - place.x, p.z - place.z) > SEE || this.quiet?.()) return;
     this.#timer -= dt;
     if (this.#timer > 0) return;
     if (!this.#queue.length) this.#queue = [...this.#next()];

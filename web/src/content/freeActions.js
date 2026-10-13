@@ -93,6 +93,10 @@ export const FREE_ACTIONS = {
     label: 'Raflara bak', think: 'Ne çok kitap var!', say: 'Kütüphanenin raflarına baktım.',
     words: [['raf', 'shelf'], ['kitap', 'book'], ['yazar', 'author']],
   },
+  village_mosque: {
+    label: 'Camiye bak', think: 'Ne güzel bir cami! Minaresi çok yüksek.', say: 'Caminin avlusunu gezdim.', minutes: 3,
+    words: [['cami', 'mosque'], ['minare', 'minaret'], ['kubbe', 'dome'], ['şadırvan', 'ablution fountain'], ['avlu', 'courtyard']],
+  },
   village_bench: {
     label: 'Bankta otur', think: 'Meydanda biraz dinleniyorum.', say: 'Bankta oturdum.', minutes: 5,
     words: [['bank', 'bench'], ['dinlenmek', 'to rest'], ['meydan', 'square']],

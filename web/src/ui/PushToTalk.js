@@ -1,4 +1,5 @@
 import { el } from './dom.js';
+import { gloss } from '../i18n/Gloss.js';
 
 const MIC = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 
@@ -13,7 +14,9 @@ export class PushToTalk {
     this.on = false;
     this.btn = el('button', { class: 'ptt', html: `${MIC}<span>Bas, konuş (yazı)</span>`, attrs: { type: 'button', 'aria-label': 'Basılı tut ve konuş (T)' } });
     this.status = el('div', { class: 'pill online' });
-    this.root = el('div', { class: 'ptt-wrap' }, [this.status, this.btn]);
+    this.zone = el('div', { class: 'pill zone-note' });
+    this.zone.hidden = true;
+    this.root = el('div', { class: 'ptt-wrap' }, [this.zone, this.status, this.btn]);
     this.root.hidden = true;
     host.append(this.root);
     this.input = el('input', { class: 'ptt-input', attrs: { type: 'text', maxlength: '140', placeholder: 'Türkçe yaz…', enterkeyhint: 'send', 'aria-label': 'Mesaj' } });
@@ -54,6 +57,13 @@ export class PushToTalk {
   }
 
   show(visible) { if (!visible) { this.set(false); this.typeBox.hidden = true; } this.root.hidden = !visible; }
+  /** In a talking zone (its name) the button sends the voice; out of it (null), text again. */
+  setZone(name) {
+    this.zone.hidden = !name;
+    if (name) this.zone.replaceChildren(`🎙️ ${name} · toplu konuşma alanı`, el('small', { text: 'Buradakiler seni duyar' }), el('small', { class: 'en-t', text: gloss('Everyone in here hears you') }));
+    this.btn.querySelector('span').textContent = name ? 'Bas, konuş (ses)' : 'Bas, konuş (yazı)';
+  }
+
   /** No speech-to-text here: type the sentence instead. */
   typeInstead() { this.typeBox.hidden = false; this.input.focus(); }
   setOnline(n, name, room = '') { this.status.textContent = `🌐 ${name} · ${room ? `${room} · ` : ''}meydanda ${n} kişi`; }

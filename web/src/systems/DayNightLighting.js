@@ -73,7 +73,8 @@ export class DayNightLighting {
     } else {
       scene.background = horizon;
       scene.fog.color.copy(horizon);
-      scene.fog.near = 30; scene.fog.far = 80 + night * 30;
+      const fog = this.location?.fog ?? { near: 30, far: 80 }; // a place may see further (the big square: its minaret)
+      scene.fog.near = fog.near; scene.fog.far = fog.far + night * 30;
     }
     this.sky?.update(dt, { visible: !indoor, top, horizon, sunDir: this.#dir, day, night, center: this.follow });
     this.fireflies?.update(t, indoor ? 0 : night);

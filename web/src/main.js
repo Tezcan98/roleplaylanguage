@@ -59,6 +59,7 @@ import { SettingsPanel } from './ui/SettingsPanel.js';
 import { Animals } from './systems/Animals.js';
 import { Bicycle } from './systems/Bicycle.js';
 import { Scooters, scooterMount } from './systems/Scooter.js';
+import { KahveCirak } from './systems/KahveCirak.js';
 import { el } from './ui/dom.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
@@ -67,6 +68,7 @@ import { LocalClassroomSession, WebSocketClassroomSession } from './services/mul
 import { ClassroomView } from './ui/ClassroomView.js';
 import { VillageNetwork } from './services/multiplayer/VillageNetwork.js';
 import { VoiceChat } from './services/multiplayer/VoiceChat.js';
+import { GroupVoice } from './services/multiplayer/GroupVoice.js';
 import { RemotePlayers } from './systems/RemotePlayers.js';
 import { VillageMultiplayer } from './systems/VillageMultiplayer.js';
 import { UsernameDialog } from './ui/UsernameDialog.js';
@@ -115,7 +117,7 @@ import { Library } from './systems/Library.js';
 import { NeyMusic } from './systems/NeyMusic.js';
 import { BookReader } from './ui/BookReader.js';
 import { AmbientTalk } from './systems/AmbientTalk.js';
-import { KAHVE_UNCLES, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
+import { KAHVE_UNCLES, KAHVEHANE, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
@@ -388,6 +390,8 @@ effects
 const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st) => village.voiceState(st), relayOnly: params.has('relayonly') }),
+  group: new GroupVoice({ net: villageNet, iceServers: manifest.iceServers, onState: (st) => village.zoneState(st) }),
+  zones: { kahve: { ...KAHVEHANE, name: 'Kahvehane' } }, // talking zones: everyone inside hears each other
   remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS, horse: () => animals.mount(), scooter: () => scooterMount(mf) }), // others on horseback or a scooter
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   // public places: the square, and the schoolyard for football (its own room: <city>-okul)
@@ -488,7 +492,11 @@ effects
   .register('chess-draw-accept', () => chess.answerDraw(true))
   .register('chess-draw-decline', () => chess.answerDraw(false));
 // the uncles in the kahvehane talk among themselves; come close and you hear them
-const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { location: 'village', x: KAHVE_UNCLES.x, z: KAHVE_UNCLES.z }, talks: KAHVE_TALKS });
+const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { location: 'village', x: KAHVE_UNCLES.x, z: KAHVE_UNCLES.z }, talks: KAHVE_TALKS,
+  quiet: () => village.group.ids().length > 0 }); // real people talking in the kahvehane: the uncles keep quiet
+// the kahvehane's apprentice brings you a tea when you sit down
+const cirak = new KahveCirak({ world, mf, models, player, labels, vocab, speak: (t) => tts.speak(t, { speaker: 'kardes' }) });
+cirak.build();
 
 // your own garden bed: planting comes later — grandpa says you are still a bit young
 effects.register('my-garden', () => {
@@ -780,7 +788,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ ambient: [kahveTalk, talk, ney], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, talk, ney], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -833,4 +841,4 @@ setInterval(() => {
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
