@@ -32,7 +32,7 @@ export class ToySystem {
 
   /** The ball close enough for a hard shot (or null). */
   shotBall() {
-    if (this.player.seated) return null;
+    if (this.player.seated || this.player.mount) return null; // (on horseback, a bike, a scooter: no kicking)
     const p = this.player.position;
     return this.toys.find((e) => e.touch && e.toy.location === this.world.current && dist(e.toy.position, p) < SHOT_RANGE) ?? null;
   }
@@ -81,7 +81,7 @@ export class ToySystem {
       const { toy } = entry;
       if (!toy.location.group.visible) continue;
       entry.cool = Math.max(0, entry.cool - dt);
-      if (entry.touch && toy.location === this.world.current && !this.player.seated) this.#touch(entry, speed, t);
+      if (entry.touch && toy.location === this.world.current && !this.player.seated && !this.player.mount) this.#touch(entry, speed, t);
       toy.update(dt, t, this.player);
     }
   }

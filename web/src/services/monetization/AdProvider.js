@@ -14,8 +14,20 @@ export class AdProvider {
 }
 
 /**
- * Website / tests: a placeholder for the rewarded video (a countdown); interstitials only with
- * `interstitials: true` (?mockads), as a 3-second placeholder card.
+ * Our own ad (no ad network on the website): the promo film of the game, the site's loop
+ * (sehem2.com.tr/assets/loop.mp4), with "soon on Google Play". Where it can't be loaded (tests,
+ * offline) the card shows the game's name on its own.
+ */
+function houseAd() {
+  const film = el('video', { class: 'ad-film', attrs: { src: '/assets/loop.mp4', poster: '/assets/poster.webp', autoplay: '', muted: '', loop: '', playsinline: '' } });
+  film.muted = true; // (needed for autoplay)
+  film.addEventListener('error', () => film.remove());
+  return el('div', { class: 'ad-box house' }, [film, el('div', { class: 'ad-caption', html: 'Anadolu Ailesi<br><small>Yakında Google Play\'de · Türkçeyi bir aileyle yaşayarak öğren</small>' })]);
+}
+
+/**
+ * Website / tests: our own ad (houseAd) for the rewarded video, with a countdown; interstitials only
+ * with `interstitials: true` (?mockads), for 3 seconds.
  */
 export class MockAdProvider extends AdProvider {
   constructor(host, modes, seconds = 5, { interstitials = false } = {}) { super(); Object.assign(this, { host, modes, seconds, interstitials }); }
@@ -25,7 +37,7 @@ export class MockAdProvider extends AdProvider {
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const close = el('button', { class: 'btn alt sm', text: '✕', attrs: { type: 'button', disabled: '' } });
-      const wrap = el('div', { class: 'overlay open ad interstitial' }, [el('div', { class: 'ad-box', html: 'Reklam<br><small>Burada tam ekran bir reklam görünecek</small>' }), close]);
+      const wrap = el('div', { class: 'overlay open ad interstitial' }, [houseAd(), close]);
       this.host.append(wrap);
       setTimeout(() => { close.disabled = false; }, 3000);
       close.onclick = () => { wrap.remove(); pop(); resolve(); };
@@ -38,7 +50,7 @@ export class MockAdProvider extends AdProvider {
       const count = el('div', { class: 'ad-count' });
       const close = el('button', { class: 'btn alt sm', text: 'Kapat', attrs: { type: 'button', disabled: '' } });
       const wrap = el('div', { class: 'overlay open ad' }, [
-        el('div', { class: 'ad-box', html: 'Reklam alanı<br><small>Burada gerçek bir reklam oynayacak</small>' }), count, close,
+        houseAd(), count, close,
       ]);
       this.host.append(wrap);
       let left = this.seconds;

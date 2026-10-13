@@ -31,9 +31,11 @@ export class ActionButton {
 export class ShotButton {
   #key = '';
 
-  constructor(host, onPress, act, { id = 'shot', text = '⚡ Sert vur', label = 'Sert vur' } = {}) {
+  constructor(host, onPress, act, { id = 'shot', text = '⚡ Sert vur', label = 'Sert vur', press = false } = {}) {
     this.act = act;
-    this.root = el('button', { attrs: { id, type: 'button', 'aria-label': label }, text, on: { click: onPress } });
+    // press: fire as the finger goes down (with a thumb on the joystick a second tap often makes no click on phones)
+    const on = press ? { pointerdown: (e) => { e.preventDefault(); onPress(); } } : { click: onPress };
+    this.root = el('button', { attrs: { id, type: 'button', 'aria-label': label }, text, on });
     this.root.hidden = true;
     host.append(this.root);
   }

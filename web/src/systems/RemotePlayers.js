@@ -6,12 +6,12 @@ import { Character } from '../entities/Character.js';
  * following the positions the server sends.
  */
 /** At most this many other players drawn at once, the nearest, within this distance (m). */
-const MAX_SHOWN = 40, SHOW_DIST = 45;
+const MAX_SHOWN = 40, SHOW_DIST = 70; // (the fog hides the rest: the square is 150 m across)
 
 export class RemotePlayers {
   #players = new Map();
 
-  constructor({ mf, models = null, baseLook, looks = {}, horse = null, scooter = null }) { Object.assign(this, { mf, models, baseLook, looks, horse, scooter }); } // horse(), scooter(): what another player rides (systems/Animals.js, Scooter.js)
+  constructor({ mf, models = null, baseLook, looks = {}, horse = null, scooter = null, bike = null }) { Object.assign(this, { mf, models, baseLook, looks, horse, scooter, bike }); } // horse(), scooter(), bike(): what another player rides (systems/Animals.js, Scooter.js, Bicycle.js)
 
   list() { return [...this.#players.values()].map((p) => p.char); }
   ids() { return [...this.#players.keys()]; }
@@ -27,8 +27,9 @@ export class RemotePlayers {
     location.group.add(char.group);
     if (sit) char.sit(true);
     if (look?.aura) char.setAura(true);
-    if (look?.outfit) char.setHd(this.models, outfitModel(look.outfit, look.gender, look.style), true, { covered: look.style === 'covered', dress: look.outfit === 'dress' }); // bought in the shop
-    this.#players.set(id, { char, target: { x, z, rot }, moving: false, location });
+    // bought in the shop: the HD body — loaded only once they come into view (a crowd far away costs nothing)
+    const hd = look?.outfit ? () => char.setHd(this.models, outfitModel(look.outfit, look.gender, look.style), true, { covered: look.style === 'covered', dress: look.outfit === 'dress' }) : null;
+    this.#players.set(id, { char, target: { x, z, rot }, moving: false, location, hd });
     if (ride) this.#ride(id, rideKind(ride));
   }
 
@@ -39,7 +40,7 @@ export class RemotePlayers {
     p.riding = kind;
     if (p.char.mount) { p.char.mount.group.removeFromParent(); p.char.setMount(null); }
     if (!kind) return;
-    const m = kind === 'scooter' ? this.scooter?.() : await this.horse?.();
+    const m = kind === 'scooter' ? this.scooter?.() : kind === 'bike' ? this.bike?.() : await this.horse?.();
     if (!m || p.riding !== kind || this.#players.get(id) !== p) return;
     p.location.group.add(m.group);
     p.char.setMount(m);
@@ -75,7 +76,7 @@ export class RemotePlayers {
   update(dt, t, near = null) {
     const k = Math.min(1, dt * 10);
     let shown = null;
-    if (near && this.#players.size > MAX_SHOWN) {
+    if (near) {
       shown = new Set([...this.#players.values()]
         .map((p) => [p, Math.hypot(p.target.x - near.x, p.target.z - near.z)])
         .filter(([, d]) => d < SHOW_DIST).sort((a, b) => a[1] - b[1]).slice(0, MAX_SHOWN).map(([p]) => p));
@@ -88,6 +89,7 @@ export class RemotePlayers {
       char.group.visible = visible;
       if (char.mount) char.mount.group.visible = visible;
       if (!visible) return;
+      if (p.hd) { p.hd(); p.hd = null; }
       char.turnTo(target.rot, 0.2);
       char.moving = moving; char.walk(t, moving ? 1 : 0);
       char.update(dt);
@@ -98,5 +100,5 @@ export class RemotePlayers {
   visible() { return this.list().filter((c) => c.group.visible); }
 }
 
-/** What a player rides from the network: 'scooter', 'horse' (also `true` / 1 from older games), or null. */
-const rideKind = (ride) => (ride === 'scooter' ? 'scooter' : ride ? 'horse' : null);
+/** What a player rides from the network: 'scooter', 'bike', 'horse' (also `true` / 1 from older games), or null. */
+const rideKind = (ride) => (ride === 'scooter' || ride === 'bike' ? ride : ride ? 'horse' : null);

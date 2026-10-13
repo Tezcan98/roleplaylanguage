@@ -28,7 +28,7 @@ export class Game {
     world.current.update(dt, t);
 
     actionButton.show(interactions.update(player.position), interactions.others);
-    shotButton?.show(modes.is('play') && !player.seated && (!!toys.shotBall() || !!village.onPitch?.(player.position))); // on a pitch: always there
+    shotButton?.show(modes.is('play') && !player.seated && !player.mount && (!!toys.shotBall() || !!village.onPitch?.(player.position))); // on a pitch: always there
     joystick.visible = modes.is('play');
     help.visible = modes.is('play');
     marker.update(dt, t, playing && !dialogue.talking);

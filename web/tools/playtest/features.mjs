@@ -257,6 +257,14 @@ try {
   check('…and back on the shelf ("Kitabı rafa koy")', (await ev(() => document.getElementById('act').textContent)).includes('rafa koy'));
   await page.keyboard.press('e'); await sleep(400);
   check('…the hand is empty again', (await ev(() => window.__game.library.held)) === null);
+  await goTo('village.kitap1'); await sleep(600);
+  check('a library seat: "Otur, kitap oku"', (await ev(() => document.getElementById('act').textContent)).includes('Otur, kitap oku'));
+  await page.keyboard.press('e');
+  const sub = await waitFor(() => ev(() => { const s = document.querySelector('.subtitles'); return s && !s.hidden && s.querySelector('.sub-tr').textContent && s.querySelector('.sub-en').textContent ? s.textContent : null; }), 15000);
+  check('…a book off the shelf, read aloud with subtitles (Turkish and its meaning)', !!sub && !!(await ev(() => window.__game.library.reading)), sub ?? '');
+  await ev(() => window.__game.player.sit(false));
+  check('…getting up stops it', !!(await waitFor(() => ev(() => document.querySelector('.subtitles').hidden && !window.__game.library.reading), 3000)));
+  await goTo('village.libShelf'); await sleep(500); await page.keyboard.press('e'); await sleep(400); // the book back on the shelf
   check('a ney plays softly in the library', (await ev(() => window.__game.ney.level)) > 0.3, String(await ev(() => window.__game.ney.level)));
   await ev(() => window.__game.player.position.set(4, 0, 4)); await sleep(300);
   check('…and not by the fountain', (await ev(() => window.__game.ney.level)) === 0);
@@ -353,6 +361,12 @@ try {
   check('…"Bisikletten in" (not "Attan in")', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Bisikletten in')), 3000)));
   await page.keyboard.press('e');
   check('…off again', !!(await waitFor(() => ev(() => !window.__game.player.mount), 3000)));
+  await page.keyboard.press('e'); await waitFor(() => ev(() => window.__game.player.mount?.kind === 'bike'), 3000); // on again
+  await ev(() => window.__game.travel.go('village', 'yardRoad')); // out of the gate to the square, riding
+  check('…ridden out of the gate, the bike comes along to the square', !!(await waitFor(() => ev(() => window.__game.world.current.id === 'village' && window.__game.player.mount?.kind === 'bike' && window.__game.bicycle.place === 'village'), 8000)));
+  await page.keyboard.press('e'); await waitFor(() => ev(() => !window.__game.player.mount), 3000); // left in the square
+  await ev(() => window.__game.travel.go('yard', 'gate'));
+  check('…walking home without it: it is back at the wall', !!(await waitFor(() => ev(() => window.__game.world.current.id === 'yard' && window.__game.bicycle.place === 'yard'), 8000)));
 
   // --- the groom by the horses ------------------------------------------------------------
   await ev(() => window.__game.travel.place('village', 'yardRoad', { force: true })); await sleep(800);
@@ -362,8 +376,16 @@ try {
   await ev(() => { const g = window.__game; g.animals.ride(g.animals.horses()[0]); });
   check('a ride on a horse: 1 credit, and the 🐎 Zıpla button is there', (await ev(() => window.__game.wallet.balance)) === rideCredits - 1 && !!(await waitFor(() => ev(() => !document.getElementById('jump').hidden), 3000)));
   await page.keyboard.press('Space');
-  const leap = await waitFor(() => ev(() => { const m = window.__game.player.mount; return m?.group.position.y > 0.4 ? m.group.position.y : 0; }), 3000, 30);
-  check('…Space: the horse jumps, then lands', !!leap && !!(await waitFor(() => ev(() => !window.__game.player.jumping && window.__game.player.mount.group.position.y === 0), 5000)), `up to ${Number(leap).toFixed(2)} m`);
+  const leap = await waitFor(() => ev(() => { const m = window.__game.player.mount; return m?.group.position.y > 0.4 ? m.group.position.y : 0; }), 8000, 30); // (slow CI machines: few frames a second)
+  check('…Space: the horse jumps, then lands', !!leap && !!(await waitFor(() => ev(() => !window.__game.player.jumping && window.__game.player.mount.group.position.y === 0), 15000)), `up to ${Number(leap).toFixed(2)} m`);
+  // a jump from a gallop flies on that way, even with the stick let go
+  await page.keyboard.down('ArrowUp'); await sleep(900);
+  const before = await ev(() => ({ x: window.__game.player.position.x, z: window.__game.player.position.z }));
+  await page.keyboard.press('Space'); await page.keyboard.up('ArrowUp');
+  await waitFor(() => ev(() => !window.__game.player.jumping), 15000);
+  const flew = await ev((b) => Math.hypot(window.__game.player.position.x - b.x, window.__game.player.position.z - b.z), before);
+  check('…jumping at a gallop: it flies on forward (the stick let go)', flew > 2, `${flew.toFixed(1)} m`);
+  check('on horseback: no "Sert vur" button', await ev(() => document.getElementById('shot').hidden));
   await ev(() => window.__game.animals.dismount());
   await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
 

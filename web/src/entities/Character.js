@@ -278,7 +278,7 @@ export class Character {
 
   /** Kick the ball: the right leg swings back and through (`power` 0–1: a hard shot swings more). */
   kick(power = 0.6, hold = null) { // `hold` (0–1): stop at that moment of the swing (tools: pictures of the pose)
-    if (!this.seated && !this.posed) this.#kick = { t: (hold ?? 0) * 0.3, dur: 0.3, power: 0.6 + 0.5 * power, hold: hold != null };
+    if (!this.seated && !this.posed && !this.mount) this.#kick = { t: (hold ?? 0) * 0.3, dur: 0.3, power: 0.6 + 0.5 * power, hold: hold != null };
   }
 
   /** The kicking leg on top of the walk (blocky: the leg joint; HD: the thigh bone, after the animation). */

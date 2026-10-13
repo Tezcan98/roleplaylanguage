@@ -57,7 +57,7 @@ import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
 import { SettingsPanel } from './ui/SettingsPanel.js';
 import { Animals } from './systems/Animals.js';
-import { Bicycle } from './systems/Bicycle.js';
+import { Bicycle, bikeMount } from './systems/Bicycle.js';
 import { Scooters, scooterMount } from './systems/Scooter.js';
 import { KahveCirak } from './systems/KahveCirak.js';
 import { el } from './ui/dom.js';
@@ -116,6 +116,7 @@ import { TalkAreas } from './systems/TalkAreas.js';
 import { Library } from './systems/Library.js';
 import { NeyMusic } from './systems/NeyMusic.js';
 import { BookReader } from './ui/BookReader.js';
+import { Subtitles } from './ui/Subtitles.js';
 import { AmbientTalk } from './systems/AmbientTalk.js';
 import { KAHVE_UNCLES, KAHVEHANE, MOSQUE, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
@@ -395,7 +396,7 @@ const village = new VillageMultiplayer({
     kahve: { ...KAHVEHANE, name: 'Kahvehane' },
     avlu: { x: (MOSQUE.x0 + MOSQUE.x1) / 2, z: (MOSQUE.z0 + MOSQUE.z1) / 2, w: MOSQUE.x1 - MOSQUE.x0, d: MOSQUE.z1 - MOSQUE.z0, name: 'Cami avlusu' },
   },
-  remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS, horse: () => animals.mount(), scooter: () => scooterMount(mf) }), // others on horseback or a scooter
+  remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS, horse: () => animals.mount(), scooter: () => scooterMount(mf), bike: () => bikeMount(mf) }), // others on horseback, a scooter, a bike
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   // public places: the square, and the schoolyard for football (its own room: <city>-okul)
   places: { village: { suffix: '', balls: villageBalls, label: '' }, schoolyard: { suffix: '-okul', balls: [schoolBall], label: 'Okul bahçesi' } },
@@ -480,9 +481,11 @@ village.ptt.onType = (text) => village.say(text); // typed instead of spoken (no
 // the open library: borrow a book, read it sitting on a bench
 const library = new Library({
   books: BOOKS, state, player, choice: new ChoiceCard(host, modes), toasts, vocab, wallet, world,
+  subtitles: new Subtitles(host), speak: (t) => tts.speak(t, { speaker: 'okuyucu' }),
   reader: new BookReader(host, { modes, onSpeak: (t) => tts.speak(t, { speaker: 'okuyucu' }), onClose: (b, page) => library.closed(b, page), onFinish: (b) => library.finished(b) }),
 });
 effects.register('library', () => library.atShelf());
+effects.register('library-read', () => library.readHere()); // a library seat: a book read aloud with subtitles
 // a ney plays quietly in the background in Aslan Bey's open library
 const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z }, muted: () => !settings.get('musicOn', true) });
 chess.onMove = (m) => talk.chessMoved(m);
@@ -520,7 +523,7 @@ bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') scooters.leftPlace(); })
 // the bicycle in the yard (riding it is a skill bought with credits)
 const bicycle = new Bicycle({ world, mf, player, wallet, toasts, vocab, choice: new ChoiceCard(host, modes), onShop: () => shop.open() });
 bicycle.build();
-bus.on(EV.LOCATION, ({ id }) => { if (id !== 'yard') bicycle.leftPlace(); });
+bus.on(EV.LOCATION, ({ id }) => bicycle.moved(id)); // ridden out of the gate it comes along
 const interactions = new InteractionSystem([
   animals, // pet an animal, get on / off a horse
   bicycle,
@@ -537,7 +540,7 @@ const actionButton = new ActionButton(host, () => interactions.trigger());
 const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root);
 // on horseback: jump (the button, or Space on a keyboard)
 const jumpHorse = () => { if (modes.is('play') && player.jump()) vocab.learn('zıplamak', 'to jump'); };
-const jumpButton = new ShotButton(host, jumpHorse, actionButton.root, { id: 'jump', text: '🐎 Zıpla', label: 'Zıpla' });
+const jumpButton = new ShotButton(host, jumpHorse, actionButton.root, { id: 'jump', text: '🐎 Zıpla', label: 'Zıpla', press: true });
 addEventListener('keydown', (e) => { if (e.code === 'Space' && !e.repeat && player.mount?.kind === 'horse' && document.activeElement?.tagName !== 'INPUT') { e.preventDefault(); jumpHorse(); } });
 const jumpShown = { update: () => jumpButton.show(modes.is('play') && player.mount?.kind === 'horse') };
 input.onKey((e) => {
@@ -794,7 +797,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ ambient: [kahveTalk, cirak, talk, ney, jumpShown], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, talk, ney, jumpShown, library], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });

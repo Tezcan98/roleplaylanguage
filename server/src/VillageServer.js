@@ -42,7 +42,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *
  * client → server
  *   { type: 'hello', name, room?, gender?, style? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open')
- *   { type: 'state', x, z, rot, moving, sit?, ride? }  own position (~10/s); sit = on a chair or bench, ride = 'horse' | 'scooter' (true / 1: horse, older games)
+ *   { type: 'state', x, z, rot, moving, sit?, ride? }  own position (~10/s); sit = on a chair or bench, ride = 'horse' | 'scooter' | 'bike' (true / 1: horse, older games)
  *   { type: 'talk', on }                  push-to-talk pressed / released (🎙️ marker)
  *   { type: 'say', text }                 recognised speech (public text bubble)
  *   { type: 'call-request', to }          ask a nearby player for a voice chat
@@ -187,7 +187,7 @@ export class VillageServer {
     switch (msg.type) {
       case 'state':
         if (msg.ka) c.ws.keepalive = true; // this page sends its state at least every 10 s
-        if ([msg.x, msg.z, msg.rot].every(Number.isFinite)) Object.assign(c, { x: msg.x, z: msg.z, rot: msg.rot, moving: !!msg.moving, sit: !!msg.sit, ride: msg.ride === 'scooter' ? 'scooter' : msg.ride ? 'horse' : false, dirty: true, farDirty: true });
+        if ([msg.x, msg.z, msg.rot].every(Number.isFinite)) Object.assign(c, { x: msg.x, z: msg.z, rot: msg.rot, moving: !!msg.moving, sit: !!msg.sit, ride: msg.ride === 'scooter' || msg.ride === 'bike' ? msg.ride : msg.ride ? 'horse' : false, dirty: true, farDirty: true });
         break;
       case 'talk':
         c.talking = !!msg.on;

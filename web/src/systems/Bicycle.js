@@ -8,11 +8,53 @@ export { BIKE_PRICE };
  * The bicycle in the yard, leaning by the house. The first time Ahmet doesn't know how to ride
  * one: learning is a skill bought with credits (kept in the wallet like the shop's things, so a
  * new game keeps it). Then "Bisiklete bin": he rides round the yard, pedalling, the wheels turning
- * with the speed; "Bisikletten in" (or leaving the yard) leaves it where it is / back at the wall.
+ * with the speed; "Bisikletten in" leaves it where it is. Riding out of the gate takes it along (the
+ * square, the schoolyard); going somewhere without it sends it home to the wall.
  */
 export const BIKE_SKILL = 'skill.bike';
 const HOME = { where: 'yard', x: -11.2, z: -10.3, rot: Math.PI / 2 };
+/** Places it can be ridden to (out of doors). */
+const RIDE_TO = new Set(['yard', 'village', 'schoolyard']);
 const WHEEL = 0.33;
+
+/** A child's bicycle facing +z: two wheels with spokes, a red frame, saddle, handlebars and pedals (also another player's: RemotePlayers). */
+export function bikeMount(mf) {
+  const group = new THREE.Group(), frame = 0xC0392B, dark = 0x2B2B2B, metal = { tex: 'metal' };
+  const wheel = (z) => {
+    const w = new THREE.Group();
+    const tyre = mf.torus(WHEEL, 0.035, dark, 20); tyre.rotation.y = Math.PI / 2; w.add(tyre);
+    for (let k = 0; k < 6; k++) { const s = mf.box(0.012, WHEEL * 2, 0.012, 0xC8CDD2); s.rotation.x = k * Math.PI / 6; w.add(s); }
+    const hub = mf.cyl(0.04, 0.04, 0.08, metal, 8); hub.rotation.z = Math.PI / 2; w.add(hub); // along the axle (x)
+    w.position.set(0, WHEEL + 0.035, z); group.add(w);
+    return w;
+  };
+  const front = wheel(0.5), back = wheel(-0.5);
+  const bar = (a, b, r = 0.025, spec = frame) => { // a tube from point a to point b
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), m = mf.cyl(r, r, A.distanceTo(B), spec, 6);
+    m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.sub(A).normalize());
+    return group.add(m);
+  };
+  const hub = WHEEL + 0.035, crank = [0, hub - 0.02, -0.05], seat = [0, 0.78, -0.22], head = [0, 0.82, 0.38];
+  bar(crank, seat); bar(crank, head); bar(seat, head); bar([0, hub, -0.5], crank); bar([0, hub, -0.5], seat);
+  bar(head, [0, hub, 0.5], 0.022, metal); bar(head, [0, 0.98, 0.34], 0.02, metal);
+  bar([-0.28, 0.98, 0.32], [0.28, 0.98, 0.32], 0.018, metal); // handlebars
+  [-0.28, 0.28].forEach((x) => { const grip = mf.at(mf.cyl(0.03, 0.03, 0.1, dark, 8), x, 0.98, 0.32); grip.rotation.z = Math.PI / 2; group.add(grip); });
+  group.add(mf.at(mf.box(0.16, 0.05, 0.26, dark), 0, 0.81, -0.24)); // saddle
+  group.add(mf.at(mf.box(0.14, 0.12, 0.02, 0xF4F1EA), 0, 0.88, 0.42)); // a little basket plate
+  const pedals = new THREE.Group(); pedals.position.set(...crank); group.add(pedals);
+  [-1, 1].forEach((side) => {
+    const arm = mf.box(0.02, 0.17, 0.03, metal); arm.position.set(side * 0.08, side * 0.08, 0); pedals.add(arm);
+    pedals.add(mf.at(mf.box(0.09, 0.025, 0.06, dark), side * 0.12, side * 0.16, 0));
+  });
+  let spin = 0;
+  return {
+    kind: 'bike', group, seat: 0.84, saddle: -0.24, speed: 1.5, legs: 'pedal',
+    hands: [new THREE.Vector3(0.26, 0.98, 0.32), new THREE.Vector3(-0.26, 0.98, 0.32)], // on the grips (left, right)
+    play: (name, v = 0) => { spin = v; },
+    update: (dt) => { const a = spin * dt / WHEEL; front.rotation.x += a; back.rotation.x += a; pedals.rotation.x += a * 0.5; },
+    get pedal() { return pedals.rotation.x; },
+  };
+}
 
 export class Bicycle {
   constructor({ world, mf, player, wallet, toasts, vocab, choice, onShop }) {
@@ -22,50 +64,16 @@ export class Bicycle {
   build() {
     const loc = this.world.get(HOME.where);
     if (!loc) return;
-    this.bike = this.#make();
+    this.bike = bikeMount(this.mf);
     this.#home();
-    loc.group.add(this.bike.group);
   }
 
-  #home() { const g = this.bike.group; g.position.set(HOME.x, 0, HOME.z); g.rotation.set(0, HOME.rot, 0.12); } // leaning a little
-
-  /** A child's bicycle facing +z: two wheels with spokes, a red frame, saddle, handlebars and pedals. */
-  #make() {
-    const mf = this.mf, group = new THREE.Group(), frame = 0xC0392B, dark = 0x2B2B2B, metal = { tex: 'metal' };
-    const wheel = (z) => {
-      const w = new THREE.Group();
-      const tyre = mf.torus(WHEEL, 0.035, dark, 20); tyre.rotation.y = Math.PI / 2; w.add(tyre);
-      for (let k = 0; k < 6; k++) { const s = mf.box(0.012, WHEEL * 2, 0.012, 0xC8CDD2); s.rotation.x = k * Math.PI / 6; w.add(s); }
-      const hub = mf.cyl(0.04, 0.04, 0.08, metal, 8); hub.rotation.z = Math.PI / 2; w.add(hub); // along the axle (x)
-      w.position.set(0, WHEEL + 0.035, z); group.add(w);
-      return w;
-    };
-    const front = wheel(0.5), back = wheel(-0.5);
-    const bar = (a, b, r = 0.025, spec = frame) => { // a tube from point a to point b
-      const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), m = mf.cyl(r, r, A.distanceTo(B), spec, 6);
-      m.position.copy(A).add(B).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.sub(A).normalize());
-      return group.add(m);
-    };
-    const hub = WHEEL + 0.035, crank = [0, hub - 0.02, -0.05], seat = [0, 0.78, -0.22], head = [0, 0.82, 0.38];
-    bar(crank, seat); bar(crank, head); bar(seat, head); bar([0, hub, -0.5], crank); bar([0, hub, -0.5], seat);
-    bar(head, [0, hub, 0.5], 0.022, metal); bar(head, [0, 0.98, 0.34], 0.02, metal);
-    bar([-0.28, 0.98, 0.32], [0.28, 0.98, 0.32], 0.018, metal); // handlebars
-    [-0.28, 0.28].forEach((x) => { const grip = mf.at(mf.cyl(0.03, 0.03, 0.1, dark, 8), x, 0.98, 0.32); grip.rotation.z = Math.PI / 2; group.add(grip); });
-    group.add(mf.at(mf.box(0.16, 0.05, 0.26, dark), 0, 0.81, -0.24)); // saddle
-    group.add(mf.at(mf.box(0.14, 0.12, 0.02, 0xF4F1EA), 0, 0.88, 0.42)); // a little basket plate
-    const pedals = new THREE.Group(); pedals.position.set(...crank); group.add(pedals);
-    [-1, 1].forEach((side) => {
-      const arm = mf.box(0.02, 0.17, 0.03, metal); arm.position.set(side * 0.08, side * 0.08, 0); pedals.add(arm);
-      pedals.add(mf.at(mf.box(0.09, 0.025, 0.06, dark), side * 0.12, side * 0.16, 0));
-    });
-    let spin = 0;
-    return {
-      kind: 'bike', group, seat: 0.84, saddle: -0.24, speed: 1.5, legs: 'pedal',
-      hands: [new THREE.Vector3(0.26, 0.98, 0.32), new THREE.Vector3(-0.26, 0.98, 0.32)], // on the grips (left, right)
-      play: (name, v = 0) => { spin = v; },
-      update: (dt) => { const a = spin * dt / WHEEL; front.rotation.x += a; back.rotation.x += a; pedals.rotation.x += a * 0.5; },
-      get pedal() { return pedals.rotation.x; },
-    };
+  /** Back at the yard's wall, leaning a little. */
+  #home() {
+    const g = this.bike.group;
+    this.world.get(HOME.where).group.add(g);
+    this.place = HOME.where;
+    g.position.set(HOME.x, 0, HOME.z); g.rotation.set(0, HOME.rot, 0.12);
   }
 
   /** Interaction provider: get off, or get on (learn first). */
@@ -73,7 +81,7 @@ export class Bicycle {
     const p = this.player, b = this.bike;
     if (!b) return null;
     if (p.mount === b) return { label: 'Bisikletten in', dist: 0, priority: 3, run: () => this.getOff() };
-    if (p.mount || this.world.current?.id !== HOME.where) return null;
+    if (p.mount || this.world.current?.id !== this.place) return null;
     const d = Math.hypot(b.group.position.x - pos.x, b.group.position.z - pos.z);
     if (d > 1.8) return null;
     return { label: 'Bisiklete bin', dist: d, priority: 1, run: () => this.getOn() }; // the price shows on the "learn it" card
@@ -112,9 +120,13 @@ export class Bicycle {
     p.position.x = g.position.x + Math.cos(r) * 0.8; p.position.z = g.position.z - Math.sin(r) * 0.8;
   }
 
-  /** Leaving the yard on the bike: it goes back to the wall. */
-  leftPlace() {
-    if (this.player.mount === this.bike) this.player.setMount(null);
-    if (this.bike) this.#home();
+  /** The player is in place `id` now: rode the bike there (it comes along), or came without it (it goes home). */
+  moved(id) {
+    if (!this.bike) return;
+    if (this.player.mount === this.bike) {
+      if (RIDE_TO.has(id)) { this.world.get(id).group.add(this.bike.group); this.place = id; return; }
+      this.player.setMount(null);
+    }
+    if (id !== this.place && (this.place !== HOME.where || id !== HOME.where)) this.#home();
   }
 }

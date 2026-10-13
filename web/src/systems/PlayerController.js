@@ -6,6 +6,8 @@ const RUN = 1.7;
 /** Moves the player from input, resolving collisions against the current location. */
 export class PlayerController {
   #vel = { x: 0, z: 0 }; // on a scooter (`mount.glide`): it keeps rolling
+  #air = null; // a horse's jump: the speed it took off with — in the air it goes on that way, whatever the stick says
+  #last = null;
 
   constructor({ player, input, world, modes, cast, camera }) { Object.assign(this, { player, input, world, modes, cast, camera }); }
 
@@ -17,9 +19,12 @@ export class PlayerController {
       if (mag > 0.3) player.sit(false); // pushing the stick stands Ahmet up (e.g. from the sofra)
       else { x = z = mag = 0; }
     }
+    if (player.jumping) return this.#flying(dt);
+    this.#air = null;
     player.moving = mag > 0.08;
     if (player.mount?.glide) return this.#glide(dt, x, z, mag);
     this.#vel.x = this.#vel.z = 0;
+    const from = { x: player.position.x, z: player.position.z };
     if (mag > 0.08) {
       const yaw = this.camera?.yaw ?? 0; // the view is turned: "up" means away from the camera
       if (yaw) { const c = Math.cos(yaw), s = Math.sin(yaw); [x, z] = [x * c - z * s, x * s + z * c]; }
@@ -35,6 +40,16 @@ export class PlayerController {
     } else {
       player.walk(t, 0);
     }
+    if (dt > 0) this.#last = { x: (player.position.x - from.x) / dt, z: (player.position.z - from.z) / dt }; // (a jump takes off with it)
+    player.update(dt);
+  }
+
+  /** In the air on horseback: on at the take-off speed and heading (a jump from a gallop goes far, from a standstill straight up). */
+  #flying(dt) {
+    const { player } = this, P = player.position, loc = this.world.current;
+    if (!this.#air) this.#air = this.#last && dt > 0 ? { ...this.#last } : { x: 0, z: 0 };
+    P.x += this.#air.x * dt; P.z += this.#air.z * dt;
+    loc.collision.resolve(P, 0.35, this.cast.obstacles(loc.id));
     player.update(dt);
   }
 
