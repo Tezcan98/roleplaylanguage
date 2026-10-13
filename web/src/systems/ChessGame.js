@@ -4,6 +4,7 @@ import { Chess } from 'chess.js';
 import { chessSquare, CHESS } from '../world/locations/VillageSquare.js';
 import { el } from '../ui/dom.js';
 import { playerName } from '../i18n/Persona.js';
+import { gloss } from '../i18n/Gloss.js';
 
 /** Offline score board (you and Dede): real games only, kept on the device. */
 const LOCAL_SCORES = 'chessScores';
@@ -60,7 +61,7 @@ export class ChessGame {
     this.online = false;
     this.state = null;
     this.#resetLocal();
-    square.animated.push((dt) => { this.#animate(dt); this.#follow(); });
+    square.animated.push((dt) => { this.#animate(dt); this.#follow(); this.#keepOut(); });
     this.#apply(this.#localState(), true);
   }
 
@@ -288,6 +289,16 @@ export class ChessGame {
   // --- playing on foot, on the board itself -------------------------------------------
 
   /** Board square under a world position (null when off the board). */
+  /** A game on: nobody but its two players walks onto the board (each screen keeps its own player off it). */
+  #keepOut() {
+    const p = this.player?.position, st = this.state;
+    if (!p || st?.phase !== 'playing' || this.myColor || this.world?.current?.id !== 'village') { if (st?.phase !== 'playing') this.warned = false; return; }
+    const h = CHESS.size * 4 + 0.3, dx = p.x - CHESS.cx, dz = p.z - CHESS.cz;
+    if (Math.abs(dx) >= h || Math.abs(dz) >= h) return;
+    if (Math.abs(dx) > Math.abs(dz)) p.x = CHESS.cx + Math.sign(dx) * h; else p.z = CHESS.cz + (Math.sign(dz) || 1) * h; // out by the nearest edge
+    if (!this.warned) { this.warned = true; this.toasts?.show('Satranç oynanıyor, tahtaya girme.', gloss('A game of chess is on: stay off the board.')); }
+  }
+
   squareAt(pos) {
     const file = Math.round((pos.x - CHESS.cx) / CHESS.size + 3.5), rank = Math.round(3.5 - (pos.z - CHESS.cz) / CHESS.size);
     return file >= 0 && file < 8 && rank >= 0 && rank < 8 ? `${'abcdefgh'[file]}${rank + 1}` : null;

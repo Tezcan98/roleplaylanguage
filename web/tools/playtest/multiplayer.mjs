@@ -168,9 +168,15 @@ try {
   await at(A, 0, 3);
   check('…walking out leaves the zone (the others no longer hear you)', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.group.zone)) === null && (await B.evaluate(() => window.__game.village.group.ids().length)) === 0, 6000))
     && await A.evaluate(() => document.querySelector('.pill.zone-note').hidden));
+  // the mosque's courtyard is a talking zone too
+  const Av = await A.evaluate(() => window.__game.village.zones.avlu);
+  await at(A, Av.x - Av.w / 2 + 4, Av.z + 6);
+  check('the mosque\'s courtyard is a talking zone too', !!(await waitFor(() => A.evaluate(() => window.__game.village.group.zone === 'avlu' && document.querySelector('.pill.zone-note').textContent.includes('Cami avlusu')), 6000)));
+  await at(A, 0, 3); await waitFor(() => A.evaluate(() => window.__game.village.group.zone === null), 4000);
   await at(B, 0, 6);
 
   await at(A, 2, 4); await at(B, 3.5, 4); await sleep(500);
+  await waitFor(async () => (await label(A))?.includes('sesli sohbet'), 6000);
   await A.keyboard.press('e'); await waitFor(() => B.$('text=Engelle')); await B.click('text=Engelle'); await sleep(800);
   await A.keyboard.press('e'); await sleep(1500);
   check('a blocked player cannot ask again', !(await B.$('text=Kabul et')) && !(await inCall(A)) && !(await inCall(B)));

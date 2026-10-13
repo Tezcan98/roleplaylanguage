@@ -142,7 +142,6 @@ export class Animals {
 
   #chore(task) {
     task.words.forEach(([tr, en]) => this.vocab.learn(tr, en));
-    this.labels.think(task.think, 2.5, this.clock());
     this.toasts.show(task.think, gloss(task.en));
     this.effects?.run(task.do);
   }
@@ -151,7 +150,6 @@ export class Animals {
     const k = KINDS[a.kind];
     this.vocab.learn(k.tr, k.en);
     this.toasts.show(`${k.tr} = ${gloss(k.en)}`, gloss(k.en));
-    this.labels.think(`${capital(k.tr)} ne kadar sevimli!`, 2.5, this.clock());
   }
 
   /** Time left on the rented horse, "2:41". */
@@ -168,6 +166,9 @@ export class Animals {
     a.target = null; a.wait = 2;
     this.toasts.show('At binme süren doldu. At yerine dönüyor.', gloss('Your ride is over. The horse goes back to its post.'));
   }
+
+  /** Debug/test: the horses of a place. */
+  horses(place = 'village') { return this.#list.filter((a) => a.def.kind === 'horse' && a.def.where === place); }
 
   ride(a) {
     const p = this.player;
@@ -210,4 +211,3 @@ export class Animals {
 }
 
 const wrap = (x) => Math.atan2(Math.sin(x), Math.cos(x));
-const capital = (s) => s.charAt(0).toLocaleUpperCase('tr-TR') + s.slice(1);

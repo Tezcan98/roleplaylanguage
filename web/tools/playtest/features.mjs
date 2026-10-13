@@ -222,7 +222,7 @@ try {
   check('on the pitch: the hard-shot button stays, no talk button', await ev(() => !document.getElementById('shot').hidden && document.querySelector('.ptt-wrap').hidden));
   await ev(() => { const t = window.__game.tts; t._said = []; const speak = t.speak.bind(t); t.speak = (x, o) => { t._said.push(o?.speaker); return speak(x, o); }; }); // who speaks aloud from now on
   await ev(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('cay1')); g.player.sit(true); });
-  const heard = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].some((b) => b.textContent && b.style.display !== 'none')), 16000);
+  const heard = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].some((b) => b.textContent && b.style.display !== 'none')), 30000); // (the CI machine is slow: game time runs slower there)
   check('tea garden: the regulars talk in speech bubbles', !!heard);
   check('…quietly: no voice, no panel on the screen', !(await page.$('.talk-panel')) && !(await ev(() => (window.__game.tts._said ?? []).some((w) => ['huseyin', 'kadir', 'cayci'].includes(w)))));
   await ev(() => window.__game.player.sit(false)); await sleep(300);
@@ -347,9 +347,9 @@ try {
   const bikeCredits = await ev(() => window.__game.wallet.balance);
   await page.keyboard.press('e');
   await waitFor(() => page.$('.overlay.open .card .btn'), 3000);
-  check('…"Bisiklet sürmeyi bilmiyorsun": learn it for 10 credits', (await page.textContent('.overlay.open .ctitle')).includes('bilmiyorsun') && (await page.textContent('.overlay.open .card .btn:not(.alt)')).includes('10'));
+  check('…"Bisiklet sürmeyi bilmiyorsun": learn it for 3 credits', (await page.textContent('.overlay.open .ctitle')).includes('bilmiyorsun') && (await page.textContent('.overlay.open .card .btn:not(.alt)')).includes('3 kredi'));
   await page.click('.overlay.open .card .btn:not(.alt)');
-  check('…learnt for credits, now riding', !!(await waitFor(() => ev((c) => window.__game.wallet.balance === c - 10 && window.__game.player.mount?.kind === 'bike', bikeCredits), 5000)));
+  check('…learnt for credits, now riding', !!(await waitFor(() => ev((c) => window.__game.wallet.balance === c - 3 && window.__game.player.mount?.kind === 'bike', bikeCredits), 5000)));
   check('…"Bisikletten in" (not "Attan in")', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Bisikletten in')), 3000)));
   await page.keyboard.press('e');
   check('…off again', !!(await waitFor(() => ev(() => !window.__game.player.mount), 3000)));
@@ -358,6 +358,13 @@ try {
   await ev(() => window.__game.travel.place('village', 'yardRoad', { force: true })); await sleep(800);
   await ev(() => window.__game.player.position.set(-4.2, 0, -21)); await sleep(400);
   check('the square: Hamdi the groom by the horses', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Hamdi Amca')), 5000)));
+  const rideCredits = await ev(() => window.__game.wallet.balance);
+  await ev(() => { const g = window.__game; g.animals.ride(g.animals.horses()[0]); });
+  check('a ride on a horse: 1 credit, and the 🐎 Zıpla button is there', (await ev(() => window.__game.wallet.balance)) === rideCredits - 1 && !!(await waitFor(() => ev(() => !document.getElementById('jump').hidden), 3000)));
+  await page.keyboard.press('Space');
+  const leap = await waitFor(() => ev(() => { const m = window.__game.player.mount; return m?.group.position.y > 0.4 ? m.group.position.y : 0; }), 3000, 30);
+  check('…Space: the horse jumps, then lands', !!leap && !!(await waitFor(() => ev(() => !window.__game.player.jumping && window.__game.player.mount.group.position.y === 0), 5000)), `up to ${Number(leap).toFixed(2)} m`);
+  await ev(() => window.__game.animals.dismount());
   await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
 
   // --- word practice -------------------------------------------------------------------

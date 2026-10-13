@@ -114,17 +114,29 @@ const GENERATORS = {
       g.beginPath(); g.ellipse(r() * s, r() * s, 12 + r() * 16, 9 + r() * 12, r() * 3, 0, Math.PI * 2); g.fill();
     }
   },
-  /** White and light grey marble slabs, laid like a chessboard, with faint veins (the mosque's courtyard). */
+  /** A running track: red-brown rubber with a fine grain, two white lane lines along it. */
+  track(g, s) {
+    const r = rng(15);
+    g.fillStyle = '#B0503A'; g.fillRect(0, 0, s, s);
+    for (let i = 0; i < 900; i++) { g.fillStyle = r() < 0.5 ? 'rgba(80,25,15,0.25)' : 'rgba(230,140,110,0.18)'; g.fillRect(r() * s, r() * s, 2, 2); }
+    g.fillStyle = '#F4F1EA';
+    [1 / 3, 2 / 3].forEach((v) => g.fillRect(0, v * s - 3, s, 6));
+    g.fillRect(0, 0, s, 4); g.fillRect(0, s - 4, s, 4); // its edges
+  },
+  /** Light stone slabs of different lengths in rows, worn a little (the mosque's courtyard). */
   marble(g, s) {
-    const r = rng(14), n = 4, w = s / n;
-    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
-      g.fillStyle = shade((x + y) % 2 ? '#C9CDD2' : '#F1F1EE', (r() - 0.5) * 0.04);
-      g.fillRect(x * w, y * w, w, w);
-      g.strokeStyle = 'rgba(120,125,135,0.25)'; g.lineWidth = 1;
-      for (let k = 0; k < 2; k++) { g.beginPath(); g.moveTo(x * w + r() * w, y * w); g.bezierCurveTo(x * w + r() * w, y * w + w * 0.4, x * w + r() * w, y * w + w * 0.6, x * w + r() * w, y * w + w); g.stroke(); }
+    const r = rng(14), rows = 6, h = s / rows;
+    g.fillStyle = '#B9B3A8'; g.fillRect(0, 0, s, s); // the joints
+    for (let y = 0; y < rows; y++) {
+      let x = -r() * h;
+      while (x < s) {
+        const w = h * (1.1 + r() * 1.3);
+        g.fillStyle = shade(['#E2DDD3', '#D8D3C9', '#E8E4DC', '#D2CEC6'][Math.floor(r() * 4)], (r() - 0.5) * 0.05);
+        g.fillRect(x + 1.5, y * h + 1.5, w - 3, h - 3);
+        for (let k = 0; k < 6; k++) { g.fillStyle = `rgba(120,110,95,${0.04 + r() * 0.05})`; g.beginPath(); g.ellipse(x + r() * w, y * h + r() * h, 3 + r() * 8, 2 + r() * 5, r() * 3, 0, Math.PI * 2); g.fill(); } // worn spots
+        x += w;
+      }
     }
-    g.fillStyle = 'rgba(150,150,150,0.6)';
-    for (let i = 0; i <= n; i++) { g.fillRect(i * w - 1, 0, 2, s); g.fillRect(0, i * w - 1, s, 2); }
   },
   brick(g, s) {
     const r = rng(10), rows = 8, h = s / rows, w = s / 4;

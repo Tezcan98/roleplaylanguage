@@ -45,6 +45,9 @@ function aimWorld(bone, tip, wantWorld) {
   bone.updateMatrixWorld(true);
 }
 
+/** A horse's jump: how long it is in the air (s), how high (m), how far its nose goes up / down (rad). */
+const JUMP = { time: 0.75, height: 0.9, pitch: 0.28 };
+
 export class Character {
   #hd = null;
   #aura = null;
@@ -53,6 +56,7 @@ export class Character {
   #lastPos = null;
   #kick = null; // { t, dur, power }: a kick of the ball, the right leg swings
   #rideSpeed = 0; // smoothed speed on horseback (the horse's gait follows it)
+  #jump = null; // on horseback: { t } of a jump in the air
   #shins = null; // per leg on horseback: { len, dir } of the shin, measured once when getting on
   #tmp = new THREE.Vector3();
   constructor(id, appearance, { mf, models }) {
@@ -176,7 +180,7 @@ export class Character {
    * height of the horse's back), legs astride down its sides, hands forward on the reins.
    */
   setMount(mount) {
-    this.mount = mount; this.#rideSpeed = 0; this.#shins = null;
+    this.mount = mount; this.#rideSpeed = 0; this.#shins = null; this.#jump = null;
     const r = this.rig;
     if (mount) {
       this.seated = false;
@@ -191,6 +195,15 @@ export class Character {
       if (this.mixer) { this.current = null; this.#playClip('idle'); }
     }
   }
+
+  /** On horseback: the horse leaps (up and down in an arc, nose up then down). False if it can't now. */
+  jump() {
+    if (this.mount?.kind !== 'horse' || this.#jump) return false;
+    this.#jump = { t: 0 };
+    this.mount.group.rotation.order = 'YXZ'; // (pitch after the heading)
+    return true;
+  }
+  get jumping() { return !!this.#jump; }
 
   walk(t, amount) {
     if (this.seated || this.posed || this.mount) return;
@@ -285,11 +298,17 @@ export class Character {
       const speed = this.#lastPos && dt > 0 ? Math.hypot(p.x - this.#lastPos.x, p.z - this.#lastPos.z) / dt : 0;
       this.#rideSpeed += (speed - this.#rideSpeed) * Math.min(1, dt * 6);
       const hip = m.stand ? { up: 0, fwd: 0 } : this.#hips(); // (the sitting pose puts them a little behind the feet)
-      p.y = m.stand ? m.seat : m.seat - hip.up + 0.08; // standing (a scooter): the feet on the deck
+      let jy = 0, pitch = 0; // a leap: up 0.9 m and down in 0.75 s
+      if (this.#jump) {
+        const u = Math.min(1, (this.#jump.t += dt) / JUMP.time);
+        jy = 4 * JUMP.height * u * (1 - u); pitch = -JUMP.pitch * Math.cos(Math.PI * u);
+        if (u >= 1) { this.#jump = null; pitch = 0; }
+      }
+      p.y = (m.stand ? m.seat : m.seat - hip.up + 0.08) + jy; // standing (a scooter): the feet on the deck
       const f = hip.fwd - (m.saddle ?? 0); // the seat (a horse's back, a bike's saddle) under the hips
-      m.group.position.set(p.x + Math.sin(rot) * f, 0, p.z + Math.cos(rot) * f); m.group.rotation.y = rot;
+      m.group.position.set(p.x + Math.sin(rot) * f, jy, p.z + Math.cos(rot) * f); m.group.rotation.y = rot; m.group.rotation.x = pitch;
       const v = this.#rideSpeed;
-      m.play(v > 2.6 ? 'run' : v > 0.3 ? 'walk' : 'idle', v);
+      m.play(this.#jump || v > 2.6 ? 'run' : v > 0.3 ? 'walk' : 'idle', v);
       m.update(dt);
       if (m.legs === 'pedal') { const a = Math.sin(m.pedal) * 0.45; this.rig.legL.rotation.x = -1.1 + a; this.rig.legR.rotation.x = -1.1 - a; }
     }

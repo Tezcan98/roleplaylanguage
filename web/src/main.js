@@ -117,7 +117,7 @@ import { Library } from './systems/Library.js';
 import { NeyMusic } from './systems/NeyMusic.js';
 import { BookReader } from './ui/BookReader.js';
 import { AmbientTalk } from './systems/AmbientTalk.js';
-import { KAHVE_UNCLES, KAHVEHANE, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
+import { KAHVE_UNCLES, KAHVEHANE, MOSQUE, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
 import { SERVERS, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
@@ -391,7 +391,10 @@ const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
   bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st) => village.voiceState(st), relayOnly: params.has('relayonly') }),
   group: new GroupVoice({ net: villageNet, iceServers: manifest.iceServers, onState: (st) => village.zoneState(st) }),
-  zones: { kahve: { ...KAHVEHANE, name: 'Kahvehane' } }, // talking zones: everyone inside hears each other
+  zones: { // talking zones: everyone inside hears each other
+    kahve: { ...KAHVEHANE, name: 'Kahvehane' },
+    avlu: { x: (MOSQUE.x0 + MOSQUE.x1) / 2, z: (MOSQUE.z0 + MOSQUE.z1) / 2, w: MOSQUE.x1 - MOSQUE.x0, d: MOSQUE.z1 - MOSQUE.z0, name: 'Cami avlusu' },
+  },
   remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS, horse: () => animals.mount(), scooter: () => scooterMount(mf) }), // others on horseback or a scooter
   rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
   // public places: the square, and the schoolyard for football (its own room: <city>-okul)
@@ -501,7 +504,6 @@ cirak.build();
 // your own garden bed: planting comes later — grandpa says you are still a bit young
 effects.register('my-garden', () => {
   if (cast.where('dede') === world.current.id) { dialogue.open('dede', 'myGarden'); return; }
-  labels.think('Burası benim bahçem olacak!', 3.5, game.t);
   toasts.show('Dede: “Biraz büyü, sonra birlikte ekeriz.”', gloss('Grandpa: “Grow a little, then we will plant it together.”'));
 });
 
@@ -533,6 +535,11 @@ const interactions = new InteractionSystem([
 ], modes);
 const actionButton = new ActionButton(host, () => interactions.trigger());
 const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root);
+// on horseback: jump (the button, or Space on a keyboard)
+const jumpHorse = () => { if (modes.is('play') && player.jump()) vocab.learn('zıplamak', 'to jump'); };
+const jumpButton = new ShotButton(host, jumpHorse, actionButton.root, { id: 'jump', text: '🐎 Zıpla', label: 'Zıpla' });
+addEventListener('keydown', (e) => { if (e.code === 'Space' && !e.repeat && player.mount?.kind === 'horse' && document.activeElement?.tagName !== 'INPUT') { e.preventDefault(); jumpHorse(); } });
+const jumpShown = { update: () => jumpButton.show(modes.is('play') && player.mount?.kind === 'horse') };
 input.onKey((e) => {
   if (modes.is('play') && ['e', 'E', 'Enter'].includes(e.key)) { e.preventDefault(); interactions.trigger(); }
   else if (['i', 'I'].includes(e.key) && (modes.is('play') || inventoryView.isOpen) && !e.target?.closest?.('input,textarea')) { e.preventDefault(); inventoryView.toggle(); } // the inventory
@@ -608,6 +615,7 @@ const refreshQuest = () => questPanel.show(story.objective());
 bus.on(EV.TIME, () => hud.setTime(time.dayName, time.label, time.isNight));
 bus.on(EV.WORD, ({ size }) => hud.setWords(size));
 bus.on(EV.INVENTORY, () => { hud.setBag(inventory.size); hud.setMoney(inventory.count('para')); hud.setTextbook(inventory.has('kitap')); refreshQuest(); });
+hud.setBag(inventory.size); hud.setMoney(inventory.count('para')); // right away too: straight into the square from the menu, no story started (it said 0 ₺ with 30 in the bag)
 bus.on(EV.CREDITS, ({ balance }) => hud.setCredits(balance));
 hud.setCredits(wallet.balance); // from the start (online from the menu, too)
 bus.on(EV.QUEST, refreshQuest);
@@ -771,9 +779,7 @@ function startNew(then, chapter = null) { // chapter: start from there (testers,
     hud.setCredits(wallet.balance); hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setMoney(inventory.count('para'));
     story.startChapter(dayIndex >= 0 ? dayIndex : 0, () => {
       enterPlay();
-      const think = story.chapter.think;
-      if (think && !then) labels.think(think, 5, game.t);
-      then?.();
+      then?.(); // (no thought bubble over the player: the day's task is in the quest panel)
     });
   });
 }
@@ -788,7 +794,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ ambient: [kahveTalk, cirak, talk, ney], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, talk, ney, jumpShown], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });

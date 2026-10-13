@@ -7,7 +7,7 @@ import { gloss } from '../i18n/Gloss.js';
  * motor picks up speed smoothly, it rolls on when let go and turns in curves (PlayerController `glide`). Others see you on one (VillageMultiplayer sends `ride: 'scooter'`). Getting off
  * leaves it where it is; leaving the square puts it back at the stand.
  */
-const STAND = { where: 'village', x: -50.6, zs: [3.4, 4.2, 5.0, 5.8, 6.6], rot: Math.PI / 2 }; // along the fence, facing into the square
+const STAND = { where: 'village', x: -47.6, zs: [3.4, 4.2, 5.0, 5.8, 6.6], rot: Math.PI / 2 }; // by the entrance, just past the running track, facing into the square
 const COLOURS = [0xE4574A, 0x2F6FDB, 0x3E8E4A];
 const WHEEL = 0.085;
 
@@ -82,7 +82,7 @@ export class Scooters {
     p.setMount(m);
     this.vocab.learn('scooter', 'electric scooter'); this.vocab.learn('binmek', 'to get on, to ride');
     this.vocab.learn('elektrikli', 'electric');
-    this.toasts.show('Elektrikli scooter\'a bindin! Gezmek için yürü.', gloss('You are on a scooter! Walk to ride around.'));
+    this.toasts.show('Elektrikli scooter\'a bindin! Hadi, meydanı dolaş.', gloss('You are on an electric scooter! Go on, ride around the square.'));
   }
 
   getOff() {

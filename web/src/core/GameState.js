@@ -5,7 +5,7 @@
 /** Every new game starts with this many lesson credits. */
 export const START_CREDITS = 100;
 /** …and this much game money (lira) for the shops on the square. */
-export const START_MONEY = 30;
+export const START_MONEY = 200;
 
 export class GameState {
   constructor() { this.reset(); }

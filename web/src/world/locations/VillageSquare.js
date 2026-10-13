@@ -12,7 +12,9 @@ const HALF = SQUARE_HALF; // the fence (content/square.js: sized for a crowd)
 const EAST = SQUARE_EAST; // the east fence, past the mosque
 
 /** The mosque's courtyard (avlu) in the east: a low wall with a gate facing the square; the mosque itself at its east end. */
-export const MOSQUE = { x0: 52, x1: 96, z0: -24, z1: 24, gate: 2.6, hall: { x: 88, z: 0, w: 12 }, sadirvan: { x: 64, z: -12 } };
+/** The running track inside the fence: its middle this far from the fence, this wide (m). */
+export const TRACK = { inset: 1.6, width: 2.4 };
+export const MOSQUE = { x0: 52, x1: 92, z0: -21, z1: 21, gate: 2.6, hall: { x: 84, z: 0, w: 12 }, sadirvan: { x: 62, z: -11 } };
 
 /** Open-air coffeehouse (north-east) and open library (north-west): walls, no roof. */
 export const KAHVEHANE = { x: 34, z: -36, w: 24, d: 14 };
@@ -51,9 +53,9 @@ const SQUARE_BENCHES = [ // (content/square.js BENCHES)
   [-30, 34, Math.PI], // south-west, under the trees
   // the mosque's courtyard (MOSQUE): along its north and south walls, along the west wall facing the
   // mosque, and four round the şadırvan facing it
-  ...[56, 62, 68, 74, 80, 86, 92].flatMap((x) => [[x, -22.6, 0], [x, 22.6, Math.PI]]),
-  ...[-20, -14, -8, 8, 14, 20].map((z) => [53.6, z, Math.PI / 2]),
-  [64, -16.5, 0], [64, -7.5, Math.PI], [59.5, -12, Math.PI / 2], [68.5, -12, -Math.PI / 2],
+  ...[56, 62, 68, 74, 80, 86].flatMap((x) => [[x, -19.6, 0], [x, 19.6, Math.PI]]),
+  ...[-17, -11, -5, 5, 11, 17].map((z) => [53.6, z, Math.PI / 2]),
+  [62, -15.5, 0], [62, -6.5, Math.PI], [57.5, -11, Math.PI / 2], [66.5, -11, -Math.PI / 2],
 ];
 
 /** Places where people sit and talk; sitting in one lets you listen in (TalkAreas). */
@@ -157,9 +159,9 @@ export class VillageSquare extends Location {
     [[-5, 12], [6, 12], [14, -14], [-4, -14], [-21, -6], [-21, 6], [30, -12], [-30, -12], [-6, 22], [-3.5, 25], [-22, 25], [22, -6],
       [-30, 30], [-10, 29], [33, 12], [-30, 2], [8, -30], [-8, -30],
       // the outer ring of the bigger square
-      [-48, -48], [48, -48], [-48, 48], [0, -48], [-18, -48], [18, -48], [-48, -20], [-48, 20], [50, 10], [50, -20], [-40, 42], [-20, 46], [50, 50],
+      [-48, -48], [48, -48], [-48, 48], [0, -48], [-18, -48], [18, -48], [-48, -20], [-48, 20], [50, 10], [50, -20], [-40, 42], [-20, 46], [50, 46],
       // round the mosque's courtyard
-      [64, -34], [84, -34], [64, 34], [84, 34], [64, -48], [80, -48], [96, -48], [64, 48], [80, 46], [96, 46]].forEach(([x, z]) => {
+      [64, -34], [84, -34], [64, 34], [84, 34], [64, -48], [80, -48], [92, -48], [64, 48], [80, 46], [92, 46]].forEach(([x, z]) => {
       this.prop(kit, 'prop.tree', x, 0, z, Math.random() * 6, () => mf.group(
         mf.at(mf.cyl(0.22, 0.3, 1.8, { tex: 'bark' }), 0, 0.9, 0),
         mf.at(mf.ico(1.55, { tex: 'leaves', repeat: [2, 2] }), 0, 2.7, 0)));
@@ -183,6 +185,7 @@ export class VillageSquare extends Location {
     rail(-(HALF + 2) / 2, HALF, HALF - 2, 0.08); rail((EAST + 2) / 2, HALF, EAST - 2, 0.08);
     rail(-HALF, -(HALF + 2) / 2, 0.08, HALF - 2); rail(-HALF, (HALF + 2) / 2, 0.08, HALF - 2);
 
+    this.#runningTrack(mf);
     add(mf.ground(2.4, 8, { tex: 'dirt', repeat: [1, 3] }, 0.0)).position.set(0, 0, HALF + 3);
     this.hotspot('village.school', 0, HALF - 0.8, 2.0);
     this.anchor('schoolRoad', 0, HALF - 2.2, Math.PI);
@@ -191,6 +194,21 @@ export class VillageSquare extends Location {
     this.hotspot('village.menu', -HALF + 0.8, 0, 2.2); // same exit when playing online from the menu
     this.#mosque(mf, C, low);
     this.#town(mf);
+  }
+
+  /** A running track all round the square, just inside the fence (TRACK): a lap is about 490 m. */
+  #runningTrack(mf) {
+    const { inset, width } = TRACK, y = 0.015, spec = (len) => ({ tex: 'track', repeat: [Math.round(len / 4), 1] });
+    const x0 = -HALF + inset, x1 = EAST - inset, z0 = -HALF + inset, z1 = HALF - inset; // the middle of the track
+    const along = (len, x, z, turned) => {
+      const m = this.add(mf.ground(len + width, width, spec(len + width), y));
+      m.position.set(x, y, z);
+      if (turned) m.rotation.z = Math.PI / 2; // runs north–south
+      m.receiveShadow = true;
+    };
+    along(x1 - x0, (x0 + x1) / 2, z0, false); along(x1 - x0, (x0 + x1) / 2, z1, false);
+    along(z1 - z0, x0, 0, true); along(z1 - z0, x1, 0, true);
+    this.#sign('KOŞU YOLU', -HALF + 0.12, 1.1, -6, 2.4).rotation.y = Math.PI / 2; // on the fence, by the entrance
   }
 
   /**
@@ -212,7 +230,7 @@ export class VillageSquare extends Location {
     };
 
     // the courtyard: stone paving, a low wall with a cap, a gate with an arch facing the square
-    add(mf.ground(M.x1 - M.x0, M.z1 - M.z0, { tex: 'marble', repeat: [(M.x1 - M.x0) / 4, (M.z1 - M.z0) / 4] }, 0.02)).position.set((M.x0 + M.x1) / 2, 0.02, (M.z0 + M.z1) / 2); // white and grey marble
+    add(mf.ground(M.x1 - M.x0, M.z1 - M.z0, { tex: 'marble', repeat: [(M.x1 - M.x0) / 4, (M.z1 - M.z0) / 4] }, 0.02)).position.set((M.x0 + M.x1) / 2, 0.02, (M.z0 + M.z1) / 2); // light stone slabs
     const wall = (x0, z0, x1, z1) => {
       const w = Math.max(0.45, x1 - x0), d = Math.max(0.45, z1 - z0), x = (x0 + x1) / 2, z = (z0 + z1) / 2;
       add(mf.at(mf.box(w, 1.5, d, STONE), x, 0.75, z));

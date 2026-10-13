@@ -12,7 +12,7 @@ const FAR_EVERY = 5;
 const CALL_RANGE = 6;   // metres: how close you must be to ask someone for a voice chat
 const CALL_DROP = 200;  // metres: practically never — a call ends when someone hangs up or leaves the square
 const REQUEST_TTL = 20000;
-const ZONES = new Set(['kahve']);           // places where everyone in them hears each other (the kahvehane)
+const ZONES = new Set(['kahve', 'avlu']);   // places where everyone in them hears each other (the kahvehane, the mosque's courtyard)
 const MAX_ZONE = 16;                        // voices in one zone (each player connects to every other one)
 const ROOM = /^[a-z0-9-]{1,24}$/;
 /** Only known looks get through: boy modest / strong, girl covered / open. */
@@ -51,7 +51,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'ball', n?, x, z, vx, vz }    kicked shared ball n (0 when left out; relayed, last state kept for newcomers)
  *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to your call partner
  *   { type: 'call-diag', state, detail? } how the voice connection went (logged, for support)
- *   { type: 'zone', zone }                walked into a talking zone ('kahve') or out of it (null)
+ *   { type: 'zone', zone }                walked into a talking zone ('kahve' | 'avlu') or out of it (null)
  *   { type: 'zone-rtc', to, data }        WebRTC offer / answer (with its candidates) to someone in the same zone
  *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
  *   { type: 'chess-ask', color } | { type: 'chess-dede', color? } | { type: 'chess-leave' } | { type: 'chess-resign' }

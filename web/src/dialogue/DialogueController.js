@@ -11,7 +11,7 @@ const CHAT_BUSY = {
  * the result decides the next node and which effects fire.
  *
  * Node: { say, en, words?: [tr, en][], hint?, ask?: 'choice'|'listen'|'order'|'speak', ... }
- *  - choice / listen: options: [{ tr, en, next?, do?, wrong? }]  (listen hides `say` until solved)
+ *  - choice / listen: options: [{ tr, en, next?, do?, wrong? }]  (listen hides `say` until solved; `next` may be a function of the context)
  *  - order: answer, en?, next?, do?
  *  - speak: expect: string[], keywords?, show?, hide?, next?, do?
  * `next: 'end'` (or missing) closes the conversation.
@@ -142,7 +142,7 @@ export class DialogueController {
       if (session !== this.#session || !this.talking) return;
     }
     const opt = result.option ?? {};
-    const next = opt.next ?? 'end';
+    const next = (typeof opt.next === 'function' ? opt.next(this.ctx) : opt.next) ?? 'end'; // (a function: chosen when picked)
     this.effects.run(opt.do);
     if (next === 'end') this.close(); else this.show(next);
   }

@@ -23,17 +23,13 @@ export class FreeActionSystem {
     const a = this.actions[id];
     if (!a) throw new Error(`Unknown free action ${id}`);
     // the same thing again right away (water, washing hands… — the ones with an `again` line) does not count: no time passes, nothing learned
-    if (a.again && this.#last?.id === id && this.time.minutes - this.#last.at < AGAIN_MINUTES) { // (sitting on a bench again is fine)
-      this.labels.think(val(a.again, this.ctx), 2.5, this.clock());
-      return;
-    }
+    if (a.again && this.#last?.id === id && this.time.minutes - this.#last.at < AGAIN_MINUTES) return; // (sitting on a bench again is fine)
     this.#last = { id, at: this.time.minutes };
     const rule = this.rules.find((r) => r.on === id && r.when(this.ctx));
     if (rule) { this.#enforce(rule); return; }
 
     const words = val(a.words, this.ctx) ?? [];
     words.forEach(([tr, en]) => this.vocab.learn(tr, en));
-    this.labels.think(val(a.think, this.ctx), 3.5, this.clock());
     this.toasts.show(`🗣 ${val(a.say, this.ctx)}`, words.map(([tr, en]) => wordNote(tr, en)).join(' · '));
     if (a.minutes) this.time.advance(a.minutes);
     if (a.anim) this.world.current.play?.(a.anim);

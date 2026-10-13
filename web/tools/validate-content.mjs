@@ -11,7 +11,7 @@ const fail = (msg) => errors.push(msg);
 // 1. dialogue graphs: every next/option.next exists
 for (const [who, d] of Object.entries(DIALOGUES)) {
   for (const [id, node] of Object.entries(d.nodes)) {
-    const nexts = [node.next, ...(node.options ?? []).map((o) => o.next)].filter((n) => n && n !== 'end');
+    const nexts = [node.next, ...(node.options ?? []).map((o) => o.next)].filter((n) => n && n !== 'end' && typeof n !== 'function'); // (a function picks its node at run time)
     for (const n of nexts) if (!d.nodes[n]) fail(`${who}.${id} → missing node "${n}"`);
   }
 }

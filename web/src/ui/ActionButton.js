@@ -27,13 +27,13 @@ export class ActionButton {
   #runs = [];
 }
 
-/** ⚡ Hard shot: next to the action button (left of it) while a ball is at your feet. */
+/** ⚡ Hard shot: next to the action button (left of it) while a ball is at your feet. (Also the horse's jump button.) */
 export class ShotButton {
   #key = '';
 
-  constructor(host, onPress, act) {
+  constructor(host, onPress, act, { id = 'shot', text = '⚡ Sert vur', label = 'Sert vur' } = {}) {
     this.act = act;
-    this.root = el('button', { attrs: { id: 'shot', type: 'button', 'aria-label': 'Sert vur' }, text: '⚡ Sert vur', on: { click: onPress } });
+    this.root = el('button', { attrs: { id, type: 'button', 'aria-label': label }, text, on: { click: onPress } });
     this.root.hidden = true;
     host.append(this.root);
   }

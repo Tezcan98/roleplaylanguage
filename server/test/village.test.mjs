@@ -234,6 +234,10 @@ test('talking zone (the kahvehane): the newcomer gets who is there, signalling o
   assert.equal(a.inbox.some((m) => m.type === 'zone-rtc' || m.type === 'zone-join'), false);
   b.send({ type: 'zone', zone: null });
   assert.deepEqual(await a.next('zone-leave'), { type: 'zone-leave', id: b.welcome.id });
+  b.send({ type: 'zone', zone: 'avlu' }); // the mosque's courtyard: a zone of its own
+  assert.deepEqual(await b.next('zone-peers'), { type: 'zone-peers', zone: 'avlu', ids: [] });
+  await silence();
+  assert.equal(a.inbox.some((m) => m.type === 'zone-join'), false);
   c.send({ type: 'zone', zone: 'kahve' });
   await a.next('zone-join');
   await c.close(); // leaving the square leaves the zone too
