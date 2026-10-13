@@ -54,7 +54,7 @@ import { CreditWallet } from './services/monetization/CreditWallet.js';
 import { MockAdProvider } from './services/monetization/AdProvider.js';
 import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder } from './platform/native.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
-import { PlayBilling, NoBilling, TestBilling, TEST_PURCHASES } from './services/monetization/Billing.js';
+import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
 import { SettingsPanel } from './ui/SettingsPanel.js';
 import { Animals } from './systems/Animals.js';
 import { Bicycle } from './systems/Bicycle.js';
@@ -249,8 +249,7 @@ const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
 const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId, bannerId: manifest.admob?.bannerId })
   : new MockAdProvider(host, modes, params.has('fastads') ? 1 : 5, { interstitials: params.has('mockads') });
-const billing = params.has('nobilling') ? new NoBilling() // ?nobilling: the website without test payments (tests)
-  : TEST_PURCHASES ? new TestBilling() : native ? new PlayBilling(nativeKit.NativePurchases, nativeKit.PURCHASE_TYPE) : new NoBilling();
+const billing = !params.has('nobilling') && SELL_PACKS && native ? new PlayBilling(nativeKit.NativePurchases, nativeKit.PURCHASE_TYPE) : new NoBilling();
 const gate = new ClassAccessGate({ host, modes, wallet, ads });
 const activities = new ActivityRegistry({ tts, speech, gate })
   .register('choice', ChoiceActivity)

@@ -18,4 +18,4 @@ Sıradakiler yukarıdan aşağıya. Biten bir iş buradan silinir (ayrıntısı 
   gizlilik politikası adresi son haline getirilecek (`docs/store/data-safety.md`, `docs/store/privacy-policy.md`).
 - **Play Games girişi**: Play Console'da kurulum, sonra proje numarası `game_services_project_id`'ye (`docs/guvenlik-logu.md`).
 - **Koşma**: kodda duruyor, şimdilik kapalı (`PlayerController.js` `run`, `Joystick.js` 🏃 düğmesi).
-- **Yayından önce**: `TEST_PURCHASES = false` (Billing.js), gerçek AdMob kimlikleri, Play Console'da kredi paketleri.
+- **Kredi paketleri (kapalı)**: satın almalar sunucuda doğrulanınca (Google Play Developer API, service account) ve Play Console ürünleri (`credits_50/200/500`) açılınca `SELL_PACKS = true` (Billing.js).

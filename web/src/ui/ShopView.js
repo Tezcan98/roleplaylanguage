@@ -1,7 +1,7 @@
 import { el, ICONS } from './dom.js';
 import { gloss } from '../i18n/Gloss.js';
 import { SHOP, outfitPicture } from '../content/shop.js';
-import { PACKS } from '../services/monetization/Billing.js';
+import { PACKS, SELL_PACKS } from '../services/monetization/Billing.js';
 import { AD_REWARD } from '../services/monetization/CreditWallet.js';
 import { coin } from './coin.js';
 
@@ -50,7 +50,7 @@ export class ShopView {
     const btn = (text, cls, fn, disabled = false) => el('button', { class: `shop-btn ${cls}`, text, attrs: { type: 'button', ...(disabled ? { disabled: '' } : {}) }, on: { click: fn } });
     const title = (tr, en) => el('h3', { class: 'shop-title' }, [tr, el('small', { class: 'en-t', text: ` · ${en}` })]);
 
-    // gold: free first (daily reward, a video), then every pack with its price
+    // gold: free first (daily reward, a video), then every pack with its price (while packs are sold)
     const daily = w.daily(), wait = w.adWait();
     const gold = [
       card('free', '🎁', daily ? `+${daily.amount}` : '✓', daily ? `Günlük ödül · ${daily.day}. gün` : 'Yarın yine gel',
@@ -61,7 +61,7 @@ export class ShopView {
           if (await this.ads.showRewarded()) { w.adWatched(); this.toasts.show(`+${AD_REWARD} kredi`, 'Credits earned'); }
           this.render();
         }), true),
-      ...PACKS.map((p, i) => card(`pack pack${i}`, [el('span', { class: 'shop-card-top' }, [coin()]), '💰', '💎'][i] ?? '💎', `${p.credits}`, 'kredi',
+      ...(SELL_PACKS ? PACKS : []).map((p, i) => card(`pack pack${i}`, [el('span', { class: 'shop-card-top' }, [coin()]), '💰', '💎'][i] ?? '💎', `${p.credits}`, 'kredi',
         btn(this.#prices[p.id] ?? p.price, 'buy', async (e) => {
           if (!this.billing.available) { this.toasts.show('Altın paketleri Android uygulamasında satılır', 'Credit packs are sold in the Android app'); return; }
           e.target.disabled = true;

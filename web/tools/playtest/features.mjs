@@ -51,7 +51,7 @@ try {
   await page.click('.credits-btn'); await sleep(400);
   check('the credits (coin) in the HUD open the shop', !!(await page.$('.shop.open')));
   await page.evaluate(() => window.__game.shop.close());
-  check('a new game starts with 50 credits', (await ev(() => window.__game.wallet.balance)) === 50);
+  check('a new game starts with 100 credits', (await ev(() => window.__game.wallet.balance)) === 100);
 
   const talkTo = async (id) => {
     await ev((npc) => { const g = window.__game; const n = g.cast.get(npc); g.player.position.set(n.position.x, 0, n.position.z + 0.8); }, id);
@@ -427,9 +427,9 @@ try {
     const daily = await waitFor(() => p2.$('.overlay.open.daily'), 8000);
     check('daily reward on opening the game (day 1: +3)', !!daily && (await p2.textContent('.daily .btn')).includes('+3'));
     await p2.click('.daily .btn'); await sleep(300);
-    check('…credits 50 → 53', (await e2(() => window.__game.wallet.balance)) === 53);
+    check('…credits 100 → 103', (await e2(() => window.__game.wallet.balance)) === 103);
     await p2.reload(); await p2.waitForFunction(() => window.__game, null, { timeout: 90000 }); await sleep(800);
-    check('…not twice the same day, and the credits are kept', !(await p2.$('.overlay.open.daily')) && (await e2(() => window.__game.wallet.balance)) === 53);
+    check('…not twice the same day, and the credits are kept', !(await p2.$('.overlay.open.daily')) && (await e2(() => window.__game.wallet.balance)) === 103);
     check('…tomorrow is day 2 (+4)', JSON.stringify(await e2(() => window.__game.wallet.daily(Date.now() + 864e5))) === '{"day":2,"amount":4}');
     await p2.click('.main-menu.open [aria-label="Dükkan"]'); await sleep(400);
     check('shop opens from the menu', !!(await p2.$('.shop.open')));
@@ -437,11 +437,9 @@ try {
     await p2.click('.shop.open .shop-card:has-text("Video izle") button');
     await waitFor(() => p2.$('.overlay.ad button:not([disabled])'), 6000); await p2.click('.overlay.ad button');
     await sleep(300);
-    check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 56 && (await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Video izle')).querySelector('button').disabled)));
-    check('every gold pack listed with its price', ['14,90 TL', '24,90 TL', '48,90 TL'].every(async () => true) && (await p2.textContent('.shop.open')).includes('48,90 TL') && (await p2.textContent('.shop.open')).includes('14,90 TL'));
-    await p2.click('.shop.open .shop-card:has-text("500") button'); await sleep(300);
-    check('test payments (until the Play products are live): a pack is bought at once', await page.evaluate(() => window.__game.billing.buy({ id: 'credits_50' })));
-    check('…on the web a pack says it is sold in the Android app', await e2(() => [...document.querySelectorAll('.toast')].some((t) => t.textContent.includes('Android uygulamasında'))));
+    check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 106 && (await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Video izle')).querySelector('button').disabled)));
+    check('no credit packs for sale for now', !(await p2.$('.shop.open .shop-card.pack')) && !(await page.evaluate(() => window.__game.billing.available)));
+    await e2(() => { window.__game.wallet.trySpend(50); window.__game.shop.render(); }); // 56
     check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
     check('outfits need the HD character first', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Günlük kıyafet')).querySelector('button').disabled));
     await e2(() => { window.__game.wallet.add(45); window.__game.shop.render(); }); // 101

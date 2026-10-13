@@ -10,17 +10,10 @@ export const PACKS = [
 ];
 
 /**
- * TEST: every pack "bought" at once, without Google Play (web and app alike), until the Play
- * Console products are live. Set to false before the release.
+ * Credit packs for sale. Off for now: no packs in the shop until purchases are checked on the
+ * server (Google Play Developer API) and the Play Console products are live.
  */
-export const TEST_PURCHASES = true;
-
-/** Test payments: always succeed (see TEST_PURCHASES). */
-export class TestBilling {
-  get available() { return true; }
-  async prices() { return {}; }
-  async buy() { await new Promise((r) => setTimeout(r, 500)); return true; }
-}
+export const SELL_PACKS = false;
 
 /** On the website: packs can't be bought here. */
 export class NoBilling {
