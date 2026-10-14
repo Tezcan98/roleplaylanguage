@@ -51,7 +51,7 @@ function sourceRules() {
 const TRANSLATED = { // what the source swaps become in each gloss language
   ar: [[/يا بنيّ?/g, 'يا بنتي'], [/ابني/g, 'ابنتي'], [/أخي الكبير/g, 'أختي الكبيرة'], [/يا أخي/g, 'يا أختي']],
   ur: [[/بیٹا/g, 'بیٹی'], [/بیٹے/g, 'بیٹی'], [/بھائی جان/g, 'آپی'], [/بڑے بھائی/g, 'بڑی بہن']],
-  es: [[/\bhijo\b/g, 'hija'], [/\bHijo\b/g, 'Hija'], [/hermano mayor/g, 'hermana mayor'], [/Hermano mayor/g, 'Hermana mayor']],
+  es: [[/\bhijo\b/g, 'hija'], [/\bHijo\b/g, 'Hija'], [/hermano mayor/g, 'hermana mayor'], [/Hermano mayor/g, 'Hermana mayor'], [/¡Hermano([!,])/g, '¡Hermana$1']], // (the little brother calling: "¡Hermano!")
   fr: [[/mon fils/g, 'ma fille'], [/Mon fils/g, 'Ma fille'], [/\bfils\b/g, 'fille'], [/grand frère/g, 'grande sœur'], [/Grand frère/g, 'Grande sœur']],
   en: [],
 };

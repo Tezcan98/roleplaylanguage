@@ -251,8 +251,8 @@ const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
   : native ? new nativeKit.NativeSpeechRecognizer('tr-TR')
   : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
-const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId, bannerId: manifest.admob?.bannerId, fallback: new MockAdProvider(host, modes, 5) }) // (no AdMob video: our own)
-  : new MockAdProvider(host, modes, params.has('fastads') ? 1 : 5, { interstitials: params.has('mockads') });
+const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId, bannerId: manifest.admob?.bannerId })
+  : new MockAdProvider(host, modes, params.has('fastads') ? 1 : 5, { interstitials: params.has('mockads'), rewarded: params.has('mockads') }); // (the website: no ads; tests: stand-ins)
 const billing = !params.has('nobilling') && SELL_PACKS && native ? new PlayBilling(nativeKit.NativePurchases, nativeKit.PURCHASE_TYPE) : new NoBilling();
 const gate = new ClassAccessGate({ host, modes, wallet, ads });
 const activities = new ActivityRegistry({ tts, speech, gate })
@@ -477,7 +477,9 @@ effects.register('score-reset', () => matches[world.current.id]?.reset(true));
 world.get('schoolyard').animated.push((dt) => football.update(dt));
 world.get('village').animated.push((dt) => squareFootball.update(dt));
 // the tea garden and the chess benches: villagers chat, sit down to listen in
-const talk = new TalkAreas({ world, player, cast, labels });
+// the villagers' own talk, out loud near them — not over a conversation of yours
+const ambientSpeak = (text, who) => { if (modes.is('play') && !library.reading) tts.speak(text, { speaker: who }); };
+const talk = new TalkAreas({ world, player, cast, labels, speak: ambientSpeak });
 village.ptt.onType = (text) => village.say(text); // typed instead of spoken (no speech-to-text on this device)
 // the open library: borrow a book, read it sitting on a bench
 const library = new Library({
@@ -505,7 +507,7 @@ effects
   .register('chess-draw-decline', () => chess.answerDraw(false));
 // the uncles in the kahvehane talk among themselves; come close and you hear them
 const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { location: 'village', x: KAHVE_UNCLES.x, z: KAHVE_UNCLES.z }, talks: KAHVE_TALKS,
-  quiet: () => village.group.ids().length > 0 }); // real people talking in the kahvehane: the uncles keep quiet
+  quiet: () => village.group.ids().length > 0, speak: ambientSpeak }); // real people talking in the kahvehane: the uncles keep quiet
 // the kahvehane's apprentice brings you a tea when you sit down
 const cirak = new KahveCirak({ world, mf, models, player, labels, vocab, speak: (t) => tts.speak(t, { speaker: 'kardes' }) });
 cirak.build();

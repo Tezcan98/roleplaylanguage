@@ -2,12 +2,13 @@ import { TALKS, CHESS_COMMENTS } from '../content/index.js';
 import { TALK_SPOTS } from '../world/locations/VillageSquare.js';
 
 const NEAR = 16;  // m: villagers' speech bubbles show to anyone this close
+const VOICE = 9;  // m: …and they are heard this close
 const PAUSE = 7;  // s between two conversations
 
 /**
  * Sitting places in the square where people talk: the tea garden and the benches round the
- * chess board. The regulars chat among themselves all day — quietly, as speech bubbles over
- * their heads (no voice, nothing else on the screen). The place you sit in gets its turn
+ * chess board. The regulars chat among themselves all day — speech bubbles over their heads, and
+ * out loud when you are close by (`speak`, only while no conversation of yours is open). The place you sit in gets its turn
  * first, and İsmail Dede comments on the moves of the giant chess game.
  */
 export class TalkAreas {
@@ -16,8 +17,8 @@ export class TalkAreas {
   #order = {};
   #listening = null;
 
-  constructor({ world, player, cast, labels }) {
-    Object.assign(this, { world, player, cast, labels });
+  constructor({ world, player, cast, labels, speak = null }) {
+    Object.assign(this, { world, player, cast, labels, speak }); // speak(text, who): their voice, near them
   }
 
   /** Which sitting place the player is in (seated inside it), or null. */
@@ -57,7 +58,9 @@ export class TalkAreas {
     const c = this.cast.get(who);
     const secs = 2.2 + tr.length * 0.07;
     if (!c?.visible || c.location !== 'village') return 0;
-    if (Math.hypot(c.position.x - this.player.position.x, c.position.z - this.player.position.z) < NEAR) this.labels.bubble(c, tr, null, secs, en);
+    const d = Math.hypot(c.position.x - this.player.position.x, c.position.z - this.player.position.z);
+    if (d < NEAR) this.labels.bubble(c, tr, null, secs, en);
+    if (d < VOICE) this.speak?.(tr, who);
     return secs;
   }
 

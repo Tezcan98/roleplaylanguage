@@ -51,7 +51,7 @@ if (look.startsWith('girl')) C.VOICES.ahmet = { id: 'tr-kiz', female: true, pitc
 const lines = [];
 const only = opt.who ? new Set(String(opt.who).split(',')) : null;
 const add = (who, text) => { if (typeof text === 'string' && /\p{L}/u.test(text) && (!only || only.has(who))) lines.push([who, text]); };
-for (const [who, d] of Object.entries(C.DIALOGUES)) for (const n of Object.values(d.nodes)) add(who, n.say);
+for (const [who, d] of Object.entries(C.DIALOGUES)) for (const n of Object.values(d.nodes)) { add(who, n.say); (n.variants ?? []).forEach((v) => add(who, v.say)); }
 for (const list of Object.values(C.TALKS ?? {})) for (const talk of list) for (const l of talk) add(l.who, l.tr);
 for (const talk of C.KAHVE_TALKS ?? []) for (const l of talk) add(l.who, l.tr);
 const cc = C.CHESS_COMMENTS ?? {};

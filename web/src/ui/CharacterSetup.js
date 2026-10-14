@@ -1,7 +1,7 @@
 import { el } from './dom.js';
 import { gloss, loadGlossLang, glossLanguages } from '../i18n/Gloss.js';
 
-/** The four characters to pick from: [gender, look] — a full-length picture each (assets/setup, tools/models/render-players.mjs), no names. */
+/** The four characters to pick from: [gender, look] — shown full length in HD (the shop's pictures of their 3D bodies), no names. */
 export const CHARACTERS = [
   ['boy', 'modest'],
   ['boy', 'strong'],
@@ -9,8 +9,9 @@ export const CHARACTERS = [
   ['girl', 'open'],
 ];
 export const characterOf = (gender, look) => CHARACTERS.find(([g, l]) => g === gender && l === look) ?? CHARACTERS.find(([g]) => g === gender) ?? CHARACTERS[0];
-/** The picture of a character: `assets/setup/boy-modest.png`. */
-export const characterPicture = (gender, look) => `assets/setup/${characterOf(gender, look).join('-')}.png`;
+const PICTURE = { 'boy-modest': 'boy', 'boy-strong': 'strong', 'girl-covered': 'covered', 'girl-open': 'girl' };
+/** The HD picture of a character in everyday clothes (assets/shop, tools/models/render-previews.mjs). */
+export const characterPicture = (gender, look) => `assets/shop/hd_casual_${PICTURE[characterOf(gender, look).join('-')]}.png`;
 
 /**
  * "Choose your character": the language of the meanings and which of the four characters you are

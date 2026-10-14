@@ -17,8 +17,10 @@ import { TALKS, CHESS_COMMENTS } from './talks.js';
 import { BOOKS } from './books.js';
 import { SHOP } from './shop.js';
 import { composeContent } from '../core/ContentComposer.js';
+import { addVariants } from './variants.js';
 
 composeContent({ story: STORY, dialogues: DIALOGUES, hotspots: HOTSPOTS, kindNames: KIND_NAMES, npcs: NPCS, voices: VOICES }, ADDONS);
+addVariants(DIALOGUES); // other first lines, so the villagers don't always say the same thing
 
 export {
   STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, TEACHER_MAN, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,

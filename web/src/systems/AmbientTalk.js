@@ -3,8 +3,7 @@ const PAUSE = 30; // s between two conversations (seldom: it is background, not 
 
 /**
  * People who talk among themselves (the uncles in the kahvehane). Their conversations show
- * as speech bubbles over their heads when you are around — quietly: no voice, nothing else
- * on the screen. Conversations come in a shuffled order, none repeated before all were heard.
+ * as speech bubbles over their heads when you are around, and you hear them (`speak`). Conversations come in a shuffled order, none repeated before all were heard.
  */
 export class AmbientTalk {
   #timer = 2;
@@ -12,8 +11,8 @@ export class AmbientTalk {
   #order = [];
 
   /** @param {{ place: { location: string, x: number, z: number }, talks: Array<Array<{ who, tr, en }>> }} o */
-  constructor({ world, player, cast, labels, place, talks, quiet = null }) {
-    Object.assign(this, { world, player, cast, labels, place, talks, quiet }); // quiet(): true while they keep their talk to themselves
+  constructor({ world, player, cast, labels, place, talks, quiet = null, speak = null }) {
+    Object.assign(this, { world, player, cast, labels, place, talks, quiet, speak }); // quiet(): true while they keep their talk to themselves
   }
 
   update(dt) {
@@ -37,6 +36,7 @@ export class AmbientTalk {
     if (!c || c.location !== this.place.location) return 0;
     const secs = 2.4 + tr.length * 0.065;
     this.labels.bubble(c, tr, null, secs, en);
+    this.speak?.(tr, who);
     return secs;
   }
 }

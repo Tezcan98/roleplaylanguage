@@ -55,10 +55,11 @@ export class ShopView {
     const gold = [
       card('free', '🎁', daily ? `+${daily.amount}` : '✓', daily ? `Günlük ödül · ${daily.day}. gün` : 'Yarın yine gel',
         daily ? btn('Al', 'go', () => { this.onDaily(); this.render(); }) : btn('Alındı', '', () => {}, true), true),
-      card('free', '▶', `+${AD_REWARD}`, 'Video izle',
+      this.ads.hasRewarded && card('free', '▶', `+${AD_REWARD}`, 'Video izle',
         wait ? btn(hm(wait), '', () => {}, true) : btn('İzle', 'go', async (e) => {
           e.target.disabled = true;
           if (await this.ads.showRewarded()) { w.adWatched(); this.toasts.show(`+${AD_REWARD} kredi`, 'Credits earned'); }
+          else if (this.ads.lastError) this.toasts.show(`Şu an reklam yok, sonra tekrar dene. (AdMob: ${this.ads.lastError})`, 'No ad right now — try again later.');
           this.render();
         }), true),
       ...(SELL_PACKS ? PACKS : []).map((p, i) => card(`pack pack${i}`, [el('span', { class: 'shop-card-top' }, [coin()]), '💰', '💎'][i] ?? '💎', `${p.credits}`, 'kredi',

@@ -1,4 +1,4 @@
-import { AdMob, BannerAdSize, BannerAdPosition } from '@capacitor-community/admob';
+import { AdMob, BannerAdSize, BannerAdPosition, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { AdProvider } from './AdProvider.js';
 
 // Google's test units: used until the real ones are in assets/manifest.json → "admob"
@@ -7,14 +7,16 @@ const TEST = { rewarded: 'ca-app-pub-3940256099942544/5224354917', interstitial:
 /**
  * AdMob in the Android app: rewarded videos (credits), full-screen interstitials between story
  * days, and a banner at the bottom of the menu where you pick the village square. The interstitial ad unit should be set to "display" only (no video) in the AdMob console.
- * Asks for consent first where the law requires it (EU, UK). When AdMob has no video to give (a new
- * app before review, no ads in that country right now) the rewarded video is our own ad (`fallback`),
- * so the button is never pressed for nothing.
+ * Asks for consent first where the law requires it (EU, UK). When AdMob gives no video, `lastError`
+ * says why (AdMob's own words: "No fill", "Account not approved yet"…; an app not yet public on
+ * Google Play is not reviewed and gets few or no ads) and the shop shows it.
  */
 export class AdMobAdProvider extends AdProvider {
-  constructor({ rewardedId, interstitialId, bannerId, fallback = null } = {}) {
+  get hasRewarded() { return true; }
+
+  constructor({ rewardedId, interstitialId, bannerId } = {}) {
     super();
-    this.fallback = fallback;
+    this.lastError = '';
     this.ids = { rewarded: rewardedId || TEST.rewarded, interstitial: interstitialId || TEST.interstitial, banner: bannerId || TEST.banner };
     this.testing = Object.fromEntries(Object.keys(TEST).map((k) => [k, this.ids[k] === TEST[k]])); // test mode only for Google's test ids
     this.bannerOn = false;
@@ -35,12 +37,18 @@ export class AdMobAdProvider extends AdProvider {
   async showRewarded() {
     try {
       await this.#init();
+      this.lastError = '';
       await AdMob.prepareRewardVideoAd({ adId: this.ids.rewarded, isTesting: this.testing.rewarded });
-      const reward = await AdMob.showRewardVideoAd();
+      // closed before the end: the plugin's call never answers, so the "dismissed" event does
+      let off = null;
+      const closed = new Promise((r) => { AdMob.addListener(RewardAdPluginEvents.Dismissed, () => setTimeout(() => r(null), 300)).then((h) => { off = h; }); });
+      const reward = await Promise.race([AdMob.showRewardVideoAd(), closed]);
+      off?.remove?.();
       return !!reward && Number(reward.amount ?? 0) > 0;
     } catch (e) {
+      this.lastError = String(e?.message ?? e ?? '').slice(0, 120);
       console.warn('[admob] rewarded ad failed', e);
-      return this.fallback ? this.fallback.showRewarded() : false;
+      return false;
     }
   }
 

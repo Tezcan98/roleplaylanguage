@@ -18,6 +18,7 @@ const CHAT_BUSY = {
  */
 export class DialogueController {
   #session = 0;
+  #said = new Map(); // node → which of its lines was said last (variants)
   #activity = null;
   #popMode = null;
 
@@ -109,8 +110,9 @@ export class DialogueController {
   }
 
   async show(id) {
-    const node = this.dialogues[this.talking].nodes[id];
+    let node = this.dialogues[this.talking].nodes[id];
     if (!node) throw new Error(`${this.talking}: missing node "${id}"`);
+    if (node.variants?.length) node = this.#variant(`${this.talking}.${id}`, node);
     const session = ++this.#session;
     const type = node.ask ?? 'choice';
     const hidden = type === 'listen';
@@ -145,6 +147,15 @@ export class DialogueController {
     const next = (typeof opt.next === 'function' ? opt.next(this.ctx) : opt.next) ?? 'end'; // (a function: chosen when picked)
     this.effects.run(opt.do);
     if (next === 'end') this.close(); else this.show(next);
+  }
+
+  /** One of a node's lines (its own or a variant), never the one said last time. */
+  #variant(key, node) {
+    const all = [{ say: node.say, en: node.en }, ...node.variants];
+    const options = all.map((_, i) => i).filter((i) => i !== this.#said.get(key));
+    const i = options[Math.floor(Math.random() * options.length)];
+    this.#said.set(key, i);
+    return { ...node, ...all[i] };
   }
 
   #learn(node) { (node.words || []).forEach(([tr, en]) => this.vocab.learn(tr, en)); }

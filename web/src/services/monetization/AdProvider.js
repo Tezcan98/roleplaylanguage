@@ -6,6 +6,9 @@ import { el } from '../../ui/dom.js';
  * In the Android app: AdMobAdProvider. On the website there is no ad network (yet).
  */
 export class AdProvider {
+  /** Whether there are rewarded videos here at all (the Android app; on the website there is no ad network). */
+  get hasRewarded() { return false; }
+  lastError = '';
   async showRewarded() { return false; }
   async showInterstitial() {}
   /** A banner at the bottom of the screen (the square's menu); nothing on the website. */
@@ -14,30 +17,20 @@ export class AdProvider {
 }
 
 /**
- * Our own ad (no ad network on the website): the promo film of the game, the site's loop
- * (sehem2.com.tr/assets/loop.mp4), with "soon on Google Play". Where it can't be loaded (tests,
- * offline) the card shows the game's name on its own.
- */
-function houseAd() {
-  const film = el('video', { class: 'ad-film', attrs: { src: 'https://sehem2.com.tr/assets/loop.mp4', poster: 'https://sehem2.com.tr/assets/poster.webp', autoplay: '', muted: '', loop: '', playsinline: '' } });
-  film.muted = true; // (needed for autoplay)
-  film.addEventListener('error', () => film.remove());
-  return el('div', { class: 'ad-box house' }, [film, el('div', { class: 'ad-caption', html: 'Anadolu Ailesi<br><small>Yakında Google Play\'de · Türkçeyi bir aileyle yaşayarak öğren</small>' })]);
-}
-
-/**
- * Website / tests: our own ad (houseAd) for the rewarded video, with a countdown; interstitials only
- * with `interstitials: true` (?mockads), for 3 seconds.
+ * Tests (?mockads): a stand-in for the rewarded video (a countdown) and the interstitial (3 s).
+ * The website itself has no ads (no ad network: no "watch a video" there).
  */
 export class MockAdProvider extends AdProvider {
-  constructor(host, modes, seconds = 5, { interstitials = false } = {}) { super(); Object.assign(this, { host, modes, seconds, interstitials }); }
+  constructor(host, modes, seconds = 5, { interstitials = false, rewarded = false } = {}) { super(); Object.assign(this, { host, modes, seconds, interstitials, rewarded }); }
+
+  get hasRewarded() { return this.rewarded; }
 
   showInterstitial() {
     if (!this.interstitials) return Promise.resolve();
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const close = el('button', { class: 'btn alt sm', text: '✕', attrs: { type: 'button', disabled: '' } });
-      const wrap = el('div', { class: 'overlay open ad interstitial' }, [houseAd(), close]);
+      const wrap = el('div', { class: 'overlay open ad interstitial' }, [el('div', { class: 'ad-box', html: 'Test reklamı' }), close]);
       this.host.append(wrap);
       setTimeout(() => { close.disabled = false; }, 3000);
       close.onclick = () => { wrap.remove(); pop(); resolve(); };
@@ -50,7 +43,7 @@ export class MockAdProvider extends AdProvider {
       const count = el('div', { class: 'ad-count' });
       const close = el('button', { class: 'btn alt sm', text: 'Kapat', attrs: { type: 'button', disabled: '' } });
       const wrap = el('div', { class: 'overlay open ad' }, [
-        houseAd(), count, close,
+        el('div', { class: 'ad-box', html: 'Test reklamı' }), count, close,
       ]);
       this.host.append(wrap);
       let left = this.seconds;

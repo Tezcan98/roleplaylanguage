@@ -35,7 +35,7 @@ try {
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   const profile = await page.textContent('.main-menu .profile-line');
   const pic = await page.getAttribute('.main-menu .profile-line img', 'src');
-  check('after setup the menu shows the profile (her picture, the language)', profile.includes('Español') && /girl-covered/.test(pic ?? ''), `${profile} ${pic}`);
+  check('after setup the menu shows the profile (her picture, the language)', profile.includes('Español') && /hd_casual_covered/.test(pic ?? ''), `${profile} ${pic}`);
   check('no setup the second time', !(await page.$('.overlay.open.setup')));
 
   // --- girl: texts rewritten, look -----------------------------------------------------
@@ -225,7 +225,7 @@ try {
   await ev(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('cay1')); g.player.sit(true); });
   const heard = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].some((b) => b.textContent && b.style.display !== 'none')), 30000); // (the CI machine is slow: game time runs slower there)
   check('tea garden: the regulars talk in speech bubbles', !!heard);
-  check('…quietly: no voice, no panel on the screen', !(await page.$('.talk-panel')) && !(await ev(() => (window.__game.tts._said ?? []).some((w) => ['huseyin', 'kadir', 'cayci'].includes(w)))));
+  check('…out loud too, sitting near them (no panel on the screen)', !(await page.$('.talk-panel')) && !!(await waitFor(() => ev(() => (window.__game.tts._said ?? []).some((w) => ['huseyin', 'kadir', 'cayci'].includes(w))), 20000)));
   await ev(() => window.__game.player.sit(false)); await sleep(300);
   await ev(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('chessBench1')); g.player.sit(true); }); await sleep(300);
   check('chess benches: sitting down to watch', (await ev(() => window.__game.talk.listening)) === 'chess');
@@ -378,6 +378,11 @@ try {
   await page.keyboard.press('e'); await waitFor(() => ev(() => !window.__game.player.mount), 3000); // left in the square
   await ev(() => window.__game.travel.go('yard', 'gate'));
   check('…walking home without it: it is back at the wall', !!(await waitFor(() => ev(() => window.__game.world.current.id === 'yard' && window.__game.bicycle.place === 'yard'), 8000)));
+
+  // --- villagers don't open with the same line every time ---------------------------------
+  const firsts = new Set();
+  for (let i = 0; i < 4; i++) { await ev(() => window.__game.dialogue.open('seyis')); await sleep(400); firsts.add(await ev(() => document.querySelector('#dlg .line, #dlg .say')?.textContent ?? window.__game.dialogue.lastLine)); await ev(() => window.__game.dialogue.close()); await sleep(200); }
+  check('the groom opens with a different line each time', firsts.size >= 2 && [...firsts].every((t) => t && t.includes('Ata binmek ister misin')), [...firsts].join(' | '));
 
   // --- the groom by the horses ------------------------------------------------------------
   await ev(() => window.__game.travel.place('village', 'yardRoad', { force: true })); await sleep(800);
