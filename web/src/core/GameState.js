@@ -1,11 +1,12 @@
+import { CONFIG } from '../config/remote.js';
 /**
  * Serializable game data. Domain classes (Inventory, Vocabulary, TimeSystem)
  * are thin facades over the slices below, so saving is just `snapshot()`.
  */
 /** Every new game starts with this many lesson credits. */
-export const START_CREDITS = 100;
+export const START_CREDITS = CONFIG.rewards.startCredits; // (set on the server: config/remote.js)
 /** …and this much game money (lira) for the shops on the square. */
-export const START_MONEY = 200;
+export const START_MONEY = CONFIG.rewards.startMoney;
 
 export class GameState {
   constructor() { this.reset(); }

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { CONFIG } from './config/remote.js'; // first: prices, rewards, cities set on the server (read before the content)
 /**
  * Composition root: builds every object and wires dependencies. Nothing else in the
  * codebase calls `new` on a system — swapping an implementation happens here only.
@@ -120,7 +121,7 @@ import { BookReader } from './ui/BookReader.js';
 import { Subtitles } from './ui/Subtitles.js';
 import { AmbientTalk } from './systems/AmbientTalk.js';
 import { KAHVE_UNCLES, KAHVEHANE, MOSQUE, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
-import { SERVERS, healthUrl } from './ui/ServerPicker.js';
+import { SERVERS, DEFAULT_SERVER, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
 import { setupLandscape } from './ui/Landscape.js';
 import { ListModal } from './ui/ListModal.js';
@@ -150,6 +151,7 @@ const host = document.getElementById('ui');
 
 // --- core ---
 const settings = new Settings();
+if (!SERVERS.some(([id]) => id === settings.get('serverRegion', DEFAULT_SERVER))) settings.set('serverRegion', DEFAULT_SERVER); // a city taken off the list (config.json)
 const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
@@ -596,7 +598,16 @@ models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animation
   world.get('village').animated.push((dt) => mixer.update(dt)); // breathes a little
 }).catch(() => {});
 // story mode: a full-screen ad between two days (not with ad-free mode)
-story.beforeNewDay = () => (wallet.adFree ? Promise.resolve() : ads.showInterstitial());
+story.beforeNewDay = () => (wallet.adFree || !CONFIG.ads.betweenDays ? Promise.resolve() : ads.showInterstitial());
+// going from place to place (home, yard, square, school): now and then a full-screen ad (config.json
+// ads.travelChance), never in the first minute and at most one every travelGapMinutes
+const travelAd = { last: performance.now() - CONFIG.ads.travelGapMinutes * 60000 + 60000 };
+bus.on(EV.LOCATION, () => {
+  if (!native || wallet.adFree || !modes.is('play') || Math.random() >= CONFIG.ads.travelChance) return; // (the app only: the website has no ads)
+  if (performance.now() - travelAd.last < CONFIG.ads.travelGapMinutes * 60000) return;
+  travelAd.last = performance.now();
+  ads.showInterstitial();
+});
 
 // ⚙️ in the HUD: voices and music, picture quality, how to play, back to the main menu
 const settingsPanel = new SettingsPanel(host, {
@@ -675,7 +686,7 @@ const introFirst = async () => {
 };
 const setup = new CharacterSetup(host, { modes, settings, villageServer });
 // a player standing still for a long while (in the game, no card open): a banner ad, gone at the first step
-const IDLE_BANNER = 90; // s
+const IDLE_BANNER = CONFIG.ads.idleBannerSeconds; // s (set on the server: config/remote.js)
 const idleAd = {
   idle: 0, on: false,
   update(dt) {
@@ -851,6 +862,19 @@ setInterval(() => {
 
 // the app: everything above started, so this build works — then look for a newer one (live updates)
 if (native) liveUpdate(nativeKit.App);
+/** A newer app on Google Play than this one (config.json "update.latestApp", for changes live updates can't bring): a card at start. */
+async function offerAppUpdate() {
+  const info = await nativeKit.App.getInfo().catch(() => null);
+  if (!info || Number(info.build) >= CONFIG.update.latestApp) return;
+  const go = await new ChoiceCard(host, modes).ask({
+    title: 'Yeni sürüm var! 🎉',
+    text: CONFIG.update.text || 'Oyunun yeni sürümü Google Play\'de. Güncellemek bir dakika sürer.',
+    en: CONFIG.update.en || 'A new version of the game is on Google Play. Updating takes a minute.',
+    yes: 'Güncelle', no: 'Sonra',
+  });
+  if (go) location.href = CONFIG.update.store; // (the app opens Google Play for it)
+}
+if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 1500);
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)

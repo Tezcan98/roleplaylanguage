@@ -1,3 +1,4 @@
+import { CONFIG, DEFAULTS } from '../config/remote.js';
 import { el } from './dom.js';
 import { gloss } from '../i18n/Gloss.js';
 
@@ -5,13 +6,11 @@ import { gloss } from '../i18n/Gloss.js';
  * Rooms on the village server, named after cities. They all run on one machine; each is
  * its own square, so players who want a quieter square can pick an emptier one.
  */
-export const SERVERS = [
-  ['ankara', 'Ankara'],
-  ['istanbul', 'İstanbul'],
-  ['izmir', 'İzmir'],
-  ['manisa', 'Manisa'],
-];
-export const DEFAULT_SERVER = 'ankara';
+export const SERVERS = (() => { // set on the server (config/remote.js): any city can be added without a new build
+  const ok = CONFIG.cities.filter((c) => Array.isArray(c) && /^[a-z0-9-]{1,20}$/.test(String(c[0])) && typeof c[1] === 'string' && c[1].trim());
+  return ok.length ? ok : DEFAULTS.cities;
+})();
+export const DEFAULT_SERVER = SERVERS[0][0];
 const REFRESH_MS = 5000;
 
 /** wss://host/ws/village → https://host/health */

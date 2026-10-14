@@ -1,11 +1,12 @@
+import { CONFIG } from '../../config/remote.js';
 import { EV } from '../../core/events.js';
 
 const KEY = 'wallet';
 const DAY = 24 * 60 * 60 * 1000;
-export const AD_EVERY = 3 * 60 * 60 * 1000; // a rewarded video at most every 3 hours
-export const AD_REWARD = 3;
+export const AD_EVERY = CONFIG.rewards.videoEveryHours * 60 * 60 * 1000; // a rewarded video at most every 3 hours (set on the server: config/remote.js)
+export const AD_REWARD = CONFIG.rewards.video;
 /** Daily reward by how many days in a row you came: day 1 → 3, … day 7 and on → 10. */
-export const DAILY = [3, 4, 5, 6, 7, 8, 10];
+export const DAILY = CONFIG.rewards.daily;
 
 const today = (now = Date.now()) => { const d = new Date(now); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
 

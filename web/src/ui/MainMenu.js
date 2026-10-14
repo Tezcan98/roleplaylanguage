@@ -1,3 +1,4 @@
+import { CONFIG } from '../config/remote.js';
 import { el } from './dom.js';
 import { gloss, glossInfo } from '../i18n/Gloss.js';
 import { ServerPicker, SERVERS } from './ServerPicker.js';
@@ -13,7 +14,7 @@ import { COIN_HTML } from './coin.js';
  * It is shown again when the player leaves the online square.
  */
 /** How often the main menu shows a banner ad (when it opens). */
-const HOME_BANNER = 0.2;
+const HOME_BANNER = CONFIG.ads.menuBannerChance; // (set on the server: config/remote.js)
 
 export class MainMenu {
   #view = 'home'; // home | city | settings
