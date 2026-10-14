@@ -17,6 +17,7 @@
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.2",
     "@capacitor/local-notifications": "^8.3.1",
+    "@capgo/capacitor-updater": "8.52.1",
     "@capgo/native-purchases": "^8.8.1"
   },
   "devDependencies": {

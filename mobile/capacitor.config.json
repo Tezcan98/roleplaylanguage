@@ -6,6 +6,14 @@
     "SystemBars": {
       "hidden": true,
       "style": "DARK"
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "appReadyTimeout": 60000,
+      "resetWhenUpdate": true,
+      "statsUrl": "",
+      "channelUrl": "",
+      "updateUrl": ""
     }
   },
   "android": {

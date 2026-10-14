@@ -18,6 +18,36 @@ export async function loadNativeAdapters() {
   return { App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider, LocalNotifications, NativePurchases, PURCHASE_TYPE, PlayGames };
 }
 
+/**
+ * Live updates (OTA): the game's web part — code, texts, quests, voices, music — updated from
+ * sehem2.com.tr without the Play Store. The app reads ota.json there (tools/ota-stamp.mjs); when
+ * that build is newer than the one running and fits this app (its `native` versionCode), only the
+ * files not here yet are downloaded and the new build starts the next time the app is opened
+ * (or comes back from the background). A build that doesn't start is rolled back by the plugin:
+ * `notifyAppReady()` says this one did. Native changes (plugins, permissions) still need the Play Store.
+ */
+const OTA = 'https://sehem2.com.tr/oyun/ota.json';
+export async function liveUpdate(App) {
+  try {
+    const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
+    await CapacitorUpdater.notifyAppReady(); // this build started fine: keep it
+    const { CapacitorHttp } = await import('@capacitor/core'); // (a native request: the site's files carry no CORS header for the app)
+    const mine = await fetch('version.json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const latest = await CapacitorHttp.get({ url: `${OTA}?t=${Date.now()}`, responseType: 'json' }).then((r) => (r.status === 200 ? (typeof r.data === 'string' ? JSON.parse(r.data) : r.data) : null)).catch(() => null);
+    const info = await App.getInfo();
+    if (!latest?.version || !latest.manifest || latest.version === mine?.version) return;
+    if (mine?.built && latest.built <= mine.built) return; // never back to an older build
+    if (Number(info.build) < Number(latest.native ?? 0)) return; // that build needs a newer app from the Play Store
+    const { bundles = [] } = await CapacitorUpdater.list();
+    let bundle = bundles.find((b) => b.version === latest.version && b.status !== 'error');
+    bundle ??= await CapacitorUpdater.download({ url: OTA, version: latest.version, manifest: latest.manifest });
+    await CapacitorUpdater.next({ id: bundle.id });
+    const { bundle: current } = await CapacitorUpdater.current();
+    for (const b of bundles) if (b.id !== bundle.id && b.id !== current?.id && b.id !== 'builtin') CapacitorUpdater.delete({ id: b.id }).catch(() => {}); // old downloads
+    console.info(`[ota] ${latest.version} ready for the next start`);
+  } catch (e) { console.warn('[ota]', e); }
+}
+
 const DAILY_ID = 7001;
 /**
  * "Bugünkü ödülünü al!" — a local notification the next day at 10:00 (and one more the day

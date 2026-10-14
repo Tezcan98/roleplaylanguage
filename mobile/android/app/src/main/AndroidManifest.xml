@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -41,6 +42,7 @@
         </provider>
             <!-- Play Games sign-in (PlayGamesPlugin): the project id from res/values/strings.xml -->
         <meta-data android:name="com.google.android.gms.games.APP_ID" android:value="@string/game_services_project_id" />
+        <service android:name="androidx.work.impl.foreground.SystemForegroundService" tools:node="remove" />
     </application>
 
     <!-- Permissions -->
@@ -54,4 +56,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Google Play in-app purchases (credit packs) -->
     <uses-permission android:name="com.android.vending.BILLING" />
+    <!-- live updates download with WorkManager as ordinary / expedited work: no foreground service needed
+         (it would make Google Play ask for a foreground service declaration) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
 </manifest>

@@ -52,7 +52,7 @@ import { LessonController } from './systems/LessonController.js';
 import { TextbookController } from './systems/TextbookController.js';
 import { CreditWallet } from './services/monetization/CreditWallet.js';
 import { MockAdProvider } from './services/monetization/AdProvider.js';
-import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder } from './platform/native.js';
+import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder, liveUpdate } from './platform/native.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
 import { SettingsPanel } from './ui/SettingsPanel.js';
@@ -848,6 +848,9 @@ setInterval(() => {
     tts.speak(call, { speaker: 'kardes' });
   }
 }, 1000);
+
+// the app: everything above started, so this build works — then look for a newer one (live updates)
+if (native) liveUpdate(nativeKit.App);
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)

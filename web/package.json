@@ -8,7 +8,7 @@
     "start": "node tools/serve.mjs 8080",
     "voices": "node tools/fetch-voices.mjs",
     "check": "node tools/validate-content.mjs && node tools/extract-glosses.mjs --coverage",
-    "build": "vite build",
+    "build": "vite build && node tools/ota-stamp.mjs",
     "preview": "vite preview --port 8095",
     "playtest": "node tools/playtest/story.mjs",
     "playtest:smoke": "node tools/playtest/story.mjs --to=d1-afternoon",
@@ -29,6 +29,7 @@
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.2",
     "@capacitor/local-notifications": "^8.3.1",
+    "@capgo/capacitor-updater": "8.52.1",
     "@capgo/native-purchases": "^8.8.1",
     "chess.js": "^1.4.0",
     "three": "^0.160.0"
