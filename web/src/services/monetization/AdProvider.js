@@ -19,7 +19,7 @@ export class AdProvider {
  * offline) the card shows the game's name on its own.
  */
 function houseAd() {
-  const film = el('video', { class: 'ad-film', attrs: { src: '/assets/loop.mp4', poster: '/assets/poster.webp', autoplay: '', muted: '', loop: '', playsinline: '' } });
+  const film = el('video', { class: 'ad-film', attrs: { src: 'https://sehem2.com.tr/assets/loop.mp4', poster: 'https://sehem2.com.tr/assets/poster.webp', autoplay: '', muted: '', loop: '', playsinline: '' } });
   film.muted = true; // (needed for autoplay)
   film.addEventListener('error', () => film.remove());
   return el('div', { class: 'ad-box house' }, [film, el('div', { class: 'ad-caption', html: 'Anadolu Ailesi<br><small>Yakında Google Play\'de · Türkçeyi bir aileyle yaşayarak öğren</small>' })]);

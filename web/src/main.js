@@ -251,7 +251,7 @@ const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
   : native ? new nativeKit.NativeSpeechRecognizer('tr-TR')
   : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
-const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId, bannerId: manifest.admob?.bannerId })
+const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId, bannerId: manifest.admob?.bannerId, fallback: new MockAdProvider(host, modes, 5) }) // (no AdMob video: our own)
   : new MockAdProvider(host, modes, params.has('fastads') ? 1 : 5, { interstitials: params.has('mockads') });
 const billing = !params.has('nobilling') && SELL_PACKS && native ? new PlayBilling(nativeKit.NativePurchases, nativeKit.PURCHASE_TYPE) : new NoBilling();
 const gate = new ClassAccessGate({ host, modes, wallet, ads });
@@ -414,7 +414,7 @@ const village = new VillageMultiplayer({
   }),
   recognizer: chatRecognizer,
 });
-village.autoName = () => `${playerName()}${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question
+village.autoName = () => `Oyuncu${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question (the characters have no names)
 village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // others see them too
 // the HD character from the shop: everywhere once bought — home too (prayer poses use the blocky body for a moment)
 const playerHd = () => {
@@ -704,27 +704,9 @@ async function editProfile({ cancellable = true } = {}) {
   if (p && (p.lang !== before.lang || p.gender !== before.gender || p.look !== before.look)) { location.reload(); return; }
   menu.show();
 }
-/**
- * Once, at the start (after the character is made): the 3D character is recommended — the game
- * looks far better and everyone in the village turns 3D too; the starting credits pay for it.
- */
-async function offerHd() {
-  const hd = SHOP.find((i) => i.id === 'hd');
-  if (!hd || settings.get('hdOffered', false) || wallet.owns('hd') || params.has('nointro')) return;
-  settings.set('hdOffered', true);
-  const yes = await new ChoiceCard(host, modes).ask({
-    title: '⭐ 3D karakter ister misin?',
-    text: `Oyun 3D karakterle çok daha güzel görünür; köydeki herkes de 3D olur. Başlangıç kredin buna yeter: ${hd.price} kredi. (Çok eski telefonlarda oyunu yavaşlatabilir.)`,
-    en: 'The game looks much better with the 3D character, and everyone in the village turns 3D too. Your starting credits are enough.',
-    yes: `3D olsun · ${hd.price} kredi`, no: 'Şimdilik böyle kalsın',
-  });
-  if (yes && wallet.buy(hd)) { wallet.equip(hd); playerHd(); toasts.show('Artık 3D\'sin! ⭐', gloss('You are 3D now!')); }
-}
-
 // first launch: create the character before anything else (tests skip it with ?nointro)
-if (!setup.done && !params.has('nointro')) { menu.hide(); editProfile({ cancellable: false }).then(() => setTimeout(offerHd, 400)); }
+if (!setup.done && !params.has('nointro')) { menu.hide(); editProfile({ cancellable: false }); } // (no 3D offer: it is in the shop)
 else {
-  setTimeout(offerHd, 600); // (the menu first)
   // back from changing the outfit: straight on where you were
   let again = false;
   try { again = sessionStorage.getItem('autoContinue') === '1'; sessionStorage.removeItem('autoContinue'); } catch { /* ignore */ }

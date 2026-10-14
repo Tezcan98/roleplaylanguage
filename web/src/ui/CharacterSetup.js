@@ -1,38 +1,32 @@
 import { el } from './dom.js';
 import { gloss, loadGlossLang, glossLanguages } from '../i18n/Gloss.js';
-import { ServerPicker } from './ServerPicker.js';
 
-export const PLAYER_NAMES = { boy: 'Ahmet', girl: 'Sare' }; // defaults; each character has its own name below
-/** The four characters to pick from: [gender, look, icon, name] — the picture tells them apart. */
+/** The four characters to pick from: [gender, look] — a full-length picture each (assets/setup, tools/models/render-players.mjs), no names. */
 export const CHARACTERS = [
-  ['boy', 'modest', '👦', 'Ahmet'],
-  ['boy', 'strong', '👦🏽', 'Hakan'],
-  ['girl', 'covered', '🧕', 'Sare'],
-  ['girl', 'open', '👧', 'Seher'],
+  ['boy', 'modest'],
+  ['boy', 'strong'],
+  ['girl', 'covered'],
+  ['girl', 'open'],
 ];
 export const characterOf = (gender, look) => CHARACTERS.find(([g, l]) => g === gender && l === look) ?? CHARACTERS.find(([g]) => g === gender) ?? CHARACTERS[0];
-const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
+/** The picture of a character: `assets/setup/boy-modest.png`. */
+export const characterPicture = (gender, look) => `assets/setup/${characterOf(gender, look).join('-')}.png`;
 
 /**
- * "Create your character": meaning language, boy/girl, username and village server.
- * Shown on the first launch and from the main menu ("Değiştir"); everything can be changed later.
+ * "Choose your character": the language of the meanings and which of the four characters you are
+ * (big full-length pictures). Nothing to type: the username is asked when you go to the square from
+ * the menu, the server is picked there too. Shown on the first launch and from the main menu.
  * `open()` resolves with the profile, or null when cancelled.
  */
 export class CharacterSetup {
-  constructor(host, { modes, settings, villageServer }) {
-    Object.assign(this, { host, modes, settings, villageServer });
+  constructor(host, { modes, settings }) {
+    Object.assign(this, { host, modes, settings });
   }
 
   /** The saved profile (defaults for anything not chosen yet). */
   profile() {
     const s = this.settings;
-    return {
-      lang: s.get('glossLang', 'ar'),
-      gender: s.get('gender', 'boy'),
-      look: characterOf(s.get('gender', 'boy'), s.get('look', ''))[1],
-      username: s.get('username', '') ?? '',
-      server: s.get('serverRegion', 'ankara'),
-    };
+    return { lang: s.get('glossLang', 'ar'), gender: s.get('gender', 'boy'), look: characterOf(s.get('gender', 'boy'), s.get('look', ''))[1] };
   }
   get done() { return !!this.settings.get('profileDone', false); }
 
@@ -48,38 +42,25 @@ export class CharacterSetup {
         class: 'chipbtn', text: name, attrs: { type: 'button', 'data-lang': code, 'aria-pressed': String(code === p.lang) },
         on: { click: async () => { p.lang = code; mark(langs, 'lang', code); await loadGlossLang(code); texts.forEach(([n, en]) => { n.textContent = gloss(en); }); } },
       })));
-      const genders = el('div', { class: 'choice-row chars' }, CHARACTERS.map(([gender, look, icon, label]) => el('button', {
-        class: 'chipbtn char-card', attrs: { type: 'button', 'data-char': `${gender}-${look}`, 'aria-pressed': String(gender === p.gender && look === p.look) },
-        on: { click: () => { p.gender = gender; p.look = look; mark(genders, 'char', `${gender}-${look}`); } },
-      }, [el('span', { class: 'ci', text: icon }), el('span', { text: label })])));
-      const name = el('input', { class: 'name-in', attrs: { type: 'text', maxlength: '16', placeholder: 'Kullanıcı adın', autocomplete: 'nickname' } });
-      name.value = p.username;
-      const err = el('p', { class: 'note' });
-      const servers = new ServerPicker({ villageServer: this.villageServer, value: p.server });
-      servers.start();
+      const chars = el('div', { class: 'char-pick' }, CHARACTERS.map(([gender, look]) => el('button', {
+        class: 'char-card', attrs: { type: 'button', 'data-char': `${gender}-${look}`, 'aria-pressed': String(gender === p.gender && look === p.look), 'aria-label': gender === 'girl' ? 'Kız' : 'Erkek' },
+        on: { click: () => { p.gender = gender; p.look = look; mark(chars, 'char', `${gender}-${look}`); } },
+      }, [el('img', { attrs: { src: characterPicture(gender, look), alt: '', draggable: 'false' } })])));
 
-      const save = el('button', { class: 'btn', text: 'Kaydet ve devam et', attrs: { type: 'button' } });
+      const save = el('button', { class: 'btn', text: 'Başla', attrs: { type: 'button' } });
       const cancel = cancellable && el('button', { class: 'btn alt', text: 'Vazgeç', attrs: { type: 'button' } });
       const root = el('div', { class: 'overlay open dim setup' }, [el('div', { class: 'card' }, [
-        el('h2', { class: 'ctitle', text: 'Karakterini oluştur' }), g('Create your character'),
-        el('div', { class: 'setup-grid' }, [
-          el('section', {}, [el('p', { class: 'chap', text: 'Açıklamalar hangi dilde olsun?' }), g('Which language should meanings be shown in?'), langs]),
-          el('section', {}, [el('p', { class: 'chap', text: 'Karakterin' }), g('Your character'), genders]),
-          el('section', {}, [el('p', { class: 'chap', text: 'Kullanıcı adı (köy meydanında görünür)' }), g('Username (shown in the village square)'), name]),
-          el('section', {}, [el('p', { class: 'chap', text: 'Köy meydanı sunucusu' }), g('Village square server — you can change it later.'), servers.root]),
-        ]),
-        err, save, cancel,
+        el('h2', { class: 'ctitle', text: 'Karakterini seç' }), g('Choose your character'),
+        chars,
+        el('p', { class: 'chap', text: 'Açıklamalar hangi dilde olsun?' }), g('Which language should meanings be shown in?'), langs,
+        save, cancel,
       ])]);
-      const done = (v) => { servers.stop(); root.remove(); pop(); if (!v && p.lang !== startLang) loadGlossLang(startLang); resolve(v); };
+      const done = (v) => { root.remove(); pop(); if (!v && p.lang !== startLang) loadGlossLang(startLang); resolve(v); };
       save.onclick = () => {
-        const username = name.value.trim();
-        if (username && !NAME.test(username)) { err.textContent = `Kullanıcı adı 2-16 harf/rakam olmalı · ${gloss('2-16 letters or digits')}`; name.focus(); return; }
-        const out = { ...p, username, server: servers.value };
         const s = this.settings;
-        s.set('glossLang', out.lang); s.set('gender', out.gender); s.set('look', out.look); s.set('serverRegion', out.server);
-        if (username) s.set('username', username);
+        s.set('glossLang', p.lang); s.set('gender', p.gender); s.set('look', p.look);
         s.set('profileDone', true);
-        done(out);
+        done({ ...p });
       };
       if (cancel) cancel.onclick = () => done(null);
       this.host.append(root);

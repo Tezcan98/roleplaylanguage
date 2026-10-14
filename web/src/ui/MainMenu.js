@@ -1,7 +1,7 @@
 import { el } from './dom.js';
 import { gloss, glossInfo } from '../i18n/Gloss.js';
 import { ServerPicker, SERVERS } from './ServerPicker.js';
-import { characterOf } from './CharacterSetup.js';
+import { characterPicture } from './CharacterSetup.js';
 import { fullscreenPossible, goFullscreen, fullscreenIcon, canInstall, installApp } from './Landscape.js';
 import { COIN_HTML } from './coin.js';
 
@@ -88,7 +88,7 @@ export class MainMenu {
         el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
       ];
     } else {
-      const gender = s.get('gender', 'boy'), [, , icon, name] = characterOf(gender, s.get('look', ''));
+      const pic = characterPicture(s.get('gender', 'boy'), s.get('look', ''));
       this.#where = el('span', { text: this.#whereText() });
       body = [
         el('div', { class: 'menu-top' }, [
@@ -103,7 +103,7 @@ export class MainMenu {
         el('p', { class: 'menu-where' }, [this.#where, ' · ', btn('Şehir değiştir', 'linkbtn', () => this.show('city'))]),
         canInstall() && el('button', { class: 'btn alt menu-install', text: '📲 Uygulama olarak yükle (hep tam ekran)', attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),
         el('div', { class: 'profile-line' }, [
-          el('span', { text: `${icon} ${name} · ${glossInfo().name}${s.get('username') ? ` · @${s.get('username')}` : ''}` }),
+          el('span', { class: 'profile-who' }, [el('img', { class: 'profile-pic', attrs: { src: pic, alt: '' } }), `${glossInfo().name}${s.get('username') ? ` · @${s.get('username')}` : ''}`]),
           btn('Değiştir', 'chipbtn', () => this.onProfile()),
         ]),
       ];

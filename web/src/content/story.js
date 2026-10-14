@@ -33,8 +33,8 @@ export const STORY = {
       },
       intro: {
         num: 'Pazar · Bölüm 1', title: 'Canım sıkılıyor',
-        text: 'Pazar sabahı. Ahmet evde. Televizyonda hiçbir şey yok. Annesi mutfakta çay demliyor.',
-        en: "Sunday morning. Ahmet is at home. There's nothing on TV. His mom is brewing tea in the kitchen.",
+        text: 'Pazar sabahı. Evdesin. Televizyonda hiçbir şey yok. Annen mutfakta çay demliyor.',
+        en: "Sunday morning. You are at home. There's nothing on TV. Your mom is brewing tea in the kitchen.",
       },
       think: 'Canım sıkılıyor…',
       quests: [
@@ -222,8 +222,8 @@ export const STORY = {
       },
       intro: {
         num: 'Pazartesi · Bölüm 9', title: 'Ödev zamanı',
-        text: 'Ahmet eve döndü. Baba işten geldi, dede sedirde dinleniyor. Ama önce ödev!',
-        en: 'Ahmet is home. Dad is back from work, grandpa is resting on the sedir. But homework first!',
+        text: 'Eve döndün. Baban işten geldi, deden sedirde dinleniyor. Ama önce ödev!',
+        en: 'You are home. Dad is back from work, grandpa is resting on the sedir. But homework first!',
       },
       quests: [
         { id: 'homework', title: 'Ünite 1', obj: 'Masaya otur, kitabındaki Ünite 1\'i bitir', en: 'Sit at the desk and finish Unit 1 in your book', target: { hotspot: 'house.desk' }, complete: { flag: 'homework-u1' }, minutes: 45 },

@@ -1,0 +1,23 @@
+<!doctype html><html><body style="margin:0">
+<!-- Full-length pictures of the four blocky player characters for the setup screen: node tools/models/render-players.mjs -->
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { TextureFactory } from '../../src/engine/TextureFactory.js';
+import { MeshFactory } from '../../src/engine/MeshFactory.js';
+import { buildRig } from '../../src/entities/CharacterRig.js';
+import { PLAYER_LOOKS } from '../../src/content/characters.js';
+const W = 260, H = 460;
+const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setClearColor(0x000000, 0); r.outputColorSpace = THREE.SRGBColorSpace; document.body.append(r.domElement);
+const mf = new MeshFactory(new TextureFactory(r));
+window.render = (key) => {
+  const s = new THREE.Scene(); s.add(new THREE.HemisphereLight(0xffffff, 0x886644, 2.2)); const d = new THREE.DirectionalLight(0xffffff, 2.4); d.position.set(1.5, 3, 4); s.add(d);
+  const rig = buildRig(mf, { ...PLAYER_LOOKS[key], scale: 1 });
+  rig.g.rotation.y = -0.35; rig.armL.rotation.z = 0.12; rig.armR.rotation.z = -0.12; // a little turned, arms a little out
+  s.add(rig.g);
+  const b = new THREE.Box3().setFromObject(rig.g), h = b.max.y - b.min.y;
+  const c = new THREE.PerspectiveCamera(24, W / H, 0.1, 50); c.position.set(0, b.min.y + h * 0.52, h * 2.75); c.lookAt(0, b.min.y + h * 0.5, 0);
+  r.render(s, c); return r.domElement.toDataURL('image/png');
+};
+window.ready = true;
+</script></body></html>

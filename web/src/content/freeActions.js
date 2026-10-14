@@ -116,21 +116,21 @@ export const HOUSE_RULES = [
   {
     id: 'tv-homework', on: 'tv', by: 'anne', node: 'warnTvHomework',
     when: (c) => c.q === 'homework',
-    shout: ['Ahmet! Önce ödevini yap!', 'Ahmet! Do your homework first!'],
+    shout: ['Oğlum! Önce ödevini yap!', 'Son! Do your homework first!'],
   },
   {
     id: 'tv-at-table', on: 'tv', by: 'anne', node: 'warnTvMeal',
     when: (c) => ['d1-breakfast', 'd1-dinner'].includes(c.chapter),
-    shout: ['Ahmet! Sofrada televizyon yok!', 'Ahmet! No TV at the table!'],
+    shout: ['Oğlum! Sofrada televizyon yok!', 'Son! No TV at the table!'],
   },
   {
     id: 'tv-with-duty', on: 'tv', by: 'anne', node: 'warnTvWork',
     when: (c) => c.hasDuty,
-    shout: ['Ahmet! Önce işini bitir, sonra televizyon!', 'Ahmet! Finish your job first, then TV!'],
+    shout: ['Oğlum! Önce işini bitir, sonra televizyon!', 'Son! Finish your job first, then TV!'],
   },
   {
     id: 'tv-bedtime', on: 'tv', by: 'anne', node: 'warnTvNight',
     when: (c) => c.chapter === 'd1-night' && c.reached('goodnight'),
-    shout: ['Ahmet! Yatma saati geldi!', "Ahmet! It's bedtime!"],
+    shout: ['Oğlum! Yatma saati geldi!', "Son! It's bedtime!"],
   },
 ];

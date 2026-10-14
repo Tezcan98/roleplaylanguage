@@ -10,7 +10,7 @@ export class UsernameDialog {
   ask(current = '') {
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
-      const input = el('input', { attrs: { type: 'text', maxlength: '16', placeholder: 'ör. Ahmet_10', autocomplete: 'off', 'aria-label': 'Kullanıcı adı' } });
+      const input = el('input', { attrs: { type: 'text', maxlength: '16', placeholder: 'ör. Ali_10', autocomplete: 'off', 'aria-label': 'Kullanıcı adı' } });
       input.value = current;
       const err = el('p', { class: 'fb bad' });
       const ok = el('button', { class: 'btn', text: 'Meydana gir', attrs: { type: 'submit' } });

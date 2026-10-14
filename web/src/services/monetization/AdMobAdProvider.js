@@ -7,11 +7,14 @@ const TEST = { rewarded: 'ca-app-pub-3940256099942544/5224354917', interstitial:
 /**
  * AdMob in the Android app: rewarded videos (credits), full-screen interstitials between story
  * days, and a banner at the bottom of the menu where you pick the village square. The interstitial ad unit should be set to "display" only (no video) in the AdMob console.
- * Asks for consent first where the law requires it (EU, UK).
+ * Asks for consent first where the law requires it (EU, UK). When AdMob has no video to give (a new
+ * app before review, no ads in that country right now) the rewarded video is our own ad (`fallback`),
+ * so the button is never pressed for nothing.
  */
 export class AdMobAdProvider extends AdProvider {
-  constructor({ rewardedId, interstitialId, bannerId } = {}) {
+  constructor({ rewardedId, interstitialId, bannerId, fallback = null } = {}) {
     super();
+    this.fallback = fallback;
     this.ids = { rewarded: rewardedId || TEST.rewarded, interstitial: interstitialId || TEST.interstitial, banner: bannerId || TEST.banner };
     this.testing = Object.fromEntries(Object.keys(TEST).map((k) => [k, this.ids[k] === TEST[k]])); // test mode only for Google's test ids
     this.bannerOn = false;
@@ -37,7 +40,7 @@ export class AdMobAdProvider extends AdProvider {
       return !!reward && Number(reward.amount ?? 0) > 0;
     } catch (e) {
       console.warn('[admob] rewarded ad failed', e);
-      return false;
+      return this.fallback ? this.fallback.showRewarded() : false;
     }
   }
 

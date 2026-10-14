@@ -272,6 +272,8 @@ body.gloss-rtl .choice .e{text-align:left}
 .setup .card{max-height:92vh;overflow-y:auto}
 .setup .chap{margin:10px 0 0}
 .setup .cen{margin:0 0 4px}
+.setup .card>.btn:not(.alt){position:sticky;bottom:0;z-index:1;box-shadow:0 -8px 12px rgba(244,232,206,.95),0 4px 0 var(--wood2)} /* "Başla" always in sight */
+@media (max-height:520px){.setup .char-pick{margin:4px 0 6px}.setup .char-card img{max-height:26vh}.setup .ctitle{font-size:22px}.setup .card{padding-top:10px;padding-bottom:10px}} /* phones held sideways: everything on one screen */
 .chatbox{display:flex;flex-direction:column;gap:6px}
 .chat-row{display:flex;gap:6px;align-items:center}
 .chat-in{flex:1;min-width:0;min-height:46px;border-radius:10px;border:2px solid var(--wood);padding:0 10px;font:700 16px Nunito,sans-serif;background:#fff;color:var(--ink);-webkit-user-select:text;user-select:text}
@@ -332,8 +334,12 @@ html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
 .cls-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
 .cls-nav:empty{display:none}
 .chars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.char-card{flex-direction:column;align-items:flex-start;min-height:64px;padding:8px 10px;gap:2px;text-align:left}
-.char-card .ci{font-size:24px;line-height:1}
+.char-pick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 14px}
+.char-card{display:flex;align-items:flex-end;justify-content:center;padding:6px 2px 4px;border:3px solid transparent;border-radius:16px;background:rgba(255,255,255,.55);cursor:pointer;transition:transform .12s}
+.char-card img{width:100%;max-height:min(34vh,230px);object-fit:contain;pointer-events:none}
+.char-card[aria-pressed="true"]{border-color:var(--wood);background:#FFF3C8;transform:translateY(-3px)}
+.profile-who{display:flex;align-items:center;gap:8px}
+.profile-pic{height:44px;width:auto}
 .char-card .cc-en{margin:0;font-size:12px;font-weight:700}
 .chars .chipbtn[aria-pressed="true"]{background:var(--gold);border-color:var(--ink)}
 .chess .card{width:min(460px,100%);gap:8px}

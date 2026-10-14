@@ -140,7 +140,7 @@ export class LessonController {
   async #ask(session, q) {
     // "Elif, kaç yaşındasın?" — questions written in lower case get the student's name in front
     const who = q.turnStudentId === 'ahmet' ? playerName() : this.cast.get(q.turnStudentId)?.name ?? '';
-    const said = /^[a-zçğıöşü]/.test(q.q) && who ? `${who}, ${q.q}` : q.q;
+    const said = /^[a-zçğıöşü]/.test(q.q) && who ? `${who}, ${q.q}` : q.q.charAt(0).toLocaleUpperCase('tr') + q.q.slice(1); // (the player has no name: just the question)
     q = { ...q, q: said, who: said !== q.q ? who : '' };
     this.view.question(q);
     this.current = q;
@@ -178,7 +178,7 @@ export class LessonController {
     const q = this.current;
     if (!q) return;
     const mine = studentId === 'ahmet', name = mine ? playerName() : this.cast.get(studentId)?.name ?? '';
-    const right = String(q.botAnswers?.[0] ?? q.hint ?? '').replace('{name}', name);
+    const right = mine ? String(q.hint ?? q.botAnswers?.[0] ?? '').replace('{name}', '…') : String(q.botAnswers?.[0] ?? q.hint ?? '').replace('{name}', name); // (mine: "Benim adım …" — their own name)
     if (!right) return;
     const said = mine ? 'Hayır, doğrusu şöyle:' : `Hayır, ${name}. Doğrusu: ${right}`;
     this.tts.speak(said, { speaker: 'ogretmen' });

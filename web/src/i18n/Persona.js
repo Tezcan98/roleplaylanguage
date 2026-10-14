@@ -1,19 +1,10 @@
 /**
- * Boy or girl. The content is written for Ahmet (a boy); for a girl the player is Sare
- * and the family says "kızım" (my daughter) instead of "oğlum" (my son). Content tables are
- * rewritten once at start-up (`personalizeContent`), translated glosses on the way out
- * (`personalizeGloss`, used by Gloss.js).
+ * Boy or girl. The player has no name (the family says "oğlum", grandpa "evladım"); the content is
+ * written for a boy, and for a girl the family says "kızım" (my daughter) instead of "oğlum" (my
+ * son). Content tables are rewritten once at start-up (`personalizeContent`), translated glosses
+ * on the way out (`personalizeGloss`, used by Gloss.js).
  */
 let gender = 'boy';
-let name = 'Ahmet';
-/** The four player characters: name in each script; `vowel` = the name ends in a vowel (Turkish buffer letters). */
-export const PLAYER_NAMES_BY_LOOK = {
-  'boy-modest': { tr: 'Ahmet', ar: 'أحمد', ur: 'احمد' },
-  'boy-strong': { tr: 'Hakan', ar: 'هاكان', ur: 'ہاکان', back: true },
-  'girl-covered': { tr: 'Sare', ar: 'سارة', ur: 'سارہ', vowel: true },
-  'girl-open': { tr: 'Seher', ar: 'سحر', ur: 'سحر' },
-};
-let names = PLAYER_NAMES_BY_LOOK['boy-modest'];
 /** The class teacher, picked at random once per device: name + gender (content says "Zeynep", a woman). */
 export const TEACHERS = {
   f: [['Zeynep', 'زينب', 'زینب'], ['Merve', 'مروة', 'مروہ'], ['Esra', 'إسراء', 'اسراء'], ['Hatice', 'خديجة', 'خدیجہ']],
@@ -45,19 +36,14 @@ const teacherSwaps = () => {
   };
 };
 export const playerGender = () => gender;
-export const playerName = () => name;
-/** Which of the four characters (see CharacterSetup): sets the name used in every text. */
-export function setPlayerLook(key) { names = PLAYER_NAMES_BY_LOOK[key] ?? PLAYER_NAMES_BY_LOOK['boy-modest']; name = names.tr; }
+/** The player character has no name: the lessons and the chess board say "you" instead (kept for those callers). */
+export const playerName = () => '';
+/** Which of the four characters (see CharacterSetup). Nothing in the texts depends on it any more. */
+export function setPlayerLook() {}
 
 /** Rewrites for the player: their name (with the right Turkish suffix after it) and, for a girl, how the family calls her. */
 function sourceRules() {
-  const n = names.tr, rules = [];
-  if (n !== 'Ahmet') {
-    // Ahmet'in / Ahmet'e / Ahmet'i / Ahmet'le → the suffixes for this name (vowel harmony, buffer letters)
-    const sfx = names.vowel ? { in: 'nin', e: 'ye', i: 'yi', le: 'yle' } : names.back ? { in: 'ın', e: 'a', i: 'ı', le: 'la' } : { in: 'in', e: 'e', i: 'i', le: 'le' };
-    for (const [k, v] of Object.entries(sfx)) rules.push([new RegExp(`\\bAhmet['’]${k}\\b`, 'g'), `${n}’${v}`]);
-    rules.push([/\bAhmet/g, n]);
-  }
+  const rules = [];
   if (gender === 'girl') rules.push([/oğlum/g, 'kızım'], [/Oğlum/g, 'Kızım'], [/oğluma/g, 'kızıma'], [/\bson\b/g, 'dear'], [/\bSon\b/g, 'Dear'],
     [/\bAbi\b/g, 'Abla'], [/\babi\b/g, 'abla'], [/\bbig brother\b/g, 'big sister'], [/\bBig brother\b/g, 'Big sister']);
   return rules;
@@ -79,13 +65,11 @@ export function setPlayerGender(g) { gender = g === 'girl' ? 'girl' : 'boy'; }
 /** The English key the translations were made for. */
 export const boyKey = (en) => {
   let k = gender === 'girl' ? swap(en, UNDO) : en;
-  if (name !== 'Ahmet') k = k.replace(new RegExp(`\\b${name}\\b`, 'g'), 'Ahmet');
   if (teacher.name !== 'Zeynep') k = k.replace(new RegExp(`\\b${teacher.name}\\b`, 'g'), 'Zeynep').replace('(he points', '(she points');
   return k;
 };
 /** A translated gloss, adjusted for a girl. */
-const nameSwap = (lang) => (name === 'Ahmet' ? [] : lang === 'ar' ? [[/أحمد/g, names.ar]] : lang === 'ur' ? [[/احمد/g, names.ur]] : [[/\bAhmet/g, name]]);
-export const personalizeGloss = (text, lang) => swap(swap(gender === 'girl' ? swap(text, TRANSLATED[lang] ?? []) : text, nameSwap(lang)), teacherSwaps().tr[lang] ?? []);
+export const personalizeGloss = (text, lang) => swap(gender === 'girl' ? swap(text, TRANSLATED[lang] ?? []) : text, teacherSwaps().tr[lang] ?? []);
 
 /** Rewrite strings in content tables in place (functions are wrapped so their results are rewritten too). */
 export function personalizeContent(...tables) {

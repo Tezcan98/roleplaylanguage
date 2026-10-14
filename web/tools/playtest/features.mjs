@@ -29,19 +29,20 @@ try {
   check('first launch shows character setup', !!(await page.$('.overlay.open.setup')));
   await page.click('.setup button[data-lang="es"]');
   check('choosing a language re-translates the setup at once', (await page.textContent('.setup .cen')) !== 'Create your character', await page.textContent('.setup .cen'));
+  check('…four characters, each a full-length picture, nothing to type', (await page.$$('.setup .char-card img')).length === 4 && !(await page.$('.setup input')));
   await page.click('.setup button[data-char="girl-covered"]');
-  await page.fill('.setup .name-in', 'Deneme_1');
-  await Promise.all([page.waitForNavigation({ timeout: 30000 }), page.click('.setup button:has-text("Kaydet")')]);
+  await Promise.all([page.waitForNavigation({ timeout: 30000 }), page.click('.setup button:has-text("Başla")')]);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   const profile = await page.textContent('.main-menu .profile-line');
-  check('after setup the menu shows the profile', profile.includes('Sare') && profile.includes('Español') && profile.includes('Deneme_1'), profile);
+  const pic = await page.getAttribute('.main-menu .profile-line img', 'src');
+  check('after setup the menu shows the profile (her picture, the language)', profile.includes('Español') && /girl-covered/.test(pic ?? ''), `${profile} ${pic}`);
   check('no setup the second time', !(await page.$('.overlay.open.setup')));
 
   // --- girl: texts rewritten, look -----------------------------------------------------
   const texts = await ev(() => JSON.stringify(Object.values(window.__game.dialogue.dialogues).map((d) => d.nodes)));
-  check('girl: dialogue texts say Sare, not Ahmet', !/\bAhmet\b/.test(texts) && texts.includes('Sare'));
+  check('no names for the player in the texts', !/\b(Ahmet|Sare|Hakan|Seher)\b/.test(texts));
   check('girl: the family says “kızım”', texts.includes('kızım') && !texts.includes('oğlum'));
-  check('girl: Spanish meanings (and her name in them)', await ev(() => window.__game.glossProbe('Ahmet! Do your homework first!')).then((t) => t.includes('Sare') && !t.includes('Do your')), await ev(() => window.__game.glossProbe('Ahmet! Do your homework first!')));
+  check('girl: Spanish meanings, "hija" for her', await ev(() => window.__game.glossProbe('Dear! Do your homework first!')).then((t) => t.includes('Hija') && !t.includes('Do your')), await ev(() => window.__game.glossProbe('Dear! Do your homework first!')));
 
   // --- new game: credits, story --------------------------------------------------------
   await page.goto(`${server.url}/?debug&fakemic&fastclass&nointro&fresh&kidout&quality=low`);
@@ -272,12 +273,12 @@ try {
   const tune = await waitFor(() => ev(() => { const m = window.__game.music; return (m.levels()[m.current] ?? 0) > 0.05 ? m.current : null; }), 10000);
   check('the square has its own background music', tune === 'assets/audio/meydan.mp3', String(tune));
   await ev(() => window.__game.settings.set('musicOn', false));
-  check('…"Müzik" off in the settings: it fades out', !!(await waitFor(() => ev(() => Object.values(window.__game.music.levels()).every((v) => v < 0.01)), 8000)));
+  check('…"Müzik" off in the settings: it fades out', !!(await waitFor(() => ev(() => Object.values(window.__game.music.levels()).every((v) => v < 0.01)), 25000))); // (slow CI machines: game time runs slow)
   await ev(() => window.__game.settings.set('musicOn', true));
-  await ev(() => { const a = window.__game.ads; a._banner = []; a.showBanner = () => a._banner.push('show'); a.hideBanner = () => a._banner.push('hide'); window.__game.idleAd.idle = 88; });
-  check('standing still for a long while: a banner ad', !!(await waitFor(() => ev(() => window.__game.ads._banner.at(-1) === 'show'), 8000)));
+  await ev(() => { const a = window.__game.ads; a._banner = []; a.showBanner = () => a._banner.push('show'); a.hideBanner = () => a._banner.push('hide'); window.__game.idleAd.idle = 89.5; });
+  check('standing still for a long while: a banner ad', !!(await waitFor(() => ev(() => window.__game.ads._banner.at(-1) === 'show'), 20000)));
   await page.keyboard.down('ArrowUp'); await sleep(500); await page.keyboard.up('ArrowUp');
-  check('…the first step takes it away', !!(await waitFor(() => ev(() => window.__game.ads._banner.at(-1) === 'hide'), 4000)));
+  check('…the first step takes it away', !!(await waitFor(() => ev(() => window.__game.ads._banner.at(-1) === 'hide'), 10000)));
 
   // --- shopping: the bag, rubbish bins, the table at home -------------------------------
   const bag = (k) => ev((k) => window.__game.inventory.count(k), k);

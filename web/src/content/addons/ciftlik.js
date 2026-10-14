@@ -34,8 +34,8 @@ export default {
     dede: {
       start: (ctx) => ({ 'cow-dede': 'cw1', 'cow-milk': 'cwRemind', 'sheep-feed': 'shRemind', 'sheep-count': 'sh1' })[ctx.q],
       nodes: {
-        cw1: { say: 'Gel bakalım Ahmet. Sarıkız\'ın sütü doldu, onu sağma zamanı. Kovayı ineğin altına koy, yavaş yavaş sağ. Sarıkız sakin bir inektir, korkma.',
-          en: 'Come here, Ahmet. Sarıkız is full of milk, it\'s time to milk her. Put the bucket under the cow and milk slowly. Sarıkız is a calm cow, don\'t be afraid.',
+        cw1: { say: 'Gel bakalım evladım. Sarıkız\'ın sütü doldu, onu sağma zamanı. Kovayı ineğin altına koy, yavaş yavaş sağ. Sarıkız sakin bir inektir, korkma.',
+          en: 'Come here, my child. Sarıkız is full of milk, it\'s time to milk her. Put the bucket under the cow and milk slowly. Sarıkız is a calm cow, don\'t be afraid.',
           words: [['inek', 'cow'], ['sağmak', 'to milk'], ['süt', 'milk'], ['sakin', 'calm'], ['korkmak', 'to be afraid']],
           options: [{ tr: 'Tamam dede, hemen sağarım!', en: 'Okay grandpa, I\'ll milk her right away!', do: ['quest'] }, { tr: 'Biraz korkuyorum ama denerim.', en: 'I\'m a bit scared, but I\'ll try.', do: ['quest'] }] },
         cwRemind: { say: 'Sarıkız bahçenin köşesinde otluyor. Yanına git, sağ onu.', en: 'Sarıkız is grazing in the corner of the yard. Go next to her and milk her.',
