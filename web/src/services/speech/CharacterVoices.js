@@ -24,34 +24,34 @@ export class CharacterVoices {
    * Gemini, made once per sentence and kept — a new sentence every time would use the daily quota
    * up, so hers is spoken by the device; a man's goes to Piper on our own server (costs nothing).
    */
-  speak(text, { speaker, rate = 1, fresh = false } = {}) {
+  speak(text, { speaker, rate = 1, fresh = false, volume } = {}) { // volume: () => 0–1, followed while it plays (talk you walk away from)
     if (!text || this.muted()) return; // voices off in the settings
     const voice = this.voiceOf(speaker), turn = ++this.#turn;
-    if (fresh || !this.repo) { this.#speak(text, voice, rate, fresh); return; }
+    if (fresh || !this.repo) { this.#speak(text, voice, rate, fresh, volume); return; }
     this.repo.url(voice, text).then((url) => {
       if (turn !== this.#turn) return; // something else was said meanwhile
-      if (!url) { this.#speak(text, voice, rate, fresh); return; }
+      if (!url) { this.#speak(text, voice, rate, fresh, volume); return; }
       this.server?.cancel(); this.neural?.cancel(); this.fallback.cancel();
-      this.repo.play(url, (voice.pitch ?? 1) * rate).catch(() => { if (turn === this.#turn) this.#speak(text, voice, rate, fresh); });
-    }, () => this.#speak(text, voice, rate, fresh));
+      this.repo.play(url, (voice.pitch ?? 1) * rate, volume).catch(() => { if (turn === this.#turn) this.#speak(text, voice, rate, fresh, volume); });
+    }, () => this.#speak(text, voice, rate, fresh, volume));
   }
 
-  #speak(text, voice, rate, fresh) {
+  #speak(text, voice, rate, fresh, volume) {
     this.repo?.cancel();
     if (!(fresh && voice.female) && (this.server?.has?.(voice) ?? this.server?.supported)) {
       this.neural?.cancel(); this.fallback.cancel();
-      this.server.speak(text, { voice, rate, fresh }).catch(() => this.#local(text, voice, rate));
+      this.server.speak(text, { voice, rate, fresh, volume }).catch(() => this.#local(text, voice, rate, volume));
       return;
     }
-    this.#local(text, voice, rate);
+    this.#local(text, voice, rate, volume);
   }
 
-  #local(text, voice, rate) {
+  #local(text, voice, rate, volume) {
     if (voice.piper) voice = { ...voice, id: voice.piper }; // a man's Gemini voice: Piper in the browser stands in
     const useNeural = this.enabled() && this.neural?.supported && !voice.female;
     if (useNeural && this.neural.isReady(voice.id)) {
       this.fallback.cancel();
-      this.neural.speak(text, { voice, rate }).catch((e) => {
+      this.neural.speak(text, { voice, rate, volume }).catch((e) => {
         console.warn('[tts] piper failed, using browser voice:', e.message);
         this.#say(text, voice, rate);
       });

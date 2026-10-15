@@ -1216,7 +1216,6 @@
  "Weekend and friends": "عطلة نهاية الأسبوع والأصدقاء",
  "Welcome again! What will you have?": "أهلًا بك مجددًا! ماذا تريد؟",
  "Welcome home son! How was school? Come on, do your homework first. Work at your desk.": "أهلاً بك في البيت يا بني! كيف كانت المدرسة؟ هيا، اكتب واجبك أولاً. اجلس إلى مكتبك.",
- "Welcome to the Yılmaz family home!": "أهلاً بك في بيت عائلة يلماز!",
  "Welcome! Fresh tea has just brewed. Would you like a tea?": "أهلاً! الشاي الطازج جاهز. هل تريد كأس شاي؟",
  "Welcome! Take your seat, the lesson is starting.": "أهلاً! اجلس في مكانك، الدرس سيبدأ.",
  "Welcome! The shop has bread, milk, cheese and olives.": "أهلاً! في الدكان خبز وحليب وجبن وزيتون.",
@@ -2131,7 +2130,6 @@
  "yoghurt": "لبن / زبادي",
  "your favourite": "المفضل لديك",
  "{name} wants to voice chat with you": "{name} يريد التحدث معك صوتياً",
- "İsmail Dede runs this board. To play, talk to him: you get white or black, and if nobody else is playing, Dede plays you. Walk onto a piece to take it, walk to a green square to move it. To offer a draw or stop playing, talk to Dede again.": "الجد إسماعيل يدير هذه الرقعة. لتلعب، تحدث معه: تأخذ الأبيض أو الأسود، وإن لم يكن هناك لاعب آخر يلعب الجد معك. امشِ فوق قطعة لتأخذها، ثم امشِ إلى مربع أخضر لتنقلها. لعرض التعادل أو لترك اللعبة، تحدث مع الجد مرة أخرى.",
  "İsmail Dede went home and grandpa went to bed. Good night!": "عاد الجد إسماعيل إلى بيته، وذهب جدي إلى النوم. تصبحون على خير!",
  "— And some milk. How much is it?": "— وحليب أيضاً. بكم؟",
  "— Hello, one bread please.": "— مرحباً، خبزة من فضلك.",
@@ -2237,5 +2235,9 @@
  "Come here, kid! The giant chess board is waiting for you. Do you want to be white or black? If you like, you can play with me too.": "تعال يا ولدي! الشطرنج العملاق ينتظرك. هل تريد أن تكون الأبيض أم الأسود؟ وإن شئت تلعب معي أيضاً.",
  "Welcome! I wonder who will win today? Do you want to be white or black? If you like, you can play with me too.": "أهلاً بك! يا ترى من سيفوز اليوم؟ هل تريد أن تكون الأبيض أم الأسود؟ وإن شئت تلعب معي أيضاً.",
  "No ad right now — try again later.": "لا يوجد إعلان الآن، حاول لاحقاً.",
- "A new version of the game is on Google Play. Updating takes a minute.": "صدرت نسخة جديدة من اللعبة على Google Play. التحديث يستغرق دقيقة."
+ "A new version of the game is on Google Play. Updating takes a minute.": "صدرت نسخة جديدة من اللعبة على Google Play. التحديث يستغرق دقيقة.",
+ "That name is taken, try another one.": "هذا الاسم مأخوذ، جرّب اسماً آخر.",
+ "To play, talk to İsmail Dede; if nobody else is playing, he plays you. Walk onto a piece, then go to a green square.": "للعب، تحدث مع الجد إسماعيل؛ إن لم يكن هناك لاعب آخر يلعب معك. امشِ فوق قطعة، ثم اذهب إلى مربع أخضر.",
+ "Thanks for sharing!": "شكراً على المشاركة!",
+ "Welcome to your Anatolian family!": "أهلاً بك في عائلتك الأناضولية!"
 }

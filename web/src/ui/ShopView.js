@@ -2,7 +2,7 @@ import { el, ICONS } from './dom.js';
 import { gloss } from '../i18n/Gloss.js';
 import { SHOP, outfitPicture } from '../content/shop.js';
 import { PACKS, SELL_PACKS } from '../services/monetization/Billing.js';
-import { AD_REWARD } from '../services/monetization/CreditWallet.js';
+import { AD_REWARD, SHARE_REWARD } from '../services/monetization/CreditWallet.js';
 import { coin } from './coin.js';
 
 const hm = (ms) => { const m = Math.ceil(ms / 60000); return m >= 60 ? `${Math.floor(m / 60)} sa ${m % 60} dk` : `${m} dk`; };
@@ -16,7 +16,8 @@ export class ShopView {
   #pop = null;
   #prices = {};
 
-  constructor(host, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts }) {
+  constructor(host, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts, share = null }) {
+    this.share = share; // "Paylaş, kazan": () => Promise<shared?> (platform/share.js)
     Object.assign(this, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts });
     this.body = el('div', { class: 'shop-body' });
     this.balance = el('b', { class: 'shop-balance' });
@@ -60,6 +61,12 @@ export class ShopView {
           e.target.disabled = true;
           if (await this.ads.showRewarded()) { w.adWatched(); this.toasts.show(`+${AD_REWARD} kredi`, 'Credits earned'); }
           else if (this.ads.lastError) this.toasts.show(`Şu an reklam yok, sonra tekrar dene. (AdMob: ${this.ads.lastError})`, 'No ad right now — try again later.');
+          this.render();
+        }), true),
+      this.share && card('free', '📤', `+${SHARE_REWARD}`, 'Paylaş, kazan',
+        w.shareWait() ? btn(hm(w.shareWait()), '', () => {}, true) : btn('Paylaş', 'go', async (e) => {
+          e.target.disabled = true;
+          if (await this.share()) { w.shared(); this.toasts.show(`Teşekkürler! +${SHARE_REWARD} kredi`, 'Thanks for sharing!'); }
           this.render();
         }), true),
       ...(SELL_PACKS ? PACKS : []).map((p, i) => card(`pack pack${i}`, [el('span', { class: 'shop-card-top' }, [coin()]), '💰', '💎'][i] ?? '💎', `${p.credits}`, 'kredi',

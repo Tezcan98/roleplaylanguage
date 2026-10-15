@@ -1,4 +1,4 @@
-import { AdMob, BannerAdSize, BannerAdPosition, RewardAdPluginEvents } from '@capacitor-community/admob';
+import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { AdProvider } from './AdProvider.js';
 
 // Google's test units: used until the real ones are in assets/manifest.json → "admob"
@@ -12,6 +12,7 @@ const TEST = { rewarded: 'ca-app-pub-3940256099942544/5224354917', interstitial:
  * Google Play is not reviewed and gets few or no ads) and the shop shows it.
  */
 export class AdMobAdProvider extends AdProvider {
+  #sized = null;
   get hasRewarded() { return true; }
 
   constructor({ rewardedId, interstitialId, bannerId } = {}) {
@@ -56,8 +57,10 @@ export class AdMobAdProvider extends AdProvider {
   async showBanner() {
     if (this.bannerOn) return;
     this.bannerOn = true;
+    document.body.classList.add('banner-on'); // the menus leave room for it at the bottom (style.css --banner-h)
     try {
       await this.#init();
+      this.#sized ??= AdMob.addListener(BannerAdPluginEvents.SizeChanged, (s) => { if (s?.height > 0) document.documentElement.style.setProperty('--banner-h', `${Math.ceil(s.height)}px`); });
       if (!this.bannerOn) return; // left the menu meanwhile
       await AdMob.showBanner({ adId: this.ids.banner, adSize: BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0, isTesting: this.testing.banner });
       if (!this.bannerOn) await AdMob.removeBanner(); // taken away while it was coming up
@@ -67,6 +70,7 @@ export class AdMobAdProvider extends AdProvider {
   async hideBanner() {
     if (!this.bannerOn) return;
     this.bannerOn = false;
+    document.body.classList.remove('banner-on');
     try { await AdMob.removeBanner(); } catch { /* not shown */ }
   }
 

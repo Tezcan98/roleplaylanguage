@@ -372,3 +372,31 @@ test('a crowd: players far away are sent less often, near ones every tick', asyn
   assert.ok(last.x < -51.5, 'the far one still ends up where it is');
   crowd.forEach((c) => c.ws.close()); v.close(); h.close();
 });
+
+test('usernames are unique: a name belongs to the device that took it first', async () => {
+  const { NameRegistry } = await import('../src/NameRegistry.js');
+  const h = createServer(), v = new VillageServer({ server: h, log: () => {}, allowOrigin: () => true, maxPerIp: 100, names: new NameRegistry() });
+  await new Promise((r) => h.listen(0, '127.0.0.1', r));
+  const at = `ws://127.0.0.1:${h.address().port}/ws/village`;
+  const hello = async (name, pid, room = 'adlar') => {
+    const ws = new WebSocket(at, { origin: 'http://localhost:1' }), inbox = [];
+    ws.on('message', (d) => inbox.push(JSON.parse(d)));
+    await new Promise((res, rej) => { ws.once('open', res); ws.once('error', rej); });
+    ws.send(JSON.stringify({ type: 'hello', name, room, pid }));
+    while (!inbox.some((m) => m.type === 'welcome' || m.type === 'error')) await silence(10);
+    return { ws, reply: inbox.find((m) => m.type === 'welcome' || m.type === 'error') };
+  };
+  const a = await hello('Zeynep', 'cihazaaaaaa1');
+  assert.equal(a.reply.type, 'welcome');
+  const b = await hello('zeynep', 'cihazbbbbbb2', 'baska-oda'); // another device, another room, other case: still taken
+  assert.deepEqual([b.reply.type, b.reply.code], ['error', 'name-taken']);
+  const a2 = await hello('Zeynep', 'cihazaaaaaa1', 'baska-oda'); // the same device: its own name
+  assert.equal(a2.reply.type, 'welcome');
+  const g1 = await hello('Oyuncu12', 'cihazcccccc3'), g2 = await hello('Oyuncu12', 'cihazdddddd4'); // automatic names are not kept
+  assert.deepEqual([g1.reply.type, g2.reply.type, g2.reply.name], ['welcome', 'welcome', 'Oyuncu122']);
+  const renamed = await hello('Yıldız', 'cihazaaaaaa1', 'oda3'); // a new name: the old one is let go
+  assert.equal(renamed.reply.type, 'welcome');
+  const b2 = await hello('Zeynep', 'cihazbbbbbb2', 'oda4');
+  assert.equal(b2.reply.type, 'welcome');
+  [a, b, a2, g1, g2, renamed, b2].forEach((c) => c.ws.close()); v.close(); h.close();
+});

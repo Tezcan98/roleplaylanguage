@@ -34,11 +34,11 @@ export class ServerTTS {
   /** Ask the server for a line ahead of time (the browser keeps it in its HTTP cache). */
   warm(text, voice) { if (this.has(voice) && text) fetch(this.src(text, voice)).catch(() => {}); }
 
-  speak(text, { voice, rate = 1, fresh = false }) {
+  speak(text, { voice, rate = 1, fresh = false, volume }) {
     this.cancel();
     this.#audio = true;
     let played = false;
-    return playVoice(this.src(text, voice, fresh), (voice.pitch ?? 1) * rate, { // the shared element (voiceAudio.js: phones)
+    return playVoice(this.src(text, voice, fresh), (voice.pitch ?? 1) * rate, { volume, // the shared element (voiceAudio.js: phones)
       onError: () => {
         // the server works but this voice keeps failing (3 in a row): skip it, her lines go to the fallback
         const n = (this.#voiceFails.get(voice.id) ?? 0) + 1;

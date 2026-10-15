@@ -41,10 +41,10 @@ export class SpeechRepo {
     return this.#keys.has(key) ? `${this.base}${key}.mp3` : null;
   }
 
-  play(url, rate = 1) {
+  play(url, rate = 1, volume = undefined) {
     this.cancel();
     this.#audio = true;
-    return playVoice(url, rate); // the shared element (voiceAudio.js: phones)
+    return playVoice(url, rate, { volume }); // the shared element (voiceAudio.js: phones)
   }
 
   cancel() { if (this.#audio) { stopVoice(); this.#audio = null; } }

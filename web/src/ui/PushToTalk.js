@@ -9,6 +9,7 @@ const MIC = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke=
  * sentence instead. Plus the online counter.
  */
 export class PushToTalk {
+  #placed = '';
   constructor(host, { onChange }) {
     this.onChange = onChange;
     this.on = false;
@@ -57,6 +58,22 @@ export class PushToTalk {
   }
 
   show(visible) { if (!visible) { this.set(false); this.typeBox.hidden = true; } this.root.hidden = !visible; }
+  /**
+   * Above the action buttons: with two or three of them stacked (on a bike next to Cemal Abi:
+   * "Bisikletten in" and "Cemal Abi ile konuş") the talk button went over them. Re-placed only
+   * when they change.
+   */
+  keepAbove(...els) {
+    const shown = els.flatMap((e) => (e && !e.hidden ? [e, ...e.children] : [])).filter((e) => e.offsetParent);
+    const key = `${shown.map((e) => e.textContent).join('|')}|${innerWidth}x${innerHeight}|${this.root.hidden}`;
+    if (key === this.#placed) return;
+    this.#placed = key;
+    this.root.style.bottom = '';
+    if (this.root.hidden || !shown.length) return;
+    const top = Math.min(...shown.map((e) => e.getBoundingClientRect().top)), mine = this.root.getBoundingClientRect();
+    if (mine.bottom > top - 8) this.root.style.bottom = `${innerHeight - top + 10}px`;
+  }
+
   /** In a talking zone (its name) the button sends the voice; out of it (null), text again. */
   setZone(name) {
     this.zone.hidden = !name;

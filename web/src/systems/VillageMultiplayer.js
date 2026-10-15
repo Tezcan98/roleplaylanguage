@@ -193,14 +193,16 @@ export class VillageMultiplayer {
     if (this.net.connected || this.joining) return;
     this.joining = true;
     try {
+      if (!this.settings.get('deviceId')) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (a username belongs to this device)
       let name = this.settings.get('username', null);
       if (!name && !this.chosenRoom && this.autoName) { // story mode: in straight away, under the character's name
         name = this.autoName();
         this.settings.set('username', name);
       }
       if (!name) {
-        name = await this.usernames.ask();
-        if (!name) return;
+        name = await this.usernames.ask('', (n) => this.#nameFree(n), this.nameNote ?? '');
+        this.nameNote = '';
+        if (!name) { this.onNameCancel?.(); return; } // "Vazgeç": back to the menu
         this.settings.set('username', name);
       }
       const here = this.world.current.id;
@@ -208,7 +210,6 @@ export class VillageMultiplayer {
       if (!this.chosenRoom) await this.#joinFriends(this.places[here].suffix);
       if (this.world.current.id !== here) return;
       const room = `${this.settings.get('serverRegion', 'ankara')}${this.places[here].suffix}`;
-      if (!this.settings.get('deviceId')) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join(''));
       const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''), this.settings.get('deviceId'), this.outfit?.() ?? {}, this.settings.get('playGamesId', ''));
       this.joinedAt = here;
       this.#last = null; // tell the others where I am right away (not the spawn point)
@@ -222,9 +223,25 @@ export class VillageMultiplayer {
       this.#retryDelay = 0;
       this.#suggestBusierRoom();
     } catch (e) {
+      if (e.code === 'name-taken') { // the name is another device's (names are unique): pick another
+        this.settings.set('username', null);
+        this.nameNote = 'Bu kullanıcı adı alınmış, başka bir ad seç.';
+        this.joining = false;
+        if (this.#inSquare()) this.join();
+        return;
+      }
       this.toasts.show('Çok oyunculu sunucuya bağlanılamadı', `Playing offline (${e.message})`);
       if ((e.message === 'unreachable' || e.message === 'timeout') && this.#inSquare()) this.#retryLater(); // network trouble, not a refusal
     } finally { this.joining = false; }
+  }
+
+  /** Is this username free (or this device's own)? Asks the village server; unreachable: let the join decide. */
+  async #nameFree(name) {
+    if (!this.healthUrl) return true;
+    try {
+      const url = `${this.healthUrl}?name=${encodeURIComponent(name)}&pid=${encodeURIComponent(this.settings.get('deviceId', ''))}`;
+      return (await (await fetch(url, { cache: 'no-store' })).json()).ok !== false;
+    } catch { return true; }
   }
 
   /** The local player kicked the shared ball: everyone else gets its new position and speed. */
@@ -412,6 +429,7 @@ export class VillageMultiplayer {
     }
     const onPitch = !!this.onPitch?.(this.player.position); // a match: the hard-shot button there, not the talk button
     if (onPitch === !this.ptt.root.hidden) this.ptt.show(!onPitch);
+    this.ptt.keepAbove?.(document.getElementById('act-more'), document.getElementById('act')); // never over the action buttons
     this.remotes.update(dt, t, this.player.position); // (only the nearest are drawn: a crowd of a hundred)
     this.#since += dt;
     if (this.#since < SEND_EVERY) return;

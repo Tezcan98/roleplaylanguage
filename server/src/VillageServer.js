@@ -60,7 +60,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *                                         ask him for a colour, play against him, leave the line, resign
  *                                         (older clients: chess-sit = ask, chess-stand = leave, chess-new is ignored)
  * server → client
- *   { type: 'welcome', id, name, look, peers, ball?, ice } | { type: 'error', message }
+ *   { type: 'welcome', id, name, look, peers, ball?, ice } | { type: 'error', message, code? }  (code 'name-taken': the name is another device's)
  *     ice: WebRTC ICE servers for voice calls (STUN + TURN with short-lived credentials)
  *   { type: 'join', peer } | { type: 'leave', id } | { type: 'states', players }
  *   { type: 'say-blocked', reason, until? }  your bubble was held back (not Turkish / harmful; `until` = muted till)
@@ -94,7 +94,8 @@ export class VillageServer {
    *   (username "<expiry>:<id>", password HMAC-SHA1(secret, username)), valid for a day
    * @param {Map} [o.chessScores]  chess score board to start from; `onChessScore()` after every game (to save it)
    */
-  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null } = {}) {
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null, names = null } = {}) {
+    this.names = names; // unique usernames (NameRegistry), or null: any name, numbered in a room
     this.moderator = moderator; // decides which public bubbles may be shown (word list, language, Jev / Laya)
     this.audit = audit; // the encrypted 90-day safety log (AuditLog.js), or null
     this.log = log;
@@ -291,6 +292,7 @@ export class VillageServer {
       c.pid = pid;
       for (const old of members.values()) if (old.pid === pid) { this.#leave(old); old.id = null; old.ws.terminate(); }
     }
+    if (this.names?.claim(clean, c.pid) === 'taken') return this.#send(c, { type: 'error', code: 'name-taken', message: 'Bu kullanıcı adı alınmış, başka bir ad seç.' }); // (unique names: NameRegistry)
     if (members.size >= MAX_PER_ROOM) return this.#send(c, { type: 'error', message: 'Meydan dolu, biraz sonra tekrar dene.' });
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
     let unique = clean, n = 2;

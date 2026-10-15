@@ -31,7 +31,7 @@ export class VillageNetwork {
     this.close();
     return new Promise((resolve, reject) => {
       const ws = this.#ws = new WebSocket(this.url);
-      const fail = (message) => { reject(new Error(message)); this.close(); };
+      const fail = (message, code = '') => { reject(Object.assign(new Error(message), { code })); this.close(); };
       const timer = setTimeout(() => fail('timeout'), 6000);
       ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', name, room, gender, style, pid, outfit, ...(gid ? { gid } : {}) }));
       ws.onerror = () => { clearTimeout(timer); fail('unreachable'); };
@@ -40,7 +40,7 @@ export class VillageNetwork {
         let msg;
         try { msg = JSON.parse(e.data); } catch { return; }
         if (msg.type === 'welcome') { clearTimeout(timer); this.id = msg.id; this.name = msg.name; this.room = room; this.ice = msg.ice ?? null; resolve(msg); }
-        else if (msg.type === 'error' && !this.id) { clearTimeout(timer); fail(msg.message); }
+        else if (msg.type === 'error' && !this.id) { clearTimeout(timer); fail(msg.message, msg.code); }
         else this.#emit(msg.type, msg);
       };
     });

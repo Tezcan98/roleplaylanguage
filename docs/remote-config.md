@@ -13,6 +13,7 @@ türde bir değer (sayı yerine yazı, eksi sayı) yok sayılır, koddaki varsay
 | `rewards.startCredits`, `rewards.startMoney` | yeni oyunun kredisi ve parası (TL) |
 | `rewards.video`, `rewards.videoEveryHours` | ödüllü video: kaç kredi, kaç saatte bir |
 | `rewards.daily` | günlük ödül, art arda 1., 2., … gün |
+| `rewards.share`, `rewards.shareEveryHours` | "Paylaş, kazan": kaç kredi, kaç saatte bir |
 | `rides.minutes` | at kiralama süresi (dakika) |
 | `ads.idleBannerSeconds` | kaç saniye kıpırdamayınca banner |
 | `ads.menuBannerChance` | ana menüde banner olasılığı (0–1) |

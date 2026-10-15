@@ -32,9 +32,11 @@
  *   GEMINI_MODEL      default gemini-flash-latest
  *   NPC_CHAT_PER_MINUTE / NPC_CHAT_PER_DAY (per IP, default 8 / 150), NPC_CHAT_GLOBAL_PER_DAY (default 1200)
  *
- * Endpoints: ws(s)://host/ws/village · GET /health · POST /api/npc-chat
+ * Endpoints: ws(s)://host/ws/village · GET /health · GET /health?name=&pid= (is the username free) · POST /api/npc-chat
  */
 import { createServer } from 'node:http';
+import { dirname, join } from 'node:path';
+import { NameRegistry } from './NameRegistry.js';
 import { VillageServer } from './VillageServer.js';
 import { DEFAULT_ORIGINS, parseOrigins, originAllowed } from './origins.js';
 import { NpcChat } from './NpcChat.js';
@@ -68,6 +70,14 @@ const http = createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({ ok: true, uptime: Math.round((Date.now() - started) / 1000), npcChat: chat.enabled, tts: tts.enabled, ...village.stats() }));
   }
+  if (req.url.startsWith('/health?name=')) { // the username box asks before it saves: free (or this device's own) or taken (on /health: the proxy passes it already)
+    const u = new URL(req.url, 'http://x'), origin = req.headers.origin;
+    const cors = origin && originAllowed(origin, origins) ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
+    const n = String(u.searchParams.get('name') ?? '').trim();
+    const ok = /^[\p{L}\p{N}_ .-]{2,16}$/u.test(n) && names.check(n, u.searchParams.get('pid') ?? '') === 'ok';
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...cors });
+    return res.end(JSON.stringify({ ok }));
+  }
   if (npcChatRoute(req, res, { chat, allowOrigin: (o) => originAllowed(o, origins), clientIp, audit })) return;
   if (req.url.startsWith('/api/tts')) {
     const u = new URL(req.url, 'http://x');
@@ -100,7 +110,8 @@ const moderator = new Moderator({
   logFile: env.MODERATION_LOG ?? '/tmp/yilmaz-moderation.log',
 });
 const chessScores = new ChessScoreFile(env.CHESS_SCORES ?? '/tmp/yilmaz-chess-scores.json');
-const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit });
+const names = new NameRegistry(env.USERNAMES ?? join(dirname(env.CHESS_SCORES ?? '/tmp/x'), env.CHESS_SCORES ? 'usernames.json' : 'yilmaz-usernames.json')).load(); // next to the chess scores
+const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit, names });
 http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'}; moderation ${moderator.provider}; safety log ${audit ? `on (${audit.days} days)` : 'off'}; turn ${village.turn ? 'on' : 'off'})`));
 
 for (const sig of ['SIGINT', 'SIGTERM']) {

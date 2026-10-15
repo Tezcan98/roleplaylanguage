@@ -5,6 +5,9 @@ const KEY = 'wallet';
 const DAY = 24 * 60 * 60 * 1000;
 export const AD_EVERY = CONFIG.rewards.videoEveryHours * 60 * 60 * 1000; // a rewarded video at most every 3 hours (set on the server: config/remote.js)
 export const AD_REWARD = CONFIG.rewards.video;
+/** "Paylaş, kazan": credits for sharing the game, at most every SHARE_EVERY. */
+export const SHARE_REWARD = CONFIG.rewards.share;
+export const SHARE_EVERY = CONFIG.rewards.shareEveryHours * 60 * 60 * 1000;
 /** Daily reward by how many days in a row you came: day 1 → 3, … day 7 and on → 10. */
 export const DAILY = CONFIG.rewards.daily;
 
@@ -58,6 +61,9 @@ export class CreditWallet {
   /** ms until the next rewarded video may be watched (0 = now). */
   adWait(now = Date.now()) { return Math.max(0, this.data.adAt + AD_EVERY - now); }
   adWatched(now = Date.now()) { this.data.adAt = now; this.add(AD_REWARD, 'ad'); }
+  /** ms until the game can be shared for credits again (0 = now). */
+  shareWait(now = Date.now()) { return Math.max(0, (this.data.shareAt ?? 0) + SHARE_EVERY - now); }
+  shared(now = Date.now()) { this.data.shareAt = now; this.add(SHARE_REWARD, 'share'); }
 
   // --- daily reward -------------------------------------------------------------------
   /** Today's reward if it has not been taken yet: { day, amount }, else null. */

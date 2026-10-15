@@ -14,8 +14,8 @@ const PICTURE = { 'boy-modest': 'boy', 'boy-strong': 'strong', 'girl-covered': '
 export const characterPicture = (gender, look) => `assets/shop/hd_casual_${PICTURE[characterOf(gender, look).join('-')]}.png`;
 
 /**
- * "Choose your character": the language of the meanings and which of the four characters you are
- * (big full-length pictures). Nothing to type: the username is asked when you go to the square from
+ * First the language of the meanings, then which of the four characters you are (big full-length
+ * pictures). Nothing to type: the username is asked when you go to the square from
  * the menu, the server is picked there too. Shown on the first launch and from the main menu.
  * `open()` resolves with the profile, or null when cancelled.
  */
@@ -49,13 +49,20 @@ export class CharacterSetup {
       }, [el('img', { attrs: { src: characterPicture(gender, look), alt: '', draggable: 'false' } })])));
 
       const save = el('button', { class: 'btn', text: 'Başla', attrs: { type: 'button' } });
+      const next = el('button', { class: 'btn', text: 'Devam ▶', attrs: { type: 'button' } });
+      const back = el('button', { class: 'btn alt', text: '◀ Geri', attrs: { type: 'button' } });
       const cancel = cancellable && el('button', { class: 'btn alt', text: 'Vazgeç', attrs: { type: 'button' } });
-      const root = el('div', { class: 'overlay open dim setup' }, [el('div', { class: 'card' }, [
-        el('h2', { class: 'ctitle', text: 'Karakterini seç' }), g('Choose your character'),
-        chars,
-        el('p', { class: 'chap', text: 'Açıklamalar hangi dilde olsun?' }), g('Which language should meanings be shown in?'), langs,
-        save, cancel,
-      ])]);
+      // two steps: first the language of the meanings, then the character
+      const langStep = el('div', { class: 'setup-step' }, [
+        el('h2', { class: 'ctitle', text: 'Açıklamalar hangi dilde olsun?' }), g('Which language should meanings be shown in?'), langs, next,
+      ]);
+      const charStep = el('div', { class: 'setup-step' }, [
+        el('h2', { class: 'ctitle', text: 'Karakterini seç' }), g('Choose your character'), chars, save, back,
+      ]);
+      charStep.hidden = true;
+      next.onclick = () => { langStep.hidden = true; charStep.hidden = false; };
+      back.onclick = () => { charStep.hidden = true; langStep.hidden = false; };
+      const root = el('div', { class: 'overlay open dim setup' }, [el('div', { class: 'card' }, [langStep, charStep, cancel])]);
       const done = (v) => { root.remove(); pop(); if (!v && p.lang !== startLang) loadGlossLang(startLang); resolve(v); };
       save.onclick = () => {
         const s = this.settings;

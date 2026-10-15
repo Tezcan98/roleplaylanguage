@@ -1215,7 +1215,6 @@
  "Weekend and friends": "Le week-end et les amis",
  "Welcome again! What will you have?": "Re-bonjour ! Qu’est-ce que tu prends ?",
  "Welcome home son! How was school? Come on, do your homework first. Work at your desk.": "Bienvenue à la maison, mon fils ! Comment était l’école ? Allez, d’abord les devoirs. Travaille à ton bureau.",
- "Welcome to the Yılmaz family home!": "Bienvenue chez la famille Yılmaz !",
  "Welcome! Fresh tea has just brewed. Would you like a tea?": "Bienvenue ! Le thé frais vient d’infuser. Tu veux un thé ?",
  "Welcome! Take your seat, the lesson is starting.": "Bienvenue ! Prenez place, la leçon commence.",
  "Welcome! The shop has bread, milk, cheese and olives.": "Bienvenue ! À l’épicerie, il y a du pain, du lait, du fromage et des olives.",
@@ -2130,7 +2129,6 @@
  "yoghurt": "yaourt",
  "your favourite": "ton préféré",
  "{name} wants to voice chat with you": "{name} veut te parler en vocal",
- "İsmail Dede runs this board. To play, talk to him: you get white or black, and if nobody else is playing, Dede plays you. Walk onto a piece to take it, walk to a green square to move it. To offer a draw or stop playing, talk to Dede again.": "Papi İsmail s’occupe de cet échiquier. Pour jouer, parle-lui : tu as les blancs ou les noirs, et s’il n’y a personne d’autre, Papi joue contre toi. Marche sur une pièce pour la prendre, puis sur une case verte pour la déplacer. Pour proposer la nulle ou arrêter, reparle à Papi.",
  "İsmail Dede went home and grandpa went to bed. Good night!": "Grand-père İsmail est rentré chez lui et grand-père est allé se coucher. Bonne nuit !",
  "— And some milk. How much is it?": "— Et du lait. C’est combien ?",
  "— Hello, one bread please.": "— Bonjour, un pain s’il vous plaît.",
@@ -2236,5 +2234,9 @@
  "Come here, kid! The giant chess board is waiting for you. Do you want to be white or black? If you like, you can play with me too.": "Viens ici, petit ! Le jeu d’échecs géant t’attend. Tu veux les blancs ou les noirs ? Si tu veux, tu peux aussi jouer avec moi.",
  "Welcome! I wonder who will win today? Do you want to be white or black? If you like, you can play with me too.": "Bienvenue ! Qui va gagner aujourd’hui ? Tu veux les blancs ou les noirs ? Si tu veux, tu peux aussi jouer avec moi.",
  "No ad right now — try again later.": "Pas de publicité pour le moment, réessaie plus tard.",
- "A new version of the game is on Google Play. Updating takes a minute.": "Une nouvelle version du jeu est sur Google Play. La mise à jour prend une minute."
+ "A new version of the game is on Google Play. Updating takes a minute.": "Une nouvelle version du jeu est sur Google Play. La mise à jour prend une minute.",
+ "That name is taken, try another one.": "Ce nom est déjà pris, essaie-en un autre.",
+ "To play, talk to İsmail Dede; if nobody else is playing, he plays you. Walk onto a piece, then go to a green square.": "Pour jouer, parle à grand-père İsmail ; s’il n’y a personne d’autre, il joue avec toi. Marche sur une pièce, puis va sur une case verte.",
+ "Thanks for sharing!": "Merci d’avoir partagé !",
+ "Welcome to your Anatolian family!": "Bienvenue dans ta famille anatolienne !"
 }

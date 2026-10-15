@@ -10,7 +10,7 @@ export class CardOverlay {
     this.text = el('p', { class: 'ctext' });
     this.en = el('p', { class: 'cen en-t' });
     this.btn = el('button', { class: 'btn', attrs: { type: 'button' } });
-    this.root = el('div', { class: 'overlay' }, [el('div', { class: 'card' }, [this.num, this.title, this.text, this.en, this.btn])]);
+    this.root = el('div', { class: 'overlay story-card' }, [el('div', { class: 'card' }, [this.num, this.title, this.text, this.en, this.btn])]);
     host.append(this.root);
   }
 

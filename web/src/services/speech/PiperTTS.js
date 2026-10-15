@@ -80,12 +80,12 @@ export class PiperTTS {
   /** Synthesise ahead of time (e.g. the next line) so playback starts instantly. */
   warm(text, voice) { if (this.isReady(voice.id)) this.#clip(text, voice.id).catch(() => {}); }
 
-  async speak(text, { voice, rate = 1 }) {
+  async speak(text, { voice, rate = 1, volume }) {
     const token = this.#audio = {};
     const url = await this.#clip(text, voice.id);
     if (this.#audio !== token) return; // cancelled or superseded meanwhile
     this.#audio = 'playing';
-    await playVoice(url, (voice.pitch ?? 1) * rate); // the shared element (voiceAudio.js: phones)
+    await playVoice(url, (voice.pitch ?? 1) * rate, { volume }); // the shared element (voiceAudio.js: phones)
   }
 
   cancel() { if (this.#audio === 'playing') stopVoice(); this.#audio = null; }

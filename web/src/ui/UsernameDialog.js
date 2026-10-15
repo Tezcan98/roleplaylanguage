@@ -3,18 +3,21 @@ import { gloss } from '../i18n/Gloss.js';
 
 const VALID = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 
-/** Asks for a username (2–16 letters/digits). Resolves with the name, or null if skipped. */
+/**
+ * Asks for a username (2–16 letters/digits), unique on the server: `check(name)` resolves true when it
+ * is free (or this device's own). Resolves with the name, or null when cancelled (back to the menu).
+ */
 export class UsernameDialog {
   constructor(host, modes) { this.host = host; this.modes = modes; }
 
-  ask(current = '') {
+  ask(current = '', check = null, note = '') {
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
-      const input = el('input', { attrs: { type: 'text', maxlength: '16', placeholder: 'ör. Ali_10', autocomplete: 'off', 'aria-label': 'Kullanıcı adı' } });
+      const input = el('input', { attrs: { type: 'text', maxlength: '16', placeholder: 'Kullanıcı adın', autocomplete: 'off', 'aria-label': 'Kullanıcı adı' } });
       input.value = current;
-      const err = el('p', { class: 'fb bad' });
+      const err = el('p', { class: 'fb bad', text: note });
       const ok = el('button', { class: 'btn', text: 'Meydana gir', attrs: { type: 'submit' } });
-      const skip = el('button', { class: 'btn alt', text: 'Tek başıma gez', attrs: { type: 'button' } });
+      const skip = el('button', { class: 'btn alt', text: 'Vazgeç', attrs: { type: 'button' } });
       const form = el('form', { class: 'card' }, [
         el('p', { class: 'chap', text: 'Çok oyunculu köy meydanı' }),
         el('h2', { class: 'ctitle', text: 'Adın ne?' }),
@@ -23,10 +26,14 @@ export class UsernameDialog {
       ]);
       const root = el('div', { class: 'overlay open dim' }, [form]);
       const done = (v) => { root.remove(); pop(); resolve(v); };
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const v = input.value.trim();
         if (!VALID.test(v)) { err.textContent = 'En az 2, en fazla 16 harf veya rakam yaz.'; return; }
+        ok.disabled = true;
+        const free = check ? await check(v) : true;
+        ok.disabled = false;
+        if (!free) { err.textContent = `“${v}” alınmış, başka bir ad dene. · ${gloss('That name is taken, try another one.')}`; input.focus(); return; }
         done(v);
       });
       input.addEventListener('keydown', (e) => e.stopPropagation());

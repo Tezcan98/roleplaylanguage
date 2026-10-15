@@ -21,7 +21,9 @@
       7,
       8,
       10
-    ]
+    ],
+    "share": 5,
+    "shareEveryHours": 24
   },
   "rides": {
     "minutes": 3

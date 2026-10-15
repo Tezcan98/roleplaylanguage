@@ -6,7 +6,7 @@
  * first tap, and every line after that uses it.
  */
 const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
-let el = null, unlocked = false;
+let el = null, unlocked = false, ticker = null;
 
 export function voiceAudio() {
   if (!el) { el = new Audio(); el.preload = 'auto'; }
@@ -25,13 +25,22 @@ if (typeof addEventListener === 'function') {
   addEventListener('keydown', unlock);
 }
 
-/** Play `url` on the shared element; resolves when it ends. `onPlaying` once it really sounds. */
-export function playVoice(url, rate = 1, { onError, onPlaying } = {}) {
+/**
+ * Play `url` on the shared element; resolves when it ends. `onPlaying` once it really sounds.
+ * `volume`: a function (0–1) followed while the line plays — a villager's talk fades as you walk away.
+ */
+export function playVoice(url, rate = 1, { onError, onPlaying, volume } = {}) {
   const a = voiceAudio();
   a.pause();
   a.onended = null; a.onerror = null; a.onplaying = null;
+  clearInterval(ticker); ticker = null;
+  a.volume = 1;
+  if (typeof volume === 'function') {
+    const set = () => { a.volume = Math.max(0, Math.min(1, Number(volume()) || 0)); };
+    set(); ticker = setInterval(set, 100);
+  }
   return new Promise((resolve, reject) => {
-    a.onended = () => resolve();
+    a.onended = () => { clearInterval(ticker); ticker = null; resolve(); };
     a.onerror = () => { onError?.(); reject(new Error('voice audio failed')); };
     a.onplaying = () => onPlaying?.();
     a.src = url;
@@ -42,4 +51,4 @@ export function playVoice(url, rate = 1, { onError, onPlaying } = {}) {
 }
 
 /** Stop whatever line is being said. */
-export function stopVoice() { if (el) { el.pause(); el.onended = null; el.onerror = null; el.onplaying = null; } }
+export function stopVoice() { clearInterval(ticker); ticker = null; if (el) { el.pause(); el.onended = null; el.onerror = null; el.onplaying = null; } }

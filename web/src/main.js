@@ -54,6 +54,7 @@ import { TextbookController } from './systems/TextbookController.js';
 import { CreditWallet } from './services/monetization/CreditWallet.js';
 import { MockAdProvider } from './services/monetization/AdProvider.js';
 import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder, liveUpdate } from './platform/native.js';
+import { shareGame } from './platform/share.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
 import { SettingsPanel } from './ui/SettingsPanel.js';
@@ -417,6 +418,7 @@ const village = new VillageMultiplayer({
   recognizer: chatRecognizer,
 });
 village.autoName = () => `Oyuncu${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question (the characters have no names)
+village.onNameCancel = () => menu.show(); // no username after all: back to the menu
 village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // others see them too
 // the HD character from the shop: everywhere once bought — home too (prayer poses use the blocky body for a moment)
 const playerHd = () => {
@@ -446,8 +448,8 @@ world.get('village').animated.push(() => {
   settings.set('chessCardSeen', true);
   cards.show({
     num: 'Dev satranç', title: 'İsmail Dede’nin satranç tahtası',
-    text: 'Bu tahtayı İsmail Dede düzenliyor. Oynamak için Dede ile konuş: beyaz ya da siyah olursun, rakip yoksa Dede seninle oynar. Taşı almak için üstüne yürü, götürmek için yeşil kareye git. Beraberlik teklif etmek ya da oyunu bırakmak için yine Dede ile konuş.',
-    en: 'İsmail Dede runs this board. To play, talk to him: you get white or black, and if nobody else is playing, Dede plays you. Walk onto a piece to take it, walk to a green square to move it. To offer a draw or stop playing, talk to Dede again.',
+    text: 'Oynamak için İsmail Dede ile konuş; rakip yoksa Dede seninle oynar. Taşın üstüne yürü, sonra yeşil kareye git.',
+    en: 'To play, talk to İsmail Dede; if nobody else is playing, he plays you. Walk onto a piece, then go to a green square.',
     button: 'Anladım',
   });
 });
@@ -480,7 +482,14 @@ world.get('schoolyard').animated.push((dt) => football.update(dt));
 world.get('village').animated.push((dt) => squareFootball.update(dt));
 // the tea garden and the chess benches: villagers chat, sit down to listen in
 // the villagers' own talk, out loud near them — not over a conversation of yours
-const ambientSpeak = (text, who) => { if (modes.is('play') && !library.reading) tts.speak(text, { speaker: who }); };
+const ambientSpeak = (text, who) => {
+  if (!modes.is('play') || library.reading) return;
+  const near = () => { // fainter as you walk away from whoever is talking, silent past 14 m
+    const c = cast.get(who), d = c && c.location === world.current?.id ? Math.hypot(c.position.x - player.position.x, c.position.z - player.position.z) : 99;
+    return d > 14 ? 0 : 1 / (1 + (Math.max(0, d - 2) / 3) ** 2);
+  };
+  tts.speak(text, { speaker: who, volume: near });
+};
 const talk = new TalkAreas({ world, player, cast, labels, speak: ambientSpeak });
 village.ptt.onType = (text) => village.say(text); // typed instead of spoken (no speech-to-text on this device)
 // the open library: borrow a book, read it sitting on a bench
@@ -565,7 +574,7 @@ const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en
   drill.available ? { label: '🧠 Kelime pratiği yap', run: () => drill.open() } : null);
 // --- shop, daily reward, ads between story days ---
 const shop = new ShopView(host, {
-  modes, wallet, ads, billing, toasts, gender: playerGender(), look: settings.get('look', ''),
+  modes, wallet, ads, billing, toasts, gender: playerGender(), look: settings.get('look', ''), share: shareGame,
   onDaily: () => takeDaily(),
   // new colours: saved, then the game opens again with them (and goes on where it was)
   onOutfit: () => { playerHd(); shop.render(); if (village.net.connected) { village.leave(); village.join(); } }, // others see it after a quick reconnect

@@ -8,7 +8,7 @@
  */
 export const DEFAULTS = {
   prices: { horseRide: 1, bikeLearn: 3, hd: 40, outfit: 30, aura: 25, adFree: 100 },
-  rewards: { startCredits: 100, startMoney: 200, video: 3, videoEveryHours: 3, daily: [3, 4, 5, 6, 7, 8, 10] },
+  rewards: { startCredits: 100, startMoney: 200, video: 3, videoEveryHours: 3, daily: [3, 4, 5, 6, 7, 8, 10], share: 5, shareEveryHours: 24 },
   rides: { minutes: 3 },
   ads: { idleBannerSeconds: 90, menuBannerChance: 0.2, betweenDays: true, travelChance: 0.25, travelGapMinutes: 3 },
   cities: [['ankara', 'Ankara'], ['istanbul', 'İstanbul'], ['izmir', 'İzmir'], ['manisa', 'Manisa']],

@@ -29,7 +29,9 @@ try {
   check('first launch shows character setup', !!(await page.$('.overlay.open.setup')));
   await page.click('.setup button[data-lang="es"]');
   check('choosing a language re-translates the setup at once', (await page.textContent('.setup .cen')) !== 'Create your character', await page.textContent('.setup .cen'));
-  check('…four characters, each a full-length picture, nothing to type', (await page.$$('.setup .char-card img')).length === 4 && !(await page.$('.setup input')));
+  check('…the language first, the characters on the next step', !(await page.isVisible('.setup .char-card')));
+  await page.click('.setup button:has-text("Devam")');
+  check('…four characters, each a full-length picture, nothing to type', (await page.$$('.setup .char-card img')).length === 4 && await page.isVisible('.setup .char-card') && !(await page.$('.setup input')));
   await page.click('.setup button[data-char="girl-covered"]');
   await Promise.all([page.waitForNavigation({ timeout: 30000 }), page.click('.setup button:has-text("Başla")')]);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
@@ -77,7 +79,7 @@ try {
   const moved = await kidDist();
   check('the little brother runs around the house', moved > 0.5, `${moved.toFixed(2)} m`);
   await talkTo('kardes');
-  check('he calls you to play, no introducing himself (Abla for a girl)', (await nodeSay()).startsWith('Abla!') && !(await nodeSay()).includes('adım'), await nodeSay());
+  check('he calls you to play, no introducing himself (Abla for a girl)', (await nodeSay()).startsWith('Abla') && !(await nodeSay()).includes('adım'), await nodeSay());
   await drainUi(page);
   check('…and asks what things are (picture quiz)', await ev(() => !!window.__game.dialogue.ctx.state.flags['kardes-yatak']));
 
@@ -501,6 +503,10 @@ try {
     check('an outfit (30 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 31);
     await p2.click('.shop.open .shop-card:has-text("Yıldız Işığı") button'); await sleep(300);
     check('the glowing ring (25 credits)', (await e2(() => window.__game.wallet.equipped('aura'))) === 'aura' && (await e2(() => window.__game.wallet.balance)) === 6);
+    await e2(() => { window.__game.shop.share = async () => true; window.__game.shop.render(); }); // (the share sheet itself is the phone's)
+    const before = await e2(() => window.__game.wallet.balance);
+    await p2.click('.shop.open .shop-card:has-text("Paylaş, kazan") button');
+    check('"Paylaş, kazan": +5 credits, then not again until tomorrow', !!(await waitFor(() => e2((b) => window.__game.wallet.balance === b + 5, before), 3000)) && await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Paylaş, kazan')).querySelector('button').disabled));
     await e2(() => window.__game.shop.close());
     // a full-screen ad between two story days (not within the same day)
     await e2(() => document.querySelector('.main-menu.open .btn')?.click()); await sleep(1500);
