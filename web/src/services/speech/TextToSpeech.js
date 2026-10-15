@@ -23,7 +23,9 @@ export class WebSpeechTTS {
     const shift = female && isMan(voice) ? 1.35 : !female && isWoman(voice) ? 0.75 : 1;
     u.pitch = Math.max(0, Math.min(2, pitch * shift));
     u.voice = voice;
+    const said = new Promise((done) => { u.onend = done; u.onerror = done; setTimeout(done, 2000 + text.length * 120); }); // resolves when it has been said
     speechSynthesis.speak(u);
+    return said;
   }
 
   cancel() { window.speechSynthesis?.cancel(); }

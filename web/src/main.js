@@ -849,6 +849,13 @@ setInterval(() => coverable.forEach((c) => {
 }
 
 // the little brother: mom tells him off for jumping on the bed; now and then he calls you over to ask what something is
+function scoldKid(anne = cast.get('anne'), kid = cast.get('kardes')) {
+  labels.bubble(anne, 'Ali, yatakta zıplama!', null, 3, "Ali, don't jump on the bed!");
+  // he answers once mom has finished (her line can take a moment to arrive: he used to answer first and cut her off)
+  return Promise.race([tts.speak('Ali, yatakta zıplama!', { speaker: 'anne' }), new Promise((r) => setTimeout(r, 6000))])
+    .then(() => new Promise((r) => setTimeout(r, 350)))
+    .then(() => { labels.bubble(kid, 'Tamam anne!', null, 2.5, 'Okay mum!'); tts.speak('Tamam anne!', { speaker: 'kardes' }); });
+}
 let kidScoldAt = -99, kidAskAt = 120;
 const KID_CALLS = [['bu ne? Gel bak!', 'Look, what is this? Come and see!'], ['bak ne buldum!', 'Look what I found!'], ['gel, oynayalım!', 'Come on, let’s play!'], ['sana bir şey soracağım!', 'I want to ask you something!']];
 setInterval(() => {
@@ -857,9 +864,7 @@ setInterval(() => {
   const t = game.t, anne = cast.get('anne');
   if (kid.roam.jumping && anne?.location === 'house' && t - kidScoldAt > 150 && kid.position.distanceTo(player.position) < 8) { // seldom, and only when you are near
     kidScoldAt = t;
-    labels.bubble(anne, 'Ali, yatakta zıplama!', null, 3, "Ali, don't jump on the bed!");
-    tts.speak('Ali, yatakta zıplama!', { speaker: 'anne' });
-    setTimeout(() => { labels.bubble(kid, 'Tamam anne!', null, 2.5, 'Okay mum!'); tts.speak('Tamam anne!', { speaker: 'kardes' }); }, 1800);
+    scoldKid(anne, kid);
   } else if (t > kidAskAt && kid.position.distanceTo(player.position) < 4.5) {
     kidAskAt = t + 240; // not too often: he is a child, not a teacher
     const [line, en] = KID_CALLS[Math.floor(Math.random() * KID_CALLS.length)]; // not the same call every time
@@ -887,4 +892,4 @@ if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

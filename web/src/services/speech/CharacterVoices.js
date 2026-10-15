@@ -17,22 +17,23 @@ export class CharacterVoices {
   voiceOf(speaker) { return this.voices[speaker] ?? this.voices.default; }
 
   /** The browser's voice: a woman's one for the women and girls, and their pitch. */
-  #say(text, voice, rate) { this.fallback.speak(text, { rate: 0.9 * rate, pitch: voice.pitch, female: !!voice.female }); }
+  #say(text, voice, rate) { return Promise.resolve(this.fallback.speak(text, { rate: 0.9 * rate, pitch: voice.pitch, female: !!voice.female })).catch(() => {}); }
 
   /**
    * `fresh`: a sentence made up on the spot (free chat with a character). Women's voices come from
    * Gemini, made once per sentence and kept — a new sentence every time would use the daily quota
    * up, so hers is spoken by the device; a man's goes to Piper on our own server (costs nothing).
    */
+  /** Resolves when the line has been said (or could not be): one villager answering another waits for it. */
   speak(text, { speaker, rate = 1, fresh = false, volume } = {}) { // volume: () => 0–1, followed while it plays (talk you walk away from)
-    if (!text || this.muted()) return; // voices off in the settings
+    if (!text || this.muted()) return Promise.resolve(); // voices off in the settings
     const voice = this.voiceOf(speaker), turn = ++this.#turn;
-    if (fresh || !this.repo) { this.#speak(text, voice, rate, fresh, volume); return; }
-    this.repo.url(voice, text).then((url) => {
-      if (turn !== this.#turn) return; // something else was said meanwhile
-      if (!url) { this.#speak(text, voice, rate, fresh, volume); return; }
+    if (fresh || !this.repo) return this.#speak(text, voice, rate, fresh, volume);
+    return this.repo.url(voice, text).then((url) => {
+      if (turn !== this.#turn) return undefined; // something else was said meanwhile
+      if (!url) return this.#speak(text, voice, rate, fresh, volume);
       this.server?.cancel(); this.neural?.cancel(); this.fallback.cancel();
-      this.repo.play(url, (voice.pitch ?? 1) * rate, volume).catch(() => { if (turn === this.#turn) this.#speak(text, voice, rate, fresh, volume); });
+      return this.repo.play(url, (voice.pitch ?? 1) * rate, volume).catch(() => (turn === this.#turn ? this.#speak(text, voice, rate, fresh, volume) : undefined));
     }, () => this.#speak(text, voice, rate, fresh, volume));
   }
 
@@ -40,10 +41,9 @@ export class CharacterVoices {
     this.repo?.cancel();
     if (!(fresh && voice.female) && (this.server?.has?.(voice) ?? this.server?.supported)) {
       this.neural?.cancel(); this.fallback.cancel();
-      this.server.speak(text, { voice, rate, fresh, volume }).catch(() => this.#local(text, voice, rate, volume));
-      return;
+      return this.server.speak(text, { voice, rate, fresh, volume }).catch(() => this.#local(text, voice, rate, volume));
     }
-    this.#local(text, voice, rate, volume);
+    return this.#local(text, voice, rate, volume);
   }
 
   #local(text, voice, rate, volume) {
@@ -51,14 +51,13 @@ export class CharacterVoices {
     const useNeural = this.enabled() && this.neural?.supported && !voice.female;
     if (useNeural && this.neural.isReady(voice.id)) {
       this.fallback.cancel();
-      this.neural.speak(text, { voice, rate, volume }).catch((e) => {
+      return this.neural.speak(text, { voice, rate, volume }).catch((e) => {
         console.warn('[tts] piper failed, using browser voice:', e.message);
-        this.#say(text, voice, rate);
+        return this.#say(text, voice, rate);
       });
-      return;
     }
-    this.#say(text, voice, rate);
     if (useNeural) this.neural.prepare(voice.id).catch((e) => console.warn('[tts] voice download failed:', e.message));
+    return this.#say(text, voice, rate);
   }
 
   /** Pre-synthesise a line the player is likely to play, so the speaker button is instant. */

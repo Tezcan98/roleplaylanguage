@@ -82,6 +82,15 @@ try {
   check('he calls you to play, no introducing himself (Abla for a girl)', (await nodeSay()).startsWith('Abla') && !(await nodeSay()).includes('adım'), await nodeSay());
   await drainUi(page);
   check('…and asks what things are (picture quiz)', await ev(() => !!window.__game.dialogue.ctx.state.flags['kardes-yatak']));
+  // mom tells him off for jumping on the bed: he answers only after she has said it (her voice may come late)
+  await ev(() => {
+    const g = window.__game, t = g.tts, speak = t.speak.bind(t);
+    t._order = [];
+    t.speak = (x, o) => { t._order.push([o?.speaker, x, performance.now()]); return o?.speaker === 'anne' ? new Promise((r) => setTimeout(r, 2000)) : speak(x, o); };
+    g.scoldKid();
+  });
+  const order = await waitFor(() => ev(() => { const o = window.__game.tts._order; const a = o.find(([w]) => w === 'anne'), k = o.find(([w, x]) => w === 'kardes' && x === 'Tamam anne!'); return a && k ? k[2] - a[2] : null; }), 12000, 200);
+  check('mom: "Ali, yatakta zıplama!", and only when she has finished: "Tamam anne!"', order != null && order >= 2000, `${order?.toFixed?.(0)} ms after her`);
 
   // --- grandma (nine) ------------------------------------------------------------------
   await talkTo('nine');
