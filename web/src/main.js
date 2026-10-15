@@ -558,7 +558,7 @@ const interactions = new InteractionSystem([
 const actionButton = new ActionButton(host, () => interactions.trigger());
 const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root);
 // on horseback: jump (the button, or Space on a keyboard)
-const jumpHorse = () => { if (modes.is('play') && player.jump()) vocab.learn('zıplamak', 'to jump'); };
+const jumpHorse = () => { if (modes.is('play') && player.jump()) { vocab.learn('zıplamak', 'to jump'); village.jumped(); } }; // (the others see it)
 const jumpButton = new ShotButton(host, jumpHorse, actionButton.root, { id: 'jump', text: '🐎 Zıpla', label: 'Zıpla', press: true });
 addEventListener('keydown', (e) => { if (e.code === 'Space' && !e.repeat && player.mount?.kind === 'horse' && document.activeElement?.tagName !== 'INPUT') { e.preventDefault(); jumpHorse(); } });
 const jumpShown = { update: () => jumpButton.show(modes.is('play') && player.mount?.kind === 'horse') };

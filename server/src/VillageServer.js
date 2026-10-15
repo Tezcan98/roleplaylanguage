@@ -54,6 +54,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'zone', zone }                walked into a talking zone ('kahve' | 'avlu') or out of it (null)
  *   { type: 'zone-rtc', to, data }        WebRTC offer / answer (with its candidates) to someone in the same zone
  *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
+ *   { type: 'jump' }                      my horse jumped (relayed: { type: 'jump', id })
  *   { type: 'chess-ask', color } | { type: 'chess-dede', color? } | { type: 'chess-leave' } | { type: 'chess-resign' }
  *   | { type: 'chess-move', from, to, promotion? }
  *                                         the square's giant chess board, run by İsmail Dede (see ChessTable):
@@ -248,6 +249,9 @@ export class VillageServer {
         if (ok) this.#toAll(c.room, t.state()); else this.#send(c, t.state()); // a refused move snaps back
         break;
       }
+      case 'jump': // a horse jumps: the others see it too (the arc itself is drawn on every screen)
+        this.#toRoom(c, { type: 'jump', id: c.id });
+        break;
       case 'score-reset': // someone reset the score board of this place's pitch
         this.#toRoom(c, { type: 'score-reset', id: c.id });
         break;

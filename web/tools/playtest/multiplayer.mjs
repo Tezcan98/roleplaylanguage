@@ -189,6 +189,13 @@ try {
   await A.evaluate(() => window.__game.village.net.send({ type: 'chess-move', from: 'e2', to: 'e4', promotion: 'q' }));
   const seen = await waitFor(() => B.evaluate(() => window.__game.village.chess.state?.last?.to === 'e4' && window.__game.village.chess.game.get('e4')?.type === 'p'), 6000);
   check('chess: a move on one screen shows on the other player’s board', !!seen);
+  // a horse: B sees A on it, and sees it jump
+  await A.evaluate(() => { const g = window.__game, h = g.animals.horses()[0]; g.wallet.add(5); g.animals.ride(h); });
+  const riding = await waitFor(() => B.evaluate(() => window.__game.village.remotes.list().some((c) => c.mount?.kind === 'horse')), 8000);
+  await A.keyboard.press('Space');
+  const jumped = await waitFor(() => B.evaluate(() => window.__game.village.remotes.list().some((c) => c.jumping)), 5000, 30);
+  check('horse: the other player sees you ride and jump', !!riding && !!jumped);
+  await A.evaluate(() => window.__game.animals.dismount());
   await B.evaluate(() => window.__game.village.chess.resign());
   const scored = await waitFor(() => A.evaluate(() => { const s = window.__game.village.chess.state; return s.phase === 'over' && s.scores.some((r) => r.games === 1) ? s.scores.map((r) => r.name).join(', ') : null; }), 6000);
   check('chess: resigning ends the game, Dede keeps the score board', !!scored, scored);

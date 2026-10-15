@@ -81,14 +81,14 @@ export class ToySystem {
       const { toy } = entry;
       if (!toy.location.group.visible) continue;
       entry.cool = Math.max(0, entry.cool - dt);
-      if (entry.touch && toy.location === this.world.current && !this.player.seated && !this.player.mount) this.#touch(entry, speed, t);
+      if (entry.touch && toy.location === this.world.current && !this.player.seated) this.#touch(entry, speed, t); // (on horseback too: the horse runs the ball along — no leg swing, no hard shot)
       toy.update(dt, t, this.player);
     }
   }
 
   #touch(entry, speed, t) {
     const { toy } = entry, p = this.player.position;
-    const d = dist(toy.position, p), reach = toy.radius + PLAYER_R;
+    const d = dist(toy.position, p), reach = toy.radius + PLAYER_R + (this.player.mount ? 0.45 : 0); // a horse / bike is bigger than a child
     // the leg swings a moment before the foot meets the ball (running at it), not after
     if (speed > 0.5 && d < reach + 0.45 && (entry.swing ?? 0) <= 0 && this.#towards(toy.position)) { this.player.kick?.(Math.min(1, speed / 6)); entry.swing = 0.5; }
     entry.swing = (entry.swing ?? 0) - this.#dt;

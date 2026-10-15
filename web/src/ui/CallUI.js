@@ -44,10 +44,11 @@ export class CallUI {
   }
 
   showCall(name, { onMute, onEnd }) {
-    this.name.textContent = `${name} ile konuşuyorsun`;
+    this.name.textContent = name; // (short: the bar sits over the game)
     let muted = false;
-    this.muteBtn.textContent = '🔇 Sessize al';
-    this.muteBtn.onclick = () => { muted = !muted; this.muteBtn.textContent = muted ? '🎙️ Sesi aç' : '🔇 Sessize al'; onMute(muted); };
+    this.muteBtn.textContent = '🔇';
+    this.muteBtn.title = 'Sessize al'; this.muteBtn.setAttribute('aria-label', 'Sessize al');
+    this.muteBtn.onclick = () => { muted = !muted; this.muteBtn.textContent = muted ? '🎙️' : '🔇'; this.muteBtn.title = muted ? 'Mikrofonu aç' : 'Sessize al'; onMute(muted); };
     this.endBtn.onclick = onEnd;
     this.bar.hidden = false;
   }

@@ -71,6 +71,7 @@ export class VillageMultiplayer {
     });
     net.on('states', ({ players }) => this.remotes.setStates(players));
     net.on('talk', ({ id, on }) => this.remotes.setTalking(id, on));
+    net.on('jump', ({ id }) => this.remotes.get(id)?.jump?.()); // another player's horse jumps
     net.on('ball', (b) => this.balls[b.n ?? 0]?.setState(b)); // someone else kicked a shared ball
     net.on('goal', ({ side }) => this.onGoal?.(this.joinedAt, side, false)); // someone scored in a match
     net.on('score-reset', () => this.onScoreReset?.(this.joinedAt)); // someone reset the score board
@@ -252,6 +253,9 @@ export class VillageMultiplayer {
     this.#rolling.add(ball);
     this.lastKick = Date.now();
   }
+  /** My horse jumped: the others see it too. */
+  jumped() { if (this.net.connected) this.net.send({ type: 'jump' }); }
+
   /** I scored (my kick): tell the others in this place. */
   goal(side) { if (this.net.connected) this.net.send({ type: 'goal', side }); }
 

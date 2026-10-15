@@ -413,6 +413,12 @@ try {
   const flew = await ev((b) => Math.hypot(window.__game.player.position.x - b.x, window.__game.player.position.z - b.z), before);
   check('…jumping at a gallop: it flies on forward (the stick let go)', flew > 2, `${flew.toFixed(1)} m`);
   check('on horseback: no "Sert vur" button', await ev(() => document.getElementById('shot').hidden));
+  // …but riding into a ball runs it along
+  await page.keyboard.down('ArrowUp'); await sleep(400);
+  await ev(() => { const g = window.__game, p = g.player.position, r = g.player.group.rotation.y, b = g.squareFootball.balls[0]; b.setState({ x: p.x + Math.sin(r) * 2.2, z: p.z + Math.cos(r) * 2.2, vx: 0, vz: 0 }); window.__ball0 = { x: b.position.x, z: b.position.z }; });
+  const pushed = await waitFor(() => ev(() => { const b = window.__game.squareFootball.balls[0].position; return Math.hypot(b.x - window.__ball0.x, b.z - window.__ball0.z) > 1 ? 1 : 0; }), 8000, 100);
+  await page.keyboard.up('ArrowUp');
+  check('…riding into the ball pushes it (horse football)', !!pushed);
   await ev(() => window.__game.animals.dismount());
   await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
 

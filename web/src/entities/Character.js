@@ -52,6 +52,7 @@ export class Character {
   #hd = null;
   #aura = null;
   #hdKey = null;
+  #hdLook = null; // the model and what goes on it (the dress is the everyday girl's model with a skirt: the same key)
   #hdWanted = false;
   #lastPos = null;
   #kick = null; // { t, dur, power }: a kick of the ball, the right leg swings
@@ -350,11 +351,12 @@ export class Character {
    */
   async setHd(models, key, on, { covered = false, dress = false, look = null, scarfColor = null } = {}) {
     this.#hdWanted = on;
-    if (on && this.#hd && this.#hd !== 'loading' && this.#hdKey !== key) { // another outfit: drop the old one
+    const look_ = `${key}|${!!dress}|${!!covered}`;
+    if (on && this.#hd && this.#hd !== 'loading' && this.#hdLook !== look_) { // another outfit (a dress on the same body too): drop the old one
       this.#hd.scene.removeFromParent(); this.#hd.skirt?.skirt.removeFromParent(); this.#hd = null;
     }
     if (on && !this.#hd && models?.has(key)) {
-      this.#hdKey = key;
+      this.#hdKey = key; this.#hdLook = look_;
       this.#hd = 'loading';
       try {
         const { scene, animations } = await models.load(key);

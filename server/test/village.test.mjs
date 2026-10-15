@@ -242,6 +242,9 @@ test('talking zone (the kahvehane): the newcomer gets who is there, signalling o
   await a.next('zone-join');
   await c.close(); // leaving the square leaves the zone too
   assert.deepEqual(await a.next('zone-leave'), { type: 'zone-leave', id: c.welcome.id });
+  // a horse jumps: the others are told
+  a.send({ type: 'jump' });
+  assert.deepEqual(await b.next('jump'), { type: 'jump', id: a.welcome.id });
   // the bigger square: a ball on the far side of the pitch (x 45) counts
   a.send({ type: 'ball', x: 45, z: 30, vx: 1, vz: 0 });
   assert.equal((await b.next('ball')).x, 45);

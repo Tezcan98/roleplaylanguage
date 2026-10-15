@@ -208,6 +208,11 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #act-mor
 .free input{flex-grow:1;min-height:50px;border-radius:10px;border:2px solid var(--wood);padding:0 12px;font:700 18px Nunito,sans-serif;background:#fff;color:var(--ink);min-width:0;-webkit-user-select:text;user-select:text}
 .callbar{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:var(--wood);color:var(--parch);border:2px solid var(--gold);border-radius:999px;padding:6px 8px 6px 12px;font:800 14px Nunito,sans-serif;pointer-events:auto;box-shadow:0 6px 18px rgba(0,0,0,.35)}
 .callbar[hidden]{display:none}
+/* small: it sits over the game (a phone held sideways is only ~360 px tall) */
+.callbar{gap:6px;padding:4px 5px 4px 8px;font-size:13px;max-width:calc(100vw - 24px);white-space:nowrap}
+.callbar .live{font-size:11px;font-weight:800;background:#E4574A;color:#fff;border-radius:999px;padding:3px 8px}
+.callbar>span:nth-child(2){overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.callbar .chipbtn{min-height:32px;padding:0 10px;font-size:13px;white-space:nowrap}
 .chipbtn.danger{background:#E4574A;color:#fff;border-color:#8A1F17}
 .caption{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);width:min(560px,calc(100vw - 24px));background:rgba(42,30,21,.92);color:var(--parch);border:2px solid var(--gold);border-radius:14px;padding:12px 16px;text-align:center;pointer-events:none}
 .caption[hidden]{display:none}
