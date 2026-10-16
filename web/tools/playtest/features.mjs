@@ -55,6 +55,10 @@ try {
   check('the credits (coin) in the HUD open the shop', !!(await page.$('.shop.open')));
   await page.evaluate(() => window.__game.shop.close());
   check('a new game starts with 100 credits', (await ev(() => window.__game.wallet.balance)) === 100);
+  await page.click('#quest .q-toggle');
+  check('the task panel folds down to its title…', await ev(() => document.getElementById('quest').classList.contains('collapsed') && getComputedStyle(document.querySelector('#quest .qo')).display === 'none'));
+  await page.click('#quest');
+  check('…and opens again with a tap', await ev(() => !document.getElementById('quest').classList.contains('collapsed')));
 
   const talkTo = async (id) => {
     await ev((npc) => { const g = window.__game; const n = g.cast.get(npc); g.player.position.set(n.position.x, 0, n.position.z + 0.8); }, id);
@@ -508,6 +512,7 @@ try {
     check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 106 && (await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Video izle')).querySelector('button').disabled)));
     check('no credit packs for sale for now', !(await p2.$('.shop.open .shop-card.pack')) && !(await page.evaluate(() => window.__game.billing.available)));
     await e2(() => { window.__game.wallet.trySpend(50); window.__game.shop.render(); }); // 56
+    await p2.click('.shop.open .shop-tab:has-text("Kıyafet")'); await sleep(200);
     check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
     check('outfits need the HD character first', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Günlük kıyafet')).querySelector('button').disabled));
     await e2(() => { window.__game.wallet.add(45); window.__game.shop.render(); }); // 101
@@ -518,10 +523,18 @@ try {
     check('an outfit (30 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 31);
     await p2.click('.shop.open .shop-card:has-text("Yıldız Işığı") button'); await sleep(300);
     check('the glowing ring (25 credits)', (await e2(() => window.__game.wallet.equipped('aura'))) === 'aura' && (await e2(() => window.__game.wallet.balance)) === 6);
+    await p2.click('.shop.open .shop-tab:has-text("Yiyecek")'); await sleep(200);
+    check('normal speed before the pepper', (await e2(() => window.__game.controller.boost())) === 1);
+    await p2.click('.shop.open .shop-card:has-text("Urfa biberi") button'); await sleep(300);
+    check('Urfa biberi (5 credits): faster (×1.5) for 3 minutes, the time left in the HUD and on its card', (await e2(() => window.__game.wallet.balance)) === 1
+      && (await e2(() => window.__game.controller.boost())) === 1.5 && (await e2(() => window.__game.wallet.boostLeft('pepper'))) > 170000
+      && /🌶️ [23]:\d\d/.test(await e2(() => document.querySelector('.pill.boost').textContent)) && (await p2.textContent('.shop.open .shop-card.food')).includes('kaldı'));
+    check('…not enough credits for a second one: its button is off', await e2(() => document.querySelector('.shop.open .shop-card.food button').disabled));
+    await p2.click('.shop.open .shop-tab:has-text("Altın")'); await sleep(200);
     await e2(() => { window.__game.shop.share = async () => true; window.__game.shop.render(); }); // (the share sheet itself is the phone's)
     const before = await e2(() => window.__game.wallet.balance);
     await p2.click('.shop.open .shop-card:has-text("Paylaş, kazan") button');
-    check('"Paylaş, kazan": +5 credits, then not again until tomorrow', !!(await waitFor(() => e2((b) => window.__game.wallet.balance === b + 5, before), 3000)) && await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Paylaş, kazan')).querySelector('button').disabled));
+    check('"Paylaş, kazan": +5 credits, then "Yarın yine" (once a day)', !!(await waitFor(() => e2((b) => window.__game.wallet.balance === b + 5, before), 3000)) && await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Paylaş, kazan')).querySelector('button').disabled));
     await e2(() => window.__game.shop.close());
     // a full-screen ad between two story days (not within the same day)
     await e2(() => document.querySelector('.main-menu.open .btn')?.click()); await sleep(1500);

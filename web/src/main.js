@@ -185,7 +185,7 @@ const ctx = new RenderContext(document.body, { quality });
 if (params.has('norender')) ctx.render = () => {}; // ?norender: a player that only takes part (recordings with many players), nothing drawn
 const textures = new TextureFactory(ctx.renderer);
 await textures.loadOverrides(manifest.textures);
-const mf = new MeshFactory(textures, { standard: quality !== 'low' });
+const mf = new MeshFactory(textures, { standard: quality !== 'low', blobShadows: quality === 'low' });
 const models = new ModelLibrary(manifest.models);
 const kit = { mf, props: new PropFactory(models), quality };
 if (quality !== 'low') ctx.setPostFX(new PostFX(ctx, { ao: quality === 'high' }));
@@ -204,7 +204,7 @@ world.setLinks(LINKS);
 
 // --- ui ---
 const toasts = new Toasts(host);
-const questPanel = new QuestPanel(host);
+const questPanel = new QuestPanel(host, { settings }); // (folds down to its title: remembered)
 const labels = new LabelLayer(host, ctx);
 const joystick = new Joystick(host);
 const cards = new CardOverlay(host, modes);
@@ -228,7 +228,7 @@ const story = new StoryDirector({ story: STORY, state, bus, time, cast, travel, 
 const items = new ItemSystem({ defs: ITEMS, names: KIND_NAMES, world, kit, state, inventory, vocab, bus, story });
 const gameCtx = new GameContext({ state, inventory, story, world, time, vocab, player, cast });
 story.setContext(gameCtx);
-const controller = new PlayerController({ player, input, world, modes, cast, camera });
+const controller = new PlayerController({ player, input, world, modes, cast, camera, boost: () => (wallet.boostLeft('pepper') > 0 ? CONFIG.boosts.pepperSpeed : 1) });
 
 // --- dialogue ---
 const progressShown = new Set();
@@ -556,7 +556,7 @@ const interactions = new InteractionSystem([
   new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts, effects, bus, ctx: gameCtx }),
 ], modes);
 const actionButton = new ActionButton(host, () => interactions.trigger());
-const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root);
+const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root, { press: true }); // (fires as the finger goes down: with a thumb on the joystick a second tap makes no click on phones)
 // on horseback: jump (the button, or Space on a keyboard)
 const jumpHorse = () => { if (modes.is('play') && player.jump()) { vocab.learn('zıplamak', 'to jump'); village.jumped(); } }; // (the others see it)
 const jumpButton = new ShotButton(host, jumpHorse, actionButton.root, { id: 'jump', text: '🐎 Zıpla', label: 'Zıpla', press: true });
@@ -576,6 +576,11 @@ const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en
 const shop = new ShopView(host, {
   modes, wallet, ads, billing, toasts, gender: playerGender(), look: settings.get('look', ''), share: shareGame,
   onDaily: () => takeDaily(),
+  onEat: () => { // Urfa biberi
+    labels.bubble(player, 'Çok acı! Hızlandım!', null, 3, "So hot! I'm faster!");
+    vocab.learn('biber', 'pepper'); vocab.learn('acı', 'hot (spicy)');
+    showBoost();
+  },
   // new colours: saved, then the game opens again with them (and goes on where it was)
   onOutfit: () => { playerHd(); shop.render(); if (village.net.connected) { village.leave(); village.join(); } }, // others see it after a quick reconnect
 });
@@ -608,15 +613,18 @@ models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animation
 }).catch(() => {});
 // story mode: a full-screen ad between two days (not with ad-free mode)
 story.beforeNewDay = () => (wallet.adFree || !CONFIG.ads.betweenDays ? Promise.resolve() : ads.showInterstitial());
-// going from place to place (home, yard, square, school): now and then a full-screen ad (config.json
-// ads.travelChance), never in the first minute and at most one every travelGapMinutes
+// going through a door or a gate (home, yard, square, school): now and then a full-screen ad, as you
+// leave — said first, never out of the blue in the middle of a place (config.json ads.travelChance),
+// never in the first minute, at most one every travelGapMinutes, never in a voice chat
 const travelAd = { last: performance.now() - CONFIG.ads.travelGapMinutes * 60000 + 60000 };
-bus.on(EV.LOCATION, () => {
-  if (!native || wallet.adFree || !modes.is('play') || Math.random() >= CONFIG.ads.travelChance) return; // (the app only: the website has no ads)
+travel.beforeGo = async () => {
+  if (!native || wallet.adFree || !modes.is('play') || village.voice.inCall || village.group.zone || Math.random() >= CONFIG.ads.travelChance) return; // (the app only: the website has no ads)
   if (performance.now() - travelAd.last < CONFIG.ads.travelGapMinutes * 60000) return;
   travelAd.last = performance.now();
-  ads.showInterstitial();
-});
+  toasts.show('📺 Kısa bir reklam…', gloss('A short ad…'));
+  await new Promise((r) => setTimeout(r, 1200));
+  await ads.showInterstitial();
+};
 
 // ⚙️ in the HUD: voices and music, picture quality, how to play, back to the main menu
 const settingsPanel = new SettingsPanel(host, {
@@ -640,6 +648,16 @@ const hud = new Hud(host, {
   onBook: () => openWords(),
   onBag: () => inventoryView.toggle(), // the game inventory (I on a keyboard)
 });
+
+// Urfa biberi: how long it still works, in the HUD
+const boostPill = el('span', { class: 'pill boost', attrs: { title: 'Urfa biberi · faster' } });
+hud.addRight(boostPill);
+function showBoost() {
+  const ms = wallet.boostLeft('pepper'), s = Math.ceil(ms / 1000);
+  boostPill.hidden = !ms;
+  if (ms) boostPill.textContent = `🌶️ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+showBoost(); setInterval(showBoost, 1000);
 
 // --- event wiring (UI reacts to the model) ---
 const refreshQuest = () => questPanel.show(story.objective());
@@ -687,6 +705,10 @@ const help = new HelpPanel(host, {
   onIntro: () => intro.show(),
   onWords: () => openWords(),
 });
+hud.addRight(help.button); // a small ? in the top bar (it took a corner of the game)
+hud.addRight(village.ptt.status); // who is online, next to it (not over the talk button)
+village.ptt.status.hidden = true;
+
 // the first time, the introduction comes before the story (skip with ?nointro)
 const introFirst = async () => {
   if (settings.get('introSeen', false) || params.has('nointro')) return;
@@ -892,4 +914,4 @@ if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

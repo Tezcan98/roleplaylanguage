@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { buildRig, RIG_PROPS } from './CharacterRig.js';
 import { fitToBox } from '../engine/ModelLibrary.js';
 import { sitPose } from './Behaviors.js';
-import { addHeadscarf, addDress, paintOutfit, addShoes, paintLook, addLookExtras, facingZ } from './hdClothes.js';
+import { addHeadscarf, addDress, addGirlFace, paintOutfit, addShoes, paintLook, addLookExtras, facingZ } from './hdClothes.js';
 
 /** The jacket's colour (the blocky one's, CharacterRig.js). */
 const JACKET = 0xB5482E;
@@ -64,6 +64,7 @@ export class Character {
     this.id = id;
     this.appearance = appearance;
     this.models = models;
+    this.mf = mf;
     this.rig = buildRig(mf, appearance);
     this.group = this.rig.g;
     (appearance.props || []).forEach((p) => { this.rig.props[p] = RIG_PROPS[p](mf, this.rig); this.rig.props[p].visible = false; });
@@ -375,7 +376,7 @@ export class Character {
         const skin = this.appearance.skin ?? 0xE9B98F, hair = [];
         scene.traverse((o) => {
           if (!o.isMesh) return;
-          o.castShadow = true;
+          o.castShadow = !this.mf?.blobShadows; // (low quality: the blob under the feet stays)
           for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
             m.metalness = 0; m.roughness = 0.85; // the converted files come out dark and shiny
             if (m.name === 'Skin') m.color.setHex(skin);
@@ -391,6 +392,7 @@ export class Character {
           const scarfParts = covered ? addHeadscarf(scene, this.group, scarfColor ?? scarf) ?? [] : [];
           const skirt = dress ? addDress(scene, this.group, look?.skirt ?? null) : null;
           if (look) addLookExtras(scene, this.group, look);
+          if (gender === 'girl') addGirlFace(scene, this.group);
           return { scarfParts, skirt };
         });
         const { scarfParts, skirt } = extras;

@@ -9,7 +9,8 @@ export class PlayerController {
   #air = null; // a horse's jump: the speed it took off with — in the air it goes on that way, whatever the stick says
   #last = null;
 
-  constructor({ player, input, world, modes, cast, camera }) { Object.assign(this, { player, input, world, modes, cast, camera }); }
+  /** `boost`: how many times faster the player goes now (Urfa biberi from the shop: 1.5 for a few minutes). */
+  constructor({ player, input, world, modes, cast, camera, boost = () => 1 }) { Object.assign(this, { player, input, world, modes, cast, camera, boost }); }
 
   update(dt, t) {
     const { player } = this;
@@ -30,7 +31,7 @@ export class PlayerController {
       if (yaw) { const c = Math.cos(yaw), s = Math.sin(yaw); [x, z] = [x * c - z * s, x * s + z * c]; }
       const loc = this.world.current, n = Math.hypot(x, z);
       const run = 1; // running is off for now: `this.input.running ? RUN : 1` (Shift / 🏃 by the joystick)
-      const speed = (loc.indoor ? 3.6 : 5.2) * (player.mount ? player.mount.speed ?? RIDE_SPEED : 1) * run * mag * dt;
+      const speed = (loc.indoor ? 3.6 : 5.2) * (player.mount ? player.mount.speed ?? RIDE_SPEED : 1) * run * this.boost() * mag * dt;
       const P = player.position;
       P.x += x / n * speed;
       P.z += z / n * speed;
@@ -60,7 +61,7 @@ export class PlayerController {
     if (mag > 0.08) {
       const yaw = this.camera?.yaw ?? 0;
       if (yaw) { const c = Math.cos(yaw), s = Math.sin(yaw); [x, z] = [x * c - z * s, x * s + z * c]; }
-      const n = Math.hypot(x, z), top = 5.2 * player.mount.speed * mag;
+      const n = Math.hypot(x, z), top = 5.2 * player.mount.speed * this.boost() * mag;
       tx = x / n * top; tz = z / n * top;
     }
     const k = Math.min(1, dt * (mag > 0.08 ? 1.4 : 0.6));

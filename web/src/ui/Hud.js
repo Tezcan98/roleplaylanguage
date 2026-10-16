@@ -25,9 +25,13 @@ export class Hud {
       ]),
     ]);
     host.append(hud);
+    this.right = hud.lastElementChild;
     // the quest panel and toasts sit right under the HUD, however many rows it wraps into (phones)
     new ResizeObserver(() => document.documentElement.style.setProperty('--hud-h', `${hud.offsetHeight}px`)).observe(hud);
   }
+  /** Something more on the right-hand side of the bar, before the clock (the help button, who is online). */
+  addRight(node) { this.right.prepend(node); }
+
   setTime(dayName, label, night) { this.clock.textContent = `${night ? '☾' : '☀'} ${dayName} ${label}`; }
   setWords(n) { this.words.textContent = n; }
   setBag(n) { this.bag.textContent = n; }

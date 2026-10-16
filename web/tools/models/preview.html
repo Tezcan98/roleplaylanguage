@@ -2,11 +2,11 @@
 <!-- Renders the shop pictures of the outfits: node tools/models/render-previews.mjs -->
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script type="module">
-import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; import { addHeadscarf, addDress, paintOutfit, addShoes } from '../../src/entities/hdClothes.js';
+import * as THREE from 'three'; import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; import { addHeadscarf, addDress, paintOutfit, addShoes, addGirlFace } from '../../src/entities/hdClothes.js';
 const W = 240, H = 300;
 const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setClearColor(0x000000, 0); r.outputColorSpace = THREE.SRGBColorSpace; document.body.append(r.domElement);
 const L = new GLTFLoader();
-window.render = async (file, covered, aura = false, dress = false) => {
+window.render = async (file, covered, aura = false, dress = false, close = false) => {
   const s = new THREE.Scene(); s.add(new THREE.HemisphereLight(0xffffff, 0x886644, 2.3)); const d = new THREE.DirectionalLight(0xffffff, 2.2); d.position.set(1.5, 3, 4); s.add(d);
   const g = await L.loadAsync(file); const sc = g.scene;
   const mx = new THREE.AnimationMixer(sc); mx.clipAction(g.animations.find((a) => a.name === 'idle')).play(); mx.update(0.4); sc.updateMatrixWorld(true);
@@ -17,6 +17,7 @@ window.render = async (file, covered, aura = false, dress = false) => {
   addShoes(sc);
   s.add(sc);
   if (covered) addHeadscarf(sc, s, scarf);
+  if (gender === 'girl') addGirlFace(sc, s);
   if (dress) addDress(sc, s)?.follow();
   if (aura) { // the golden light under the feet
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.62, 48), new THREE.MeshBasicMaterial({ color: 0xFFD54A, side: THREE.DoubleSide }));
@@ -25,6 +26,7 @@ window.render = async (file, covered, aura = false, dress = false) => {
     ring.position.y = 0.02;
   }
   const c = new THREE.PerspectiveCamera(28, W / H, 0.1, 50); c.position.set(0.9, aura ? 1.9 : 1.25, 4.6); c.lookAt(0, aura ? 0.85 : 0.98, 0);
+  if (close) { c.position.set(0.3, 1.8, 2.6); c.lookAt(0, 1.66, 0); }
   r.render(s, c); return r.domElement.toDataURL('image/png');
 };
 window.ready = true;

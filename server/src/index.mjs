@@ -110,7 +110,7 @@ const moderator = new Moderator({
   logFile: env.MODERATION_LOG ?? '/tmp/yilmaz-moderation.log',
 });
 const chessScores = new ChessScoreFile(env.CHESS_SCORES ?? '/tmp/yilmaz-chess-scores.json');
-const names = new NameRegistry(env.USERNAMES ?? join(dirname(env.CHESS_SCORES ?? '/tmp/x'), env.CHESS_SCORES ? 'usernames.json' : 'yilmaz-usernames.json')).load(); // next to the chess scores
+const names = new NameRegistry(env.USERNAMES || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'usernames.json') : null)).load(); // next to the chess scores on the real server; without them (tests, a quick local run) only in memory
 const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit, names });
 http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'}; moderation ${moderator.provider}; safety log ${audit ? `on (${audit.days} days)` : 'off'}; turn ${village.turn ? 'on' : 'off'})`));
 

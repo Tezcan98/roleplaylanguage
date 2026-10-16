@@ -1,4 +1,5 @@
 import { EV } from '../core/events.js';
+import { CONFIG } from '../config/remote.js';
 
 const SEND_EVERY = 0.1; // seconds
 const KEEPALIVE = 10;   // seconds: my state goes out at least this often, even standing still (the server drops frozen pages)
@@ -120,9 +121,10 @@ export class VillageMultiplayer {
   }
 
   /**
-   * Walking in from the story (no square picked on the menu): go where the people are.
-   * Two friends who meet "in the square" must end up in the same room, whatever city
-   * each of them picked some other day.
+   * Which room to go to: from the story (no square picked on the menu), where the people are — two
+   * friends who meet "in the square" end up in the same room, whatever city each picked some other
+   * day; but not a room that is full already (CONFIG.roomFull: then the busiest one below it). A
+   * player who never picked a city by hand doesn't go into a full room from the menu either.
    */
   async #joinFriends(suffix) {
     if (!this.healthUrl) return;
@@ -132,10 +134,12 @@ export class VillageMultiplayer {
       rooms = (await (await fetch(this.healthUrl, { cache: 'no-store', signal: ctl.signal })).json()).rooms ?? {};
       clearTimeout(t);
     } catch { return; }
-    const count = (id) => Number(rooms[`${id}${suffix}`] ?? 0);
+    const count = (id) => Number(rooms[`${id}${suffix}`] ?? 0), full = CONFIG.roomFull;
     const mine = this.settings.get('serverRegion', 'ankara');
-    const [best] = this.rooms.map(([id]) => id).sort((a, b) => count(b) - count(a));
-    if (best && count(best) > count(mine)) this.settings.set('serverRegion', best);
+    const ids = this.rooms.map(([id]) => id), open = ids.filter((id) => count(id) < full);
+    const [best] = open.length ? open.sort((a, b) => count(b) - count(a)) : ids.sort((a, b) => count(a) - count(b)); // the busiest that isn't full (all full: the emptiest)
+    if (!best) return;
+    if (!this.chosenRoom ? count(best) > count(mine) || count(mine) >= full : count(mine) >= full && !this.settings.get('serverPicked', false)) this.settings.set('serverRegion', best);
   }
 
   /** Alone in this room while another room has players: offer to go there (from the story: go there). */
@@ -208,7 +212,7 @@ export class VillageMultiplayer {
       }
       const here = this.world.current.id;
       if (!this.places[here]) return;
-      if (!this.chosenRoom) await this.#joinFriends(this.places[here].suffix);
+      await this.#joinFriends(this.places[here].suffix); // (where the people are — or not into a full room)
       if (this.world.current.id !== here) return;
       const room = `${this.settings.get('serverRegion', 'ankara')}${this.places[here].suffix}`;
       const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''), this.settings.get('deviceId'), this.outfit?.() ?? {}, this.settings.get('playGamesId', ''));

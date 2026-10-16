@@ -19,6 +19,14 @@ export const SHOP = [
   { id: 'aura', slot: 'aura', title: '✨ Altın Yıldız Işığı', en: 'A golden light shining under your feet — everyone in the square sees you', price: CONFIG.prices.aura, picture: true },
 ];
 
+/**
+ * Food from the shop: eaten at once, for credits, and good for a few minutes (a second one adds
+ * its minutes on). Urfa biberi: so hot you run faster (systems/PlayerController.js `boost`).
+ */
+export const FOODS = [
+  { id: 'pepper', icon: '🌶️', title: 'Urfa biberi', en: 'So hot you run faster!', price: CONFIG.prices.pepper, minutes: CONFIG.boosts.pepperMinutes, speed: CONFIG.boosts.pepperSpeed },
+];
+
 /** The glowing ring under the player is on. */
 export const auraOn = (wallet) => wallet.equipped('aura') === 'aura';
 

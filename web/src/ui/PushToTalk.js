@@ -57,7 +57,7 @@ export class PushToTalk {
     this.onChange(on);
   }
 
-  show(visible) { if (!visible) { this.set(false); this.typeBox.hidden = true; } this.root.hidden = !visible; }
+  show(visible) { if (!visible) { this.set(false); this.typeBox.hidden = true; } this.root.hidden = !visible; this.status.hidden = !visible; }
   /**
    * Above the action buttons: with two or three of them stacked (on a bike next to Cemal Abi:
    * "Bisikletten in" and "Cemal Abi ile konuş") the talk button went over them. Re-placed only
@@ -83,5 +83,6 @@ export class PushToTalk {
 
   /** No speech-to-text here: type the sentence instead. */
   typeInstead() { this.typeBox.hidden = false; this.input.focus(); }
-  setOnline(n, name, room = '') { this.status.textContent = `🌐 ${name} · ${room ? `${room} · ` : ''}meydanda ${n} kişi`; }
+  /** Who is here, short (it sits in the top bar): "👥 3 · Ankara"; the details on a long press / hover. */
+  setOnline(n, name, room = '') { this.status.textContent = `👥 ${n}${room ? ` · ${room.split(' · ')[0]}` : ''}`; this.status.title = `${name} · ${room ? `${room} · ` : ''}meydanda ${n} kişi`; }
 }

@@ -8,10 +8,14 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 export class MeshFactory {
   #materials = new Map();
 
-  /** @param {{ standard?: boolean }} opts — standard: PBR materials (high quality), else Lambert */
-  constructor(textures, { standard = true } = {}) {
+  /**
+   * @param {{ standard?: boolean, blobShadows?: boolean }} opts — standard: PBR materials (high quality),
+   * else Lambert; blobShadows (low quality): characters get a soft spot under the feet instead of a real shadow
+   */
+  constructor(textures, { standard = true, blobShadows = false } = {}) {
     this.textures = textures;
     this.standard = standard;
+    this.blobShadows = blobShadows;
     this.Material = standard ? THREE.MeshStandardMaterial : THREE.MeshLambertMaterial;
     this.base = standard ? { roughness: 0.88, metalness: 0 } : {};
   }
@@ -28,6 +32,14 @@ export class MeshFactory {
       m = new this.Material({ color, map: this.textures.get(tex, repeat), ...(normalMap ? { normalMap } : {}), ...this.base, ...extra });
     }
     this.#materials.set(key, m);
+    return m;
+  }
+
+  /** A soft dark spot on the ground (a character's shadow on low quality: one cheap draw instead of a shadow pass for every part). */
+  blob(r = 0.42) {
+    this.blobMat ??= new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.22, depthWrite: false });
+    const m = new THREE.Mesh(this.blobGeo ??= new THREE.CircleGeometry(1, 20), this.blobMat);
+    m.rotation.x = -Math.PI / 2; m.scale.setScalar(r); m.position.y = 0.03;
     return m;
   }
 

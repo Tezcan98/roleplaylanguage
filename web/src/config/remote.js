@@ -7,10 +7,13 @@
  * site and the Android app): local test pages and node tools always use the defaults.
  */
 export const DEFAULTS = {
-  prices: { horseRide: 1, bikeLearn: 3, hd: 40, outfit: 30, aura: 25, adFree: 100 },
-  rewards: { startCredits: 100, startMoney: 200, video: 3, videoEveryHours: 3, daily: [3, 4, 5, 6, 7, 8, 10], share: 5, shareEveryHours: 24 },
+  prices: { horseRide: 1, bikeLearn: 3, hd: 40, outfit: 30, aura: 25, adFree: 100, pepper: 5 },
+  rewards: { startCredits: 100, startMoney: 200, video: 3, videoEveryHours: 3, daily: [3, 4, 5, 6, 7, 8, 10], share: 5 },
   rides: { minutes: 3 },
+  boosts: { pepperMinutes: 3, pepperSpeed: 1.5 }, // Urfa biberi: this much faster for this long
   ads: { idleBannerSeconds: 90, menuBannerChance: 0.2, betweenDays: true, travelChance: 0.25, travelGapMinutes: 3 },
+  sellPacks: false, // credit packs for sale (Google Play): on once the Play Console products are live
+  roomFull: 30, // a room this busy: newcomers who didn't pick a city go to a quieter one
   cities: [['ankara', 'Ankara'], ['istanbul', 'İstanbul'], ['izmir', 'İzmir'], ['manisa', 'Manisa']],
   update: { latestApp: 0, store: 'https://play.google.com/store/apps/details?id=com.anadolu', text: '', en: '' },
 };

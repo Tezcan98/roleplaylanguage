@@ -2,6 +2,7 @@ import * as THREE from 'three';
 
 /** Owns the WebGL renderer, the scene graph root, the camera and the two global lights. */
 export class RenderContext {
+  #frame = 0;
   /** @param {{ quality?: 'high' | 'medium' | 'low' }} opts — low: lower resolution and shadow map, no post FX */
   constructor(host = document.body, { quality = 'high' } = {}) {
     this.quality = quality;
@@ -11,7 +12,8 @@ export class RenderContext {
     r.toneMappingExposure = 1.05;
     r.setSize(innerWidth, innerHeight);
     r.shadowMap.enabled = true;
-    r.shadowMap.type = THREE.PCFSoftShadowMap;
+    r.shadowMap.type = quality === 'low' ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap; // (soft edges cost several lookups a pixel)
+    r.shadowMap.autoUpdate = quality !== 'low';
     host.prepend(r.domElement);
     this.renderer = r;
 
@@ -54,6 +56,9 @@ export class RenderContext {
   setPostFX(fx) { this.postfx = fx; }
 
   render() {
+    // low quality: the sun's shadows are drawn every fourth frame (the trees and houses don't move;
+    // characters have a spot under their feet instead) — a whole second pass saved on three frames out of four
+    if (this.quality === 'low') this.renderer.shadowMap.needsUpdate = (this.#frame = (this.#frame + 1) % 4) === 0;
     if (this.postfx) this.postfx.render();
     else this.renderer.render(this.scene, this.camera);
   }

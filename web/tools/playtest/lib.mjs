@@ -48,7 +48,7 @@ export async function startServer(dir) {
 /** Start the production village server (server/src/index.mjs) on its own port, as on a real host. */
 export async function startVillageServer() {
   const port = await freePort();
-  const proc = spawn(process.execPath, ['../server/src/index.mjs', String(port)], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, HOST: '127.0.0.1', CHESS_SCORES: `${tmpdir()}/yilmaz-chess-scores-${port}.json` } }); // a fresh score board per test server
+  const proc = spawn(process.execPath, ['../server/src/index.mjs', String(port)], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, HOST: '127.0.0.1', CHESS_SCORES: `${tmpdir()}/yilmaz-chess-scores-${port}.json`, USERNAMES: `${tmpdir()}/yilmaz-usernames-${port}.json` } }); // a fresh score board and fresh usernames per test server
   await new Promise((resolve, reject) => {
     const t = setTimeout(() => reject(new Error('village server did not start')), 10000);
     proc.stdout.on('data', (d) => { if (String(d).includes('village server')) { clearTimeout(t); resolve(); } });

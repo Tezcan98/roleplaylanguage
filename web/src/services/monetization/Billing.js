@@ -1,3 +1,4 @@
+import { CONFIG } from '../../config/remote.js';
 /**
  * Credit packs sold through Google Play (in the Android app only). The products are created
  * in Play Console with these ids as one-time "consumable" products; their price is set there
@@ -10,10 +11,10 @@ export const PACKS = [
 ];
 
 /**
- * Credit packs for sale. Off for now: no packs in the shop until purchases are checked on the
- * server (Google Play Developer API) and the Play Console products are live.
+ * Credit packs for sale (config.json "sellPacks", turned on from the server once the Play Console
+ * products — credits_50, credits_200, credits_500 — are live; off: no packs in the shop).
  */
-export const SELL_PACKS = false;
+export const SELL_PACKS = CONFIG.sellPacks;
 
 /** On the website: packs can't be bought here. */
 export class NoBilling {

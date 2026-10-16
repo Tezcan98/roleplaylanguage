@@ -3,45 +3,75 @@ import * as THREE from 'three';
 /** Matching colours for each outfit (the pack's own purple and navy clashed). `scarf` = the headscarf with it. */
 const PALETTE = {
   'casual.boy': { Shirt: 0x3E7C8C, Pants: 0xA68B5B, Belt: 0x4A3020 },             // teal shirt, khaki trousers
-  'casual.girl': { Shirt: 0xC07A68, Pants: 0x5C4A42, Belt: 0x4A3020, scarf: 0xEFE3CF }, // terracotta, warm brown, cream scarf
-  'dress.girl': { Shirt: 0x3F7F73, Pants: 0x3F7F73, Belt: 0xB08A4E, scarf: 0xEFE3CF }, // a teal dress with a tan belt, cream scarf
+  'casual.girl': { Shirt: 0xC07A68, Pants: 0x5C4A42, Belt: 0x4A3020, scarf: 0xE7A1B0 }, // terracotta, warm brown, a pink scarf
+  'dress.girl': { Shirt: 0x3F7F73, Pants: 0x3F7F73, Belt: 0xB08A4E, scarf: 0xF0CF6E }, // a teal dress with a tan belt, a soft yellow scarf
   'suit.boy': { Black: 0x2B3448 },                                                    // a navy suit
   'curly.boy': { Shirt: 0xB5523F, Pants: 0x3F4A5A, Belt: 0x2E2218 },                // Hakan: brick red, slate trousers
-  'brown.girl': { Shirt: 0xD9A23E, Pants: 0x2E5E8C, Belt: 0x4A3020, scarf: 0xEFE3CF }, // Seher: mustard, denim blue
+  'brown.girl': { Shirt: 0xD9A23E, Pants: 0x2E5E8C, Belt: 0x4A3020, scarf: 0x9C7BC0 }, // Seher: mustard, denim blue, a lilac scarf
 };
 
 /** Paints the HD model in its outfit's colours; returns the headscarf colour that goes with it. */
 export function paintOutfit(scene, outfit, gender) {
   const p = { Face: 0x2A1D17, ...PALETTE[`${outfit}.${gender === 'girl' ? 'girl' : 'boy'}`] }; // Face: eyes and eyebrows (the converted files made them white)
   scene.traverse((o) => { if (o.isMesh) for (const m of [o.material].flat()) if (p[m.name] != null) m.color.setHex(p[m.name]); });
-  return p.scarf ?? 0xEFE3CF;
+  return p.scarf ?? 0xE7A1B0;
 }
 
 /**
- * A headscarf for the HD character of a covered girl: a cap over the head and a drape round the
- * neck, in a colour that goes with the outfit (not like hair). Sized and
- * placed in world units round the head, then fixed to the head bone so it follows the animation.
- * The model's hair should already be hidden.
+ * A headscarf for the HD character of a covered girl, in a colour that goes with the outfit and a
+ * little flower print: a hood round the head that leaves an oval for the face (a sphere with a
+ * wedge cut out at the front, tipped forward so the wedge's top is the forehead), and a drape from
+ * under the chin over the shoulders. Sized from the head's skin, then fixed to the head bone so it
+ * follows the animation. The model's hair should already be hidden.
  */
-export function addHeadscarf(scene, holder, color = 0xEFE3CF) {
+export function addHeadscarf(scene, holder, color = 0xE7A1B0) {
   const head = scene.getObjectByName('Head');
   if (!head) return;
   holder.updateMatrixWorld(true);
-  const hb = new THREE.Box3();
-  hb.union(boxOf(scene, 'Skin')); // (the feet's mesh has two materials since the shoes: skin + shoes)
+  scene.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.update(); });
   const hp = head.getWorldPosition(new THREE.Vector3());
-  const h = hb.max.y - hp.y; // head bone (at the neck) → top of the head
+  const hb = new THREE.Box3(), v = new THREE.Vector3(); // the head: the skin above the head bone (at the neck)
+  scene.traverse((o) => {
+    if (!o.isMesh || [o.material].flat()[0]?.name !== 'Skin') return;
+    for (let i = 0, n = o.geometry.attributes.position.count; i < n; i++) { o.getVertexPosition(i, v); o.localToWorld(v); if (v.y > hp.y) hb.expandByPoint(v); }
+  });
+  if (hb.isEmpty()) return;
+  const h = hb.max.y - hp.y, hw = (hb.max.x - hb.min.x) / 2, hd = (hb.max.z - hb.min.z) / 2;
+  const hc = hb.getCenter(new THREE.Vector3());
   const ws = holder.getWorldScale(new THREE.Vector3()).x;
-  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.95, side: THREE.DoubleSide });
-  const cap = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 18, 0, Math.PI * 2, 0, Math.PI * 0.66), mat);
-  cap.scale.set(h * 0.64 / ws, h * 0.64 / ws, h * 0.68 / ws);
-  cap.position.copy(holder.worldToLocal(new THREE.Vector3(hp.x, hp.y + h * 0.48, hp.z - h * 0.05)));
-  cap.rotation.x = -0.45; // the face stays open
-  const drape = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.42, 0.42, 28, 1, true), mat);
-  drape.scale.setScalar(h / ws);
-  drape.position.copy(holder.worldToLocal(new THREE.Vector3(hp.x, hp.y - h * 0.12, hp.z - h * 0.04))); // round the neck, under the chin
-  for (const m of [cap, drape]) { holder.add(m); head.attach(m); }
-  return [cap, drape];
+  const map = scarfPrint(color), mat = new THREE.MeshStandardMaterial({ color: map ? 0xffffff : color, map, roughness: 0.95, side: THREE.DoubleSide });
+  const open = 0.62; // half the face opening (radians round the head)
+  const hood = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20, Math.PI / 2 + open, Math.PI * 2 - open * 2, 0, Math.PI * 0.8), mat);
+  hood.scale.set(hw * 1.18 / ws, h * 0.62 / ws, hd * 1.2 / ws);
+  hood.rotation.x = 0.42; // the opening's top towards the forehead
+  hood.position.copy(holder.worldToLocal(new THREE.Vector3(hc.x, hp.y + h * 0.5, hc.z - hd * 0.12)));
+  const top = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 8, 0, Math.PI * 2, 0, Math.PI * 0.28), mat); // closes the opening's top: the forehead's edge
+  top.scale.copy(hood.scale); top.rotation.copy(hood.rotation); top.position.copy(hood.position);
+  const drape = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.3, 1, 32, 1, true), mat);
+  drape.scale.set(hw * 1.05 / ws, h * 0.62 / ws, hd * 1.05 / ws);
+  drape.position.copy(holder.worldToLocal(new THREE.Vector3(hc.x, hp.y - h * 0.14, hc.z - hd * 0.12))); // round the neck, under the chin, over the shoulders
+  for (const m of [hood, top, drape]) { holder.add(m); head.attach(m); }
+  return [hood, top, drape];
+}
+
+/** The scarf's cloth: its colour with a small flower print (one texture per colour). */
+const prints = new Map();
+function scarfPrint(color) {
+  if (prints.has(color) || typeof document === 'undefined') return prints.get(color) ?? null;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const g = cv.getContext('2d'), base = new THREE.Color(color);
+  g.fillStyle = `#${base.getHexString()}`; g.fillRect(0, 0, 128, 128);
+  const light = `#${base.clone().lerp(new THREE.Color(0xffffff), 0.55).getHexString()}`, dark = `#${base.clone().multiplyScalar(0.72).getHexString()}`;
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { // little five-petal flowers, every other row shifted
+    const x = i * 32 + (j % 2) * 16 + 8, y = j * 32 + 8;
+    g.fillStyle = light;
+    for (let k = 0; k < 5; k++) { const a = k * Math.PI * 0.4; g.beginPath(); g.arc(x + Math.cos(a) * 3.2, y + Math.sin(a) * 3.2, 2.4, 0, Math.PI * 2); g.fill(); }
+    g.fillStyle = dark; g.beginPath(); g.arc(x, y, 1.6, 0, Math.PI * 2); g.fill();
+  }
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 2);
+  prints.set(color, t);
+  return t;
 }
 
 /**
@@ -122,6 +152,58 @@ export function paintLook(scene, look) {
     if (!o.isMesh) return;
     for (const m of [o.material].flat()) if (p[m.name] != null) m.color.setHex(p[m.name]);
     if ([o.material].flat()[0]?.name === 'Hair' && !look.hair && !look.sides) o.visible = false; // bald
+  });
+}
+
+/**
+ * A girl's face on the HD model (the models' faces are the same for boys and girls: two eyes and
+ * two brows): lashes flicking out from each eye, rosy cheeks and pink lips. Placed from the eyes
+ * (the "Face" material) on the skin's surface in front, fixed to the head bone.
+ */
+export function addGirlFace(scene, holder, { lips = 0xC8505F } = {}) {
+  const head = scene.getObjectByName('Head');
+  if (!head) return [];
+  return facingZ(holder, () => {
+    scene.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.update(); });
+    const face = boxOf(scene, 'Face');
+    if (face.isEmpty()) return [];
+    const ws = holder.getWorldScale(new THREE.Vector3()).x;
+    const fw = face.max.x - face.min.x, fh = face.max.y - face.min.y, c = face.getCenter(new THREE.Vector3());
+    // the head's skin, to sit things on its surface
+    const neck = head.getWorldPosition(new THREE.Vector3()).y, skin = [], v = new THREE.Vector3();
+    scene.traverse((o) => {
+      if (!o.isMesh || [o.material].flat()[0]?.name !== 'Skin') return;
+      for (let i = 0, n = o.geometry.attributes.position.count; i < n; i++) { o.getVertexPosition(i, v); o.localToWorld(v); if (v.y > neck) skin.push(v.clone()); }
+    });
+    const front = (x, y) => { let z = face.max.z; for (const p of skin) if (Math.abs(p.x - x) < fw * 0.12 && Math.abs(p.y - y) < fh * 0.2 && p.z > z) z = p.z; return z; };
+    const out = [];
+    const put = (mesh, x, y, z) => { mesh.scale.multiplyScalar(1 / ws); mesh.position.copy(holder.worldToLocal(new THREE.Vector3(x, y, z))); holder.add(mesh); head.attach(mesh); out.push(mesh); };
+    const dark = new THREE.MeshStandardMaterial({ color: 0x1E1410, roughness: 0.9 });
+    const facePts = []; // the eyes: the lower half of each side's dark marks (the upper half is the brow)
+    scene.traverse((o) => {
+      if (!o.isMesh || [o.material].flat()[0]?.name !== 'Face') return;
+      for (let i = 0, n = o.geometry.attributes.position.count; i < n; i++) { o.getVertexPosition(i, v); o.localToWorld(v); facePts.push(v.clone()); }
+    });
+    for (const s of [-1, 1]) {
+      const eye = new THREE.Box3();
+      for (const p of facePts) if (Math.sign(p.x - c.x) === s && p.y < c.y) eye.expandByPoint(p);
+      if (eye.isEmpty()) continue;
+      const ex = s < 0 ? eye.min.x : eye.max.x, ey = eye.max.y; // the eye's outer upper corner
+      for (const [k, a] of [[0, 0.35], [1, 0.9]]) { // two lashes fanning out
+        const lash = new THREE.Mesh(new THREE.BoxGeometry(fw * 0.11, fh * 0.07, fh * 0.05), dark);
+        lash.rotation.z = s * a;
+        put(lash, ex + s * fw * 0.035, ey - fh * (0.06 - k * 0.07), Math.max(eye.max.z, front(ex, ey)) + fh * 0.01);
+      }
+      const cheek = new THREE.Mesh(new THREE.CircleGeometry(fw * 0.13, 20), new THREE.MeshBasicMaterial({ color: 0xF07C82, transparent: true, opacity: 0.45, depthWrite: false }));
+      cheek.rotation.y = s * 0.45;
+      const cx = c.x + s * fw * 0.42, cy = face.min.y - fh * 0.25;
+      put(cheek, cx, cy, front(cx, cy) + fh * 0.03);
+    }
+    const my = face.min.y - fh * 0.75;
+    const mouth = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8), new THREE.MeshStandardMaterial({ color: lips, roughness: 0.6 }));
+    mouth.scale.set(fw * 0.11, fh * 0.07, fh * 0.05);
+    put(mouth, c.x, my, front(c.x, my));
+    return out;
   });
 }
 

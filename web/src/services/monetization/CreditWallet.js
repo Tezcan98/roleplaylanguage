@@ -5,9 +5,8 @@ const KEY = 'wallet';
 const DAY = 24 * 60 * 60 * 1000;
 export const AD_EVERY = CONFIG.rewards.videoEveryHours * 60 * 60 * 1000; // a rewarded video at most every 3 hours (set on the server: config/remote.js)
 export const AD_REWARD = CONFIG.rewards.video;
-/** "Paylaş, kazan": credits for sharing the game, at most every SHARE_EVERY. */
+/** "Paylaş, kazan": credits for sharing the game, once a day (a new day at midnight). */
 export const SHARE_REWARD = CONFIG.rewards.share;
-export const SHARE_EVERY = CONFIG.rewards.shareEveryHours * 60 * 60 * 1000;
 /** Daily reward by how many days in a row you came: day 1 → 3, … day 7 and on → 10. */
 export const DAILY = CONFIG.rewards.daily;
 
@@ -53,6 +52,18 @@ export class CreditWallet {
     return true;
   }
 
+  // --- food: good for a while ------------------------------------------------------
+  /** ms left of a food's boost (0: none). */
+  boostLeft(id, now = Date.now()) { return Math.max(0, (this.data.boosts?.[id] ?? 0) - now); }
+
+  /** Eat a food from the shop: its price in credits, its minutes added on to what is left. */
+  eat(food, now = Date.now()) {
+    if (!this.trySpend(food.price)) return false;
+    this.data.boosts = { ...this.data.boosts, [food.id]: now + this.boostLeft(food.id, now) + food.minutes * 60000 };
+    this.#save();
+    return true;
+  }
+
   equip(item) { if (!this.owns(item.id)) return false; this.data.equipped[item.slot] = item.id; this.#save(); return true; }
   unequip(slot) { delete this.data.equipped[slot]; this.#save(); }
   equipped(slot) { return this.data.equipped[slot] ?? null; }
@@ -61,9 +72,9 @@ export class CreditWallet {
   /** ms until the next rewarded video may be watched (0 = now). */
   adWait(now = Date.now()) { return Math.max(0, this.data.adAt + AD_EVERY - now); }
   adWatched(now = Date.now()) { this.data.adAt = now; this.add(AD_REWARD, 'ad'); }
-  /** ms until the game can be shared for credits again (0 = now). */
-  shareWait(now = Date.now()) { return Math.max(0, (this.data.shareAt ?? 0) + SHARE_EVERY - now); }
-  shared(now = Date.now()) { this.data.shareAt = now; this.add(SHARE_REWARD, 'share'); }
+  /** Shared for credits today already? (once a day: tomorrow again) */
+  sharedToday(now = Date.now()) { return this.data.shareDay === today(now); }
+  shared(now = Date.now()) { this.data.shareDay = today(now); this.add(SHARE_REWARD, 'share'); }
 
   // --- daily reward -------------------------------------------------------------------
   /** Today's reward if it has not been taken yet: { day, amount }, else null. */

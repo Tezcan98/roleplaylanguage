@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 /**
  * Procedural blocky character built from an appearance description.
@@ -53,10 +54,37 @@ export function buildRig(mf, o) {
   if (o.glasses) [-0.1, 0.1].forEach((x) => head.add(mf.at(mf.torus(0.07, 0.012, 0x1B2440), x, 0.03, 0.29)));
 
   g.scale.setScalar(o.scale || 1);
+  // one mesh per moving part (the body, each arm and leg, the head, the hair, the scarf) instead of
+  // fifteen to twenty: a crowd on the square cost ~44 draw calls a character (shadows count twice)
+  const merged = [body, legL, legR, armL, armR, head, hair, scarf].map((n) => mergeParts(mf, n));
+  if (mf.blobShadows) { g.traverse((o) => { if (o.isMesh) o.castShadow = false; }); g.add(mf.blob()); } // (low quality: a spot under the feet)
   /** Headscarf on (hair hidden) or off; characters without a scarf colour stay as they are. */
   const setCovered = (on) => { if (!o.headscarf) return; scarf.visible = on; hair.visible = !on || !o.hair; };
   setCovered(true);
-  return { g, body, legL, legR, armL, armR, head, torso, props: {}, setCovered };
+  return { g, body, legL, legR, armL, armR, head, torso: merged[0] ?? torso, props: {}, setCovered };
+}
+
+/**
+ * The plain-coloured meshes right under `node` merged into one, their colours kept as vertex colours
+ * (one material for all of them). Nested groups (hair, scarf: shown and hidden on their own) and
+ * textured meshes stay apart. Returns the merged mesh, or null when there was nothing to merge.
+ */
+function mergeParts(mf, node) {
+  const parts = node.children.filter((c) => c.isMesh && !c.material.map && !Array.isArray(c.material));
+  if (parts.length < 2) return parts[0] ?? null;
+  const geos = parts.map((m) => {
+    m.updateMatrix();
+    const geo = (m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone()).applyMatrix4(m.matrix);
+    for (const k of Object.keys(geo.attributes)) if (!['position', 'normal'].includes(k)) geo.deleteAttribute(k);
+    const n = geo.attributes.position.count, c = m.material.color, col = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) col.set([c.r, c.g, c.b], i * 3);
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    return geo;
+  });
+  const mesh = mf.mesh(mergeGeometries(geos), mf.mat(0xffffff, { vertexColors: true }));
+  parts.forEach((m) => { node.remove(m); m.geometry.dispose(); });
+  node.add(mesh);
+  return mesh;
 }
 
 /** Optional hand-held / worn props, attached by name. Hidden until a behaviour or item shows them. */

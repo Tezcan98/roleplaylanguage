@@ -13,7 +13,8 @@ export class TravelService {
     return loc;
   }
 
+  /** Through a door or a gate. `beforeGo(locId)` (optional) may hold the way for a moment first (an ad between places). */
   go(locId, anchor, after) {
-    this.fader.run(() => { this.place(locId, anchor, { force: true }); after?.(); });
+    Promise.resolve(this.beforeGo?.(locId)).catch(() => {}).then(() => this.fader.run(() => { this.place(locId, anchor, { force: true }); after?.(); }));
   }
 }
