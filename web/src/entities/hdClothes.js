@@ -209,11 +209,12 @@ export function paintLook(scene, look) {
 }
 
 /**
- * A girl's face on the HD model (the models' faces are the same for boys and girls: two eyes and
- * two brows): lashes flicking out from each eye, rosy cheeks and pink lips. Placed from the eyes
- * (the "Face" material) on the skin's surface in front, fixed to the head bone.
+ * A mouth on the HD model (the models' faces are just two eyes and two brows) — for everyone; a
+ * girl also gets lashes flicking out from each eye, rosy cheeks, and pink lips. Placed from the eyes
+ * (the "Face" material) on the skin's surface in front, fixed to the head bone. `mustache`: the
+ * mouth a little lower, under it.
  */
-export function addGirlFace(scene, holder, { lips = 0xC8505F } = {}) {
+export function addFace(scene, holder, { girl = false, mustache = false, lips = girl ? 0xC8505F : 0x7A2E2A } = {}) {
   const head = scene.getObjectByName('Head');
   if (!head) return [];
   return facingZ(holder, () => {
@@ -237,7 +238,7 @@ export function addGirlFace(scene, holder, { lips = 0xC8505F } = {}) {
       if (!o.isMesh || [o.material].flat()[0]?.name !== 'Face') return;
       for (let i = 0, n = o.geometry.attributes.position.count; i < n; i++) { o.getVertexPosition(i, v); o.localToWorld(v); facePts.push(v.clone()); }
     });
-    for (const s of [-1, 1]) {
+    for (const s of girl ? [-1, 1] : []) {
       const eye = new THREE.Box3();
       for (const p of facePts) if (Math.sign(p.x - c.x) === s && p.y < c.y) eye.expandByPoint(p);
       if (eye.isEmpty()) continue;
@@ -252,9 +253,9 @@ export function addGirlFace(scene, holder, { lips = 0xC8505F } = {}) {
       const cx = c.x + s * fw * 0.36, cy = face.min.y - fh * 0.25;
       put(cheek, cx, cy, front(cx, cy) + fh * 0.03);
     }
-    const my = face.min.y - fh * 0.75;
+    const my = face.min.y - fh * (mustache ? 1.15 : 0.75);
     const mouth = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 8), new THREE.MeshStandardMaterial({ color: lips, roughness: 0.6 }));
-    mouth.scale.set(fw * 0.11, fh * 0.07, fh * 0.05);
+    mouth.scale.set(fw * (girl ? 0.11 : 0.14), fh * (girl ? 0.07 : 0.065), fh * 0.05);
     put(mouth, c.x, my, front(c.x, my));
     return out;
   });
@@ -299,7 +300,7 @@ export function addLookExtras(scene, holder, look) {
       });
       const front = (x, y) => { let z = -Infinity; for (const q of skin) if (Math.abs(q.x - x) < fw * 0.25 && Math.abs(q.y - y) < fh * 0.4 && q.z > z) z = q.z; return Number.isFinite(z) ? z : face.max.z; };
       if (look.beard && !hb.isEmpty()) { // a short beard: a bowl round the jaw and the chin from just under the mouth, ear to ear (the front half)
-        const top = face.min.y - fh * 0.8; // just under the mouth
+        const top = face.min.y - fh * 0.95; // just under the mouth
         const beard = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 8, 0, Math.PI, Math.PI / 2, Math.PI * 0.42), new THREE.MeshStandardMaterial({ color: look.beard, roughness: 0.95, side: THREE.DoubleSide }));
         beard.scale.set((hb.max.x - hb.min.x) / 2 * 1.03, fh * 1.25, (hb.max.z - hb.min.z) / 2 * 1.06);
         put(beard, (hb.min.x + hb.max.x) / 2, top, (hb.min.z + hb.max.z) / 2);

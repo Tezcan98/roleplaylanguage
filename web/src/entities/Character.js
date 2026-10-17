@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { buildRig, RIG_PROPS } from './CharacterRig.js';
 import { fitToBox } from '../engine/ModelLibrary.js';
 import { sitPose } from './Behaviors.js';
-import { addHeadscarf, addDress, addGirlFace, paintOutfit, addShoes, paintLook, addLookExtras, facingZ } from './hdClothes.js';
+import { addHeadscarf, addDress, addFace, paintOutfit, addShoes, paintLook, addLookExtras, facingZ } from './hdClothes.js';
 
 /** The jacket's colour (the blocky one's, CharacterRig.js). */
 const JACKET = 0xB5482E;
@@ -392,7 +392,7 @@ export class Character {
           const scarfParts = covered ? addHeadscarf(scene, this.group, scarfColor ?? scarf) ?? [] : [];
           const skirt = dress ? addDress(scene, this.group, look?.skirt ?? look?.robe ?? null) : null;
           if (look) addLookExtras(scene, this.group, look);
-          if (gender === 'girl') addGirlFace(scene, this.group);
+          addFace(scene, this.group, { girl: gender === 'girl', mustache: !!look?.mustache }); // a mouth for everyone; lashes, cheeks and lips for girls
           return { scarfParts, skirt };
         });
         const { scarfParts, skirt } = extras;

@@ -28,6 +28,10 @@ export function buildRig(mf, o) {
   const head = new THREE.Group(); head.position.y = 1.84; body.add(head);
   head.add(mf.sphere(0.3, o.skin, 20));
   [-0.1, 0.1].forEach((x) => head.add(mf.at(mf.sphere(0.04, 0x1B2440, 8), x, 0.03, 0.27)));
+  // the mouth: a small smile (under a moustache, a little lower)
+  const girl = !!(o.skirt || o.headscarf || o.bun), my = o.mustache ? -0.14 : -0.1;
+  const mouth = mf.at(mf.torus(0.055, 0.013, girl ? 0xC8505F : 0x8A3B32, 10, Math.PI), 0, my, Math.sqrt(0.3 * 0.3 - my * my) - 0.004);
+  mouth.rotation.z = Math.PI; head.add(mouth); // the lower half of a ring: a smile
   const hair = new THREE.Group(); head.add(hair);
   if (o.hair) {
     const h = mf.mesh(new THREE.SphereGeometry(0.32, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), o.hair);
@@ -52,7 +56,7 @@ export function buildRig(mf, o) {
     head.add(mf.at(mf.box(0.32, 0.04, 0.2, o.cap), 0, 0.2, 0.3));
   }
   if (o.beard) { // a short beard along the jaw from ear to ear, the mouth left free: the front half of a band round the lower head
-    const beard = mf.mesh(new THREE.SphereGeometry(0.355, 22, 8, 0, Math.PI, Math.PI * 0.6, Math.PI * 0.33), o.beard);
+    const beard = mf.mesh(new THREE.SphereGeometry(0.315, 22, 8, 0, Math.PI, Math.PI * 0.67, Math.PI * 0.28), o.beard);
     beard.position.set(0, 0, 0.005); head.add(beard);
   }
   if (o.sarik) { // the imam's sarık: white cloth wound round a cap, a dome on top
