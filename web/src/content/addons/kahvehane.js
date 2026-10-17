@@ -98,7 +98,11 @@ export default {
     rifat: { start: () => 'r1', nodes: {
       r1: { say: 'Gel evlat. Sence insanlar gerçekten Ay’a gitti mi?', en: 'Come here, child. Do you think people really went to the Moon?',
         words: [['Ay', 'the Moon'], ['gerçekten', 'really']],
-        options: [{ tr: 'Evet, gittiler.', en: 'Yes, they did.', next: 'r2' }, { tr: 'Bilmiyorum.', en: "I don't know.", next: 'r3' }] },
+        options: [{ tr: 'Evet, gittiler.', en: 'Yes, they did.', next: 'r2' }, { tr: 'Bilmiyorum.', en: "I don't know.", next: 'r3' }, { tr: 'Dama oynamaya var mısın?', en: 'Are you up for a game of dama?', next: 'rDama' }] },
+      // dama: he comes to a free table with you (systems/DamaClub.js); boards for two players are on the shelf
+      rDama: { say: 'Varım evlat! Ama haberin olsun, bu kahvehanede beni kimse yenemedi. Hadi, şu boş masaya oturalım.', en: "I'm in, child! But be warned, nobody in this coffeehouse has beaten me. Come on, let's sit at that free table.",
+        words: [['dama', 'Turkish draughts'], ['var mısın?', 'are you in? (up for it?)'], ['yenmek', 'to beat']],
+        options: [{ tr: 'Hadi oynayalım!', en: "Let's play!", do: ['dama-npc'] }, { tr: 'Sonra oynarız amca.', en: "We'll play later, uncle." }] },
       r2: { say: 'Kemal de öyle diyor. Belki haklısınız; ben yine de kitaplara bakacağım.', en: "Kemal says so too. Maybe you're right; I'll still look it up in the books.", words: [['haklı', 'right']], options: [{ tr: 'Kütüphanede çok kitap var.', en: 'There are many books in the library.' }] },
       r3: { say: 'Bilmediğin şeyi araştır. Kütüphanede Aslan Bey’e sor.', en: "Look into what you don't know. Ask Aslan Bey in the library.", words: [['araştırmak', 'to look into, to research']], options: [{ tr: 'Tamam amca.', en: 'Okay, uncle.' }] },
     } },

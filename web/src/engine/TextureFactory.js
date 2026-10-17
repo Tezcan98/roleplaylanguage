@@ -253,6 +253,11 @@ const GENERATORS = {
     g.fillText('KÖY', s / 2, s * 0.38);
     g.fillText('İLKOKULU', s / 2, s * 0.6);
   },
+  /** A dama board's 8×8 light and dark squares. */
+  damaBoard(g, s) {
+    const c = s / 8;
+    for (let r = 0; r < 8; r++) for (let k = 0; k < 8; k++) { g.fillStyle = (r + k) % 2 ? '#F1DDB5' : '#C8955C'; g.fillRect(k * c, r * c, c, c); }
+  },
   cayOcagiSign(g, s) {
     g.fillStyle = '#8E2B1E'; g.fillRect(0, 0, s, s);
     g.fillStyle = '#F7E3B5'; g.textAlign = 'center'; g.textBaseline = 'middle';

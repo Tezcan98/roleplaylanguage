@@ -484,7 +484,23 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .daily-day.today{background:var(--gold);border-color:var(--wood);transform:scale(1.08)}
 .overlay.ad.interstitial{background:#111;flex-direction:column;gap:12px}
 @media (orientation:landscape) and (max-height:520px){.shop .card{width:min(820px,100%)}.shop-sec{padding:8px 10px;gap:6px}}
-.overlay.shop,.overlay.daily,.overlay.ad,.overlay.ios-guide,.overlay.settings-panel{z-index:70} /* above the main menu */
+.dama .card{width:min(460px,100%);gap:8px;padding:14px}
+.dama-head{display:flex;align-items:center;gap:10px}.dama-head .ctitle{flex-grow:1;font-size:26px;margin:0}
+.dama-line{font:600 15px Nunito,sans-serif;min-height:40px;background:#fff;border:2px solid rgba(58,42,30,.2);border-radius:12px;padding:6px 10px}
+.dama-board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;width:min(100%,58vh,420px);align-self:center;border:5px solid #5B3A29;border-radius:8px;overflow:hidden;box-shadow:0 4px 0 #3E2718}
+.dama-board .cell{border:0;padding:0;aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.dama-board .cell.l{background:#F1DDB5}.dama-board .cell.d{background:#C8955C}
+.dama-board .cell.last{box-shadow:inset 0 0 0 3px rgba(224,176,74,.95)}
+.dama-board .cell.sel{background:#E9C24A}
+.dama-board .cell.to{background-image:radial-gradient(circle,rgba(62,142,74,.8) 24%,transparent 26%)}
+.dama-board .cell.can .piece{box-shadow:0 0 0 3px #7BE07E,0 3px 0 rgba(0,0,0,.35)}
+.dama-board .piece{width:78%;height:78%;border-radius:50%;box-shadow:0 3px 0 rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:min(4.5vw,22px);line-height:1}
+.dama-board .piece.w{background:radial-gradient(circle at 35% 30%,#FFFFFF,#E3DCCB 70%);border:2px solid #B8AE96}
+.dama-board .piece.b{background:radial-gradient(circle at 35% 30%,#6A6A6A,#1E1E1E 70%);border:2px solid #000}
+.dama-board .piece.king::after{content:"♛";color:#D4A93A;text-shadow:0 1px 0 rgba(0,0,0,.5)}
+.dama-foot{display:flex;justify-content:space-between;align-items:center;font:700 16px Fredoka,sans-serif}
+@media (orientation:landscape) and (max-height:520px){.dama .card{width:min(760px,100%);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto 1fr auto;column-gap:12px}.dama-board{grid-row:1/5;grid-column:1;width:min(86vh,420px)}.dama-head,.dama-line,.dama-foot,.dama .btn{grid-column:2}}
+.overlay.dama,.overlay.shop,.overlay.daily,.overlay.ad,.overlay.ios-guide,.overlay.settings-panel{z-index:70} /* above the main menu */
 .settings-panel .card{max-width:420px}
 .settings-body{display:grid;gap:10px;margin-top:8px}
 .settings-body .toggle{display:flex;align-items:center;gap:10px;font:600 17px Nunito,sans-serif}

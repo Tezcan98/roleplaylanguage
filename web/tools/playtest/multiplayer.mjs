@@ -213,6 +213,20 @@ try {
   check('football: a goal counts on both screens', !!goal && (await A.evaluate(() => window.__game.football.score.a)) === 1);
   await A.evaluate(() => window.__game.travel.go('village', 'schoolRoad')); await B.evaluate(() => window.__game.travel.go('village', 'schoolRoad'));
   await waitFor(async () => (await A.evaluate(() => window.__game.village.joinedAt === 'village' && window.__game.village.remotes.count)) === 1, 15000);
+  // dama in the kahvehane: A takes a board from the shelf and sits at a table, B sits down opposite
+  await A.evaluate(() => { const g = window.__game; g.dama.take(); g.dama.sitAt('kahve5'); });
+  check('dama: A puts a board on a table, B sees it waiting', !!(await waitFor(() => B.evaluate(() => window.__game.dama.tables.some((t) => t.n === 2 && t.white.name && !t.black)), 8000)));
+  await B.evaluate(() => window.__game.dama.sitAt('kahve6'));
+  check('…B sits opposite: the game is on, on both screens (A white, B black)', !!(await waitFor(async () => (await A.evaluate(() => !!document.querySelector('.dama.open') && window.__game.dama.mine()?.black?.name)) && (await B.evaluate(() => !!document.querySelector('.dama.open') && window.__game.dama.mine()?.turn === 1)), 8000)));
+  await A.click('.dama.open .dama-board .cell.can'); await sleep(150); await A.click('.dama.open .dama-board .cell.to');
+  check('…A moves, B sees it and it is B\'s turn', !!(await waitFor(() => B.evaluate(() => window.__game.dama.mine()?.turn === -1 && !!document.querySelector('.dama.open .dama-board .cell.can')), 8000)));
+  await B.click('.dama.open .dama-board .cell.can'); await sleep(150); await B.click('.dama.open .dama-board .cell.to');
+  check('…B answers, back to A (the server checks every move)', !!(await waitFor(() => A.evaluate(() => window.__game.dama.mine()?.turn === 1 && window.__game.dama.mine().last?.by === -1), 8000)));
+  check('…a move out of turn is refused', await B.evaluate(() => { const t = window.__game.dama.mine(); window.__game.village.net.send({ type: 'dama-move', n: t.n, from: 40, to: 32 }); return true; }) && !!(await waitFor(() => A.evaluate(() => window.__game.dama.mine()?.turn === 1), 2000)));
+  await B.evaluate(() => window.__game.player.sit(false));
+  check('…B gets up: the seat is free again, A waits with the board', !!(await waitFor(() => A.evaluate(() => { const t = window.__game.dama.mine(); return t && !t.black; }), 8000)));
+  await A.evaluate(() => window.__game.player.sit(false));
+  check('…A gets up: the board goes off the table for everyone', !!(await waitFor(() => B.evaluate(() => window.__game.dama.tables.length === 0), 8000)));
 
   // a phone locking its screen drops the socket: the game reconnects by itself
   await B.evaluate(() => window.__game.village.net.dropForTest());

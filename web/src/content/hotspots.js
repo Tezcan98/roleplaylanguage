@@ -42,6 +42,7 @@ export const HOTSPOTS = {
   ...Object.fromEntries(Array.from({ length: BENCH_SEATS }, (_, i) => [`village.bench${i + 1}`, { label: 'Banka otur', use: [`sit:bench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])), // (content/square.js)
   'village.bakkalCounter': { label: 'Alışveriş yap', use: ['market:bakkal'] }, // shop windows (ui/MarketView.js)
   'village.manavStall': { label: 'Meyve sebze al', use: ['market:manav'] },
+  'village.damaShelf': { label: 'Dama al', use: ['dama-take'], available: (c) => !c.dama?.carrying && !c.dama?.mine() }, // the kahvehane's shelf: take a board, sit at a table (systems/DamaClub.js)
   // giant chess on the square (ChessGame), and the stools of the tea garden
   // seats in the tea garden and on the benches round the chess board (counts: content/square.js)
   ...Object.fromEntries(Array.from({ length: TEA_SEATS }, (_, i) => [`village.cay${i + 1}`, { label: 'Çay bahçesinde otur', use: [`sit:cay${i + 1}`, 'free:village_tea'], available: (c) => !c.seated }])),

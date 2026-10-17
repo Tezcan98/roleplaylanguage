@@ -62,6 +62,8 @@ import { Animals } from './systems/Animals.js';
 import { Bicycle, bikeMount } from './systems/Bicycle.js';
 import { Scooters, scooterMount } from './systems/Scooter.js';
 import { KahveCirak } from './systems/KahveCirak.js';
+import { DamaView } from './ui/DamaView.js';
+import { DamaClub } from './systems/DamaClub.js';
 import { el } from './ui/dom.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
@@ -300,7 +302,7 @@ effects
   .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); })
   .register('sit', (anchor) => { // a seat in the current place (sofra at home, tea-garden stools…)
     const here = world.current.anchors.has(anchor) ? world.current : world.get('house'), a = here.anchors.get(anchor);
-    if (a) { player.place(a); player.sit(true, seatAt(here, a)); } // the hips on the seat (world/seats.js)
+    if (a) { player.place(a); player.sit(true, seatAt(here, a)); player.seatAnchor = anchor; } // the hips on the seat (world/seats.js); which seat: the dama tables (DamaClub)
     // how to get up again: always at the sofra (meals), the first two times on other seats
     const told = settings.get('sitHints', 0);
     if (anchor.startsWith('sofra') || told < 2) {
@@ -602,6 +604,17 @@ async function offerDaily() {
   takeDaily();
 }
 effects.register('shop', () => shop.open());
+// dama in the kahvehane: a board from the shelf, a table, someone opposite — or Rıfat Amca (systems/DamaClub.js)
+const damaView = new DamaView(host, {
+  modes, vocab,
+  say: (tr, en) => { const r = cast.get('rifat'); if (r) labels.bubble(r, tr, null, 3, en); tts.speak(tr, { speaker: 'rifat' }); },
+});
+const dama = new DamaClub({
+  world, mf, net: villageNet, player, view: damaView, cast, toasts,
+  myName: () => villageNet.name ?? playerName(), sitAt: (anchor) => effects.run([`sit:${anchor}`]),
+});
+gameCtx.dama = dama; // (the shelf's "Dama al" only when your hands are free)
+effects.register('dama-take', () => dama.take()).register('dama-npc', () => dama.playRifat());
 // the tailor's mannequin in the square wears the HD suit (so people see what they can buy)
 models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animations }) => {
   const a = world.get('village').anchors.get('mannequin');
@@ -850,7 +863,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ ambient: [kahveTalk, cirak, talk, ney, music, jumpShown, library, idleAd], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, talk, ney, music, jumpShown, library, idleAd], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -924,4 +937,4 @@ if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

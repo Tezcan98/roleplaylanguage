@@ -424,6 +424,17 @@ try {
   await page.keyboard.up('ArrowUp');
   check('…riding into the ball pushes it (horse football)', !!pushed);
   await ev(() => window.__game.animals.dismount());
+  // dama in the kahvehane with Rıfat Amca (online: someone sitting down opposite — multiplayer.mjs)
+  check('Rıfat Amca: "Dama oynamaya var mısın?"', await ev(() => window.__game.dialogue.dialogues.rifat.nodes.r1.options.some((o) => o.next === 'rDama')));
+  check('the shelf of dama boards in the kahvehane', await ev(() => window.__game.world.get('village').hotspots.has('village.damaShelf')));
+  await ev(() => window.__game.dama.playRifat()); await sleep(600);
+  check('…he comes to a free table and sits opposite; the board on screen, you play white', await ev(() => { const g = window.__game, t = g.dama.mine(), r = g.cast.get('rifat'); return !!t?.black?.npc && t.white.id === g.dama.myId && g.player.seated && document.querySelector('.dama.open') && r.home && Math.hypot(r.home.x - g.player.position.x, r.home.z - g.player.position.z) < 2.2; }));
+  await page.click('.dama.open .dama-board .cell.can'); await sleep(150);
+  await page.click('.dama.open .dama-board .cell.to');
+  check('…your move, then his (only forward or sideways)', !!await waitFor(() => ev(() => { const t = window.__game.dama.mine(); return t?.turn === 1 && t.board.some((v, i) => v < 0 && ((i / 8) | 0) < 5); }), 6000));
+  check('…the board stands on the table for everyone', await ev(() => window.__game.world.get('village').group.children.length > 0 && window.__game.dama.tables.length === 1));
+  await page.click('.dama.open [aria-label="Masadan kalk"]'); await sleep(400);
+  check('…getting up takes the board away, Rıfat Amca goes back to his table', await ev(() => !window.__game.dama.mine() && !document.querySelector('.dama.open') && !window.__game.player.seated && window.__game.cast.get('rifat').home === window.__game.world.get('village').anchors.get('amca3')));
   await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
 
   // --- word practice -------------------------------------------------------------------

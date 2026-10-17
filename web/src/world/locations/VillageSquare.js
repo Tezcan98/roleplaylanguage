@@ -675,6 +675,23 @@ export class VillageSquare extends Location {
       this.#stool(mf, `kahve${n + 1}`, x + 0.9, z, -Math.PI / 2);
     }
     this.anchor('kahveci', K.x - 2.5, K.z - K.d / 2 + 1.6, 0);
+    this.#damaShelf(mf, C, K.x + 8, K.z - K.d / 2 + 0.35);
+  }
+
+  /** The kahvehane's shelf of dama boards, against the back wall: "Dama al" (systems/DamaClub.js). */
+  #damaShelf(mf, C, x, z) {
+    const add = (m) => this.add(m), WOOD_ = 0x6B4A32;
+    add(mf.at(mf.box(1.4, 1.5, 0.4, WOOD_), x, 0.75, z));
+    for (const y of [0.45, 0.9, 1.35]) {
+      add(mf.at(mf.box(1.3, 0.03, 0.36, 0x8A6244), x, y - 0.18, z + 0.02));
+      for (const dx of [-0.42, 0, 0.42]) { // boxes of dama, the board painted on the lid
+        add(mf.at(mf.box(0.34, 0.07, 0.3, 0x5B3A29), x + dx, y - 0.13, z + 0.03));
+        add(mf.at(mf.box(0.3, 0.005, 0.005, 0xF1DDB5), x + dx, y - 0.1, z + 0.185));
+      }
+    }
+    this.#sign('DAMA', x, 1.75, z + 0.21, 0.9);
+    C.addBox(x - 0.7, x + 0.7, z - 0.2, z + 0.2);
+    this.hotspot('village.damaShelf', x, z + 1.0, 1.4);
   }
 
   /** Açık kütüphane: shelves full of books along the walls, Aslan Bey's desk, reading tables. */

@@ -2,6 +2,7 @@ import { WebSocketServer } from 'ws';
 import { createHmac } from 'node:crypto';
 import { ChatFilter } from './ChatFilter.js';
 import { ChessTable } from './ChessTable.js';
+import { DamaTables } from './DamaTables.js';
 import { Moderator } from './Moderator.js';
 
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
@@ -57,6 +58,9 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'jump' }                      my horse jumped (relayed: { type: 'jump', id })
  *   { type: 'chess-ask', color } | { type: 'chess-dede', color? } | { type: 'chess-leave' } | { type: 'chess-resign' }
  *   | { type: 'chess-move', from, to, promotion? }
+ *   { type: 'dama-open', n, npc? } | { type: 'dama-sit', n } | { type: 'dama-move', n, from, to } | { type: 'dama-again', n } | { type: 'dama-leave' }
+ *                                         the kahvehane's dama tables (DamaTables): a board put on table n (npc: a villager plays
+ *                                         black, the owner moves for him), sitting down opposite, moves checked by the Turkish rules
  *                                         the square's giant chess board, run by İsmail Dede (see ChessTable):
  *                                         ask him for a colour, play against him, leave the line, resign
  *                                         (older clients: chess-sit = ask, chess-stand = leave, chess-new is ignored)
@@ -81,6 +85,7 @@ export class VillageServer {
 
   #perIp = new Map();
   #chess = new Map(); // room → ChessTable
+  #dama = new Map(); // room → DamaTables (the kahvehane's dama tables)
   #balls = new Map(); // room → [last state of each ball] (the kicker also reports where it stops)
 
   /**
@@ -249,6 +254,16 @@ export class VillageServer {
         if (ok) this.#toAll(c.room, t.state()); else this.#send(c, t.state()); // a refused move snaps back
         break;
       }
+      case 'dama-open': case 'dama-sit': case 'dama-move': case 'dama-again': case 'dama-leave': { // dama in the kahvehane (DamaTables)
+        const d = this.#damaOf(c.room), n = msg.n, p = { id: c.id, name: c.name };
+        const ok = msg.type === 'dama-open' ? d.open(p, n, msg.npc ?? null)
+          : msg.type === 'dama-sit' ? d.sit(p, n)
+            : msg.type === 'dama-move' ? d.move(c.id, n, msg)
+              : msg.type === 'dama-again' ? d.again(c.id, n)
+                : d.leave(c.id);
+        if (ok) this.#toAll(c.room, d.state()); else this.#send(c, d.state()); // a refused move snaps back
+        break;
+      }
       case 'jump': // a horse jumps: the others see it too (the arc itself is drawn on every screen)
         this.#toRoom(c, { type: 'jump', id: c.id });
         break;
@@ -302,7 +317,7 @@ export class VillageServer {
     let unique = clean, n = 2;
     while (taken.has(unique.toLocaleLowerCase('tr'))) unique = `${clean}${n++}`;
     Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], ...lookOf(gender, style), ...outfitOf(outfit) } });
-    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ...this.#ballsFor(room), chess: this.#table(room).state(), ice: this.iceFor(c.id) });
+    this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ...this.#ballsFor(room), chess: this.#table(room).state(), dama: this.#damaOf(room).state(), ice: this.iceFor(c.id) });
     this.#toRoom(c, { type: 'join', peer: this.#public(c) });
     members.set(c.id, c);
     if (this.#table(room).rejoin(c)) this.#toAll(room, this.#table(room).state()); // back at the board after a dropped connection
@@ -355,6 +370,8 @@ export class VillageServer {
     this.turn?.release?.(c.id);
     const table = this.#chess.get(c.room);
     if (table?.disconnect(c.id, c.name)) this.#toAll(c.room, table.state(), c);
+    const dama = this.#dama.get(c.room);
+    if (dama?.leave(c.id)) this.#toAll(c.room, dama.state(), c);
     this.#endCall(c, 'left');
     this.#zone(c, null);
     const members = this.#room(c.room);
@@ -403,6 +420,7 @@ export class VillageServer {
     if (!this.#chess.has(room)) this.#chess.set(room, new ChessTable({ scores: this.chessScores, onScore: this.onChessScore }));
     return this.#chess.get(room);
   }
+  #damaOf(room) { if (!this.#dama.has(room)) this.#dama.set(room, new DamaTables()); return this.#dama.get(room); }
   /** Chess clocks run out and İsmail Dede moves even when nobody sends anything. */
   #tickChess() { for (const [room, t] of this.#chess) if (t.tick()) this.#toAll(room, t.state()); }
   /** Everyone in the room (optionally except one). */
