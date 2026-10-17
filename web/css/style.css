@@ -466,7 +466,7 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .shop-head{display:flex;align-items:center;gap:10px}
 .shop-head .ctitle{flex-grow:1;margin:0;color:#fff;text-shadow:0 3px 0 #16294A,0 0 2px #16294A}
 .shop-balance{font:700 19px Fredoka,sans-serif;background:linear-gradient(#FFE27A,#F5B32E);border:2px solid #7A4A0E;border-radius:999px;padding:4px 14px;box-shadow:inset 0 2px 0 rgba(255,255,255,.6),0 3px 0 #7A4A0E}
-.shop-body{display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding:4px 2px 6px}
+.shop-body{display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding:4px 2px 6px;flex:1 1 auto;min-height:0} /* (min-height 0: it scrolls inside the card instead of being cut off) */
 .shop-tabs{display:flex;gap:6px}
 .shop-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:4px 6px;border-radius:12px;border:2px solid #16294A;background:linear-gradient(#6F95C9,#4C6FA3);color:#E7F0FF;font:700 16px Fredoka,sans-serif;cursor:pointer;box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 3px 0 #16294A}
 .shop-tab small{display:block;font:700 10px Nunito,sans-serif;opacity:.85}
@@ -551,6 +551,21 @@ body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.op
 .shop-pic{width:88px;height:110px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))}
 .shop-aura{width:84px;height:105px;background:radial-gradient(ellipse 42px 14px at 50% 82%,rgba(255,213,74,.95) 0 55%,rgba(255,233,160,.35) 70%,transparent 72%);animation:auraPulse 1.6s ease-in-out infinite}
 .pill.boost{background:linear-gradient(#FFB199,#E5533D);color:#fff;font-weight:800}
+/* a phone held sideways: a compact shop (small pictures, two lines of text, low tabs) */
+@media (max-height:520px){
+  .shop .card{padding:8px 10px 10px;gap:6px}
+  .shop-head .ctitle{font-size:22px}.shop-balance{font-size:16px;padding:2px 10px}
+  .shop-head .iconbtn{width:38px;height:38px}
+  .shop-tab{min-height:34px;flex-direction:row;gap:6px;font-size:15px}.shop-tab small{display:none}.shop-tab-icon{font-size:18px}
+  .shop-grid{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:8px}
+  .shop-card{padding:5px 6px 7px;gap:2px}.shop-card:has(.shop-ribbon){padding-top:16px}
+  .shop-card-name,.shop-card.pack .shop-card-name,.shop-card.free .shop-card-name{font-size:15px}
+  .shop-art{min-height:0}.shop-card-top,.shop-food .shop-card-top,.shop-card.pack1 .shop-card-top,.shop-card.pack2 .shop-card-top{font-size:32px}
+  .shop-pic{width:56px;height:70px}
+  .shop-badge{font-size:11px}.shop-ribbon{font-size:9px;padding:0 7px 1px}
+  .shop-card .shop-sub,html[data-gloss-scale] .shop-card .shop-sub{font-size:11px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:0}
+  .shop-btn{min-height:32px;font-size:15px}
+}
 @keyframes auraPulse{50%{filter:brightness(1.35)}}
 /* shop window at the grocer's / greengrocer's (ui/MarketView.js): an MMO-style shelf of slots */
 .market .mk-win{width:min(360px,94vw);background:linear-gradient(#3B2A1E,#24180F);border:3px solid #B88A3E;border-radius:10px;box-shadow:0 0 0 2px #1A110A,0 10px 30px rgba(0,0,0,.6),inset 0 0 18px rgba(0,0,0,.6);color:#F4E6C8;padding:8px 10px 12px}
