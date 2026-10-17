@@ -15,8 +15,10 @@ export class AdMobAdProvider extends AdProvider {
   #sized = null;
   get hasRewarded() { return true; }
 
-  constructor({ rewardedId, interstitialId, bannerId } = {}) {
+  /** `onEvent(e, f, data)`: every ad shown, rewarded, opened (a banner's click), and its estimated revenue — for the live numbers (server AdStats.js). */
+  constructor({ rewardedId, interstitialId, bannerId, onEvent = null } = {}) {
     super();
+    this.onEvent = onEvent;
     this.lastError = '';
     this.ids = { rewarded: rewardedId || TEST.rewarded, interstitial: interstitialId || TEST.interstitial, banner: bannerId || TEST.banner };
     this.testing = Object.fromEntries(Object.keys(TEST).map((k) => [k, this.ids[k] === TEST[k]])); // test mode only for Google's test ids
@@ -27,12 +29,26 @@ export class AdMobAdProvider extends AdProvider {
   #init() {
     this.ready ??= (async () => {
       await AdMob.initialize({ initializeForTesting: Object.values(this.testing).some(Boolean) });
+      this.#listen();
       try {
         const info = await AdMob.requestConsentInfo();
         if (info.isConsentFormAvailable && info.status === 'REQUIRED') await AdMob.showConsentForm();
       } catch { /* no consent form needed */ }
     })();
     return this.ready;
+  }
+
+  /** The plugin's ad events → onEvent (impressions of full-screen ads come with the revenue AdMob estimates for them). */
+  #listen() {
+    if (!this.onEvent) return;
+    const on = (name, e, f) => AdMob.addListener(name, (d) => { try { this.onEvent(e, f, d ?? {}); } catch { /* never in the ad's way */ } }).catch(() => {});
+    for (const [name, e, f] of [
+      ['interstitialAdShowed', 'show', 'interstitial'], ['interstitialAdImpression', 'paid', 'interstitial'], ['interstitialAdDismissed', 'dismiss', 'interstitial'],
+      ['interstitialAdFailedToShow', 'fail', 'interstitial'], ['interstitialAdFailedToLoad', 'fail', 'interstitial'],
+      ['onRewardedVideoAdShowed', 'show', 'rewarded'], ['onRewardedVideoAdImpression', 'paid', 'rewarded'], ['onRewardedVideoAdReward', 'reward', 'rewarded'],
+      ['onRewardedVideoAdDismissed', 'dismiss', 'rewarded'], ['onRewardedVideoAdFailedToShow', 'fail', 'rewarded'], ['onRewardedVideoAdFailedToLoad', 'fail', 'rewarded'],
+      ['bannerAdImpression', 'impression', 'banner'], ['bannerAdPaid', 'paid', 'banner'], ['bannerAdOpened', 'click', 'banner'], ['bannerAdFailedToLoad', 'fail', 'banner'],
+    ]) on(name, e, f);
   }
 
   async showRewarded() {

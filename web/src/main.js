@@ -256,7 +256,15 @@ const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
   : native ? new nativeKit.NativeSpeechRecognizer('tr-TR')
   : manifest.sttEndpoint ? new RemoteSpeechRecognizer(manifest.sttEndpoint) : new WebSpeechRecognizer('tr-TR');
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
-const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId, bannerId: manifest.admob?.bannerId })
+// every ad event to our server too: live numbers (AdMob's own come a day or two late; server/src/AdStats.js)
+const adEvent = (e, f, d) => {
+  if (!settings.get('deviceId')) settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (as the square makes it: one per device)
+  const body = { e, f, v: appVersion, pid: settings.get('deviceId'), ...(d.valueMicros != null ? { micros: Number(d.valueMicros), cur: d.currencyCode } : {}) };
+  import('@capacitor/core').then(({ CapacitorHttp }) => CapacitorHttp.post({ url: 'https://sehem2.com.tr/api/ad-event', headers: { 'Content-Type': 'application/json' }, data: body })).catch(() => {});
+};
+let appVersion = '';
+if (native) nativeKit.App.getInfo().then((i) => { appVersion = `${i.version}`; }).catch(() => {});
+const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId, bannerId: manifest.admob?.bannerId, onEvent: adEvent })
   : new MockAdProvider(host, modes, params.has('fastads') ? 1 : 5, { interstitials: params.has('mockads'), rewarded: params.has('mockads') }); // (the website: no ads; tests: stand-ins)
 const billing = !params.has('nobilling') && SELL_PACKS && native ? new PlayBilling(nativeKit.NativePurchases, nativeKit.PURCHASE_TYPE) : new NoBilling();
 const gate = new ClassAccessGate({ host, modes, wallet, ads });
