@@ -138,7 +138,9 @@ export function addDress(scene, holder, color = null) {
   const turned = holder.rotation.y;
   holder.rotation.y = 0; holder.updateMatrixWorld(true); // measured facing +z
   const box = (name) => boxOf(scene, name);
-  const pants = box('Pants'), all = new THREE.Box3().setFromObject(scene, true);
+  let pants = box('Pants');
+  const all = new THREE.Box3().setFromObject(scene, true), belted = pants.isEmpty(); // the suit has no trousers of their own (jacket and trousers are one): the imam's cübbe hangs from the belt
+  if (belted) { const belt = box('Belt'); if (belt.isEmpty()) { holder.rotation.y = turned; holder.updateMatrixWorld(true); return null; } pants = belt.clone(); pants.max.y = belt.min.y; }
   let shirt = null;
   scene.traverse((o) => { if (o.isMesh) for (const m of [o.material].flat()) if (m.name === 'Shirt') shirt = m.color; });
   if (color != null) shirt = new THREE.Color(color); // a villager's skirt colour
@@ -287,11 +289,34 @@ export function addLookExtras(scene, holder, look) {
       put(new THREE.Mesh(new THREE.BoxGeometry(r * 1.1, fh * 0.12, r * 0.8), mat(look.cap)), c.x, top - fh * 0.6, face.max.z + r * 0.15);
     }
     */
-    if (look.takke) { // the imam's small round white cap on the crown
-      const top = hair.isEmpty() ? face.max.y + fh * 2 : hair.max.y, r = hair.isEmpty() ? fw * 0.85 : (hair.max.x - hair.min.x) * 0.4;
-      const takke = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 8, 0, Math.PI * 2, 0, Math.PI * 0.32), mat(look.takke));
-      takke.scale.y = 0.75;
-      put(takke, c.x, top - r * 0.62, hair.isEmpty() ? c.z - fw * 0.3 : (hair.min.z + hair.max.z) / 2);
+    if (look.beard || look.sarik) {
+      // the head's skin (above the head bone at the neck): the beard sits on it, the sarık goes round it
+      scene.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.update(); });
+      const neck = head.getWorldPosition(new THREE.Vector3()).y, skin = [], v = new THREE.Vector3(), hb = new THREE.Box3();
+      scene.traverse((o) => {
+        if (!o.isMesh || [o.material].flat()[0]?.name !== 'Skin') return;
+        for (let i = 0, n = o.geometry.attributes.position.count; i < n; i++) { o.getVertexPosition(i, v); o.localToWorld(v); if (v.y > neck) { skin.push(v.clone()); hb.expandByPoint(v); } }
+      });
+      const front = (x, y) => { let z = -Infinity; for (const q of skin) if (Math.abs(q.x - x) < fw * 0.25 && Math.abs(q.y - y) < fh * 0.4 && q.z > z) z = q.z; return Number.isFinite(z) ? z : face.max.z; };
+      if (look.beard) { // a short, rounded beard along the jaw and the chin
+        const by = face.min.y - fh * 1.22, beard = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), mat(look.beard));
+        beard.scale.set(fw * 0.55, fh * 0.34, fh * 0.32);
+        put(beard, c.x, by, front(c.x, by) - fh * 0.12);
+      }
+      if (look.sarik && !hb.isEmpty()) { // the imam's sarık: white cloth wound round the head from just above the brows, a dome on top (the hair goes)
+        scene.traverse((o) => { if (o.isMesh && [o.material].flat()[0]?.name === 'Hair') o.visible = false; });
+        const R = (hb.max.x - hb.min.x) * 0.5 * 1.1, low = face.max.y + fh * 0.2, high = hb.max.y + R * 0.12, bh = high - low;
+        const cy = (low + high) / 2, cz = (hb.min.z + hb.max.z) / 2 - R * 0.05;
+        put(new THREE.Mesh(new THREE.CylinderGeometry(R, R * 0.98, bh, 24), mat(look.sarik)), c.x, cy, cz);
+        for (const [dy, tilt] of [[-0.3, 0.1], [0.05, -0.08], [0.36, 0.06]]) { // the folds of the wound cloth
+          const ring = new THREE.Mesh(new THREE.TorusGeometry(R * 0.99, R * 0.11, 8, 24), mat(look.sarik));
+          ring.rotation.set(Math.PI / 2 + tilt, 0, 0);
+          put(ring, c.x, cy + bh * dy, cz);
+        }
+        const dome = new THREE.Mesh(new THREE.SphereGeometry(R * 0.8, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(look.sarik));
+        dome.scale.y = 0.55;
+        put(dome, c.x, high - R * 0.05, cz);
+      }
     }
     if (look.apron && !shirt.isEmpty() && hips) {
       const w = (shirt.max.x - shirt.min.x) * 0.5, h = (shirt.max.y - shirt.min.y) * 1.25;

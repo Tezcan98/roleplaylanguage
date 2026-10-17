@@ -390,7 +390,7 @@ export class Character {
         this.group.add(scene);
         const extras = facingZ(this.group, () => {
           const scarfParts = covered ? addHeadscarf(scene, this.group, scarfColor ?? scarf) ?? [] : [];
-          const skirt = dress ? addDress(scene, this.group, look?.skirt ?? null) : null;
+          const skirt = dress ? addDress(scene, this.group, look?.skirt ?? look?.robe ?? null) : null;
           if (look) addLookExtras(scene, this.group, look);
           if (gender === 'girl') addGirlFace(scene, this.group);
           return { scarfParts, skirt };

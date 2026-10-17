@@ -25,7 +25,7 @@ export function villagerHd(look, id = '') {
   const body = BODIES[id] ?? (!woman && look.vest ? 'suit' : 'casual');
   return {
     key: `hd.${woman && body === 'suit' ? 'casual' : body}.${woman ? 'girl' : 'boy'}`,
-    opts: { covered: !!look.headscarf, scarfColor: look.headscarf ?? null, dress: !!look.skirt, look },
+    opts: { covered: !!look.headscarf, scarfColor: look.headscarf ?? null, dress: !!(look.skirt || look.robe), look }, // (the imam's cübbe hangs like a long skirt)
   };
 }
 

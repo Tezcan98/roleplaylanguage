@@ -16,7 +16,7 @@ export function buildRig(mf, o) {
   const strong = o.build === 'strong'; // broad shoulders, thicker arms and legs
   const legW = strong ? 0.28 : 0.24;
   const legL = limb(legW, 0.8, o.pants, -0.15, 0.8), legR = limb(legW, 0.8, o.pants, 0.15, 0.8);
-  if (o.skirt) body.add(mf.at(mf.cyl(0.3, 0.52, 0.85, o.skirt, 12), 0, 0.58, 0));
+  if (o.skirt || o.robe) body.add(mf.at(mf.cyl(0.3, 0.52, 0.85, o.skirt ?? o.robe, 12), 0, 0.58, 0)); // a long skirt, or the imam's cübbe
   const torso = mf.at(mf.rbox(strong ? 0.8 : 0.62, 0.75, strong ? 0.42 : 0.36, o.shirt, 0.1), 0, 1.18, 0);
   body.add(torso);
   if (o.apron) body.add(mf.at(mf.box(0.48, 0.95, 0.03, 0xFFFFFF), 0, 0.95, 0.2));
@@ -51,9 +51,12 @@ export function buildRig(mf, o) {
     head.add(mf.at(mf.cyl(0.33, 0.33, 0.1, o.cap, 16), 0, 0.24, 0));
     head.add(mf.at(mf.box(0.32, 0.04, 0.2, o.cap), 0, 0.2, 0.3));
   }
-  if (o.takke) { // the imam's small round white cap on the crown
-    const takke = mf.mesh(new THREE.SphereGeometry(0.36, 20, 8, 0, Math.PI * 2, 0, Math.PI * 0.27), o.takke);
-    takke.position.y = 0.03; head.add(takke);
+  if (o.beard) head.add(mf.at(mf.box(0.34, 0.13, 0.08, o.beard), 0, -0.17, 0.27)); // a short beard round the chin
+  if (o.sarik) { // the imam's sarık: white cloth wound round a cap, a dome on top
+    head.add(mf.at(mf.cyl(0.37, 0.36, 0.2, o.sarik, 20), 0, 0.2, 0));
+    for (const [y, tilt] of [[0.13, 0.08], [0.25, -0.08]]) { const ring = mf.at(mf.torus(0.365, 0.055, o.sarik, 20), 0, y, 0); ring.rotation.set(Math.PI / 2 + tilt, 0, 0); head.add(ring); } // the folds of the wound cloth
+    const dome = mf.at(mf.mesh(new THREE.SphereGeometry(0.3, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), o.sarik), 0, 0.28, 0);
+    dome.scale.y = 0.6; head.add(dome);
   }
   if (o.glasses) [-0.1, 0.1].forEach((x) => head.add(mf.at(mf.torus(0.07, 0.012, 0x1B2440), x, 0.03, 0.29)));
 

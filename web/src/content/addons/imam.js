@@ -29,8 +29,8 @@ export default {
   npcs: {
     imam: {
       name: 'Yusuf Hoca', short: 'Yusuf Hoca', role: 'imam · the prayer leader',
-      look: { shirt: 0xF4F1EA, vest: 0x2F3E56, pants: 0x2A2F3A, skin: 0xE6B48C, hair: 0x2B1D14, takke: 0xFFFFFF },
-      face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#CFE3D4"/><circle cx="32" cy="37" r="15" fill="#E6B48C"/><path d="M18 31q2-12 14-12t14 12q-5-3-14-3t-14 3z" fill="#FFFFFF" stroke="#D5D0C4" stroke-width="1"/><circle cx="26.5" cy="37" r="2" fill="#1B2440"/><circle cx="37.5" cy="37" r="2" fill="#1B2440"/><path d="M27 44q5 4 10 0" stroke="#8A4A3A" stroke-width="2" fill="none" stroke-linecap="round"/></svg>',
+      look: { shirt: 0xF4F1EA, vest: 0x1F2A44, robe: 0x1F2A44, pants: 0x1F2A44, skin: 0xE6B48C, hair: 0x2B1D14, beard: 0x2B1D14, sarik: 0xFFFFFF }, // a navy cübbe, a white sarık, a short beard
+      face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#CFE3D4"/><path d="M14 64q0-14 18-14t18 14z" fill="#1F2A44"/><circle cx="32" cy="37" r="14" fill="#E6B48C"/><path d="M19 43q1 9 13 9t13-9q-3 3-13 3t-13-3z" fill="#2B1D14"/><path d="M26 42.5q6-2.5 12 0" stroke="#2B1D14" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="32" cy="27" rx="15" ry="6.5" fill="#FFFFFF" stroke="#D9D3C6" stroke-width="1"/><path d="M18 26q14-5 28 0M18.5 29.5q13.5-5 27 0" stroke="#D9D3C6" stroke-width="1.2" fill="none"/><ellipse cx="32" cy="21" rx="10" ry="5" fill="#FFFFFF" stroke="#D9D3C6" stroke-width="1"/><circle cx="27" cy="36" r="1.9" fill="#1B2440"/><circle cx="37" cy="36" r="1.9" fill="#1B2440"/></svg>',
       route: ROUTE,
     },
   },
