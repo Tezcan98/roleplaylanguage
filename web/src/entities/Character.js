@@ -432,7 +432,7 @@ export class Character {
   replayHd() { if (this.mixer && this.mixer === this.#hd?.mixer) { this.current = null; this.#playClip(this.seated ? 'sit' : 'idle'); } }
 
   /**
-   * "Altın Yıldız Işığı" (bought in the shop): a gold ring on the ground with a faint glow and a few
+   * the golden light (Altın baklava from the shop): a gold ring on the ground with a faint glow and a few
    * small sparkles rising round the feet — seen by everyone in the square. Plain (not additive)
    * gold for the ring, so it shows on the light cobblestones in daylight too; nothing more (a
    * column of light was too much).

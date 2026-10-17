@@ -116,7 +116,7 @@ export class ShopView {
       });
     } else {
       // outfits (one on at a time) and ad-free mode
-      cards = SHOP.filter((i) => (!i.for || i.for(this.gender, this.look)) && (!i.onlyOwned || w.owns(i.id))).map((i) => {
+      cards = SHOP.filter((i) => (!i.for || i.for(this.gender, this.look))).map((i) => {
         const owned = w.owns(i.id), worn = i.slot && w.equipped(i.slot) === i.id && (!i.needs || w.equipped(i.needs) === i.needs);
         let action;
         if (i.needs && !w.owns(i.needs)) action = btn('Önce HD karakter', '', () => {}, true); // outfits are for the HD character

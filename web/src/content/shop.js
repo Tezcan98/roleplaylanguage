@@ -21,8 +21,6 @@ export const SHOP = [
   outfit('jersey', 'Futbol forması', 'Football shirt'),
   outfit('sweater', 'Kazak', 'Jumper'),
   outfit('summer', 'Yazlık', 'Summer clothes'),
-  // the old golden light, bought for good: only shown to whoever has it (now it is Altın baklava, food)
-  { id: 'aura', slot: 'aura', title: '✨ Altın Yıldız Işığı', en: 'A golden light shining under your feet — everyone in the square sees you', price: CONFIG.prices.aura, picture: true, onlyOwned: true },
 ];
 
 /**
@@ -35,7 +33,7 @@ export const FOODS = [
   { id: 'baklava', icon: '🍯', title: 'Altın baklava', en: 'You shine with a golden light — everyone in the square sees you', price: CONFIG.prices.aura, minutes: CONFIG.boosts.glowDays * 24 * 60, glow: true },
 ];
 
-/** The glowing ring under the player is on (Altın baklava eaten, or the old golden light bought). */
+/** The glowing ring under the player is on (Altın baklava eaten; whoever bought the old golden light keeps it on). */
 export const auraOn = (wallet) => wallet.boostLeft('baklava') > 0 || wallet.equipped('aura') === 'aura';
 
 /** The outfit the player has on (an id like 'casual'), or null. */
