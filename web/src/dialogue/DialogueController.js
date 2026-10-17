@@ -97,7 +97,7 @@ export class DialogueController {
         if (!live()) return;
         this.lastLine = r.reply; this.lastFresh = true;
         this.view.setLine(r.reply, r.meaning);
-        this.view.setWords(r.words);
+        this.view.setWords(r.words, (tr) => this.vocab.knows?.(tr));
         r.words.forEach(([tr, m]) => this.vocab.learn(tr, m));
         if (r.correction) this.view.setHint(`Doğrusu: ${r.correction}`);
         this.tts.speak(r.reply, { speaker: npc, fresh: true }); // a new sentence each time: no Gemini voice for it
@@ -122,7 +122,7 @@ export class DialogueController {
     if (hidden) this.view.setLine('🔊 …', 'Listen carefully', true);
     else this.view.setLine(node.say, node.en);
     this.view.setHint(null);
-    this.view.setWords(hidden ? [] : node.words);
+    this.view.setWords(hidden ? [] : node.words, (tr) => this.vocab.knows?.(tr));
     if (!hidden) this.#learn(node);
 
     this.#activity?.destroy();
@@ -137,7 +137,7 @@ export class DialogueController {
 
     if (hidden) { // reveal what was said before moving on
       this.view.setLine(node.say, node.en);
-      this.view.setWords(node.words);
+      this.view.setWords(node.words, (tr) => this.vocab.knows?.(tr));
       this.#learn(node);
       this.#activity.destroy();
       await new Promise((r) => setTimeout(r, 1400));

@@ -54,7 +54,7 @@ export const BIN_WORDS = [['çöp kutusu', 'rubbish bin'], ['çöp', 'rubbish'],
  */
 export const MARKETS = {
   bakkal: {
-    title: 'Mehmet Bakkal', en: "Mehmet's grocery", npc: 'bakkal',
+    title: 'Recep Bakkal', en: "Recep's grocery", npc: 'bakkal',
     goods: [['ekmek', 10, '🍞', 'bir ekmek'], ['sut', 15, '🥛', 'bir şişe süt'], ['simit', 10, '🥯', 'bir simit'], ['ayran', 10, '🥤', 'bir ayran'], ['peynir', 60, '🧀', 'yarım kilo peynir'], ['yumurta', 30, '🥚', 'altı yumurta']],
   },
   manav: {

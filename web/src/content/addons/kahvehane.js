@@ -31,7 +31,7 @@ export const KAHVE_TALKS = [
     { who: 'rifat', tr: 'Bakkalın fiyatları neden her hafta artıyor, biliyor musunuz?', en: 'Do you know why the grocer’s prices go up every week?' },
     { who: 'kemal', tr: 'Neden?', en: 'Why?' },
     { who: 'rifat', tr: 'Gece biri gelip etiketleri değiştiriyor. Ben gördüm!', en: 'Someone comes at night and changes the price tags. I saw it!' },
-    { who: 'husnu', tr: 'Etiketleri Mehmet değiştiriyor, Rıfat. Toptancı zam yapınca o da yapıyor.', en: 'Mehmet changes the tags himself, Rıfat. When the wholesaler raises prices, so does he.' },
+    { who: 'husnu', tr: 'Etiketleri Recep değiştiriyor, Rıfat. Toptancı zam yapınca o da yapıyor.', en: 'Recep changes the tags himself, Rıfat. When the wholesaler raises prices, so does he.' },
   ],
   [
     { who: 'kemal', tr: 'Aslan Bey kütüphanede bütün gün ne yapıyor sizce?', en: 'What do you think Aslan Bey does in the library all day?' },

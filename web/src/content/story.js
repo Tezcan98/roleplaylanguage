@@ -128,7 +128,6 @@ export const STORY = {
           target: (c) => (laundryCount(c) >= 3 ? { npc: 'anne' } : { kind: 'camasir' }),
           minutes: 20,
         },
-        { id: 'masal', title: 'Dedenin masalı', obj: 'Dedenin yanına otur, masal dinle', en: 'Sit with grandpa and listen to a tale', target: { npc: 'dede' }, complete: { flag: 'tale-kazan' }, after: ['chapter'], minutes: 60 },
       ],
     },
 
@@ -237,8 +236,8 @@ export const STORY = {
         },
         {
           id: 'letter', title: 'Mektup',
-          obj: (c) => (c.flag('letter-delivered') ? 'Bakkalın haberini dedene anlat' : c.has('mektup') ? 'Mektubu bakkal Mehmet amcaya götür (köy meydanı)' : 'Dedenle konuş'),
-          en: (c) => (c.flag('letter-delivered') ? "Tell grandpa the grocer's news" : c.has('mektup') ? 'Take the letter to Mehmet the grocer (village square)' : 'Talk to grandpa'),
+          obj: (c) => (c.flag('letter-delivered') ? 'Bakkalın haberini dedene anlat' : c.has('mektup') ? 'Mektubu bakkal Recep amcaya götür (köy meydanı)' : 'Dedenle konuş'),
+          en: (c) => (c.flag('letter-delivered') ? "Tell grandpa the grocer's news" : c.has('mektup') ? 'Take the letter to Recep the grocer (village square)' : 'Talk to grandpa'),
           target: (c) => (c.flag('letter-delivered') || !c.has('mektup') ? { npc: 'dede' } : { npc: 'bakkal' }),
           minutes: 25,
         },
@@ -323,11 +322,13 @@ export const STORY = {
       },
       intro: {
         num: 'Salı · Bölüm 13', title: 'Okuldan sonra',
-        text: 'Eve geldin. Bugünkü ders daha zordu. Önce kısa bir tekrar, sonra aileyle sohbet.',
-        en: 'You are home. Today’s lesson was harder. First a short review, then time with the family.',
+        text: 'Eve geldin. Bugün sayıları öğrendin! Önce kısa bir tekrar, sonra annen için manava git. Akşam deden bir masal anlatacak.',
+        en: 'You are home. Today you learnt the numbers! First a short review, then go to the greengrocer for mom. In the evening grandpa will tell a tale.',
       },
       quests: [
         { id: 'review-2', title: 'Dersi tekrar et', obj: 'Kitabından bugünkü konuyu tekrar et', en: 'Review today’s topic in your book', target: { hotspot: 'house.shelf' }, complete: { use: 'house.shelf' }, minutes: 20 },
+        // Nasreddin Hoca's cauldron: past tense and -mış come after the first days (it was on Sunday)
+        { id: 'masal', title: 'Dedenin masalı', obj: 'Dedenin yanına otur, masal dinle', en: 'Sit with grandpa and listen to a tale', target: { npc: 'dede' }, complete: { flag: 'tale-kazan' }, minutes: 60 },
         { id: 'talk-baba-tools', title: 'Babaya yardım', obj: 'Babanla konuş', en: 'Talk to dad', target: { npc: 'baba' }, minutes: 15 },
         { id: 'talk-dede-3', title: 'Bahçe planı', obj: 'Dedenle yarın için konuş', en: 'Talk to grandpa about tomorrow', target: { npc: 'dede' }, after: ['chapter'], minutes: 15 },
       ],
@@ -469,14 +470,42 @@ export const STORY = {
       },
       intro: {
         num: 'Cumartesi · Bölüm 21', title: 'Hafta sonu başladı',
-        text: 'Okul yok! Arkadaşların köy meydanında. Bakkal Mehmet amca da oğlunun düğünü için büyük bir hazırlık yapıyor.',
-        en: 'No school! Your friends are at the village square. Mehmet the grocer is making big preparations for his son’s wedding.',
+        text: 'Okul yok! Arkadaşların köy meydanında. Bu akşam bakkal Recep amcanın oğlunun düğünü var; meydanda hazırlık yapılıyor.',
+        en: 'No school! Your friends are at the village square. Tonight is the wedding of Recep the grocer’s son; the square is getting ready.',
       },
       quests: [
         { id: 'sat-elif', title: 'Elif ile buluş', obj: 'Elif ile konuş', en: 'Talk to Elif', target: { npc: 'elif' }, minutes: 10 },
         { id: 'sat-can', title: 'Can ile buluş', obj: 'Can ile konuş', en: 'Talk to Can', target: { npc: 'can' }, minutes: 10 },
         { id: 'sat-zehra', title: 'Zehra ile buluş', obj: 'Zehra ile konuş', en: 'Talk to Zehra', target: { npc: 'zehra' }, minutes: 10 },
-        { id: 'sat-bakkal', title: 'Düğün hazırlığı', obj: 'Bakkal Mehmet amcayla konuş', en: 'Talk to Mehmet the grocer', target: { npc: 'bakkal' }, after: ['chapter'], minutes: 20 },
+        { id: 'sat-bakkal', title: 'Düğün hazırlığı', obj: 'Bakkal Recep amcayla konuş', en: 'Talk to Recep the grocer', target: { npc: 'bakkal' }, after: ['chapter'], minutes: 20 },
+      ],
+    },
+
+    // Saturday evening: the wedding in the square — congratulate the family, join the halay
+    {
+      id: 'd6-wedding', day: 7, time: '19:30', location: 'village', spawn: 'yardRoad',
+      cast: {
+        anne: ['village', 'weddingAnne', 'stand'],
+        baba: ['village', 'weddingBaba', 'stand'],
+        dede: ['village', 'weddingDede', 'stand'],
+        bakkal: ['village', 'weddingHost', 'stand'],
+        elif: ['village', 'halay1', 'halay'],
+        can: ['village', 'halay2', 'halay'],
+        zehra: ['village', 'halay3', 'halay'],
+        kemal: ['village', 'halay4', 'halay'],
+        rifat: ['village', 'halay5', 'halay'],
+        manav: ['village', 'halay6', 'halay'],
+        seyis: ['village', 'halay7', 'halay'],
+      },
+      intro: {
+        num: 'Cumartesi · Bölüm 22', title: 'Düğün',
+        text: 'Akşam oldu. Meydanda davul zurna çalıyor! Recep amcanın oğlu bugün evleniyor, bütün köy düğünde.',
+        en: 'Evening has come. Drum and zurna are playing in the square! Recep’s son is getting married today; the whole village is at the wedding.',
+      },
+      quests: [
+        { id: 'wedding-congrats', title: 'Tebrik', obj: 'Recep amcayı tebrik et', en: 'Congratulate uncle Recep', target: { npc: 'bakkal' }, minutes: 10 },
+        { id: 'wedding-halay', title: 'Halay', obj: 'Halaya katıl', en: 'Join the halay (the line dance by the fountain)', target: { hotspot: 'village.halay' }, complete: { flag: 'halay-done' }, minutes: 30 },
+        { id: 'wedding-home', title: 'Eve dönüş', obj: 'Annenle konuş', en: 'Talk to mom', target: { npc: 'anne' }, after: ['chapter'], minutes: 10 },
       ],
     },
 
@@ -492,7 +521,7 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Pazar · Bölüm 22', title: 'Pazar günü',
+        num: 'Pazar · Bölüm 23', title: 'Pazar günü',
         text: 'Hafta sonunun son günü. Ailenin yanında biraz yardım ediyor, sonra arkadaşlarınla yeniden buluşuyorsun.',
         en: 'The last day of the weekend. You help your family for a while, then meet your friends again.',
       },

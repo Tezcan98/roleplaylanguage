@@ -49,7 +49,7 @@ export const lookKey = (gender, style) => `${gender === 'girl' ? 'girl' : 'boy'}
 
 export const NPCS = {
   bakkal: {
-    name: 'Mehmet Bakkal', short: 'Bakkal', role: 'bakkal · grocer',
+    name: 'Recep Bakkal', short: 'Bakkal', role: 'bakkal · grocer',
     look: { shirt: 0xD08A42, pants: 0x3E536B, skin: 0xF0C09A, hair: 0x2E2926, mustache: 0x382A22, apron: true, scale: 0.98 },
     face: '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#F0D2A6"/><circle cx="32" cy="36" r="16" fill="#F0C09A"/><path d="M16 30q4-13 16-13t16 13q-5-4-16-4t-16 4z" fill="#2E2926"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M24 43q8-5 16 0q-8 3-16 0z" fill="#382A22"/></svg>',
   },

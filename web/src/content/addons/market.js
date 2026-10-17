@@ -1,8 +1,8 @@
 import { man, M2 } from '../characters.js';
 /**
- * The greengrocer (manav) at the village square. Sunday afternoon mom sends Ahmet to buy
- * a kilo of apples and two kilos of potatoes: kilos, fruit and vegetable names, prices,
- * adding up and change.
+ * The greengrocer (manav) at the village square. Tuesday after school — the day of the numbers
+ * lesson — mom sends Ahmet to buy a kilo of apples and two kilos of potatoes: kilos, fruit and
+ * vegetable names, prices, adding up and change, right after the numbers are learnt.
  */
 const face = '<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#C9E6A8"/><circle cx="32" cy="36" r="16" fill="#E9B98F"/><path d="M16 30q4-12 16-12t16 12q-6-3-16-3t-16 3z" fill="#4A3426"/><circle cx="26" cy="36" r="2" fill="#1B2440"/><circle cx="38" cy="36" r="2" fill="#1B2440"/><path d="M25 43q7 5 14 0" stroke="#7A3B2A" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>';
 
@@ -24,32 +24,34 @@ export default {
   },
 
   quests: [{
-    chapter: 'd1-afternoon', after: 'laundry',
+    chapter: 'd3-home', after: 'review-2',
     quests: [{
       id: 'manav', title: 'Manav',
-      obj: (c) => (c.has('patates') ? 'Aldıklarını annene götür' : 'Köy meydanındaki manavdan elma ve patates al'),
-      en: (c) => (c.has('patates') ? 'Take what you bought to mom' : 'Buy apples and potatoes at the greengrocer in the village square'),
-      target: (c) => (c.has('patates') ? { npc: 'anne' } : { npc: 'manav' }),
+      obj: (c) => (c.has('patates') ? 'Aldıklarını annene götür' : c.flag('manav-asked') ? 'Köy meydanındaki manavdan elma ve patates al' : 'Annenle konuş'),
+      en: (c) => (c.has('patates') ? 'Take what you bought to mom' : c.flag('manav-asked') ? 'Buy apples and potatoes at the greengrocer in the village square' : 'Talk to mom'),
+      target: (c) => (c.has('patates') || !c.flag('manav-asked') ? { npc: 'anne' } : { npc: 'manav' }),
       minutes: 25,
     }],
   }],
 
   dialogues: {
     anne: {
-      start: (ctx) => (ctx.q === 'manav' ? (ctx.has('patates') ? 'mvBack' : 'mvRemind') : undefined),
+      start: (ctx) => (ctx.q === 'manav' ? (ctx.has('patates') ? 'mvBack' : ctx.flag('manav-asked') ? 'mvRemind' : 'mvAsk') : undefined),
       nodes: {
-        // replaces the end of the laundry talk: one more errand before grandpa's tale
-        ln3: { say: 'Çok yardımseversin! Bir ricam daha var: manava gider misin? Bir kilo elma ve iki kilo patates al. Al, elli lira.',
-          en: "You're so helpful! One more favour: will you go to the greengrocer? Buy a kilo of apples and two kilos of potatoes. Here, fifty lira.",
+        // the errand, after the numbers lesson
+        mvAsk: { say: 'Okul nasıldı? Bugün sayıları öğrendin, değil mi? O zaman bir ricam var: manava gider misin? Bir kilo elma ve iki kilo patates al. Al, elli lira.',
+          en: "How was school? You learnt the numbers today, didn't you? Then I have a favour to ask: will you go to the greengrocer? Buy a kilo of apples and two kilos of potatoes. Here, fifty lira.",
           words: [['manav', 'greengrocer'], ['kilo', 'kilogram'], ['elma', 'apple'], ['patates', 'potato'], ['elli', 'fifty']],
-          options: [{ tr: 'Tamam anne, hemen giderim!', en: "Okay mom, I'll go right away!", do: ['give:para:50'] }] },
+          options: [{ tr: 'Tamam anne, hemen giderim!', en: "Okay mom, I'll go right away!", do: ['give:para:50', 'flag:manav-asked'] }, { tr: 'Olur! Elma kaç lira?', en: 'Sure! How much are apples?', next: 'mvAsk2' }] },
+        mvAsk2: { say: 'Bilmiyorum, manava sor. Paranın üstünü de getir!', en: "I don't know, ask the greengrocer. And bring the change!",
+          options: [{ tr: 'Tamam anne!', en: 'Okay mom!', do: ['give:para:50', 'flag:manav-asked'] }] },
         mvRemind: { say: 'Manav köy meydanında, çeşmenin arkasında. Bir kilo elma, iki kilo patates!', en: 'The greengrocer is in the village square, behind the fountain. One kilo of apples, two kilos of potatoes!',
-          words: [['arkasında', 'behind']], options: [{ tr: 'Unutmam anne!', en: "I won't forget, mom!" }] },
+          words: [['arkasında', 'behind']], options: [{ tr: 'Unutmam anne!', en: "I won't forget, mom!" }, { tr: 'Tamam, gidiyorum.', en: "Okay, I'm going." }] },
         mvBack: { ask: 'order', say: 'Geldin mi? Söyle bakalım, ne aldın?', en: 'Are you back? Tell me, what did you buy?',
           answer: 'Bir kilo elma ve iki kilo patates aldım.', answerEn: 'I bought a kilo of apples and two kilos of potatoes.', next: 'mvDone' },
         mvDone: { say: 'Aferin! Para üstü de senin olsun. Şimdi deden seni çağırıyor, sana masal anlatacak.', en: "Well done! Keep the change too. Now grandpa is calling you, he'll tell you a tale.",
           words: [['para üstü', 'change (money)']],
-          options: [{ tr: 'Masal mı? Yaşasın!', en: 'A tale? Hooray!', do: ['take:elma', 'take:patates', 'quest'] }] },
+          options: [{ tr: 'Masal mı? Yaşasın!', en: 'A tale? Hooray!', do: ['take:elma', 'take:patates', 'quest'] }, { tr: 'Yaşasın, masal!', en: 'Hooray, a tale!', do: ['take:elma', 'take:patates', 'quest'] }] },
       },
     },
     manav: {

@@ -43,6 +43,8 @@ const hoe = (r, on) => { if (r.props?.hoe) r.props.hoe.visible = on; };
 
 export const Behaviors = {
   stand: { pose(r) { r.armL.rotation.x = r.armR.rotation.x = 0; r.body.rotation.x = 0; } },
+  /** In the wedding's halay line: side steps with the drum, arms a little up (little fingers held). Npc moves the body. */
+  halay: { halay: true, pose(r) { r.armL.rotation.x = r.armR.rotation.x = -0.55; r.body.rotation.x = 0; } },
   /**
    * Grandpa in the vegetable garden: walks round it along `def.gardenRoute` and at each stop does
    * another job — hoeing, picking tomatoes, kneeling to firm the soil, watering, a rest to wipe his brow.

@@ -64,6 +64,7 @@ import { Scooters, scooterMount } from './systems/Scooter.js';
 import { KahveCirak } from './systems/KahveCirak.js';
 import { DamaView } from './ui/DamaView.js';
 import { DamaClub } from './systems/DamaClub.js';
+import { HalayDance } from './systems/HalayDance.js';
 import { el } from './ui/dom.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
@@ -352,7 +353,7 @@ const tableAndBins = new TableAndBins({ state, inventory, items, world, mf, list
 effects.register('table-goods', () => tableAndBins.atTable()).register('trash', () => tableAndBins.atBin());
 
 // --- prayer scene, meal times ---
-const prayer = new PrayerScene({ playerRow: () => (playerGender() === 'girl' ? 'saf2c' : 'saf1b'),
+const prayer = new PrayerScene({ playerRow: () => (playerGender() === 'girl' ? 'saf2c' : 'saf1b'), watching: () => !!state.flags['watch-prayer'],
   bus, world, cast, player, camera, fader, modes, toasts, vocab, effects, story,
   caption: new CaptionView(host), steps: PRAYER_STEPS, words: PRAYER_WORDS,
 });
@@ -623,6 +624,9 @@ const dama = new DamaClub({
 });
 gameCtx.dama = dama; // (the shelf's "Dama al" only when your hands are free)
 effects.register('dama-take', () => dama.take()).register('dama-npc', () => dama.playRifat());
+// Saturday's wedding: the drum, and the player joining the halay line
+const halay = new HalayDance({ world, player, modes, toasts, vocab, effects, story, muted: () => !settings.get('soundOn', true) || !settings.get('musicOn', true) });
+effects.register('halay', () => halay.join());
 // the tailor's mannequin in the square wears the HD suit (so people see what they can buy)
 models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animations }) => {
   const a = world.get('village').anchors.get('mannequin');
@@ -871,7 +875,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ ambient: [kahveTalk, cirak, dama, talk, ney, music, jumpShown, library, idleAd], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, idleAd], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -945,4 +949,4 @@ if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

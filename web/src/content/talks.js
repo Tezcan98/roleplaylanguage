@@ -6,7 +6,7 @@
 export const TALKS = {
   cay: [
     [
-      { who: 'huseyin', tr: 'Günaydın Kadir! Nasılsın?', en: 'Good morning Kadir! How are you?' },
+      { who: 'huseyin', tr: 'Merhaba Kadir! Nasılsın?', en: 'Hello Kadir! How are you?' }, // (any hour: they talk all day)
       { who: 'kadir', tr: 'İyiyim, sağ ol. Sen nasılsın?', en: 'I’m fine, thanks. How are you?' },
       { who: 'huseyin', tr: 'Ben de iyiyim. Hava bugün çok güzel.', en: 'I’m fine too. The weather is very nice today.' },
       { who: 'kadir', tr: 'Evet, güneşli. Bir çay daha içelim mi?', en: 'Yes, it’s sunny. Shall we have another tea?' },

@@ -47,8 +47,12 @@ export class DialogueView {
     this.en.hidden = !en;
   }
   setHint(text) { this.hint.style.display = text ? 'block' : 'none'; this.hint.replaceChildren(el('b', { text: 'İpucu: ' }), text || ''); }
-  setWords(list) {
-    this.words.replaceChildren(...(list || []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { class: 'en-t', text: `= ${gloss(en)}` })])));
+  setWords(list, known = () => false) {
+    // a word already in the notebook: ✓ "pekişti" (seen again, reinforced) — not new again
+    this.words.replaceChildren(...(list || []).map(([tr, en]) => {
+      const old = known(tr);
+      return el('span', { class: `word${old ? ' known' : ''}`, attrs: { title: old ? 'pekişti · seen again' : 'yeni kelime · new word' } }, [`${old ? '✓ ' : ''}${tr} `, el('span', { class: 'en-t', text: `= ${gloss(en)}` })]);
+    }));
   }
   setEnPressed(on) { this.enBtn.setAttribute('aria-pressed', String(on)); }
   clearActivity() { this.slot.replaceChildren(); }

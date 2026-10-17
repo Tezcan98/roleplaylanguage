@@ -8,6 +8,9 @@ export class Vocabulary {
   entries() { return Object.entries(this.state.words); }
 
   /** @returns {boolean} true when the word is new */
+  /** Already in the notebook. */
+  knows(tr) { return tr in this.state.words; }
+
   learn(tr, en) {
     if (!tr) return false;
     const isNew = !(tr in this.state.words);

@@ -14,6 +14,7 @@ export class PlayerController {
 
   update(dt, t) {
     const { player } = this;
+    if (player.dancing) return; // in the wedding's halay (systems/HalayDance.js moves the player)
     let { x, z } = this.modes.is('play') && !player.posed ? this.input.axis() : { x: 0, z: 0 };
     let mag = Math.min(1, Math.hypot(x, z));
     if (player.seated) {

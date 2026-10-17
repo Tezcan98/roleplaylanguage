@@ -14,8 +14,9 @@ export class PrayerScene {
   #pop = null;
   #timers = [];
 
-  constructor({ bus, world, cast, player, camera, fader, modes, caption, toasts, vocab, effects, story, steps, words, playerRow = () => 'saf1b' }) {
-    Object.assign(this, { world, cast, player, camera, fader, modes, caption, toasts, vocab, effects, story, steps, words, playerRow });
+  /** `watching()`: the player chose to watch — standing beside the rugs, not praying. */
+  constructor({ bus, world, cast, player, camera, fader, modes, caption, toasts, vocab, effects, story, steps, words, playerRow = () => 'saf1b', watching = () => false }) {
+    Object.assign(this, { world, cast, player, camera, fader, modes, caption, toasts, vocab, effects, story, steps, words, playerRow, watching });
     this.active = false;
     // mom lays out the prayer rugs once it's prayer time
     bus.on(EV.QUEST, ({ quest }) => this.#house().setPrayerRugs?.(this.active || quest?.id === 'namaz'));
@@ -32,8 +33,9 @@ export class PrayerScene {
       house.setPrayerRugs(true);
       prayerState.pose = 'kiyam';
       ROWS.forEach(([id, anchor]) => { if (this.cast.get(id)?.location === 'house') this.cast.get(id).station(house, anchor, 'pray'); });
-      this.player.place(house.anchors.get(this.playerRow())); // a girl stands in the women's row
-      this.player.setPosed(true);
+      this.watch = this.watching();
+      if (this.watch) this.player.place({ x: -2.6, z: 2.0, rot: Math.PI }); // beside the rugs, watching
+      else { this.player.place(house.anchors.get(this.playerRow())); this.player.setPosed(true); } // a girl stands in the women's row
       // from the side, so the postures are easy to see
       this.camera.setFixed(new THREE.Vector3(2.2, 3.0, 3.4), new THREE.Vector3(-2.6, 0.6, 2.7));
       this.#run(0);
@@ -67,5 +69,5 @@ export class PrayerScene {
     }), 2600));
   }
 
-  update() { if (this.active) PRAYER_POSES[prayerState.pose](this.player.rig); }
+  update() { if (this.active && !this.watch) PRAYER_POSES[prayerState.pose](this.player.rig); }
 }

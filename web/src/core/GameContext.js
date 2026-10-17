@@ -1,3 +1,4 @@
+import { playerGender } from '../i18n/Persona.js';
 /**
  * Read-only view of the game handed to content scripts (dialogue `start`, quest objectives).
  * Content never touches systems directly — only this facade.
@@ -16,6 +17,8 @@ export class GameContext {
   get chapter() { return this.story.chapter?.id ?? null; }
   get loc() { return this.world.current?.id ?? null; }
   get isNight() { return this.time.isNight; }
+  /** A girl plays (a few scenes are told differently for her). */
+  get girl() { return playerGender() === 'girl'; }
   /** The hour of the day (0–24) and the day's Turkish name ('Cuma'): what a villager says can depend on them. */
   get hour() { return this.time.hour % 24; }
   get dayName() { return this.time.dayName; }

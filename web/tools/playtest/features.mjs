@@ -447,6 +447,22 @@ try {
   check('…the board stands on the table for everyone', await ev(() => window.__game.world.get('village').group.children.length > 0 && window.__game.dama.tables.length === 1));
   await page.click('.dama.open [aria-label="Masadan kalk"]'); await sleep(400);
   check('…getting up takes the board away, Rıfat Amca goes back to his table', await ev(() => !window.__game.dama.mine() && !document.querySelector('.dama.open') && !window.__game.player.seated && window.__game.cast.get('rifat').home === window.__game.world.get('village').anchors.get('amca3')));
+  // content after the language review: polite pairs, the first day lighter, the prayer by choice, a surprise not a secret
+  check('"Hoş geldin" is answered "Hoş bulduk", "Kolay gelsin" with "Sağ ol"', await ev(() => { const d = window.__game.dialogue.dialogues; return d.dede.nodes.d1.options.every((o) => o.tr.startsWith('Hoş bulduk')) && d.dede.nodes.d2k.say.startsWith('Sağ ol') && d.baba.nodes.b1k.say.startsWith('Sağ ol'); }));
+  check('Sunday has no tale and no greengrocer any more (Tuesday, after the numbers lesson)', await ev(() => { const ch = (id) => window.__game.story.story.chapters.find((c) => c.id === id).quests.map((q) => q.id); return !ch('d1-afternoon').includes('masal') && !ch('d1-afternoon').includes('manav') && ch('d3-home').join() === 'review-2,manav,masal,talk-baba-tools,talk-dede-3'; }));
+  check('the prayer: grandpa asks whether you join or watch', await ev(() => window.__game.dialogue.dialogues.dede.nodes.ez2.options.some((o) => o.next === 'ezWatch')));
+  check('the envelope is a surprise, nobody asks to keep a secret', await ev(() => !JSON.stringify(Object.values(window.__game.dialogue.dialogues).map((d) => Object.values(d.nodes).map((n) => [n.say, ...(n.options ?? []).map((o) => o.tr)]))).match(/[Aa]ramızda kalsın|[Kk]imseye gösterme|sorular sorulmaz/)));
+  // Saturday evening: the wedding — congratulate, join the halay, home
+  const wi = await ev(() => window.__game.story.story.chapters.findIndex((c) => c.id === 'd6-wedding'));
+  await ev((i) => window.__game.story.startChapter(i), wi); await sleep(1500);
+  await ev(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(800);
+  check('the wedding: the villagers dance the halay by the fountain', await ev(() => ['elif', 'can', 'zehra'].every((id) => window.__game.cast.get(id).behavior.halay) && window.__game.story.quest?.id === 'wedding-congrats'));
+  await ev(() => window.__game.dialogue.open('bakkal')); await sleep(500);
+  await page.click('#dlg button:has-text("Allah mesut etsin")'); await sleep(500);
+  await page.click('#dlg button:has-text("Hemen katılıyorum")'); await sleep(500);
+  check('…"Allah mesut etsin" to the family, then "Halaya katıl"', await ev(() => window.__game.story.quest?.id === 'wedding-halay'));
+  await ev(() => window.__game.halay.join());
+  check('…in the line for a few rounds, then the quest is done', !!(await waitFor(() => ev(() => window.__game.story.quest?.id === 'wedding-home' && !window.__game.player.dancing), 20000)));
   await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
 
   // --- word practice -------------------------------------------------------------------

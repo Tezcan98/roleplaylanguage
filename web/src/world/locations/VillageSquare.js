@@ -131,6 +131,15 @@ export class VillageSquare extends Location {
     let seat = 0;
     SQUARE_BENCHES.forEach(([x, z, rot, keep]) => this.#bench(mf, C, x, z, rot, keep ? [keep, `bench${++seat}`] : [`bench${++seat}`, `bench${++seat}`], 'bench'));
     this.anchor('zehra', 2.8, 3.6, -0.6); // friends hang out by the fountain
+    // Saturday's wedding (content/story.js d6-wedding): the halay in an arc in front of the fountain, facing it,
+    // the player's place at its end (systems/HalayDance.js), the family and the host watching
+    for (let i = 0; i <= 7; i++) {
+      const a = -0.95 + i * 0.26, r = 4.7;
+      this.anchor(i < 7 ? `halay${i + 1}` : 'halayJoin', Math.sin(a) * r, Math.cos(a) * r, a + Math.PI);
+    }
+    this.hotspot('village.halay', Math.sin(0.87) * 4.7, Math.cos(0.87) * 4.7, 2.2);
+    const facing = (x, z) => Math.atan2(-x, -z);
+    for (const [name, x, z] of [['weddingAnne', -5.2, 8.6], ['weddingBaba', -3.9, 9.4], ['weddingDede', -6.4, 7.6], ['weddingHost', 3.6, 8.2]]) this.anchor(name, x, z, facing(x, z));
 
     // well
     this.prop(kit, 'prop.well', -1, 0, 9, 0, () => mf.group(
@@ -736,7 +745,7 @@ export class VillageSquare extends Location {
   }
   /**
    * Bakkal: a small shop open at the front so the camera sees in — shelves of goods along
-   * the walls (under a roof at the back only), Mehmet behind the counter with the scales and
+   * the walls (under a roof at the back only), Recep behind the counter with the scales and
    * the till, bread and crates outside under a striped awning, a sign over the door.
    */
   #grocer(kit, mf, C) {
