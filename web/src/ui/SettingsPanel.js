@@ -46,8 +46,10 @@ export class SettingsPanel {
     const toggle = (key, text, en, fallback = true) => {
       const box = el('input', { attrs: { type: 'checkbox', id: `set-${key}` } });
       box.checked = s.get(key, fallback);
-      box.addEventListener('change', () => { s.set(key, box.checked); this.onSound?.(key, box.checked); });
-      return el('label', { class: 'toggle' }, [box, el('span', {}, [text, el('small', { class: 'en-t', text: ` · ${gloss(en)}` })])]);
+      box.addEventListener('change', () => { s.set(key, box.checked); this.onSound?.(key, box.checked); if (key === 'soundOn') this.render(); });
+      const sub = key !== 'soundOn' && (key === 'voicesOn' || key === 'musicOn') && !s.get('soundOn', true); // sound off: voices and music go quiet with it
+      if (sub) box.disabled = true;
+      return el('label', { class: `toggle${sub ? ' off' : ''}` }, [box, el('span', {}, [text, el('small', { class: 'en-t', text: ` · ${gloss(en)}` })])]);
     };
     const quality = el('select', { attrs: { id: 'set-quality' } }, [
       el('option', { text: 'Yüksek', attrs: { value: 'high' } }),
@@ -60,6 +62,7 @@ export class SettingsPanel {
     this.body.replaceChildren(
       // start the story from any day (testing): a button, the list opens in its place
       this.onStartAt && (s.get('testerMode', false) ? this.#chapterPicker() : btn('🧪 Bölüm seç (gün seç)', 'btn alt', () => { s.set('testerMode', true); this.render(); })),
+      toggle('soundOn', '🔊 Ses', 'Sound (all of it)'),
       toggle('voicesOn', 'Karakter sesleri', 'Characters speak out loud'),
       toggle('musicOn', 'Müzik', 'Music'),
       el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),

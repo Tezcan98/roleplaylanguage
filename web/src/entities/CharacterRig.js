@@ -51,7 +51,10 @@ export function buildRig(mf, o) {
     head.add(mf.at(mf.cyl(0.33, 0.33, 0.1, o.cap, 16), 0, 0.24, 0));
     head.add(mf.at(mf.box(0.32, 0.04, 0.2, o.cap), 0, 0.2, 0.3));
   }
-  if (o.beard) head.add(mf.at(mf.box(0.34, 0.13, 0.08, o.beard), 0, -0.17, 0.27)); // a short beard round the chin
+  if (o.beard) { // a short beard along the jaw from ear to ear, the mouth left free: the front half of a band round the lower head
+    const beard = mf.mesh(new THREE.SphereGeometry(0.355, 22, 8, 0, Math.PI, Math.PI * 0.6, Math.PI * 0.33), o.beard);
+    beard.position.set(0, 0, 0.005); head.add(beard);
+  }
   if (o.sarik) { // the imam's sarık: white cloth wound round a cap, a dome on top
     head.add(mf.at(mf.cyl(0.37, 0.36, 0.2, o.sarik, 20), 0, 0.2, 0));
     for (const [y, tilt] of [[0.13, 0.08], [0.25, -0.08]]) { const ring = mf.at(mf.torus(0.365, 0.055, o.sarik, 20), 0, y, 0); ring.rotation.set(Math.PI / 2 + tilt, 0, 0); head.add(ring); } // the folds of the wound cloth

@@ -505,6 +505,7 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .settings-body{display:grid;gap:10px;margin-top:8px}
 .settings-body .toggle{display:flex;align-items:center;gap:10px;font:600 17px Nunito,sans-serif}
 .settings-body .toggle input[type=checkbox]{width:22px;height:22px;accent-color:var(--wood)}
+.settings-body .toggle.off{opacity:.45}
 .settings-body select{font:600 16px Nunito,sans-serif;padding:6px 8px;border-radius:10px;border:2px solid var(--wood)}
 body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.open) #shot{display:none!important} /* the talk button never covers a conversation or a card */
 .tile.nope{animation:nope .35s;border-color:#C0392B;background:#FADBD8}
@@ -550,6 +551,11 @@ body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.op
 .shop-btn:disabled{background:linear-gradient(#C9CED6,#98A1AD);border-color:#56606C;box-shadow:0 3px 0 #56606C;opacity:.85;cursor:default}
 .shop-pic{width:88px;height:110px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))}
 .shop-aura{width:84px;height:105px;background:radial-gradient(ellipse 42px 14px at 50% 82%,rgba(255,213,74,.95) 0 55%,rgba(255,233,160,.35) 70%,transparent 72%);animation:auraPulse 1.6s ease-in-out infinite}
+.shop-confirm{position:fixed;inset:0;z-index:5;display:grid;place-items:center;background:rgba(10,20,35,.55);padding:16px}
+.shop-confirm-card{width:min(340px,100%);background:linear-gradient(#FFF7E3,#FFE9B8);border:3px solid #7A4A0E;border-radius:16px;box-shadow:0 6px 0 #7A4A0E;padding:14px 16px;text-align:center;color:#3A2A1E}
+.shop-confirm-card b{font:700 22px Fredoka,sans-serif}.shop-confirm-card p{margin:6px 0 12px;font:600 15px Nunito,sans-serif}
+.shop-confirm-btns{display:flex;gap:10px}.shop-confirm-btns .shop-btn{flex:1}
+.shop-btn.no{background:linear-gradient(#F2F2F2,#BFC6CF);color:#33404F;text-shadow:none;border-color:#56606C;box-shadow:0 3px 0 #56606C}
 .pill.boost{background:linear-gradient(#FFB199,#E5533D);color:#fff;font-weight:800}
 /* a phone held sideways: a compact shop (small pictures, two lines of text, low tabs) */
 @media (max-height:520px){

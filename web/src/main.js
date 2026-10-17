@@ -249,7 +249,7 @@ const tts = new CharacterVoices({
   fallback: native ? new nativeKit.NativeTTS('tr-TR') : new WebSpeechTTS('tr-TR'),
   voices: VOICES,
   enabled: () => settings.get('neuralVoices', native ? false : true),
-  muted: () => !settings.get('voicesOn', true), // ⚙️ in the HUD
+  muted: () => !settings.get('soundOn', true) || !settings.get('voicesOn', true), // ⚙️ in the HUD (🔊 Ses: everything)
 });
 // ?fakemic → scripted answers (tests); manifest.sttEndpoint → Whisper server; else browser STT
 const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
@@ -511,10 +511,10 @@ const library = new Library({
 effects.register('library', () => library.atShelf());
 effects.register('library-read', () => library.readHere()); // a library seat: a book read aloud with subtitles
 // a ney plays quietly in the background in Aslan Bey's open library
-const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z }, src: 'assets/audio/kutuphane.mp3', muted: () => !settings.get('musicOn', true) });
+const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z }, src: 'assets/audio/kutuphane.mp3', muted: () => !settings.get('soundOn', true) || !settings.get('musicOn', true) });
 // each outdoor place its own tune; low under talk, and giving way to the library's music near it
 const music = new BackgroundMusic({
-  world, muted: () => !settings.get('musicOn', true),
+  world, muted: () => !settings.get('soundOn', true) || !settings.get('musicOn', true),
   duck: () => (modes.is('dialogue') || village.group.zone || village.voice.inCall || library.reading ? 0.3 : 1) * (1 - ney.level),
 });
 chess.onMove = (m) => talk.chessMoved(m);
@@ -658,7 +658,7 @@ const settingsPanel = new SettingsPanel(host, {
   onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onHelp: () => intro.show(),
-  onSound: (key, on) => { if (key === 'voicesOn' && !on) tts.cancel(); },
+  onSound: (key, on) => { if ((key === 'voicesOn' || key === 'soundOn') && !on) tts.cancel(); },
   onMenu: ({ resume = false } = {}) => {
     saves.save(state.snapshot()); // where you are now, for "Devam et"
     if (resume) try { sessionStorage.setItem('autoContinue', '1'); } catch { /* ignore */ } // (quality change: straight back into the game)

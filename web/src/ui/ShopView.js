@@ -64,7 +64,8 @@ export class ShopView {
       sub ? el('small', { class: subTr ? 'shop-sub' : 'shop-sub en-t', text: sub }) : null, action,
     ].filter(Boolean));
     const btn = (text, cls, fn, disabled = false) => el('button', { class: `shop-btn ${cls}`, text, attrs: { type: 'button', ...(disabled ? { disabled: '' } : {}) }, on: { click: fn } });
-    const price = (n, fn) => { const b = btn(` ${n}`, 'buy', fn, w.balance < n); b.prepend(coin()); return b; };
+    // spending credits: "Emin misin?" first (what it is, how much)
+    const price = (n, fn, what) => { const b = btn(` ${n}`, 'buy', async () => { if (await this.#confirm(what, n)) fn(); }, w.balance < n); b.prepend(coin()); return b; };
 
     this.tabs.replaceChildren(...TABS.map(([id, icon, tr, en]) => el('button', {
       class: `shop-tab${id === this.#tab ? ' on' : ''}`, attrs: { type: 'button', role: 'tab', 'aria-selected': String(id === this.#tab) },
@@ -112,7 +113,7 @@ export class ShopView {
           if (f.glow) this.toasts.show(`✨ Parlıyorsun! ${span(f.minutes)}`, 'Everyone in the square sees your golden light');
           else this.toasts.show(`${f.icon} Hızlandın! ${span(f.minutes)}`, 'You are faster for a while');
           this.render();
-        }), { subTr: !!left, ribbon: left ? 'Aktif' : 'Yeni' });
+        }, f.title), { subTr: !!left, ribbon: left ? 'Aktif' : 'Yeni' });
       });
     } else {
       // outfits (one on at a time) and ad-free mode
@@ -120,7 +121,7 @@ export class ShopView {
         const owned = w.owns(i.id), worn = i.slot && w.equipped(i.slot) === i.id && (!i.needs || w.equipped(i.needs) === i.needs);
         let action;
         if (i.needs && !w.owns(i.needs)) action = btn('Önce HD karakter', '', () => {}, true); // outfits are for the HD character
-        else if (!owned) action = price(i.price, () => this.#buy(i));
+        else if (!owned) action = price(i.price, () => this.#buy(i), i.title);
         else if (!i.slot) action = btn('Alındı ✓', '', () => {}, true);
         else action = worn ? btn('Çıkar', 'worn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Giy', 'go', () => { this.#wear(i); this.onOutfit(); });
         // what the character will look like (no icons): the outfit picture, a glowing ring
@@ -129,6 +130,21 @@ export class ShopView {
       });
     }
     this.body.replaceChildren(el('div', { class: `shop-grid tab-${this.#tab}` }, cards.filter(Boolean)));
+  }
+
+  /** "Emin misin?" over the shop: resolves true for "Evet, al". */
+  #confirm(what, n) {
+    return new Promise((resolve) => {
+      const done = (ok) => { box.remove(); resolve(ok); };
+      const yes = el('button', { class: 'shop-btn buy yes', attrs: { type: 'button' }, on: { click: () => done(true) } }, [coin(), ` ${n} · Evet, al`]);
+      const box = el('div', { class: 'shop-confirm', attrs: { role: 'dialog', 'aria-modal': 'true' }, on: { click: (e) => { if (e.target === box) done(false); } } }, [el('div', { class: 'shop-confirm-card' }, [
+        el('b', { text: 'Emin misin?' }),
+        el('p', {}, [`${what} için `, coin(), ` ${n} altın harcanacak.`, el('small', { class: 'en-t', text: ` · ${gloss('Are you sure? This spends your gold.')}` })]),
+        el('div', { class: 'shop-confirm-btns' }, [el('button', { class: 'shop-btn no', text: 'Vazgeç', attrs: { type: 'button' }, on: { click: () => done(false) } }), yes]),
+      ])]);
+      this.root.append(box);
+      yes.focus();
+    });
   }
 
   /** An outfit puts the HD character on too. */

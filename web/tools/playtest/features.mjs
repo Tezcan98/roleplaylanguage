@@ -539,20 +539,22 @@ try {
     check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
     check('outfits need the HD character first', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Günlük kıyafet')).querySelector('button').disabled));
     await e2(() => { window.__game.wallet.add(45); window.__game.shop.render(); }); // 101
-    await p2.click('.shop.open .shop-card:has-text("HD karakter") button'); await sleep(300);
+    await p2.click('.shop.open .shop-card:has-text("HD karakter") button'); await sleep(200);
+    check('spending gold asks "Emin misin?" first; "Vazgeç" spends nothing', !!(await p2.$('.shop-confirm')) && (await p2.textContent('.shop-confirm')).includes('40') && await p2.click('.shop-confirm .no').then(() => e2(() => window.__game.wallet.balance === 101 && !document.querySelector('.shop-confirm') && !window.__game.wallet.owns('hd'))));
+    await p2.click('.shop.open .shop-card:has-text("HD karakter") button'); await p2.click('.shop-confirm .yes'); await sleep(300);
     check('the HD character (40 credits): bought and on, in its everyday clothes', (await e2(() => window.__game.wallet.equipped('hd'))) === 'hd' && (await e2(() => window.__game.wallet.balance)) === 61);
     check('…and the villagers on the square are HD for you now', await waitFor(() => e2(() => window.__game.cast.get('manav').hdOn === true), 4000));
-    await p2.click('.shop.open .shop-card:has-text("Günlük kıyafet") button'); await sleep(300);
+    await p2.click('.shop.open .shop-card:has-text("Günlük kıyafet") button'); await p2.click('.shop-confirm .yes'); await sleep(300);
     check('an outfit (30 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 31);
     check('the old golden light is not sold any more (Altın baklava instead)', !(await p2.$('.shop.open .shop-card:has-text("Yıldız Işığı")')));
     await p2.click('.shop.open .shop-tab:has-text("Yiyecek")'); await sleep(200);
-    await p2.click('.shop.open .shop-card:has-text("Altın baklava") button'); await sleep(600);
+    await p2.click('.shop.open .shop-card:has-text("Altın baklava") button'); await p2.click('.shop-confirm .yes'); await sleep(600);
     check('Altın baklava (25 credits): the golden light for 3 days', (await e2(() => window.__game.wallet.balance)) === 6
       && (await e2(() => window.__game.wallet.boostLeft('baklava'))) > 71.9 * 3600000 && await e2(() => window.__game.player.auraShown)
       && (await p2.textContent('.shop.open .shop-card.gold')).includes('2 gün 23 sa kaldı'));
     await p2.click('.shop.open .shop-tab:has-text("Yiyecek")'); await sleep(200);
     check('normal speed before the pepper', (await e2(() => window.__game.controller.boost())) === 1);
-    await p2.click('.shop.open .shop-card:has-text("Urfa biberi") button'); await sleep(300);
+    await p2.click('.shop.open .shop-card:has-text("Urfa biberi") button'); await p2.click('.shop-confirm .yes'); await sleep(300);
     check('Urfa biberi (5 credits): faster (×1.5) for 30 minutes, the time left in the HUD and on its card', (await e2(() => window.__game.wallet.balance)) === 1
       && (await e2(() => window.__game.controller.boost())) === 1.5 && (await e2(() => window.__game.wallet.boostLeft('pepper'))) > 29 * 60000
       && /🌶️ (30|29):\d\d/.test(await e2(() => document.querySelector('.pill.boost').textContent)) && (await p2.textContent('.shop.open .shop-card.food')).includes('kaldı'));

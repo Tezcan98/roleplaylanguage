@@ -298,10 +298,11 @@ export function addLookExtras(scene, holder, look) {
         for (let i = 0, n = o.geometry.attributes.position.count; i < n; i++) { o.getVertexPosition(i, v); o.localToWorld(v); if (v.y > neck) { skin.push(v.clone()); hb.expandByPoint(v); } }
       });
       const front = (x, y) => { let z = -Infinity; for (const q of skin) if (Math.abs(q.x - x) < fw * 0.25 && Math.abs(q.y - y) < fh * 0.4 && q.z > z) z = q.z; return Number.isFinite(z) ? z : face.max.z; };
-      if (look.beard) { // a short, rounded beard along the jaw and the chin
-        const by = face.min.y - fh * 1.22, beard = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 10), mat(look.beard));
-        beard.scale.set(fw * 0.55, fh * 0.34, fh * 0.32);
-        put(beard, c.x, by, front(c.x, by) - fh * 0.12);
+      if (look.beard && !hb.isEmpty()) { // a short beard: a bowl round the jaw and the chin from just under the mouth, ear to ear (the front half)
+        const top = face.min.y - fh * 0.8; // just under the mouth
+        const beard = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 8, 0, Math.PI, Math.PI / 2, Math.PI * 0.42), new THREE.MeshStandardMaterial({ color: look.beard, roughness: 0.95, side: THREE.DoubleSide }));
+        beard.scale.set((hb.max.x - hb.min.x) / 2 * 1.03, fh * 1.25, (hb.max.z - hb.min.z) / 2 * 1.06);
+        put(beard, (hb.min.x + hb.max.x) / 2, top, (hb.min.z + hb.max.z) / 2);
       }
       if (look.sarik && !hb.isEmpty()) { // the imam's sarık: white cloth wound round the head from just above the brows, a dome on top (the hair goes)
         scene.traverse((o) => { if (o.isMesh && [o.material].flat()[0]?.name === 'Hair') o.visible = false; });
