@@ -64,6 +64,9 @@ h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.12}
 .store.web{background:var(--gold);color:var(--night);box-shadow:0 8px 24px rgba(242,182,48,.35)}
 .store.ios{background:rgba(255,255,255,.08);color:#fff;border:1.5px dashed rgba(255,255,255,.45);cursor:default}
 .store.ios:hover{transform:none}
+/* iPhone / iPad: no stores to send them to (no iPhone app yet, Google Play is no use) — just "play in the browser" */
+html.ios-device .store.play,html.ios-device .store.ios{display:none}
+html.ios-device .store.web{min-height:68px;padding:12px 28px 12px 20px}html.ios-device .store.web b{font-size:24px}
 .soon{font:800 10px var(--body);letter-spacing:.08em;text-transform:uppercase;background:var(--turq);color:#fff;border-radius:999px;padding:3px 8px;margin-inline-start:4px;align-self:center}
 
 /* the phrase card: lines from the game, meaning in your language */
@@ -291,7 +294,7 @@ const T = {
     's2.t': 'Söyle', 's2.p': 'Cümleyi yüksek sesle söylersin. Rakamla bile söylesen anlar: “10” da olur, “on” da.',
     's3.t': 'Kur', 's3.p': 'Parçaları doğru sıraya dizersin. İki kez takılırsan doğru parça parlar.',
     'lang.title': 'Anlamı senin dilinde', 'lang.lead': 'Her Türkçe cümlenin altında, seçtiğin dilde anlamı. Yeni kelimeler kendiliğinden defterine eklenir.',
-    'final.title': 'Köy seni bekliyor', 'final.lead': 'Android’de indir ya da hemen tarayıcında oyna. iPhone sürümü yolda.',
+    'final.title': 'Köy seni bekliyor', 'final.lead': 'Android’de indir ya da hemen tarayıcında oyna. iPhone sürümü yolda.', 'final.ios': 'Hemen tarayıcında oyna, kurulum yok. İpucu: Safari’de Paylaş → “Ana Ekrana Ekle” dersen uygulama gibi açılır.',
     privacy: 'Gizlilik politikası',
   },
   en: {
@@ -311,7 +314,7 @@ const T = {
     's2.t': 'Say it', 's2.p': 'You say the sentence out loud. Even with digits it understands: “10” works as well as “on”.',
     's3.t': 'Build it', 's3.p': 'Put the pieces in the right order. Stuck twice? The right piece lights up.',
     'lang.title': 'The meaning, in your language', 'lang.lead': 'Under every Turkish line, its meaning in the language you pick. New words go into your notebook by themselves.',
-    'final.title': 'The village is waiting', 'final.lead': 'Download it on Android or play right now in your browser. The iPhone version is on its way.',
+    'final.title': 'The village is waiting', 'final.lead': 'Download it on Android or play right now in your browser. The iPhone version is on its way.', 'final.ios': 'Play right now in your browser, nothing to install. Tip: in Safari tap Share → “Add to Home Screen” and it opens like an app.',
     privacy: 'Privacy policy',
   },
   ar: {
@@ -331,7 +334,7 @@ const T = {
     's2.t': 'قُلها', 's2.p': 'تقول الجملة بصوت عالٍ. تفهمك حتى بالأرقام: «10» مثل «on».',
     's3.t': 'رتّبها', 's3.p': 'رتّب القطع بالترتيب الصحيح. إن تعثّرت مرتين تضيء القطعة الصحيحة.',
     'lang.title': 'المعنى بلغتك', 'lang.lead': 'تحت كل جملة تركية معناها باللغة التي تختارها. وتُضاف الكلمات الجديدة إلى دفترك تلقائيًا.',
-    'final.title': 'القرية بانتظارك', 'final.lead': 'نزّلها على أندرويد أو العب الآن في متصفحك. نسخة iPhone في الطريق.',
+    'final.title': 'القرية بانتظارك', 'final.lead': 'نزّلها على أندرويد أو العب الآن في متصفحك. نسخة iPhone في الطريق.', 'final.ios': 'العب الآن في متصفحك، بلا تثبيت. نصيحة: في Safari اضغط مشاركة ← «إضافة إلى الشاشة الرئيسية» فتفتح مثل التطبيق.',
     privacy: 'سياسة الخصوصية',
   },
   ur: {
@@ -351,7 +354,7 @@ const T = {
     's2.t': 'بولیں', 's2.p': 'آپ جملہ اونچی آواز میں بولتے ہیں۔ ہندسوں میں بھی سمجھتا ہے: «10» بھی چلے گا اور «on» بھی۔',
     's3.t': 'جوڑیں', 's3.p': 'ٹکڑوں کو صحیح ترتیب میں رکھیں۔ دو بار اٹکیں تو صحیح ٹکڑا چمکتا ہے۔',
     'lang.title': 'مطلب آپ کی زبان میں', 'lang.lead': 'ہر ترکی جملے کے نیچے آپ کی چنی ہوئی زبان میں اس کا مطلب۔ نئے الفاظ خود بخود آپ کی کاپی میں چلے جاتے ہیں۔',
-    'final.title': 'گاؤں آپ کا منتظر ہے', 'final.lead': 'اینڈرائیڈ پر ڈاؤن لوڈ کریں یا ابھی اپنے براؤزر میں کھیلیں۔ iPhone ورژن راستے میں ہے۔',
+    'final.title': 'گاؤں آپ کا منتظر ہے', 'final.lead': 'اینڈرائیڈ پر ڈاؤن لوڈ کریں یا ابھی اپنے براؤزر میں کھیلیں۔ iPhone ورژن راستے میں ہے۔', 'final.ios': 'ابھی اپنے براؤزر میں کھیلیں، انسٹال کی ضرورت نہیں۔ مشورہ: Safari میں شیئر ← «ہوم اسکرین میں شامل کریں» دبائیں تو یہ ایپ کی طرح کھلے گا۔',
     privacy: 'رازداری کی پالیسی',
   },
   es: {
@@ -371,7 +374,7 @@ const T = {
     's2.t': 'Dilo', 's2.p': 'Dices la frase en voz alta. Te entiende incluso con cifras: «10» vale igual que «on».',
     's3.t': 'Constrúyela', 's3.p': 'Ordena las piezas. ¿Te atascas dos veces? La pieza correcta se ilumina.',
     'lang.title': 'El significado, en tu idioma', 'lang.lead': 'Debajo de cada frase en turco, su significado en el idioma que elijas. Las palabras nuevas pasan solas a tu cuaderno.',
-    'final.title': 'El pueblo te espera', 'final.lead': 'Descárgalo en Android o juega ahora mismo en tu navegador. La versión para iPhone está en camino.',
+    'final.title': 'El pueblo te espera', 'final.lead': 'Descárgalo en Android o juega ahora mismo en tu navegador. La versión para iPhone está en camino.', 'final.ios': 'Juega ahora mismo en tu navegador, sin instalar nada. Consejo: en Safari pulsa Compartir → «Añadir a pantalla de inicio» y se abre como una app.',
     privacy: 'Política de privacidad',
   },
   fr: {
@@ -391,7 +394,7 @@ const T = {
     's2.t': 'Dis-le', 's2.p': 'Tu dis la phrase à voix haute. Il comprend même les chiffres : « 10 » marche aussi bien que « on ».',
     's3.t': 'Construis-la', 's3.p': 'Remets les morceaux dans l’ordre. Bloqué deux fois ? Le bon morceau s’allume.',
     'lang.title': 'Le sens, dans ta langue', 'lang.lead': 'Sous chaque phrase turque, son sens dans la langue que tu choisis. Les nouveaux mots rejoignent ton carnet tout seuls.',
-    'final.title': 'Le village t’attend', 'final.lead': 'Télécharge-le sur Android ou joue tout de suite dans ton navigateur. La version iPhone arrive.',
+    'final.title': 'Le village t’attend', 'final.lead': 'Télécharge-le sur Android ou joue tout de suite dans ton navigateur. La version iPhone arrive.', 'final.ios': 'Joue tout de suite dans ton navigateur, rien à installer. Astuce : dans Safari, touche Partager → « Sur l’écran d’accueil » et il s’ouvre comme une appli.',
     privacy: 'Politique de confidentialité',
   },
 };
@@ -411,6 +414,10 @@ const PHRASES = [
 const pick = () => { try { const s = localStorage.getItem('aa-lang'); if (T[s]) return s; } catch {} const n = (navigator.language || 'tr').slice(0, 2); return T[n] ? n : 'en'; };
 let lang = pick(), idx = 0;
 
+/** iPhone / iPad (an iPad says it is a Mac, but has a touch screen): no store buttons, only the browser game. */
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+if (IOS) document.documentElement.classList.add('ios-device');
+
 function apply() {
   const t = T[lang], root = document.documentElement;
   root.lang = lang; root.dir = lang === 'ar' || lang === 'ur' ? 'rtl' : 'ltr';
@@ -418,6 +425,7 @@ function apply() {
   document.querySelectorAll('.langs button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
   document.querySelectorAll('.store.web').forEach((a) => { a.href = `/oyun/${lang}/`; }); // the game, with the meanings in the site's language
   document.getElementById('final-ctas').innerHTML = document.querySelector('.hero .ctas').innerHTML;
+  if (IOS) document.querySelector('[data-t="final.lead"]').textContent = t['final.ios'];
   phrase(false);
 }
 

@@ -3,28 +3,28 @@ import * as THREE from 'three';
 /** Matching colours for each outfit (the pack's own purple and navy clashed). `scarf` = the headscarf with it. */
 const PALETTE = {
   'casual.boy': { Shirt: 0x3E7C8C, Pants: 0xA68B5B, Belt: 0x4A3020 },             // teal shirt, khaki trousers
-  'casual.girl': { Shirt: 0xC07A68, Pants: 0x5C4A42, Belt: 0x4A3020, scarf: 0xE7A1B0 }, // terracotta, warm brown, a pink scarf
-  'dress.girl': { Shirt: 0x3F7F73, Pants: 0x3F7F73, Belt: 0xB08A4E, scarf: 0xF0CF6E }, // a teal dress with a tan belt, a soft yellow scarf
+  'casual.girl': { Shirt: 0x2F5D73, Pants: 0x3A3634, Belt: 0x7A5C44, scarf: 0xCDB08A }, // a petrol-blue tunic, dark taupe, a camel scarf
+  'dress.girl': { Shirt: 0x3F7F73, Pants: 0x3F7F73, Belt: 0xB08A4E, scarf: 0xD6A9A1 }, // a teal dress with a tan belt, a dusty-rose scarf
   'suit.boy': { Black: 0x2B3448 },                                                    // a navy suit
   'curly.boy': { Shirt: 0xB5523F, Pants: 0x3F4A5A, Belt: 0x2E2218 },                // Hakan: brick red, slate trousers
   'brown.girl': { Shirt: 0xD9A23E, Pants: 0x2E5E8C, Belt: 0x4A3020, scarf: 0x9C7BC0 }, // Seher: mustard, denim blue, a lilac scarf
   // the shop's other outfits: the same bodies in other clothes
-  'dress2.girl': { Shirt: 0xD9638C, Pants: 0xD9638C, Belt: 0xF2D27A, scarf: 0xF2D27A },    // a pink dress with a golden belt and scarf
+  'dress2.girl': { Shirt: 0xC48B93, Pants: 0xC48B93, Belt: 0xD8C08A, scarf: 0xEAD8D2 },    // a dusty-rose dress, a champagne belt, a blush scarf
   'sport.boy': { Shirt: 0x22356B, Pants: 0x22356B, Belt: 0xFFFFFF },                     // a navy tracksuit (eşofman), white waistband
-  'sport.girl': { Shirt: 0xC94F7C, Pants: 0xC94F7C, Belt: 0xFFFFFF, scarf: 0x2E3A5C },    // a raspberry tracksuit, a navy scarf
+  'sport.girl': { Shirt: 0xB84A6E, Pants: 0xB84A6E, Belt: 0xFFFFFF, scarf: 0x2E2E34 },    // a raspberry tracksuit, a charcoal sports scarf
   'jersey.boy': { Shirt: 0xC8102E, Pants: 0x1B1B1B, Belt: 0xF5C518 },                    // a red football shirt, black shorts' colour
   'jersey.girl': { Shirt: 0xF5C518, Pants: 0x1F2A5A, Belt: 0x1F2A5A, scarf: 0x1F2A5A },   // yellow and navy
   'sweater.boy': { Shirt: 0x7A1F2B, Pants: 0x2E4A6B, Belt: 0x3B2A20 },                   // a burgundy jumper, jeans
-  'sweater.girl': { Shirt: 0x5E8C6A, Pants: 0x3B3F55, Belt: 0x3B2A20, scarf: 0xE9D8B4 },  // a sage-green jumper, a cream scarf
+  'sweater.girl': { Shirt: 0x5E8C6A, Pants: 0x3E3A36, Belt: 0x3B2A20, scarf: 0xE9DCC6 },  // a sage-green jumper, taupe, a cream scarf
   'summer.boy': { Shirt: 0xF3F3F3, Pants: 0xD8C3A0, Belt: 0x8A6A44 },                    // a white shirt, light chinos
-  'summer.girl': { Shirt: 0x8EC5E8, Pants: 0xF3F3F3, Belt: 0xD9A23E, scarf: 0x8EC5E8 },   // sky blue and white
+  'summer.girl': { Shirt: 0x8EC5E8, Pants: 0xEDE7DC, Belt: 0xC9A66B, scarf: 0xF1E7D3 },   // sky blue, off-white, a sand scarf
 };
 
 /** Paints the HD model in its outfit's colours; returns the headscarf colour that goes with it. */
 export function paintOutfit(scene, outfit, gender) {
   const p = { Face: 0x2A1D17, ...PALETTE[`${outfit}.${gender === 'girl' ? 'girl' : 'boy'}`] }; // Face: eyes and eyebrows (the converted files made them white)
   scene.traverse((o) => { if (o.isMesh) for (const m of [o.material].flat()) if (p[m.name] != null) m.color.setHex(p[m.name]); });
-  return p.scarf ?? 0xE7A1B0;
+  return p.scarf ?? 0xCDB08A;
 }
 
 /**
@@ -34,7 +34,7 @@ export function paintOutfit(scene, outfit, gender) {
  * over the shoulders. Sized from the head's skin, then fixed to the head bone so it follows the
  * animation. The model's hair should already be hidden.
  */
-export function addHeadscarf(scene, holder, color = 0xE7A1B0) {
+export function addHeadscarf(scene, holder, color = 0xCDB08A) {
   const head = scene.getObjectByName('Head');
   if (!head) return;
   holder.updateMatrixWorld(true);
@@ -104,22 +104,23 @@ export function addHeadscarf(scene, holder, color = 0xE7A1B0) {
   return parts;
 }
 
-/** The scarf's cloth: its colour with a small flower print (one texture per colour). */
+/** The scarf's cloth: its colour with a fine, quiet print of small flowers (one texture per colour). */
 const prints = new Map();
 function scarfPrint(color) {
   if (prints.has(color) || typeof document === 'undefined') return prints.get(color) ?? null;
   const cv = document.createElement('canvas'); cv.width = cv.height = 128;
   const g = cv.getContext('2d'), base = new THREE.Color(color);
   g.fillStyle = `#${base.getHexString()}`; g.fillRect(0, 0, 128, 128);
-  const light = `#${base.clone().lerp(new THREE.Color(0xffffff), 0.55).getHexString()}`, dark = `#${base.clone().multiplyScalar(0.72).getHexString()}`;
+  const dark = base.getHSL({}).l > 0.5; // light cloth: a slightly darker print; dark cloth: a slightly lighter one
+  const tint = (k) => `#${base.clone().lerp(new THREE.Color(dark ? 0x000000 : 0xffffff), k).getHexString()}`;
   for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { // little five-petal flowers, every other row shifted
     const x = i * 32 + (j % 2) * 16 + 8, y = j * 32 + 8;
-    g.fillStyle = light;
-    for (let k = 0; k < 5; k++) { const a = k * Math.PI * 0.4; g.beginPath(); g.arc(x + Math.cos(a) * 3.2, y + Math.sin(a) * 3.2, 2.4, 0, Math.PI * 2); g.fill(); }
-    g.fillStyle = dark; g.beginPath(); g.arc(x, y, 1.6, 0, Math.PI * 2); g.fill();
+    g.fillStyle = tint(0.1);
+    for (let k = 0; k < 5; k++) { const a = k * Math.PI * 0.4; g.beginPath(); g.arc(x + Math.cos(a) * 2.2, y + Math.sin(a) * 2.2, 1.6, 0, Math.PI * 2); g.fill(); }
+    g.fillStyle = tint(0.18); g.beginPath(); g.arc(x, y, 1, 0, Math.PI * 2); g.fill();
   }
   const t = new THREE.CanvasTexture(cv);
-  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 2);
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(4, 3);
   prints.set(color, t);
   return t;
 }

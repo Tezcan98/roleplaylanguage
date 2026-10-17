@@ -29,7 +29,7 @@ export const VOICES = {
 const kidFace = (bg, skin, hair, extra = '') => `<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${bg}"/>${extra}<circle cx="32" cy="36" r="14" fill="${skin}"/><path d="M18 33c1-9 7-13 14-13s13 4 14 13c-4-4-9-5-14-5s-10 1-14 5z" fill="${hair}"/><circle cx="27" cy="37" r="2" fill="#1B2440"/><circle cx="37" cy="37" r="2" fill="#1B2440"/><path d="M28 43q4 3 8 0" stroke="#B83A5A" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
 /** Portrait in a headscarf: face open, hair covered. */
 const hijabFace = (bg, skin, scarf, { glasses = false, edge = 'rgba(0,0,0,.18)' } = {}) => `<svg width="52" height="52" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${bg}"/><path d="M11 60C11 28 19 13 32 13s21 15 21 47z" fill="${scarf}"/><ellipse cx="32" cy="37" rx="11" ry="12.5" fill="${skin}"/><path d="M20.5 33q2-11 11.5-11t11.5 11" fill="none" stroke="${edge}" stroke-width="2"/><circle cx="27.5" cy="37" r="2" fill="#1B2440"/><circle cx="36.5" cy="37" r="2" fill="#1B2440"/>${glasses ? '<circle cx="27.5" cy="37" r="4.3" fill="none" stroke="#1B2440" stroke-width="1.6"/><circle cx="36.5" cy="37" r="4.3" fill="none" stroke="#1B2440" stroke-width="1.6"/><path d="M31.8 37h0.4" stroke="#1B2440" stroke-width="1.6"/>' : ''}<path d="M28.5 43q3.5 3 7 0" stroke="#B83A5A" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`;
-export const PLAYER_FACE_GIRL = hijabFace('#F7C6D6', '#F2C49B', '#9B59B6');
+export const PLAYER_FACE_GIRL = hijabFace('#CFE0E8', '#F2C49B', '#CDB08A');
 /** The teacher when the random pick is a man. */
 export const TEACHER_MAN = {
   look: { shirt: 0xDCE6F0, vest: 0x34495E, pants: 0x2A2F3A, skin: 0xE9B98F, hair: 0x2B1D14, mustache: 0x2B1D14, glasses: true },
@@ -37,7 +37,7 @@ export const TEACHER_MAN = {
 };
 export const PLAYER_LOOK = { shirt: 0xFFC845, pants: 0x2F6FDB, skin: 0xF2C49B, hair: 0x5B3A29, scale: 0.78, props: ['jacket'] };
 /** Sare in a long skirt; `homeUncovered`: the headscarf comes off at home and goes on outside. */
-export const PLAYER_LOOK_GIRL = { shirt: 0xE86A92, skirt: 0x7A3552, pants: 0x3A3F66, skin: 0xF2C49B, hair: 0x6B4226, bun: true, headscarf: 0x9B59B6, homeUncovered: true, scale: 0.76, props: ['jacket'] };
+export const PLAYER_LOOK_GIRL = { shirt: 0x2F5D73, skirt: 0x3A3634, pants: 0x3A3634, skin: 0xF2C49B, hair: 0x6B4226, bun: true, headscarf: 0xCDB08A, homeUncovered: true, scale: 0.76, props: ['jacket'] };
 /** The four characters on the setup screen: boy modest / strong, girl covered / open. */
 export const PLAYER_LOOKS = {
   'boy-modest': PLAYER_LOOK,
