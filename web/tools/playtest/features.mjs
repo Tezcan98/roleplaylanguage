@@ -131,6 +131,18 @@ try {
     return { shown, v: Math.hypot(b.vel.x, b.vel.z), dir: b.vel.x > 0 }; // slow CI frames: check the shot's speed, not the distance
   });
   check('⚡ hard shot: the button shows next to the ball and the ball flies the way you face', shot.shown && shot.v > 10 && shot.dir, `${shot.v.toFixed(1)} m/s`);
+  const far = await ev(() => {
+    const g = window.__game, b = g.toys.toys.find((t) => t.toy.location.id === 'yard' && t.action === 'ball').toy;
+    b.vel.x = b.vel.z = 0;
+    g.player.position.set(b.position.x - 2.2, 0, b.position.z); g.player.group.rotation.y = Math.PI / 2; // 2.2 m in front
+    const ahead = !!g.toys.shotBall();
+    g.player.position.set(b.position.x + 1.2, 0, b.position.z); // 1.2 m behind you
+    const behind = !!g.toys.shotBall();
+    g.player.position.set(b.position.x - 1.4, 0, b.position.z); // 1.4 m in front
+    const near = !!g.toys.shotBall();
+    return { ahead, behind, near };
+  });
+  check('…not from far off, nor at a ball behind you', !far.ahead && !far.behind && far.near, JSON.stringify(far));
   // dad works all round his car, not only under the bonnet
   const dad0 = await ev(() => { const b = window.__game.cast.get('baba').position; return [b.x, b.z]; });
   const dadMoved = await waitFor(() => ev((a) => { const b = window.__game.cast.get('baba').position; return Math.hypot(b.x - a[0], b.z - a[1]) > 1; }, dad0), 60000); // ~15 s of game time on a slow runner

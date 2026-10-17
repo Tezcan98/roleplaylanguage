@@ -2,7 +2,8 @@ const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const PLAYER_R = 0.35;
 const KICK_COOLDOWN = 0.25;   // s between two kicks of the same ball
 const WORDS_EVERY = 45;       // s: the "top / vurmak / gol" words and thought at most this often
-const SHOT_RANGE = 2.6;       // m: a hard shot reaches a ball this close
+const SHOT_RANGE = 1.6;       // m: a hard shot reaches a ball this close, in front of you (2.6 m, all round, kicked balls from far off)
+const SHOT_CLOSE = 0.8;       // m: this close the ball can be anywhere round the feet
 const SHOT_WAIT = 0.8;        // s: pressed with the ball a little too far, the shot goes off when it comes in range
 
 /**
@@ -34,7 +35,11 @@ export class ToySystem {
   shotBall() {
     if (this.player.seated || this.player.mount) return null; // (on horseback, a bike, a scooter: no kicking)
     const p = this.player.position;
-    return this.toys.find((e) => e.touch && e.toy.location === this.world.current && dist(e.toy.position, p) < SHOT_RANGE) ?? null;
+    return this.toys.find((e) => {
+      if (!e.touch || e.toy.location !== this.world.current) return false;
+      const d = dist(e.toy.position, p);
+      return d < SHOT_CLOSE || (d < SHOT_RANGE && this.#towards(e.toy.position, 0.3));
+    }) ?? null;
   }
 
   /** Hard shot (⚡ button / F key): the ball flies the way the player faces (towards the goal: Football.assist). */
@@ -64,10 +69,10 @@ export class ToySystem {
   }
 
   /** Is the player facing (roughly) towards `q`? */
-  #towards(q) {
+  #towards(q, min = 0.5) {
     const p = this.player.position, rot = this.player.group.rotation.y;
     const dx = q.x - p.x, dz = q.z - p.z, d = Math.hypot(dx, dz) || 1;
-    return (dx * Math.sin(rot) + dz * Math.cos(rot)) / d > 0.5;
+    return (dx * Math.sin(rot) + dz * Math.cos(rot)) / d > min;
   }
 
   update(dt, t) {
