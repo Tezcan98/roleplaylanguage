@@ -20,7 +20,7 @@ const lookOf = (gender, style) => (gender === 'girl'
   ? { gender: 'girl', style: style === 'open' ? 'open' : 'covered' }
   : { gender: 'boy', style: style === 'strong' ? 'strong' : 'modest' });
 /** Bought in the shop: an outfit (HD character). */
-const OUTFITS = ['casual', 'suit', 'dress'];
+const OUTFITS = ['casual', 'suit', 'dress', 'dress2', 'sport', 'jersey', 'sweater', 'summer'];
 const outfitOf = (o) => ({ ...(OUTFITS.includes(o?.outfit) ? { outfit: o.outfit } : {}), ...(o?.aura === true ? { aura: true } : {}) });
 const RATE = { burst: 60, perSecond: 30 }; // messages per client (10/s states + WebRTC ICE bursts)
 const MAX_BALLS = 4;                        // shared balls per room (the square's pitch has two)

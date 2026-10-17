@@ -1,4 +1,4 @@
-import { outfitModel } from '../content/shop.js';
+import { outfitModel, isDress } from '../content/shop.js';
 import { Character } from '../entities/Character.js';
 
 /**
@@ -28,7 +28,7 @@ export class RemotePlayers {
     if (sit) char.sit(true);
     if (look?.aura) char.setAura(true);
     // bought in the shop: the HD body — loaded only once they come into view (a crowd far away costs nothing)
-    const hd = look?.outfit ? () => char.setHd(this.models, outfitModel(look.outfit, look.gender, look.style), true, { covered: look.style === 'covered', dress: look.outfit === 'dress' }) : null;
+    const hd = look?.outfit ? () => char.setHd(this.models, outfitModel(look.outfit, look.gender, look.style), true, { covered: look.style === 'covered', dress: isDress(look.outfit), paint: look.outfit }) : null;
     this.#players.set(id, { char, target: { x, z, rot }, moving: false, location, hd });
     if (ride) this.#ride(id, rideKind(ride));
   }

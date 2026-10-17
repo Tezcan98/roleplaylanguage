@@ -16,19 +16,27 @@ export const SHOP = [
   outfit('casual', 'Günlük kıyafet', 'Everyday clothes'),
   outfit('suit', 'Takım elbise', 'Suit', 'boy'),
   outfit('dress', 'Elbise', 'Dress', 'girl'),
-  { id: 'aura', slot: 'aura', title: '✨ Altın Yıldız Işığı', en: 'A golden light shining under your feet — everyone in the square sees you', price: CONFIG.prices.aura, picture: true },
+  outfit('dress2', 'Pembe elbise', 'Pink dress', 'girl'),
+  outfit('sport', 'Eşofman', 'Tracksuit'),
+  outfit('jersey', 'Futbol forması', 'Football shirt'),
+  outfit('sweater', 'Kazak', 'Jumper'),
+  outfit('summer', 'Yazlık', 'Summer clothes'),
+  // the old golden light, bought for good: only shown to whoever has it (now it is Altın baklava, food)
+  { id: 'aura', slot: 'aura', title: '✨ Altın Yıldız Işığı', en: 'A golden light shining under your feet — everyone in the square sees you', price: CONFIG.prices.aura, picture: true, onlyOwned: true },
 ];
 
 /**
- * Food from the shop: eaten at once, for credits, and good for a few minutes (a second one adds
- * its minutes on). Urfa biberi: so hot you run faster (systems/PlayerController.js `boost`).
+ * Food from the shop: eaten at once, for credits, and good for a while (a second one adds its time
+ * on). Urfa biberi: so hot you run faster (systems/PlayerController.js `boost`). Altın baklava: a
+ * golden light shines under your feet for days, seen by everyone in the square.
  */
 export const FOODS = [
   { id: 'pepper', icon: '🌶️', title: 'Urfa biberi', en: 'So hot you run faster!', price: CONFIG.prices.pepper, minutes: CONFIG.boosts.pepperMinutes, speed: CONFIG.boosts.pepperSpeed },
+  { id: 'baklava', icon: '🍯', title: 'Altın baklava', en: 'You shine with a golden light — everyone in the square sees you', price: CONFIG.prices.aura, minutes: CONFIG.boosts.glowDays * 24 * 60, glow: true },
 ];
 
-/** The glowing ring under the player is on. */
-export const auraOn = (wallet) => wallet.equipped('aura') === 'aura';
+/** The glowing ring under the player is on (Altın baklava eaten, or the old golden light bought). */
+export const auraOn = (wallet) => wallet.boostLeft('baklava') > 0 || wallet.equipped('aura') === 'aura';
 
 /** The outfit the player has on (an id like 'casual'), or null. */
 /** The HD outfit the player wears ('casual' when only the HD character is on), or null: the blocky body. */
@@ -43,9 +51,12 @@ export function migrateWallet(wallet) {
   wallet.settings.set('wallet', d);
 }
 /** The model for an outfit and a gender. */
+/** Outfits that are the everyday body in other colours (hdClothes.js PALETTE); the dresses add a long skirt. */
+export const REPAINTS = ['dress', 'dress2', 'sport', 'jersey', 'sweater', 'summer'];
+export const isDress = (outfit) => outfit === 'dress' || outfit === 'dress2';
 export const outfitModel = (outfit, gender, style = '') => {
   const girl = gender === 'girl';
-  let body = outfit === 'dress' ? 'casual' : outfit; // the dress: the everyday girl with a long skirt
+  let body = REPAINTS.includes(outfit) ? 'casual' : outfit; // the dress: the everyday girl with a long skirt; the others: her / his own body repainted
   if (body === 'casual' && !girl && style === 'strong') body = 'curly'; // each of the four characters has a body of its own: Hakan
   if (body === 'casual' && girl && style === 'open') body = 'brown'; // Seher
   return `hd.${body}.${girl ? 'girl' : 'boy'}`;

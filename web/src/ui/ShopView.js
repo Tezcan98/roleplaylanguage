@@ -8,6 +8,9 @@ import { coin } from './coin.js';
 const hm = (ms) => { const m = Math.ceil(ms / 60000); return m >= 60 ? `${Math.floor(m / 60)} sa ${m % 60} dk` : `${m} dk`; };
 
 const mmss = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+/** How long a food works: '30 dk', '3 gün'; what is left: '29:41', '2 gün 23 sa'. */
+const span = (min) => (min >= 1440 ? `${Math.round(min / 1440)} gün` : `${min} dk`);
+const left_ = (ms) => (ms >= 86400000 ? `${Math.floor(ms / 86400000)} gün ${Math.floor((ms % 86400000) / 3600000)} sa` : ms >= 3600000 ? `${Math.floor(ms / 3600000)} sa ${Math.floor((ms % 3600000) / 60000)} dk` : mmss(ms));
 /** The shop's tabs: gold (free credits and packs), food (boosts), outfits and more. */
 const TABS = [['gold', '🪙', 'Altın', 'Gold'], ['food', '🌶️', 'Yiyecek', 'Food'], ['wear', '👕', 'Kıyafet', 'Outfits and more']];
 
@@ -88,30 +91,32 @@ export class ShopView {
             if (await this.share()) { w.shared(); this.toasts.show(`Teşekkürler! +${SHARE_REWARD} kredi`, 'Thanks for sharing!'); }
             this.render();
           }), { subTr: true }),
-        ...(SELL_PACKS ? PACKS : []).map((p, i) => card(`pack pack${i}`, ['🪙', '💰', '💎'][i] ?? '💎', `${p.credits}`, 'kredi',
+        // the packs with their prices; not on sale yet (config.json sellPacks): shown, the button off
+        ...PACKS.map((p, i) => card(`pack pack${i}`, ['🪙', '💰', '💎'][i] ?? '💎', `${p.credits}`, SELL_PACKS ? 'kredi' : 'kredi · yakında',
           btn(this.#prices[p.id] ?? p.price, 'buy', async (e) => {
             if (!this.billing.available) { this.toasts.show('Altın paketleri Android uygulamasında satılır', 'Credit packs are sold in the Android app'); return; }
             e.target.disabled = true;
             if (await this.billing.buy(p)) { w.add(p.credits, 'purchase'); this.toasts.show(`+${p.credits} kredi. Teşekkürler!`, 'Thank you!'); }
             else this.toasts.show('Satın alma tamamlanmadı', 'The purchase did not go through');
             this.render();
-          }), { subTr: true, ribbon: ['', 'En popüler', 'En avantajlı'][i] ?? '' })),
+          }, !SELL_PACKS), { subTr: true, ribbon: ['', 'En popüler', 'En avantajlı'][i] ?? '' })),
       ];
     } else if (this.#tab === 'food') {
       // eaten at once, good for a few minutes; another one adds its minutes on
       cards = FOODS.map((f) => {
         const left = w.boostLeft(f.id);
-        const art = el('div', { class: 'shop-food' }, [el('span', { class: 'shop-card-top', text: f.icon }), el('span', { class: 'shop-badge', text: `⚡ ×${f.speed} · ${f.minutes} dk` })]);
-        return card(left ? 'food on' : 'food', art, f.title, left ? `⏱ ${mmss(left)} kaldı` : gloss(f.en), price(f.price, () => {
+        const art = el('div', { class: `shop-food${f.glow ? ' glow' : ''}` }, [el('span', { class: 'shop-card-top', text: f.icon }), el('span', { class: 'shop-badge', text: f.speed ? `⚡ ×${f.speed} · ${span(f.minutes)}` : `✨ ${span(f.minutes)}` })]);
+        return card(`food${f.glow ? ' gold' : ''}${left ? ' on' : ''}`, art, f.title, left ? `⏱ ${left_(left)} kaldı` : gloss(f.en), price(f.price, () => {
           if (!w.eat(f)) return;
           this.onEat(f);
-          this.toasts.show(`🌶️ Hızlandın! ${f.minutes} dakika`, 'You are faster for a few minutes');
+          if (f.glow) this.toasts.show(`✨ Parlıyorsun! ${span(f.minutes)}`, 'Everyone in the square sees your golden light');
+          else this.toasts.show(`${f.icon} Hızlandın! ${span(f.minutes)}`, 'You are faster for a while');
           this.render();
         }), { subTr: !!left, ribbon: left ? 'Aktif' : 'Yeni' });
       });
     } else {
       // outfits (one on at a time) and ad-free mode
-      cards = SHOP.filter((i) => !i.for || i.for(this.gender, this.look)).map((i) => {
+      cards = SHOP.filter((i) => (!i.for || i.for(this.gender, this.look)) && (!i.onlyOwned || w.owns(i.id))).map((i) => {
         const owned = w.owns(i.id), worn = i.slot && w.equipped(i.slot) === i.id && (!i.needs || w.equipped(i.needs) === i.needs);
         let action;
         if (i.needs && !w.owns(i.needs)) action = btn('Önce HD karakter', '', () => {}, true); // outfits are for the HD character

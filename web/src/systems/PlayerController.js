@@ -9,7 +9,7 @@ export class PlayerController {
   #air = null; // a horse's jump: the speed it took off with — in the air it goes on that way, whatever the stick says
   #last = null;
 
-  /** `boost`: how many times faster the player goes now (Urfa biberi from the shop: 1.5 for a few minutes). */
+  /** `boost`: how many times faster the player goes now (Urfa biberi from the shop: 1.5 for half an hour). */
   constructor({ player, input, world, modes, cast, camera, boost = () => 1 }) { Object.assign(this, { player, input, world, modes, cast, camera, boost }); }
 
   update(dt, t) {

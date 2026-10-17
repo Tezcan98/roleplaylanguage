@@ -65,7 +65,7 @@ import { KahveCirak } from './systems/KahveCirak.js';
 import { el } from './ui/dom.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
-import { SHOP, outfitOn, outfitModel, auraOn, migrateWallet } from './content/shop.js';
+import { SHOP, outfitOn, outfitModel, auraOn, migrateWallet, isDress } from './content/shop.js';
 import { LocalClassroomSession, WebSocketClassroomSession } from './services/multiplayer/ClassroomSession.js';
 import { ClassroomView } from './ui/ClassroomView.js';
 import { VillageNetwork } from './services/multiplayer/VillageNetwork.js';
@@ -423,7 +423,7 @@ village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // 
 // the HD character from the shop: everywhere once bought — home too (prayer poses use the blocky body for a moment)
 const playerHd = () => {
   player.setAura(auraOn(wallet)); const o = outfitOn(wallet);
-  player.setHd(models, outfitModel(o ?? 'casual', playerGender(), playerLook.split('-')[1]), !!o, { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: o === 'dress' });
+  player.setHd(models, outfitModel(o ?? 'casual', playerGender(), playerLook.split('-')[1]), !!o, { covered: !!PLAYER_LOOKS[playerLook].headscarf, dress: isDress(o), paint: o });
   // an HD player (credits spent in the shop) sees the villagers in HD too, everywhere (entities/Npc.js)
   if (HD_VILLAGERS.on !== !!o) { HD_VILLAGERS.on = !!o; npcs.forEach((n) => n.refreshHd()); }
 };
@@ -576,9 +576,14 @@ const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en
 const shop = new ShopView(host, {
   modes, wallet, ads, billing, toasts, gender: playerGender(), look: settings.get('look', ''), share: shareGame,
   onDaily: () => takeDaily(),
-  onEat: () => { // Urfa biberi
-    labels.bubble(player, 'Çok acı! Hızlandım!', null, 3, "So hot! I'm faster!");
-    vocab.learn('biber', 'pepper'); vocab.learn('acı', 'hot (spicy)');
+  onEat: (food) => {
+    if (food.glow) { // Altın baklava: the golden light on, seen by the others after a quick reconnect
+      labels.bubble(player, 'Çok tatlı! Parlıyorum!', null, 3, "So sweet! I'm shining!");
+      vocab.learn('tatlı', 'sweet'); vocab.learn('parlamak', 'to shine');
+    } else { // Urfa biberi
+      labels.bubble(player, 'Çok acı! Hızlandım!', null, 3, "So hot! I'm faster!");
+      vocab.learn('biber', 'pepper'); vocab.learn('acı', 'hot (spicy)');
+    }
     showBoost();
   },
   // new colours: saved, then the game opens again with them (and goes on where it was)
@@ -652,10 +657,15 @@ const hud = new Hud(host, {
 // Urfa biberi: how long it still works, in the HUD
 const boostPill = el('span', { class: 'pill boost', attrs: { title: 'Urfa biberi · faster' } });
 hud.addRight(boostPill);
+let glowing = auraOn(wallet);
 function showBoost() {
   const ms = wallet.boostLeft('pepper'), s = Math.ceil(ms / 1000);
   boostPill.hidden = !ms;
   if (ms) boostPill.textContent = `🌶️ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  if (glowing !== auraOn(wallet)) { // Altın baklava eaten, or its days are over: the light on / off, for the others too
+    glowing = auraOn(wallet); playerHd();
+    if (village.net.connected) { village.leave(); village.join(); }
+  }
 }
 showBoost(); setInterval(showBoost, 1000);
 

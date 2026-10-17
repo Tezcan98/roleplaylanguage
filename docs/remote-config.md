@@ -17,6 +17,7 @@ türde bir değer (sayı yerine yazı, eksi sayı) yok sayılır, koddaki varsay
 | `rewards.share` | "Paylaş, kazan": kaç kredi (günde bir kez) |
 | `rides.minutes` | at kiralama süresi (dakika) |
 | `boosts.pepperMinutes`, `boosts.pepperSpeed` | Urfa biberi kaç dakika, kaç kat hızlı (1.5 = %50 daha hızlı) |
+| `boosts.glowDays` | Altın baklava: kaç gün parlarsın (fiyatı `prices.aura`) |
 | `ads.idleBannerSeconds` | kaç saniye kıpırdamayınca banner |
 | `ads.menuBannerChance` | ana menüde banner olasılığı (0–1) |
 | `ads.betweenDays` | hikâyede gün arası geçiş reklamı (true/false) |

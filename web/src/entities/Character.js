@@ -350,9 +350,9 @@ export class Character {
    * `covered`: the hair goes, a headscarf goes on; `dress`: a long skirt; `look`: a villager's
    * own colours and moustache, glasses, cap, apron (CharacterRig's appearance).
    */
-  async setHd(models, key, on, { covered = false, dress = false, look = null, scarfColor = null } = {}) {
+  async setHd(models, key, on, { covered = false, dress = false, look = null, scarfColor = null, paint = null } = {}) {
     this.#hdWanted = on;
-    const look_ = `${key}|${!!dress}|${!!covered}`;
+    const look_ = `${key}|${!!dress}|${!!covered}|${paint}`;
     if (on && this.#hd && this.#hd !== 'loading' && this.#hdLook !== look_) { // another outfit (a dress on the same body too): drop the old one
       this.#hd.scene.removeFromParent(); this.#hd.skirt?.skirt.removeFromParent(); this.#hd = null;
     }
@@ -379,12 +379,12 @@ export class Character {
           o.castShadow = !this.mf?.blobShadows; // (low quality: the blob under the feet stays)
           for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
             m.metalness = 0; m.roughness = 0.85; // the converted files come out dark and shiny
-            if (m.name === 'Skin') m.color.setHex(skin);
+            if (m.name === 'Skin') { m.color.setHex(skin); m.emissive.setHex(skin).multiplyScalar(0.2); } // (a little light of its own: the jaw's underside went dark, like a beard)
             if (covered && m.name === 'Hair') { o.visible = false; hair.push(o); }
           }
         });
         const [, outfit, gender] = key.split('.'); // hd.<outfit>.<boy|girl>
-        const scarf = paintOutfit(scene, dress ? 'dress' : outfit, gender);
+        const scarf = paintOutfit(scene, paint && paint !== 'casual' ? paint : dress ? 'dress' : outfit, gender); // the shop's outfit in its colours
         if (look) paintLook(scene, look);
         addShoes(scene, look?.pants && dress ? 0x4A3A30 : 0x3B2A20);
         this.group.add(scene);
@@ -467,6 +467,9 @@ export class Character {
     }
     if (this.#aura) this.#aura.visible = on;
   }
+
+  /** The golden light is on (tests). */
+  get auraShown() { return !!this.#aura?.visible; }
 
   #playClip(name) {
     if (!this.mixer || this.current === name || !this.clips[name]) return;

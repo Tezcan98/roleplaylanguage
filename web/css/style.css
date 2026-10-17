@@ -507,6 +507,9 @@ body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.op
 .shop-card.pack1{background:linear-gradient(#FFC979,#E57B22)}
 .shop-card.pack2{background:linear-gradient(#A8E6FF,#3C8FE0)}
 .shop-card.food{background:linear-gradient(#FFA98A,#D9412B)}
+.shop-card.food.gold{background:linear-gradient(#FFE58A,#E0A11B)}
+.shop-food.glow .shop-card-top{animation:goldGlow 1.6s ease-in-out infinite}
+@keyframes goldGlow{50%{filter:drop-shadow(0 0 10px #FFF3B0) drop-shadow(0 0 4px #FFD54A);transform:scale(1.06)}}
 .shop-card.food.on{box-shadow:inset 0 3px 0 rgba(255,255,255,.45),0 4px 0 rgba(0,0,0,.3),0 0 0 3px #FFD54A}
 .shop-card.noads{background:linear-gradient(#B9C3D1,#66758B)}
 .shop-card.worn{box-shadow:inset 0 3px 0 rgba(255,255,255,.45),0 4px 0 rgba(0,0,0,.3),0 0 0 3px #7BE07E}

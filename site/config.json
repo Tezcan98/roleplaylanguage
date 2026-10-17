@@ -26,11 +26,12 @@
     "share": 5
   },
   "rides": {
-    "minutes": 3
+    "minutes": 10
   },
   "boosts": {
-    "pepperMinutes": 3,
-    "pepperSpeed": 1.5
+    "pepperMinutes": 30,
+    "pepperSpeed": 1.5,
+    "glowDays": 3
   },
   "ads": {
     "idleBannerSeconds": 90,

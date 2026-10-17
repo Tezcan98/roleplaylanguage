@@ -8,6 +8,16 @@ const PALETTE = {
   'suit.boy': { Black: 0x2B3448 },                                                    // a navy suit
   'curly.boy': { Shirt: 0xB5523F, Pants: 0x3F4A5A, Belt: 0x2E2218 },                // Hakan: brick red, slate trousers
   'brown.girl': { Shirt: 0xD9A23E, Pants: 0x2E5E8C, Belt: 0x4A3020, scarf: 0x9C7BC0 }, // Seher: mustard, denim blue, a lilac scarf
+  // the shop's other outfits: the same bodies in other clothes
+  'dress2.girl': { Shirt: 0xD9638C, Pants: 0xD9638C, Belt: 0xF2D27A, scarf: 0xF2D27A },    // a pink dress with a golden belt and scarf
+  'sport.boy': { Shirt: 0x22356B, Pants: 0x22356B, Belt: 0xFFFFFF },                     // a navy tracksuit (eşofman), white waistband
+  'sport.girl': { Shirt: 0xC94F7C, Pants: 0xC94F7C, Belt: 0xFFFFFF, scarf: 0x2E3A5C },    // a raspberry tracksuit, a navy scarf
+  'jersey.boy': { Shirt: 0xC8102E, Pants: 0x1B1B1B, Belt: 0xF5C518 },                    // a red football shirt, black shorts' colour
+  'jersey.girl': { Shirt: 0xF5C518, Pants: 0x1F2A5A, Belt: 0x1F2A5A, scarf: 0x1F2A5A },   // yellow and navy
+  'sweater.boy': { Shirt: 0x7A1F2B, Pants: 0x2E4A6B, Belt: 0x3B2A20 },                   // a burgundy jumper, jeans
+  'sweater.girl': { Shirt: 0x5E8C6A, Pants: 0x3B3F55, Belt: 0x3B2A20, scarf: 0xE9D8B4 },  // a sage-green jumper, a cream scarf
+  'summer.boy': { Shirt: 0xF3F3F3, Pants: 0xD8C3A0, Belt: 0x8A6A44 },                    // a white shirt, light chinos
+  'summer.girl': { Shirt: 0x8EC5E8, Pants: 0xF3F3F3, Belt: 0xD9A23E, scarf: 0x8EC5E8 },   // sky blue and white
 };
 
 /** Paints the HD model in its outfit's colours; returns the headscarf colour that goes with it. */
@@ -19,10 +29,10 @@ export function paintOutfit(scene, outfit, gender) {
 
 /**
  * A headscarf for the HD character of a covered girl, in a colour that goes with the outfit and a
- * little flower print: a hood round the head that leaves an oval for the face (a sphere with a
- * wedge cut out at the front, tipped forward so the wedge's top is the forehead), and a drape from
- * under the chin over the shoulders. Sized from the head's skin, then fixed to the head bone so it
- * follows the animation. The model's hair should already be hidden.
+ * little flower print: a hood round the whole head with an oval cut out for the face (from just
+ * above the brows to under the chin), a soft band round that oval, and a shawl from under the chin
+ * over the shoulders. Sized from the head's skin, then fixed to the head bone so it follows the
+ * animation. The model's hair should already be hidden.
  */
 export function addHeadscarf(scene, holder, color = 0xE7A1B0) {
   const head = scene.getObjectByName('Head');
@@ -35,23 +45,63 @@ export function addHeadscarf(scene, holder, color = 0xE7A1B0) {
     if (!o.isMesh || [o.material].flat()[0]?.name !== 'Skin') return;
     for (let i = 0, n = o.geometry.attributes.position.count; i < n; i++) { o.getVertexPosition(i, v); o.localToWorld(v); if (v.y > hp.y) hb.expandByPoint(v); }
   });
-  if (hb.isEmpty()) return;
-  const h = hb.max.y - hp.y, hw = (hb.max.x - hb.min.x) / 2, hd = (hb.max.z - hb.min.z) / 2;
-  const hc = hb.getCenter(new THREE.Vector3());
+  const face = boxOf(scene, 'Face');
+  if (hb.isEmpty() || face.isEmpty()) return;
   const ws = holder.getWorldScale(new THREE.Vector3()).x;
-  const map = scarfPrint(color), mat = new THREE.MeshStandardMaterial({ color: map ? 0xffffff : color, map, roughness: 0.95, side: THREE.DoubleSide });
-  const open = 0.62; // half the face opening (radians round the head)
-  const hood = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20, Math.PI / 2 + open, Math.PI * 2 - open * 2, 0, Math.PI * 0.8), mat);
-  hood.scale.set(hw * 1.18 / ws, h * 0.62 / ws, hd * 1.2 / ws);
-  hood.rotation.x = 0.42; // the opening's top towards the forehead
-  hood.position.copy(holder.worldToLocal(new THREE.Vector3(hc.x, hp.y + h * 0.5, hc.z - hd * 0.12)));
-  const top = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 8, 0, Math.PI * 2, 0, Math.PI * 0.28), mat); // closes the opening's top: the forehead's edge
-  top.scale.copy(hood.scale); top.rotation.copy(hood.rotation); top.position.copy(hood.position);
-  const drape = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.3, 1, 32, 1, true), mat);
-  drape.scale.set(hw * 1.05 / ws, h * 0.62 / ws, hd * 1.05 / ws);
-  drape.position.copy(holder.worldToLocal(new THREE.Vector3(hc.x, hp.y - h * 0.14, hc.z - hd * 0.12))); // round the neck, under the chin, over the shoulders
-  for (const m of [hood, top, drape]) { holder.add(m); head.attach(m); }
-  return [hood, top, drape];
+  // the hood: an ellipsoid a little bigger than the head
+  const R = new THREE.Vector3((hb.max.x - hb.min.x) / 2 * 1.16, (hb.max.y - hp.y) / 2 * 1.14, (hb.max.z - hb.min.z) / 2 * 1.2);
+  const C = new THREE.Vector3((hb.min.x + hb.max.x) / 2, hp.y + (hb.max.y - hp.y) / 2, (hb.min.z + hb.max.z) / 2 - R.z * 0.04);
+  // the face's oval in the hood's own units (−1…1): its top just above the brows
+  const top = (face.max.y + (face.max.y - face.min.y) * 0.3 - C.y) / R.y, chin = -0.95;
+  const oy = (top + chin) / 2, ay = (top - chin) / 2;
+  const wide = (y) => 0.64 * (y > oy ? 1 : 1 - 0.3 * (oy - y) / ay); // an egg: narrower round the chin (the cheeks wrapped)
+  const bulge = (y) => 1 + 0.22 * Math.max(0, -y); // fuller below: the head's square jaw stays inside
+  const inFace = (x, y, z) => z > 0 && (x / wide(y)) ** 2 + ((y - oy) / ay) ** 2 < 1;
+  const sphere = new THREE.SphereGeometry(1, 64, 40).toNonIndexed();
+  const pos = sphere.attributes.position, uv = sphere.attributes.uv, keep = [], keepUv = [];
+  for (let t = 0; t < pos.count; t += 3) {
+    let x = 0, y = 0, z = 0;
+    for (let k = 0; k < 3; k++) { x += pos.getX(t + k) / 3; y += pos.getY(t + k) / 3; z += pos.getZ(t + k) / 3; }
+    if (inFace(x, y, z) || y < -0.9) continue; // the face, and the bottom (inside the shawl)
+    for (let k = 0; k < 3; k++) { keep.push(pos.getX(t + k), pos.getY(t + k), pos.getZ(t + k)); keepUv.push(uv.getX(t + k), uv.getY(t + k)); }
+  }
+  for (let i = 0; i < keep.length; i += 3) { const g = bulge(keep[i + 1]); keep[i] *= g; keep[i + 2] *= g; }
+  const hoodGeo = new THREE.BufferGeometry();
+  hoodGeo.setAttribute('position', new THREE.Float32BufferAttribute(keep, 3));
+  hoodGeo.setAttribute('uv', new THREE.Float32BufferAttribute(keepUv, 2));
+  hoodGeo.computeVertexNormals();
+  const map = scarfPrint(color);
+  const mat = new THREE.MeshStandardMaterial({ color: map ? 0xffffff : color, map, roughness: 0.95, side: THREE.DoubleSide });
+  const toLocal = (p) => holder.worldToLocal(p.clone());
+  const hood = new THREE.Mesh(hoodGeo, mat);
+  hood.scale.copy(R).divideScalar(ws);
+  hood.position.copy(toLocal(C));
+  // the band round the face: along the oval's edge on the hood, a little out
+  const edge = [];
+  for (let i = 0; i < 48; i++) {
+    const a = (i / 48) * Math.PI * 2, y = oy + Math.cos(a) * ay, x = Math.sin(a) * wide(y);
+    const z = Math.sqrt(Math.max(0, 1 - x * x - y * y));
+    edge.push(new THREE.Vector3(x * R.x * bulge(y), y * R.y, z * R.z * bulge(y)).add(C));
+  }
+  const bandMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).lerp(new THREE.Color(0xffffff), 0.35), roughness: 0.9 });
+  const band = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(edge.map(toLocal), true), 64, R.x * 0.075 / ws, 8, false), bandMat);
+  // the shawl: up round the jaw at the back and sides, down under the chin in front, out over the shoulders
+  const lift = 0.72, rr = Math.sqrt(1 - lift ** 2) * bulge(-lift);
+  const prof = [[rr - 0.03, 0.05], [rr, 0], [0.9, -0.3], [1.12, -0.62], [1.26, -0.95], [1.28, -1.06]]; // (radius in head radii, height in head radii)
+  const shawlGeo = new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 40);
+  const sp = shawlGeo.attributes.position;
+  for (let i = 0; i < sp.count; i++) {
+    const x = sp.getX(i), y = sp.getY(i), z = sp.getZ(i), f = Math.min(1, -y / 0.95); // 0 at the top → 1 at the shoulders
+    const front = Math.max(0, z / (Math.hypot(x, z) || 1)) ** 2; // 1 straight ahead
+    sp.setXYZ(i, x * R.x, (y - 0.3 * front * (1 - f)) * R.y, z * R.z * (1 - 0.3 * f));
+  }
+  shawlGeo.computeVertexNormals();
+  const shawl = new THREE.Mesh(shawlGeo, mat);
+  shawl.scale.setScalar(1 / ws);
+  shawl.position.copy(toLocal(new THREE.Vector3(C.x, C.y - R.y * lift, C.z)));
+  const parts = [hood, band, shawl];
+  for (const m of parts) { holder.add(m); head.attach(m); }
+  return parts;
 }
 
 /** The scarf's cloth: its colour with a small flower print (one texture per colour). */
@@ -196,7 +246,7 @@ export function addGirlFace(scene, holder, { lips = 0xC8505F } = {}) {
       }
       const cheek = new THREE.Mesh(new THREE.CircleGeometry(fw * 0.13, 20), new THREE.MeshBasicMaterial({ color: 0xF07C82, transparent: true, opacity: 0.45, depthWrite: false }));
       cheek.rotation.y = s * 0.45;
-      const cx = c.x + s * fw * 0.42, cy = face.min.y - fh * 0.25;
+      const cx = c.x + s * fw * 0.36, cy = face.min.y - fh * 0.25;
       put(cheek, cx, cy, front(cx, cy) + fh * 0.03);
     }
     const my = face.min.y - fh * 0.75;
@@ -236,6 +286,12 @@ export function addLookExtras(scene, holder, look) {
       put(new THREE.Mesh(new THREE.BoxGeometry(r * 1.1, fh * 0.12, r * 0.8), mat(look.cap)), c.x, top - fh * 0.6, face.max.z + r * 0.15);
     }
     */
+    if (look.takke) { // the imam's small round white cap on the crown
+      const top = hair.isEmpty() ? face.max.y + fh * 2 : hair.max.y, r = hair.isEmpty() ? fw * 0.85 : (hair.max.x - hair.min.x) * 0.4;
+      const takke = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 8, 0, Math.PI * 2, 0, Math.PI * 0.32), mat(look.takke));
+      takke.scale.y = 0.75;
+      put(takke, c.x, top - r * 0.62, hair.isEmpty() ? c.z - fw * 0.3 : (hair.min.z + hair.max.z) / 2);
+    }
     if (look.apron && !shirt.isEmpty() && hips) {
       const w = (shirt.max.x - shirt.min.x) * 0.5, h = (shirt.max.y - shirt.min.y) * 1.25;
       put(new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.02), mat(0xFFFFFF)), c.x, shirt.max.y - h * 0.62, shirt.max.z + 0.012, hips);

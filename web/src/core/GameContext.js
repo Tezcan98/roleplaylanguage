@@ -16,6 +16,9 @@ export class GameContext {
   get chapter() { return this.story.chapter?.id ?? null; }
   get loc() { return this.world.current?.id ?? null; }
   get isNight() { return this.time.isNight; }
+  /** The hour of the day (0–24) and the day's Turkish name ('Cuma'): what a villager says can depend on them. */
+  get hour() { return this.time.hour % 24; }
+  get dayName() { return this.time.dayName; }
   /** Ahmet has been given a job he hasn't finished yet. */
   get hasDuty() { const q = this.story.quest; return !!q && !q.final; }
   get words() { return this.vocab.size; }

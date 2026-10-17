@@ -286,6 +286,7 @@ export class VillageSquare extends Location {
     add(mf.at(mf.box(0.14, 2.6, 0.05, 0x3E2718), px1 - 0.1, 1.7, H.z));
     this.#sign('CAMİ', px0 - 0.13, 4.35, H.z, 2.2).rotation.y = -Math.PI / 2;
     this.hotspot('village.mosque', px0 - 1.0, H.z, 2.0);
+    this.anchor('imam', 56, 4, Math.PI / 2); // Yusuf Hoca walks round the courtyard from here (content/addons/imam.js)
 
     // the minaret at the north-west corner: a square base, a tall shaft, the balcony, the cap
     const mx = H.x - hw + 0.2, mz = H.z - hw - 1.2;
@@ -399,7 +400,29 @@ export class VillageSquare extends Location {
     });
   }
 
-  /** Çay ocağı: a small kiosk with a samovar and tables with stools where people can sit. */
+  /**
+   * A Turkish double teapot (çaydanlık) on its stove ring: the kettle below, the demlik on top, each
+   * with its spout, and a handle at the side (a tall copper samovar looked like a döner spit).
+   * `y`: the counter's top.
+   */
+  #caydanlik(mf, x, y, z) {
+    const STEEL = 0xC9CED6, DARK = 0x2B2B2B;
+    const squash = (m, k) => { m.scale.y = k; return m; };
+    const spout = (r, h, px, py) => { const m = mf.at(mf.cyl(r * 0.6, r, h, STEEL, 8), px, py, 0); m.rotation.z = -0.9; return m; };
+    const handle = mf.at(mf.torus(0.1, 0.014, DARK, 10, Math.PI), -0.17, 0.22, 0);
+    handle.rotation.z = Math.PI / 2;
+    return mf.at(mf.group(
+      mf.at(mf.cyl(0.2, 0.22, 0.05, DARK, 12), 0, 0.025, 0),
+      squash(mf.at(mf.sphere(0.2, STEEL, 14), 0, 0.2, 0), 0.8),
+      spout(0.035, 0.18, 0.22, 0.22),
+      squash(mf.at(mf.sphere(0.12, 0xE7EBF0, 12), 0, 0.42, 0), 0.85),
+      spout(0.022, 0.12, 0.14, 0.44),
+      mf.at(mf.sphere(0.025, DARK, 6), 0, 0.53, 0),
+      handle,
+    ), x, y, z);
+  }
+
+  /** Çay ocağı: a small kiosk with a tea stove and tables with stools where people can sit. */
   #teaGarden(kit, mf, C) {
     const add = (m) => this.add(m);
     const kx = 25.5, kz = 7.5;
@@ -407,8 +430,7 @@ export class VillageSquare extends Location {
       mf.at(mf.box(3.6, 2.8, 2.6, { tex: 'whiteWall' }), 0, 1.4, 0),
       mf.at(mf.box(4.4, 0.18, 3.4, { tex: 'roof', repeat: [2, 1] }), 0, 2.95, -0.2),
       mf.at(mf.box(3.0, 1.0, 0.5, LIGHT_WOOD), 0, 0.5, -1.55), // counter, facing west
-      mf.at(mf.cyl(0.25, 0.3, 0.6, 0xB87333, 12), -0.8, 1.3, -1.55), // samovar
-      mf.at(mf.cyl(0.05, 0.05, 0.5, 0x555555, 6), -0.8, 1.85, -1.55),
+      this.#caydanlik(mf, -0.8, 1.0, -1.55),
       ...[-0.2, 0.2, 0.6].map((x) => mf.at(mf.cyl(0.04, 0.03, 0.1, 0xC8451F, 8), x, 1.06, -1.6)), // tea glasses
       mf.at(mf.box(1.8, 0.4, 0.05, { tex: 'cayOcagiSign' }), 0, 2.45, -1.33),
     ));
@@ -625,7 +647,7 @@ export class VillageSquare extends Location {
     this.#sign('KAHVEHANE', K.x, 3.55, K.z + K.d / 2 + 0.02);
     // counter and stove against the back wall
     add(mf.at(mf.box(4, 1.0, 0.8, WOOD), K.x - 2.5, 0.5, K.z - K.d / 2 + 0.7));
-    add(mf.at(mf.cyl(0.25, 0.3, 0.55, 0xB87333, 12), K.x - 3.6, 1.28, K.z - K.d / 2 + 0.7)); // çaydanlık on the stove
+    add(this.#caydanlik(mf, K.x - 3.6, 1.0, K.z - K.d / 2 + 0.7)); // on the stove
     [-2.6, -2.2, -1.8].forEach((dx) => add(mf.at(mf.cyl(0.04, 0.03, 0.1, 0xC8451F, 8), K.x + dx, 1.06, K.z - K.d / 2 + 0.6)));
     C.addBox(K.x - 4.5, K.x - 0.5, K.z - K.d / 2 + 0.2, K.z - K.d / 2 + 1.2);
     // the uncles' table (tavla on it) and two tables for guests

@@ -510,7 +510,7 @@ try {
     await waitFor(() => p2.$('.overlay.ad button:not([disabled])'), 6000); await p2.click('.overlay.ad button');
     await sleep(300);
     check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 106 && (await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Video izle')).querySelector('button').disabled)));
-    check('no credit packs for sale for now', !(await p2.$('.shop.open .shop-card.pack')) && !(await page.evaluate(() => window.__game.billing.available)));
+    check('credit packs shown with their prices, not for sale yet (buttons off)', (await e2(() => [...document.querySelectorAll('.shop.open .shop-card.pack')].map((c) => c.querySelector('button').disabled))).join() === 'true,true,true' && !(await page.evaluate(() => window.__game.billing.available)));
     await e2(() => { window.__game.wallet.trySpend(50); window.__game.shop.render(); }); // 56
     await p2.click('.shop.open .shop-tab:has-text("Kıyafet")'); await sleep(200);
     check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
@@ -521,14 +521,18 @@ try {
     check('…and the villagers on the square are HD for you now', await waitFor(() => e2(() => window.__game.cast.get('manav').hdOn === true), 4000));
     await p2.click('.shop.open .shop-card:has-text("Günlük kıyafet") button'); await sleep(300);
     check('an outfit (30 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 31);
-    await p2.click('.shop.open .shop-card:has-text("Yıldız Işığı") button'); await sleep(300);
-    check('the glowing ring (25 credits)', (await e2(() => window.__game.wallet.equipped('aura'))) === 'aura' && (await e2(() => window.__game.wallet.balance)) === 6);
+    check('the old golden light is not sold any more (Altın baklava instead)', !(await p2.$('.shop.open .shop-card:has-text("Yıldız Işığı")')));
+    await p2.click('.shop.open .shop-tab:has-text("Yiyecek")'); await sleep(200);
+    await p2.click('.shop.open .shop-card:has-text("Altın baklava") button'); await sleep(600);
+    check('Altın baklava (25 credits): the golden light for 3 days', (await e2(() => window.__game.wallet.balance)) === 6
+      && (await e2(() => window.__game.wallet.boostLeft('baklava'))) > 71.9 * 3600000 && await e2(() => window.__game.player.auraShown)
+      && (await p2.textContent('.shop.open .shop-card.gold')).includes('2 gün 23 sa kaldı'));
     await p2.click('.shop.open .shop-tab:has-text("Yiyecek")'); await sleep(200);
     check('normal speed before the pepper', (await e2(() => window.__game.controller.boost())) === 1);
     await p2.click('.shop.open .shop-card:has-text("Urfa biberi") button'); await sleep(300);
-    check('Urfa biberi (5 credits): faster (×1.5) for 3 minutes, the time left in the HUD and on its card', (await e2(() => window.__game.wallet.balance)) === 1
-      && (await e2(() => window.__game.controller.boost())) === 1.5 && (await e2(() => window.__game.wallet.boostLeft('pepper'))) > 170000
-      && /🌶️ [23]:\d\d/.test(await e2(() => document.querySelector('.pill.boost').textContent)) && (await p2.textContent('.shop.open .shop-card.food')).includes('kaldı'));
+    check('Urfa biberi (5 credits): faster (×1.5) for 30 minutes, the time left in the HUD and on its card', (await e2(() => window.__game.wallet.balance)) === 1
+      && (await e2(() => window.__game.controller.boost())) === 1.5 && (await e2(() => window.__game.wallet.boostLeft('pepper'))) > 29 * 60000
+      && /🌶️ (30|29):\d\d/.test(await e2(() => document.querySelector('.pill.boost').textContent)) && (await p2.textContent('.shop.open .shop-card.food')).includes('kaldı'));
     check('…not enough credits for a second one: its button is off', await e2(() => document.querySelector('.shop.open .shop-card.food button').disabled));
     await p2.click('.shop.open .shop-tab:has-text("Altın")'); await sleep(200);
     await e2(() => { window.__game.shop.share = async () => true; window.__game.shop.render(); }); // (the share sheet itself is the phone's)

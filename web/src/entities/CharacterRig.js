@@ -51,6 +51,10 @@ export function buildRig(mf, o) {
     head.add(mf.at(mf.cyl(0.33, 0.33, 0.1, o.cap, 16), 0, 0.24, 0));
     head.add(mf.at(mf.box(0.32, 0.04, 0.2, o.cap), 0, 0.2, 0.3));
   }
+  if (o.takke) { // the imam's small round white cap on the crown
+    const takke = mf.mesh(new THREE.SphereGeometry(0.36, 20, 8, 0, Math.PI * 2, 0, Math.PI * 0.27), o.takke);
+    takke.position.y = 0.03; head.add(takke);
+  }
   if (o.glasses) [-0.1, 0.1].forEach((x) => head.add(mf.at(mf.torus(0.07, 0.012, 0x1B2440), x, 0.03, 0.29)));
 
   g.scale.setScalar(o.scale || 1);
