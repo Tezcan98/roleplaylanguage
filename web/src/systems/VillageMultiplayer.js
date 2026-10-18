@@ -437,7 +437,7 @@ export class VillageMultiplayer {
     }
     const onPitch = !!this.onPitch?.(this.player.position); // a match: the hard-shot button there, not the talk button
     if (onPitch === !this.ptt.root.hidden) this.ptt.show(!onPitch);
-    this.ptt.keepAbove?.(document.getElementById('act-more'), document.getElementById('act')); // never over the action buttons
+    this.ptt.keepAbove?.(document.getElementById('act-more'), document.getElementById('act'), document.getElementById('shot'), document.getElementById('jump')); // down in the corner, but never over the action buttons
     this.remotes.update(dt, t, this.player.position); // (only the nearest are drawn: a crowd of a hundred)
     this.#since += dt;
     if (this.#since < SEND_EVERY) return;

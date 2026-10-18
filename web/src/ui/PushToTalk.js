@@ -73,7 +73,8 @@ export class PushToTalk {
    * when they change.
    */
   keepAbove(...els) {
-    const shown = els.flatMap((e) => (e && !e.hidden ? [e, ...e.children] : [])).filter((e) => e.offsetParent);
+    // the buttons themselves (a container only through its children: the empty #act-more box pushed it up for nothing)
+    const shown = els.flatMap((e) => (!e || e.hidden ? [] : e.children.length && e.tagName !== 'BUTTON' ? [...e.children] : [e])).filter((e) => e.offsetParent && e.getBoundingClientRect().height > 0);
     const key = `${shown.map((e) => e.textContent).join('|')}|${innerWidth}x${innerHeight}|${this.root.hidden}`;
     if (key === this.#placed) return;
     this.#placed = key;

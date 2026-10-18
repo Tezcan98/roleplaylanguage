@@ -199,7 +199,7 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #act-mor
 .mncard .p{font-weight:700;font-size:14px}
 
 /* ---------- multiplayer village ---------- */
-.ptt-wrap{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 128px);display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
+.ptt-wrap{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 50px);display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
 .ptt-wrap[hidden]{display:none}
 .ptt{pointer-events:auto;display:flex;align-items:center;justify-content:center;gap:8px;min-width:56px;min-height:56px;padding:0 13px;border-radius:999px;border:3px solid var(--wood);background:#fff;color:var(--ink);font:700 15px Fredoka,sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2);touch-action:none;-webkit-user-select:none;user-select:none}
 .ptt span{display:none} /* just the mic; the words only as a short hint the first few times (PushToTalk.show) and while recording */
@@ -334,6 +334,7 @@ body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
   #act-more{bottom:136px;right:max(14px,env(safe-area-inset-right))} /* (above the help button, which moves here on small screens) */
   .help-btn{left:auto;right:max(14px,env(safe-area-inset-right));bottom:84px;min-height:42px;font-size:18px}
   #shot{right:max(14px,env(safe-area-inset-right));bottom:18px;min-height:44px}
+  .ptt-wrap{right:max(14px,env(safe-area-inset-right));bottom:18px}
 }
 .menu-cols{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
 .menu-col{display:flex;flex-direction:column;gap:10px}
