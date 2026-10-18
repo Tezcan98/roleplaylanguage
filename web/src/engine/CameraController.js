@@ -34,7 +34,8 @@ export class CameraController {
       if (e.pointerType === 'touch') {
         this.#pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
         if (this.#pointers.size === 2) { this.#pinch = this.#spread(); this.#touch.active = false; return; }
-        if (e.isPrimary === false) return;
+        // (not "primary only": with a thumb on the joystick, the other thumb's swipe turns the view while walking)
+        if (this.#touch.active) return;
       } else if (e.button !== 0 && e.button !== 2) return;
       this.#touch = { active: true, id: e.pointerId, x: e.clientX, y: e.clientY };
     };

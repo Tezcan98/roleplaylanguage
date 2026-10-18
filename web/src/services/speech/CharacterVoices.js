@@ -10,14 +10,15 @@
 export class CharacterVoices {
   #turn = 0;
 
-  constructor({ repo = null, server = null, neural, fallback, voices, enabled = () => true, muted = () => false }) {
-    Object.assign(this, { repo, server, neural, fallback, voices, enabled, muted });
+  /** `level()`: 0–1, the voices' volume from the settings (each line's own `volume` is multiplied by it). */
+  constructor({ repo = null, server = null, neural, fallback, voices, enabled = () => true, muted = () => false, level = () => 1 }) {
+    Object.assign(this, { repo, server, neural, fallback, voices, enabled, muted, level });
   }
 
   voiceOf(speaker) { return this.voices[speaker] ?? this.voices.default; }
 
   /** The browser's voice: a woman's one for the women and girls, and their pitch. */
-  #say(text, voice, rate) { return Promise.resolve(this.fallback.speak(text, { rate: 0.9 * rate, pitch: voice.pitch, female: !!voice.female })).catch(() => {}); }
+  #say(text, voice, rate) { return Promise.resolve(this.fallback.speak(text, { rate: 0.9 * rate, pitch: voice.pitch, female: !!voice.female, volume: this.level() })).catch(() => {}); }
 
   /**
    * `fresh`: a sentence made up on the spot (free chat with a character). Women's voices come from
@@ -26,7 +27,9 @@ export class CharacterVoices {
    */
   /** Resolves when the line has been said (or could not be): one villager answering another waits for it. */
   speak(text, { speaker, rate = 1, fresh = false, volume } = {}) { // volume: () => 0–1, followed while it plays (talk you walk away from)
-    if (!text || this.muted()) return Promise.resolve(); // voices off in the settings
+    if (!text || this.muted() || this.level() <= 0) return Promise.resolve(); // voices off in the settings
+    const own = volume;
+    volume = () => this.level() * (own ? own() : 1); // the settings' level, followed while the line plays
     const voice = this.voiceOf(speaker), turn = ++this.#turn;
     if (fresh || !this.repo) return this.#speak(text, voice, rate, fresh, volume);
     return this.repo.url(voice, text).then((url) => {

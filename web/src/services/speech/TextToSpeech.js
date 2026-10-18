@@ -7,12 +7,13 @@ export class WebSpeechTTS {
   constructor(lang = 'tr-TR') { this.lang = lang; }
 
   /** `female`: the speaker is a woman or a girl — her voice if the device has one, else a higher pitch. */
-  speak(text, { rate = 0.9, pitch = 1, female = false } = {}) {
+  speak(text, { rate = 0.9, pitch = 1, female = false, volume = 1 } = {}) {
     if (!window.speechSynthesis || !text) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = this.lang;
     u.rate = rate;
+    u.volume = Math.max(0, Math.min(1, volume));
     const turkish = speechSynthesis.getVoices().filter((v) => v.lang?.toLowerCase().startsWith(this.lang.slice(0, 2)));
     // no Turkish voice on this device: stay silent rather than read Turkish with an English voice
     if (!turkish.length) return;

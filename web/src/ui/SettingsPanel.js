@@ -43,13 +43,13 @@ export class SettingsPanel {
 
   render() {
     const s = this.settings;
-    const toggle = (key, text, en, fallback = true) => {
-      const box = el('input', { attrs: { type: 'checkbox', id: `set-${key}` } });
-      box.checked = s.get(key, fallback);
-      box.addEventListener('change', () => { s.set(key, box.checked); this.onSound?.(key, box.checked); if (key === 'soundOn') this.render(); });
-      const sub = key !== 'soundOn' && (key === 'voicesOn' || key === 'musicOn') && !s.get('soundOn', true); // sound off: voices and music go quiet with it
-      if (sub) box.disabled = true;
-      return el('label', { class: `toggle${sub ? ' off' : ''}` }, [box, el('span', {}, [text, el('small', { class: 'en-t', text: ` · ${gloss(en)}` })])]);
+    // sound levels: sliders, 0–100 % (stored 0–1); older saves had on/off switches
+    const slider = (key, text, en) => {
+      const stored = s.get(`${key}Vol`), now = typeof stored === 'number' ? stored : s.get(`${key}On`, true) ? 1 : 0;
+      const value = el('b', { class: 'vol-val', text: `%${Math.round(now * 100)}` });
+      const range = el('input', { attrs: { type: 'range', min: '0', max: '100', step: '5', value: String(Math.round(now * 100)), id: `set-${key}`, 'aria-label': text } });
+      range.addEventListener('input', () => { const v = Number(range.value) / 100; s.set(`${key}Vol`, v); value.textContent = `%${range.value}`; this.onSound?.(key, v); });
+      return el('label', { class: 'vol' }, [el('span', {}, [text, el('small', { class: 'en-t', text: ` · ${gloss(en)}` })]), range, value]);
     };
     const quality = el('select', { attrs: { id: 'set-quality' } }, [
       el('option', { text: 'Yüksek', attrs: { value: 'high' } }),
@@ -62,9 +62,9 @@ export class SettingsPanel {
     this.body.replaceChildren(
       // start the story from any day (testing): a button, the list opens in its place
       this.onStartAt && (s.get('testerMode', false) ? this.#chapterPicker() : btn('🧪 Bölüm seç (gün seç)', 'btn alt', () => { s.set('testerMode', true); this.render(); })),
-      toggle('soundOn', '🔊 Ses', 'Sound (all of it)'),
-      toggle('voicesOn', 'Karakter sesleri', 'Characters speak out loud'),
-      toggle('musicOn', 'Müzik', 'Music'),
+      slider('sound', '🔊 Ses', 'Sound (all of it)'),
+      slider('voices', 'Karakter sesleri', 'Characters speak out loud'),
+      slider('music', 'Müzik', 'Music'),
       el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
       btn('Nasıl oynanır?', 'btn alt', () => { this.close(); this.onHelp?.(); }),
       btn('Ana menüye dön', 'btn alt', () => { this.close(); this.onMenu(); }),

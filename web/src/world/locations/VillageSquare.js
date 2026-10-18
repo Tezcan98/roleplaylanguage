@@ -69,7 +69,7 @@ export const TALK_SPOTS = {
  * at the front: shelves, counter, crates), the greengrocer's stall, a tea garden (çay ocağı) with tables, a giant
  * chess board with İsmail Dede's bench, his score board and benches to watch from, a fenced
  * football pitch, an open-air coffeehouse (kahvehane) where the uncles chat, an open library
- * with Aslan Bey, the well, benches and trees in stone rings. Nothing that people sit under
+ * with Aslan Bey, benches and trees in stone rings. Nothing that people sit under
  * has a roof, so the camera (from above) always sees who is inside.
  */
 export class VillageSquare extends Location {
@@ -141,13 +141,6 @@ export class VillageSquare extends Location {
     const facing = (x, z) => Math.atan2(-x, -z);
     for (const [name, x, z] of [['weddingAnne', -5.2, 8.6], ['weddingBaba', -3.9, 9.4], ['weddingDede', -6.4, 7.6], ['weddingHost', 3.6, 8.2]]) this.anchor(name, x, z, facing(x, z));
 
-    // well
-    this.prop(kit, 'prop.well', -1, 0, 9, 0, () => mf.group(
-      mf.at(mf.cyl(1.15, 1.3, 0.8, STONE, 18), 0, 0.4, 0),
-      mf.at(mf.box(2.5, 0.12, 0.12, WOOD), 0, 2, 0),
-      mf.at(mf.cyl(0.06, 0.06, 1.8, WOOD, 8), 0, 1.1, 0)));
-    C.addCircle(-1, 9, 1.5);
-    this.hotspot('village.well', -1, 7.2, 1.8);
 
     this.#teaGarden(kit, mf, C);
     this.#chessBoard(mf, C);

@@ -72,11 +72,7 @@ export const FREE_ACTIONS = {
     label: 'Çeşmeden su iç', think: 'Çeşmenin suyu serin!', say: 'Çeşmeden su içtim.', minutes: 2,
     words: [['çeşme', 'fountain / tap'], ['serin', 'cool'], ['su içmek', 'to drink water']],
   },
-  village_well: {
-    again: 'Az önce kuyudan su çektim.', // (said instead when done again within the hour)
-    label: 'Kuyuyu incele', think: 'Kuyunun içi çok derin.', say: 'Kuyuyu inceledim.', minutes: 2,
-    words: [['kuyu', 'well'], ['derin', 'deep'], ['incelemek', 'to examine']],
-  },
+
   village_tea: {
     label: 'Çay iç', think: 'Oh, sıcacık çay!', say: 'Çay bahçesinde oturup çay içtim.', minutes: 10,
     words: [['çay bahçesi', 'tea garden'], ['bardak', 'glass'], ['şeker', 'sugar']],

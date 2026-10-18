@@ -4,7 +4,7 @@ import { TextToSpeech } from '@capacitor-community/text-to-speech';
 export class NativeTTS {
   constructor(lang = 'tr-TR') { this.lang = lang; }
 
-  speak(text, { rate = 0.9, pitch = 1 } = {}) {
+  speak(text, { rate = 0.9, pitch = 1, volume = 1 } = {}) {
     if (!text) return;
     TextToSpeech.stop().catch(() => {});
     return TextToSpeech.speak({
@@ -12,7 +12,7 @@ export class NativeTTS {
       lang: this.lang,
       rate,
       pitch: Math.max(0, Math.min(2, pitch)),
-      volume: 1,
+      volume: Math.max(0, Math.min(1, volume)),
       queueStrategy: 0,
     }).catch(() => {});
   }

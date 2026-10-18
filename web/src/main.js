@@ -155,6 +155,9 @@ const host = document.getElementById('ui');
 
 // --- core ---
 const settings = new Settings();
+/** Sound levels from the settings, 0–1: "Ses" (everything), "Karakter sesleri", "Müzik" (older saves: the on/off switches). */
+const soundSetting = (k) => { const v = settings.get(`${k}Vol`); return typeof v === 'number' ? Math.max(0, Math.min(1, v)) : settings.get(`${k}On`, true) ? 1 : 0; };
+const voicesLevel = () => soundSetting('sound') * soundSetting('voices'), musicLevel = () => soundSetting('sound') * soundSetting('music');
 if (!SERVERS.some(([id]) => id === settings.get('serverRegion', DEFAULT_SERVER))) settings.set('serverRegion', DEFAULT_SERVER); // a city taken off the list (config.json)
 const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
@@ -250,7 +253,8 @@ const tts = new CharacterVoices({
   fallback: native ? new nativeKit.NativeTTS('tr-TR') : new WebSpeechTTS('tr-TR'),
   voices: VOICES,
   enabled: () => settings.get('neuralVoices', native ? false : true),
-  muted: () => !settings.get('soundOn', true) || !settings.get('voicesOn', true), // ⚙️ in the HUD (🔊 Ses: everything)
+  muted: () => voicesLevel() <= 0, // ⚙️ in the HUD (🔊 Ses: everything)
+  level: voicesLevel,
 });
 // ?fakemic → scripted answers (tests); manifest.sttEndpoint → Whisper server; else browser STT
 const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
@@ -512,10 +516,10 @@ const library = new Library({
 effects.register('library', () => library.atShelf());
 effects.register('library-read', () => library.readHere()); // a library seat: a book read aloud with subtitles
 // a ney plays quietly in the background in Aslan Bey's open library
-const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z }, src: 'assets/audio/kutuphane.mp3', muted: () => !settings.get('soundOn', true) || !settings.get('musicOn', true) });
+const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z }, src: 'assets/audio/kutuphane.mp3', muted: () => musicLevel() <= 0, volume: musicLevel });
 // each outdoor place its own tune; low under talk, and giving way to the library's music near it
 const music = new BackgroundMusic({
-  world, muted: () => !settings.get('soundOn', true) || !settings.get('musicOn', true),
+  world, muted: () => musicLevel() <= 0, volume: musicLevel,
   duck: () => (modes.is('dialogue') || village.group.zone || village.voice.inCall || library.reading ? 0.3 : 1) * (1 - ney.level),
 });
 chess.onMove = (m) => talk.chessMoved(m);
@@ -625,7 +629,7 @@ const dama = new DamaClub({
 gameCtx.dama = dama; // (the shelf's "Dama al" only when your hands are free)
 effects.register('dama-take', () => dama.take()).register('dama-npc', () => dama.playRifat());
 // Saturday's wedding: the drum, and the player joining the halay line
-const halay = new HalayDance({ world, player, modes, toasts, vocab, effects, story, muted: () => !settings.get('soundOn', true) || !settings.get('musicOn', true) });
+const halay = new HalayDance({ world, player, modes, toasts, vocab, effects, story, muted: () => musicLevel() <= 0, volume: musicLevel });
 effects.register('halay', () => halay.join());
 // the tailor's mannequin in the square wears the HD suit (so people see what they can buy)
 models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animations }) => {
@@ -662,7 +666,7 @@ const settingsPanel = new SettingsPanel(host, {
   onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onHelp: () => intro.show(),
-  onSound: (key, on) => { if ((key === 'voicesOn' || key === 'soundOn') && !on) tts.cancel(); },
+  onSound: () => { if (voicesLevel() <= 0) tts.cancel(); },
   onMenu: ({ resume = false } = {}) => {
     saves.save(state.snapshot()); // where you are now, for "Devam et"
     if (resume) try { sessionStorage.setItem('autoContinue', '1'); } catch { /* ignore */ } // (quality change: straight back into the game)

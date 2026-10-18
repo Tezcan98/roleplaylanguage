@@ -57,7 +57,16 @@ export class PushToTalk {
     this.onChange(on);
   }
 
-  show(visible) { if (!visible) { this.set(false); this.typeBox.hidden = true; } this.root.hidden = !visible; this.status.hidden = !visible; }
+  show(visible) {
+    if (!visible) { this.set(false); this.typeBox.hidden = true; }
+    const appearing = visible && this.root.hidden;
+    this.root.hidden = !visible; this.status.hidden = !visible;
+    // a small round mic button; its words ("Bas, konuş") only the first few times, for a few seconds
+    if (appearing) {
+      let n = 0; try { n = Number(localStorage.getItem('pttHints') ?? 0); localStorage.setItem('pttHints', String(n + 1)); } catch { /* private mode */ }
+      if (n < 3) { this.btn.classList.add('hint'); clearTimeout(this.hintTimer); this.hintTimer = setTimeout(() => this.btn.classList.remove('hint'), 5000); }
+    }
+  }
   /**
    * Above the action buttons: with two or three of them stacked (on a bike next to Cemal Abi:
    * "Bisikletten in" and "Cemal Abi ile konuş") the talk button went over them. Re-placed only

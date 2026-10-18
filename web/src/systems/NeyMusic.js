@@ -11,8 +11,8 @@ export class NeyMusic {
   #missing = false;
 
   /** @param {{ place: { location: string, x: number, z: number }, src?: string }} o */
-  constructor({ world, player, place, src = 'assets/audio/kutuphane.mp3', muted = () => false }) {
-    Object.assign(this, { world, player, place, src, muted });
+  constructor({ world, player, place, src = 'assets/audio/kutuphane.mp3', muted = () => false, volume = () => 1 }) {
+    Object.assign(this, { world, player, place, src, muted, volume });
     // browsers start sound only after a tap / key press
     const unlock = () => { if (this.level > 0 && !this.muted()) this.#play(); };
     addEventListener('pointerdown', unlock, { passive: true });
@@ -42,7 +42,7 @@ export class NeyMusic {
     if (level > 0) this.#play();
     const a = this.#audio;
     if (!a) return;
-    const target = level * VOLUME;
+    const target = level * VOLUME * Math.max(0, Math.min(1, this.volume()));
     a.volume = Math.max(0, Math.min(1, a.volume + (target - a.volume) * Math.min(1, dt * 2))); // fade in / out
     if (level === 0 && a.volume < 0.01 && !a.paused) a.pause();
   }

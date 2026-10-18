@@ -37,7 +37,6 @@ export const HOTSPOTS = {
   // online play from the main menu: leaving the square goes back to the menu, not home
   'village.menu': { label: 'Ana menüye dön', use: ['main-menu'], available: (c) => c.online },
   'village.fountain': free('village_fountain'),
-  'village.well': questOnly('village_well', 'village.well'),
   'village.mosque': { label: 'Camiye bak', use: ['free:village_mosque'] }, // seen from outside only (VillageSquare #mosque)
   ...Object.fromEntries(Array.from({ length: BENCH_SEATS }, (_, i) => [`village.bench${i + 1}`, { label: 'Banka otur', use: [`sit:bench${i + 1}`, 'free:village_bench'], available: (c) => !c.seated }])), // (content/square.js)
   'village.bakkalCounter': { label: 'Alışveriş yap', use: ['market:bakkal'] }, // shop windows (ui/MarketView.js)

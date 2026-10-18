@@ -12,8 +12,9 @@ export class BackgroundMusic {
   #tracks = new Map(); // src → { audio, gain, level }
   #ctx = null;
 
-  constructor({ world, muted = () => false, duck = () => 1, tracks = TRACKS }) {
-    Object.assign(this, { world, muted, duck, tracks });
+  /** `volume()`: 0–1 from the settings ("Müzik" × "Ses"). */
+  constructor({ world, muted = () => false, duck = () => 1, tracks = TRACKS, volume = () => 1 }) {
+    Object.assign(this, { world, muted, duck, tracks, volume });
     // browsers start sound only after a tap / key press
     const unlock = () => { this.#ctx?.resume?.().catch(() => {}); this.#want(); };
     addEventListener('pointerdown', unlock, { passive: true });
@@ -52,7 +53,7 @@ export class BackgroundMusic {
     const src = this.current, duck = src ? Math.max(0, Math.min(1, this.duck())) : 0;
     if (src) this.#want();
     for (const [key, t] of this.#tracks) {
-      const target = key === src ? VOLUME * duck : 0;
+      const target = key === src ? VOLUME * duck * Math.max(0, Math.min(1, this.volume())) : 0;
       t.level += (target - t.level) * Math.min(1, dt * (target > t.level ? 0.8 : 1.6)); // in slowly, out a little faster
       if (t.gain) t.gain.gain.value = t.level; else t.audio.volume = Math.max(0, Math.min(1, t.level));
       if (key !== src && t.level < 0.005 && !t.audio.paused) t.audio.pause();

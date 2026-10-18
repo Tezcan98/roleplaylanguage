@@ -299,9 +299,11 @@ try {
   await page.keyboard.press('Shift'); // (a key press: the browser lets sound start)
   const tune = await waitFor(() => ev(() => { const m = window.__game.music; return (m.levels()[m.current] ?? 0) > 0.05 ? m.current : null; }), 10000);
   check('the square has its own background music', tune === 'assets/audio/meydan.mp3', String(tune));
-  await ev(() => window.__game.settings.set('musicOn', false));
-  check('…"Müzik" off in the settings: it fades out', !!(await waitFor(() => ev(() => Object.values(window.__game.music.levels()).every((v) => v < 0.01)), 25000))); // (slow CI machines: game time runs slow)
-  await ev(() => window.__game.settings.set('musicOn', true));
+  await ev(() => window.__game.settings.set('musicVol', 0));
+  check('…"Müzik" at 0 % in the settings: it fades out', !!(await waitFor(() => ev(() => Object.values(window.__game.music.levels()).every((v) => v < 0.01)), 25000))); // (slow CI machines: game time runs slow)
+  await ev(() => window.__game.settings.set('musicVol', 0.5));
+  check('…at 50 %: it plays again, softer', !!(await waitFor(() => ev(() => { const v = Object.values(window.__game.music.levels()); return v.some((x) => x > 0.05) && v.every((x) => x < 0.2); }), 25000)));
+  await ev(() => window.__game.settings.set('musicVol', 1));
   await ev(() => { const a = window.__game.ads; a._banner = []; a.showBanner = () => a._banner.push('show'); a.hideBanner = () => a._banner.push('hide'); window.__game.idleAd.idle = 89.5; });
   check('standing still for a long while: a banner ad', !!(await waitFor(() => ev(() => window.__game.ads._banner.at(-1) === 'show'), 20000)));
   await page.keyboard.down('ArrowUp'); await sleep(500); await page.keyboard.up('ArrowUp');

@@ -16,8 +16,8 @@ export class HalayDance {
   #step = 0;
   #since = 0;
 
-  constructor({ world, player, modes, toasts, vocab, effects, story, muted = () => false }) {
-    Object.assign(this, { world, player, modes, toasts, vocab, effects, story, muted });
+  constructor({ world, player, modes, toasts, vocab, effects, story, muted = () => false, volume = () => 1 }) {
+    Object.assign(this, { world, player, modes, toasts, vocab, effects, story, muted, volume });
     this.active = false;
   }
 
@@ -67,7 +67,7 @@ export class HalayDance {
       this.#ac ??= new AC();
       if (this.#ac.state === 'suspended') { this.#ac.resume().catch(() => {}); return; } // (after a tap)
       const now = this.#ac.currentTime, p = this.player.position;
-      const vol = Math.max(0, 1 - Math.hypot(p.x, p.z) / 45) * 0.45;
+      const vol = Math.max(0, 1 - Math.hypot(p.x, p.z) / 45) * 0.45 * this.volume();
       if (this.#next < now) this.#next = now + 0.05;
       while (this.#next < now + 0.15) {
         const w = PATTERN[this.#step++ % PATTERN.length];
