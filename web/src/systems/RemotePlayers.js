@@ -91,7 +91,7 @@ export class RemotePlayers {
       if (!visible) return;
       if (p.hd) { p.hd(); p.hd = null; }
       char.turnTo(target.rot, 0.2);
-      char.moving = moving; char.walk(t, moving ? 1 : 0);
+      char.moving = moving; char.walk(t, moving && !char.mount?.glide ? 1 : 0); // (on a scooter they stand still on the deck, as on their own screen)
       char.update(dt);
     });
   }

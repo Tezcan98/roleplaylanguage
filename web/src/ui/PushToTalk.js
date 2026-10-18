@@ -87,8 +87,9 @@ export class PushToTalk {
   /** In a talking zone (its name) the button sends the voice; out of it (null), text again. */
   setZone(name) {
     this.zone.hidden = !name;
+    this.btn.classList.toggle('zone', !!name); // in a talking zone its words stay: hold it to speak
     if (name) this.zone.replaceChildren(`🎙️ ${name} · toplu konuşma alanı`, el('small', { text: 'Buradakiler seni duyar' }), el('small', { class: 'en-t', text: gloss('Everyone in here hears you') }));
-    this.btn.querySelector('span').textContent = name ? 'Bas, konuş (ses)' : 'Bas, konuş (yazı)';
+    this.btn.querySelector('span').textContent = name ? 'Basılı tut, konuş' : 'Bas, konuş (yazı)';
   }
 
   /** No speech-to-text here: type the sentence instead. */

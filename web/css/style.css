@@ -203,7 +203,7 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #act-mor
 .ptt-wrap[hidden]{display:none}
 .ptt{pointer-events:auto;display:flex;align-items:center;justify-content:center;gap:8px;min-width:56px;min-height:56px;padding:0 13px;border-radius:999px;border:3px solid var(--wood);background:#fff;color:var(--ink);font:700 15px Fredoka,sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2);touch-action:none;-webkit-user-select:none;user-select:none}
 .ptt span{display:none} /* just the mic; the words only as a short hint the first few times (PushToTalk.show) and while recording */
-.ptt.hint span,.ptt.rec span{display:inline}
+.ptt.hint span,.ptt.rec span,.ptt.zone span{display:inline}
 .ptt.rec{background:#E4574A;color:#fff;animation:pulse 1s infinite}
 .pill.online{cursor:default;font-size:13px;pointer-events:none}
 .subtitles{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 200px);width:min(640px,calc(100vw - 32px));display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center;padding:10px 14px;border-radius:14px;background:rgba(20,16,12,.78);color:#fff;pointer-events:none;z-index:5}

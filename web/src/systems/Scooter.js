@@ -17,7 +17,7 @@ export function scooterMesh(mf, colour = COLOURS[0]) {
   const wheels = [0.32, -0.32].map((z) => {
     const w = mf.cyl(WHEEL, WHEEL, 0.06, dark, 12); w.rotation.z = Math.PI / 2; w.position.set(0, WHEEL, z); group.add(w); return w;
   });
-  group.add(mf.at(mf.cyl(0.05, 0.05, 0.07, colour, 10), 0, WHEEL, -0.32)).rotation.z = Math.PI / 2; // the hub motor in the back wheel
+  const hub = mf.at(mf.cyl(0.05, 0.05, 0.07, colour, 10), 0, WHEEL, -0.32); hub.rotation.z = Math.PI / 2; group.add(hub); // the hub motor in the back wheel (add() returns the group: `.rotation` after it rolled the whole scooter on its side — the others' scooters, never put back on the stand)
   group.add(mf.at(mf.box(0.17, 0.07, 0.74, dark), 0, WHEEL + 0.035, 0)); // the deck with the battery in it
   group.add(mf.at(mf.box(0.175, 0.03, 0.7, colour), 0, WHEEL + 0.075, 0));
   group.add(mf.at(mf.box(0.13, 0.008, 0.58, 0x1A1A1A), 0, WHEEL + 0.094, -0.03)); // grip tape
@@ -63,6 +63,9 @@ export class Scooters {
   #home(m) { m.group.position.set(m.home.x, 0, m.home.z); m.group.rotation.set(0, STAND.rot, 0); }
 
   /** Interaction provider: get off, or get on a free scooter on the square. */
+  /** The scooters at the stand (tests). */
+  get mounts() { return this.#list; }
+
   find(pos) {
     const p = this.player;
     if (p.mount?.kind === 'scooter') return { label: 'Scooter\'dan in', dist: 0, priority: 3, run: () => this.getOff() };

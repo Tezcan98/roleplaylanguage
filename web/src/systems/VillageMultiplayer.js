@@ -411,7 +411,7 @@ export class VillageMultiplayer {
     if (zone) {
       this.group.enter(zone);
       this.ptt.setZone(this.zones[zone].name);
-      this.toasts.show(`${this.zones[zone].name}: toplu konuşma alanı 🎙️`, 'Everyone in here hears each other. Hold the talk button to speak.');
+      this.toasts.show(`${this.zones[zone].name}: toplu konuşma alanı 🎙️ Konuşmak için butona basılı tut.`, 'Everyone in here hears each other. Hold the talk button to speak.');
     } else {
       this.group.leave({ tell });
       this.ptt.setZone(null);

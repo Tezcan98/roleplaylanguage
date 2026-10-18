@@ -6,13 +6,12 @@
  * answer between two players of the same zone only). Offers and answers carry their ICE
  * candidates (no trickling: a room of sixteen would flood the server with small messages).
  */
-const GATHER_MS = 2500;
+const GATHER_MS = 1500; // (a phone's candidates are in well before: a quicker start in the zone)
 
 export class GroupVoice {
-  #peers = new Map(); // id → { pc, audio, gain }
+  #peers = new Map(); // id → { pc, audio }
   #mic = null;
   #stream = null;
-  #ctx = null;
   #volume = new Map(); // id → 0–1, kept for a peer whose audio arrives later
 
   constructor({ net, iceServers = [{ urls: 'stun:stun.l.google.com:19302' }], onState }) {
@@ -24,7 +23,7 @@ export class GroupVoice {
     net.on('zone-full', () => { this.zone = null; this.onState?.('full'); });
     net.on('disconnected', () => this.leave({ tell: false }));
     // the browser lets audio play only after a tap: try again on the next one
-    addEventListener('pointerdown', () => { if (this.#ctx?.state === 'suspended') this.#ctx.resume().catch(() => {}); }, { capture: true });
+    addEventListener('pointerdown', () => { for (const p of this.#peers.values()) if (p.audio?.paused) p.audio.play().catch(() => {}); }, { capture: true });
   }
 
   get supported() { return typeof RTCPeerConnection === 'function'; }
@@ -36,7 +35,6 @@ export class GroupVoice {
     if (this.zone === zone || !this.supported) return;
     this.leave();
     this.zone = zone;
-    this.#audioContext();
     if (!this.#mic && navigator.mediaDevices?.getUserMedia) {
       try {
         this.#stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
@@ -66,35 +64,24 @@ export class GroupVoice {
     this.#volume.set(id, v);
     const p = this.#peers.get(id);
     if (!p) return;
-    if (p.gain) p.gain.gain.setTargetAtTime(v, this.#ctx.currentTime, 0.1);
-    else if (p.audio) p.audio.volume = Math.max(0, Math.min(1, v));
+    if (p.audio) p.audio.volume = Math.max(0, Math.min(1, v));
   }
 
-  #audioContext() {
-    const AC = window.AudioContext ?? window.webkitAudioContext;
-    if (!this.#ctx && AC) this.#ctx = new AC();
-    this.#ctx?.resume?.().catch(() => {});
-  }
 
   #peer(id) {
     this.#drop(id);
     const pc = new RTCPeerConnection({ iceServers: this.net.ice ?? this.iceServers });
-    const p = { pc, audio: null, gain: null, source: null };
+    const p = { pc, audio: null };
     this.#peers.set(id, p);
     if (this.#mic) pc.addTrack(this.#mic, this.#stream); else pc.addTransceiver('audio', { direction: 'recvonly' });
     pc.ontrack = (e) => {
       const stream = e.streams[0] ?? new MediaStream([e.track]);
-      // Chrome plays a WebRTC stream through Web Audio only while a media element holds it too
+      // played by a plain audio element, its volume from the distance (as the two-person call does):
+      // through Web Audio (a muted element holding the stream) the Android app stayed silent
       const audio = p.audio = document.createElement('audio');
       audio.autoplay = true; audio.setAttribute('playsinline', ''); audio.srcObject = stream;
+      audio.volume = Math.max(0, Math.min(1, this.#volume.get(id) ?? 1));
       document.body.append(audio);
-      if (this.#ctx) {
-        audio.muted = true;
-        p.gain = this.#ctx.createGain();
-        p.gain.gain.value = this.#volume.get(id) ?? 1;
-        p.source = this.#ctx.createMediaStreamSource(stream);
-        p.source.connect(p.gain).connect(this.#ctx.destination);
-      } else audio.volume = this.#volume.get(id) ?? 1;
       audio.play().catch(() => this.onState?.('blocked-audio'));
     };
     pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed') this.onState?.('failed', id); };
@@ -141,7 +128,6 @@ export class GroupVoice {
     if (!p) return;
     p.pc.close();
     if (p.audio) { p.audio.srcObject = null; p.audio.remove(); }
-    p.source?.disconnect(); p.gain?.disconnect();
     this.#peers.delete(id);
   }
 
@@ -149,4 +135,5 @@ export class GroupVoice {
   states() { return Object.fromEntries([...this.#peers].map(([id, p]) => [id, p.pc.connectionState])); }
   volumes() { return Object.fromEntries(this.#volume); }
   _debugPeers() { return [...this.#peers.values()].map((p) => p.pc); }
+  _debugAudio() { return [...this.#peers.values()].map((p) => p.audio).filter(Boolean); }
 }

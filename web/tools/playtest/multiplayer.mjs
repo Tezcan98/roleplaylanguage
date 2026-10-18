@@ -150,7 +150,7 @@ try {
   const K = await A.evaluate(() => window.__game.village.zones.kahve);
   await at(A, K.x + 4, K.z + 3); await at(B, K.x + 5, K.z + 3);
   const inZone = await waitFor(async () => (await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.group.zone)))).every((z) => z === 'kahve'), 8000);
-  check('kahvehane: walking in joins its talking zone, and the screen says so', !!inZone && await A.evaluate(() => !document.querySelector('.pill.zone-note').hidden && document.querySelector('.ptt span').textContent.includes('ses')),
+  check('kahvehane: walking in joins its talking zone, and the screen says so', !!inZone && await A.evaluate(() => !document.querySelector('.pill.zone-note').hidden && document.querySelector('.ptt span').textContent.includes('Basılı tut')),
     await A.evaluate(() => document.querySelector('.pill.zone-note')?.textContent));
   const zoneUp = () => Promise.all([A, B].map((p) => p.evaluate(() => Object.values(window.__game.village.group.states())))).then((s) => (s.every((x) => x.length === 1 && x[0] === 'connected') ? s : null));
   const zs = await waitFor(zoneUp, 45000) ?? await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.group.states())));
@@ -227,6 +227,28 @@ try {
   check('…B gets up: the seat is free again, A waits with the board', !!(await waitFor(() => A.evaluate(() => { const t = window.__game.dama.mine(); return t && !t.black; }), 8000)));
   await A.evaluate(() => window.__game.player.sit(false));
   check('…A gets up: the board goes off the table for everyone', !!(await waitFor(() => B.evaluate(() => window.__game.dama.tables.length === 0), 8000)));
+  // a talking zone (the kahvehane): everyone inside hears each other while the button is held
+  await A.evaluate(() => { const g = window.__game, z = g.village.zones.kahve; g.player.position.set(z.x - 1, 0, z.z); }); await sleep(1500);
+  await B.evaluate(() => { const g = window.__game, z = g.village.zones.kahve; g.player.position.set(z.x + 1, 0, z.z); });
+  check('kahvehane: both in the talking zone, connected to each other', !!(await waitFor(async () => (await A.evaluate(() => Object.values(window.__game.village.group.states())[0])) === 'connected' && (await B.evaluate(() => Object.values(window.__game.village.group.states())[0])) === 'connected', 20000)));
+  check('…the talk button says to hold it there', (await A.textContent('.ptt')).includes('Basılı tut'));
+  await A.evaluate(() => window.__game.village.talk(true));
+  await B.mouse.click(450, 120); // (a tap: the browser lets the sound start)
+  const heard = await waitFor(() => B.evaluate(async () => {
+    const g = window.__game.village.group, el = g._debugAudio()[0];
+    let bytes = 0; for (const pc of g._debugPeers()) (await pc.getStats()).forEach((r) => { if (r.type === 'inbound-rtp' && r.kind === 'audio') bytes = r.bytesReceived; });
+    return el && !el.muted && !el.paused && el.volume > 0.3 && bytes > 3000 ? bytes : null;
+  }), 15000, 500);
+  check("…A holds it: B's speaker plays A's voice (an unmuted audio element, the sound arriving)", !!heard, String(heard));
+  await A.evaluate(() => window.__game.village.talk(false));
+  await A.evaluate(() => { const g = window.__game; g.player.position.set(0, 0, 8); }); await B.evaluate(() => { const g = window.__game; g.player.position.set(2, 0, 8); });
+  check('…out of the zone: the connections close', !!(await waitFor(async () => !Object.keys(await A.evaluate(() => window.__game.village.group.states())).length && !Object.keys(await B.evaluate(() => window.__game.village.group.states())).length, 8000)));
+  // a scooter: the others see it upright, heading the way the rider goes (it lay on its side)
+  await A.evaluate(() => { const g = window.__game; g.scooters.getOn(g.scooters.mounts[0]); });
+  const aRot = await A.evaluate(() => window.__game.player.group.rotation.y);
+  const scooterSeen = await waitFor(() => B.evaluate((y) => { const r = window.__game.village.remotes.list().find((c) => c.mount?.kind === 'scooter'); if (!r) return null; const m = r.mount.group.rotation; return Math.abs(m.x) < 0.01 && Math.abs(m.z) < 0.01 && Math.abs(Math.atan2(Math.sin(m.y - y), Math.cos(m.y - y))) < 0.15 ? 'ok' : null; }, aRot), 8000);
+  check("A on a scooter: B sees it upright, heading A's way", scooterSeen === 'ok', String(scooterSeen));
+  await A.evaluate(() => window.__game.scooters.getOff());
 
   // a phone locking its screen drops the socket: the game reconnects by itself
   await B.evaluate(() => window.__game.village.net.dropForTest());
