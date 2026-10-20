@@ -109,9 +109,12 @@ export class Feedback {
     });
     let last;
     for (const model of this.models) {
-      const res = await this.fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.apiKey }, body: req, signal: AbortSignal.timeout(15000),
-      });
+      let res;
+      try {
+        res = await this.fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': this.apiKey }, body: req, signal: AbortSignal.timeout(12000),
+        });
+      } catch (e) { last = e; continue; } // too slow (or the network): the next model
       if (res.status === 429 || res.status === 503) { last = new Error(`Gemini ${model} busy (${res.status})`); continue; }
       if (!res.ok) throw new Error(`Gemini ${res.status}`);
       const data = await res.json();
