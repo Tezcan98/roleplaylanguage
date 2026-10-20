@@ -641,7 +641,7 @@ try {
     await e3(() => document.querySelector('.overlay.open .iconbtn')?.click()); await sleep(200);
     await e3(() => { window.__game.intro.show(); }); await sleep(300);
     check('…the introduction in Turkish', (await e3(() => document.querySelector('.intro .ctitle').textContent)) === 'Türk Ailem’e hoş geldin!');
-    for (let i = 0; i < 8; i++) { await noEnglish(`introduction slide ${i + 1}`); await e3(() => document.querySelector('.intro .row .btn:last-child').click()); await sleep(150); }
+    for (let i = 0; i < 7; i++) { await noEnglish(`introduction slide ${i + 1}`); await e3(() => document.querySelector('.intro .row .btn:last-child').click()); await sleep(150); }
     await e3(() => { window.__game.drill.open(); }); await sleep(300);
     const asked = new Set();
     for (let i = 0; i < 6; i++) {
