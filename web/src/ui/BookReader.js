@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, meaning } from '../i18n/Gloss.js';
 
 /** A book open in your hands: one page at a time, Turkish with its meaning and the book's words. */
 export class BookReader {
@@ -56,7 +56,7 @@ export class BookReader {
     this.author.replaceChildren(b.author, el('small', { class: 'en-t', text: ` · ${gloss(b.en)}` }));
     this.text.textContent = p.tr;
     this.en.textContent = gloss(p.en);
-    this.words.replaceChildren(...(this.page === last ? b.words : []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { text: `= ${gloss(en)}` })])));
+    this.words.replaceChildren(...(this.page === last ? b.words : []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { text: meaning(tr, en) && `= ${meaning(tr, en)}` })])));
     this.pageNo.textContent = `${this.page + 1} / ${b.pages.length}`; // read quietly: 🔊 reads the page aloud on request
     this.prev.disabled = this.page === 0;
     this.next.textContent = this.page === last ? 'Bitir ✓' : 'Sonraki ▶';

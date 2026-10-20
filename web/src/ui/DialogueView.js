@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss, glossInfo, glossRole } from '../i18n/Gloss.js';
+import { gloss, glossInfo, glossRole, meaning, hintText } from '../i18n/Gloss.js';
 
 /** Dumb view for conversations: header, line, translation, words, activity slot. */
 export class DialogueView {
@@ -7,7 +7,7 @@ export class DialogueView {
     this.face = el('div', { class: 'face' });
     this.name = el('div', { class: 'n' });
     this.role = el('div', { class: 'r' });
-    this.enBtn = el('button', { class: 'iconbtn', text: glossInfo().short ?? 'EN', attrs: { type: 'button', 'aria-pressed': 'true', 'aria-label': 'Çeviri' }, on: { click: onToggleEn } });
+    this.enBtn = el('button', { class: 'iconbtn en-btn', text: glossInfo().short ?? 'EN', attrs: { type: 'button', 'aria-pressed': 'true', 'aria-label': 'Çeviri' }, on: { click: onToggleEn } });
     this.line = el('p', { class: 'line' });
     this.en = el('p', { class: 'en en-t' });
     this.hint = el('div', { class: 'hint', style: { display: 'none' } });
@@ -46,12 +46,12 @@ export class DialogueView {
     this.en.textContent = gloss(en) || '';
     this.en.hidden = !en;
   }
-  setHint(text) { this.hint.style.display = text ? 'block' : 'none'; this.hint.replaceChildren(el('b', { text: 'İpucu: ' }), text || ''); }
+  setHint(text) { this.hint.style.display = text ? 'block' : 'none'; this.hint.replaceChildren(el('b', { text: 'İpucu: ' }), hintText(text) || ''); }
   setWords(list, known = () => false) {
     // a word already in the notebook: ✓ "pekişti" (seen again, reinforced) — not new again
     this.words.replaceChildren(...(list || []).map(([tr, en]) => {
       const old = known(tr);
-      return el('span', { class: `word${old ? ' known' : ''}`, attrs: { title: old ? 'pekişti · seen again' : 'yeni kelime · new word' } }, [`${old ? '✓ ' : ''}${tr} `, el('span', { class: 'en-t', text: `= ${gloss(en)}` })]);
+      return el('span', { class: `word${old ? ' known' : ''}`, attrs: { title: old ? 'pekişti · seen again' : 'yeni kelime · new word' } }, [`${old ? '✓ ' : ''}${tr} `, el('span', { class: 'en-t def', text: meaning(tr, en) && `= ${meaning(tr, en)}` })]);
     }));
   }
   setEnPressed(on) { this.enBtn.setAttribute('aria-pressed', String(on)); }

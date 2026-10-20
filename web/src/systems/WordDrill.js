@@ -1,5 +1,5 @@
 import { el } from '../ui/dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, meaning } from '../i18n/Gloss.js';
 
 const QUESTIONS = 8;
 const MIN_WORDS = 4;
@@ -18,7 +18,7 @@ export class WordDrill {
     Object.assign(this, { modes, vocab, activities, tts, state, effects, toasts });
     this.count = el('span');
     this.prompt = el('p', { class: 'ctitle drill-q' });
-    this.sub = el('p', { class: 'cen en-t' });
+    this.sub = el('p', { class: 'cen' });
     this.slot = el('div', { class: 'activity' });
     this.root = el('div', { class: 'overlay dim drill' }, [el('div', { class: 'card' }, [
       el('p', { class: 'chap' }, ['🧠 Kelime pratiği · ', this.count]), this.prompt, this.sub, this.slot,
@@ -46,9 +46,13 @@ export class WordDrill {
 
   /** @returns {Promise<boolean>} answered right on the first try */
   #ask([tr, en], words, kind) {
-    const others = pick(words.filter(([w]) => w !== tr), 2);
+    // what a word means: in the player's language, or explained in Turkish (Turkish-only mode, where a word may have no explanation yet: then it is a listening question)
+    const m = meaning(tr, en);
+    const pool = (withMeaning) => pick(words.filter(([w, e]) => w !== tr && (!withMeaning || meaning(w, e))), 2);
+    let others = pool(kind !== 2);
+    if (kind !== 2 && (!m || others.length < 2)) { kind = 2; others = pool(false); }
     let firstTry = true;
-    const onWrong = () => { firstTry = false; this.sub.textContent = `${tr} = ${gloss(en)}`; };
+    const onWrong = () => { firstTry = false; this.sub.textContent = m ? `${tr} = ${m}` : tr; };
     this.#activity?.destroy();
     this.slot.replaceChildren();
     const shuffle = (opts) => pick(opts, opts.length);
@@ -56,10 +60,10 @@ export class WordDrill {
     if (kind === 0) { // Turkish → meaning
       type = 'choice';
       this.prompt.textContent = `“${tr}” ne demek?`; this.sub.textContent = gloss('What does it mean?');
-      spec = { optionsAreMeanings: true, options: shuffle([{ tr: en, en: '' }, ...others.map(([, e]) => ({ tr: e, en: '', wrong: true }))]) };
+      spec = { options: shuffle([{ tr: m, en: '' }, ...others.map(([w, e]) => ({ tr: meaning(w, e), en: '', wrong: true }))]) };
     } else if (kind === 1) { // meaning → Turkish
       type = 'choice';
-      this.prompt.textContent = gloss(en); this.sub.textContent = 'Türkçesi hangisi?';
+      this.prompt.textContent = m; this.sub.textContent = 'Hangi kelime?';
       spec = { options: shuffle([{ tr, en: '' }, ...others.map(([w]) => ({ tr: w, en: '', wrong: true }))]) };
     } else if (kind === 2) { // listen and pick
       type = 'listen';
@@ -67,7 +71,7 @@ export class WordDrill {
       spec = { say: tr, speaker: 'ogretmen', prompt: 'Hangi kelimeyi duydun?', options: shuffle([{ tr, en: '' }, ...others.map(([w]) => ({ tr: w, en: '', wrong: true }))]) };
     } else { // say it
       type = 'speak';
-      this.prompt.textContent = gloss(en); this.sub.textContent = 'Türkçe söyle:';
+      this.prompt.textContent = m; this.sub.textContent = 'Hangi kelime? Söyle:';
       spec = { expect: [tr], show: tr, hint: tr };
     }
     const act = this.#activity = this.activities.create(type);

@@ -1,6 +1,6 @@
 import { CONFIG, DEFAULTS } from '../config/remote.js';
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 /**
  * Rooms on the village server, named after cities. They all run on one machine; each is
@@ -77,7 +77,7 @@ export class ServerPicker {
       card.querySelector('.sc-level').replaceChildren(word[0], el('small', { class: 'en-t', text: ` · ${word[1]}` }));
     });
     const total = Object.values(this.#counts).reduce((a, b) => a + b, 0);
-    this.status.textContent = `Çevrimiçi: ${total} · ${gloss('Pick an emptier square if you want it quiet.')}`;
+    this.status.textContent = withGloss(`Çevrimiçi: ${total}`, 'Pick an emptier square if you want it quiet.');
     this.onUpdate?.();
   }
 
@@ -95,7 +95,7 @@ export class ServerPicker {
       }
       this.#render();
     } catch {
-      this.status.textContent = `Sunucu durumu alınamadı · ${gloss('Could not reach the server.')}`;
+      this.status.textContent = withGloss('Sunucu durumu alınamadı', 'Could not reach the server.');
     }
   }
 

@@ -68,7 +68,7 @@ const arg = (name) => { const i = process.argv.indexOf(name); return i > 0 ? pro
 if (arg('--coverage')) {
   const { languages, source } = JSON.parse(readFileSync(new URL('languages.json', I18N), 'utf8'));
   let bad = 0;
-  for (const { code } of languages.filter((l) => l.code !== source)) {
+  for (const { code } of languages.filter((l) => l.code !== source && !l.turkishOnly)) { // Turkish-only: a few texts, not a translation
     const dict = read(code);
     const missing = all.filter((k) => !dict[k]);
     console.log(`${code}: ${all.length - missing.length}/${all.length}${missing.length ? `  missing e.g. ${JSON.stringify(missing.slice(0, 3))}` : ''}`);

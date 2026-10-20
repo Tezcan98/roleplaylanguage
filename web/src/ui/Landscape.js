@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 const fsElement = () => document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
 const inApp = () => window.Capacitor?.isNativePlatform?.() === true; // the Android app is full screen by itself
@@ -92,7 +92,7 @@ export async function goFullscreen() {
  * explains "Add to Home Screen". Nobody is forced to turn the phone — the game also plays upright.
  */
 export function setupLandscape() {
-  const btn = el('button', { class: 'pill hud-fs', attrs: { type: 'button', 'aria-label': 'Tam ekran', title: `Tam ekran · ${gloss('Full screen')}` } });
+  const btn = el('button', { class: 'pill hud-fs', attrs: { type: 'button', 'aria-label': 'Tam ekran', title: withGloss('Tam ekran', 'Full screen') } });
   const paint = () => { const on = !!fsElement(); btn.innerHTML = on ? ICON.exit : ICON.enter; btn.setAttribute('aria-pressed', String(on)); };
   btn.hidden = !(fsEnabled() || iosBrowser());
   btn.addEventListener('click', async () => {

@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, meaning } from '../i18n/Gloss.js';
 
 /** Lesson overlay: the teacher's presentation, practice, then questions with a live feed and scoreboard. */
 export class ClassroomView {
@@ -67,7 +67,7 @@ export class ClassroomView {
   /** One presentation step: what the teacher says + new words; Next (or the repeat activity). */
   teachStep(step, i, n, { onNext, onSkip, onReplay }) {
     this.teacherLine(step.say, step.en, `Anlatım ${i + 1}/${n}`);
-    this.words.replaceChildren(...(step.words ?? []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { class: 'en-t', text: `= ${gloss(en)}` })])));
+    this.words.replaceChildren(...(step.words ?? []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { class: 'en-t def', text: meaning(tr, en) && `= ${meaning(tr, en)}` })])));
     this.nav.replaceChildren(...[ // (a missing button is left out, not written as "null")
       el('button', { class: 'chipbtn', html: `${ICONS.speaker} Tekrar dinle`, attrs: { type: 'button' }, on: { click: onReplay } }),
       !step.repeat && el('button', { class: 'chipbtn primary cls-next', text: 'Anladım, devam ▶', attrs: { type: 'button' }, on: { click: onNext } }),
@@ -86,7 +86,7 @@ export class ClassroomView {
     this.#clear();
     this.count.textContent = `Soru ${index + 1}/${total}`;
     this.q.textContent = q;
-    this.en.textContent = who ? `${who}, ${gloss(en)}` : gloss(en);
+    this.en.textContent = who && gloss(en) ? `${who}, ${gloss(en)}` : gloss(en);
     this.status.textContent = '';
     this.status.className = 'fb';
     this.slot.replaceChildren();

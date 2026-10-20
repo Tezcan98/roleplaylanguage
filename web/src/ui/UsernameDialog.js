@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 const VALID = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 
@@ -33,7 +33,7 @@ export class UsernameDialog {
         ok.disabled = true;
         const free = check ? await check(v) : true;
         ok.disabled = false;
-        if (!free) { err.textContent = `“${v}” alınmış, başka bir ad dene. · ${gloss('That name is taken, try another one.')}`; input.focus(); return; }
+        if (!free) { err.textContent = withGloss(`“${v}” alınmış, başka bir ad dene.`, 'That name is taken, try another one.'); input.focus(); return; }
         done(v);
       });
       input.addEventListener('keydown', (e) => e.stopPropagation());

@@ -9,7 +9,9 @@
  */
 import { ChatFilter } from './ChatFilter.js';
 
-const LANG_NAMES = { ar: 'Arabic', en: 'English', ur: 'Urdu', es: 'Spanish', fr: 'French' };
+const LANG_NAMES = { ar: 'Arabic', en: 'English', ur: 'Urdu', es: 'Spanish', fr: 'French', tr: 'çok basit Türkçe (ilkokul çocuğunun anlayacağı açıklama)' };
+/** "Sadece Türkçe" in the game: a Turkish-speaking primary-school child, no other language at all. */
+const TR_ONLY = '\nOyuncu Türkçe konuşan bir ilkokul çocuğu: yaşına uygun, öğretici ve neşeli konuş; hiçbir yabancı dil kullanma. "meaning" alanını boş bırak.';
 const MAX_MESSAGE = 200;
 const MAX_TURNS = 10;
 
@@ -114,7 +116,7 @@ export class NpcChat {
   }
 
   systemPrompt(persona, lang, player) {
-    return `${persona}\nOyuncunun oyundaki adı: ${player}.\n${BASE_RULES.replaceAll('{LANG}', LANG_NAMES[lang])}`;
+    return `${persona}\nOyuncunun oyundaki adı: ${player}.\n${BASE_RULES.replaceAll('{LANG}', LANG_NAMES[lang])}${lang === 'tr' ? TR_ONLY : ''}`;
   }
 
   async #ask({ persona, lang, history, message, player }) {

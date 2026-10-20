@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss, glossDir, glossLang } from '../i18n/Gloss.js';
+import { gloss, glossDir, glossLang, turkishOnly, withGloss } from '../i18n/Gloss.js';
 
 /**
  * The "? Help" button in the corner: explains in the player's language what to do right now
@@ -28,16 +28,16 @@ export class HelpPanel {
     const section = (title, ...children) => el('section', {}, [el('h3', { text: title }), ...children]);
     const p = (text, cls) => el('p', { class: cls, text });
     const tr = (text) => el('p', { class: 'tr-line', attrs: { dir: 'ltr', lang: 'tr' }, text });
-    this.title.textContent = `${gloss('Help')} · Yardım`;
+    this.title.textContent = turkishOnly() ? 'Yardım' : `${gloss('Help')} · Yardım`;
     this.body.dir = glossDir();
     this.body.lang = glossLang();
 
     this.body.replaceChildren(
       section(`🎯 ${gloss('Your task now')}`,
-        ...(s.quest ? [p(gloss(s.quest.en), 'big-ar'), tr(`${s.quest.title}: ${s.quest.text}`)] : [p(gloss('No task right now. Walk around and talk to everyone!'))]),
+        ...(s.quest ? [!turkishOnly() && p(gloss(s.quest.en), 'big-ar'), tr(`${s.quest.title}: ${s.quest.text}`)] : [p(gloss('No task right now. Walk around and talk to everyone!'))]),
         p(gloss('Follow the golden arrow ⬇️ above the person or the door. When you get close, a yellow button appears at the bottom: press it (or the E key).'))),
       section(`🎒 ${gloss('Bag')}`,
-        ...(s.bag.length ? s.bag.map(([trName, meaning]) => el('p', {}, [el('b', { text: meaning }), el('span', { class: 'tr-inline', attrs: { dir: 'ltr' }, text: ` · ${trName}` })])) : [p(gloss('The bag is empty.'))])),
+        ...(s.bag.length ? s.bag.map(([trName, meaning]) => (turkishOnly() ? el('p', {}, [el('b', { text: trName }), meaning ? ` · ${meaning}` : '']) : el('p', {}, [el('b', { text: meaning }), el('span', { class: 'tr-inline', attrs: { dir: 'ltr' }, text: ` · ${trName}` })]))) : [p(gloss('The bag is empty.'))])),
       section(`🗣️ ${gloss('Talking')}`,
         p(gloss('The Turkish sentence is on top, the translation below it. Choose your answer by tapping it (or with the keys 1-4).')),
         p(gloss('🎤 When the microphone appears: press it and say the sentence in Turkish. 🔊 reads the sentence to you.')),

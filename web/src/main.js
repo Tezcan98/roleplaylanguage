@@ -134,7 +134,7 @@ import { MarketView } from './ui/MarketView.js';
 import { CHORE_PAY } from './content/goods.js';
 import { DialogueView } from './ui/DialogueView.js';
 
-import { gloss, wordNote, loadGlossLang, glossLang } from './i18n/Gloss.js';
+import { gloss, wordNote, loadGlossLang, glossLang, meaning, withGloss } from './i18n/Gloss.js';
 import { man } from './content/characters.js';
 import { schoolDay } from './content/hotspots.js';
 import { setPlayerGender, setPlayerLook, playerGender, playerName, personalizeContent, setTeacher, teacherInfo } from './i18n/Persona.js';
@@ -163,10 +163,10 @@ const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
 // on our own site the address carries the language: sehem2.com.tr/oyun/en/ → meanings in English (kept as the player's choice)
-const pathLang = location.pathname.match(/\/oyun\/(ar|ur|en|es|fr)(?:\/|$)/)?.[1];
+const pathLang = location.pathname.match(/\/oyun\/(ar|ur|en|es|fr|tr)(?:\/|$)/)?.[1]; // tr: "Sadece Türkçe" (no other language)
 if (pathLang && !params.has('gloss')) settings.set('glossLang', pathLang);
 await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
-document.title = `${gloss('My Turkish Family')} · Türk Ailem`; // the tab: the name in the player's language too
+document.title = withGloss('Türk Ailem', 'My Turkish Family'); // the tab: the name in the player's language too
 const fullscreenBtn = setupLandscape(); // ⛶ in the HUD
 // boy (Ahmet) or girl (Sare): the content is rewritten once, before any system reads it
 setPlayerGender(params.get('gender') ?? settings.get('gender', 'boy'));
@@ -586,7 +586,7 @@ const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, pl
 
 // word notebook with "practice" (a quick quiz over the learned words)
 const drill = new WordDrill(host, { modes, vocab, activities, tts, state, effects, toasts });
-const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, gloss(en)]), 'Henüz kelime yok. Biriyle konuş!',
+const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, meaning(tr, en)]), 'Henüz kelime yok. Biriyle konuş!',
   drill.available ? { label: '🧠 Kelime pratiği yap', run: () => drill.open() } : null);
 // --- shop, daily reward, ads between story days ---
 const shop = new ShopView(host, {
@@ -739,7 +739,7 @@ const help = new HelpPanel(host, {
   modes,
   getState: () => ({
     quest: story.objective(),
-    bag: inventory.entries().map(([kind, n]) => { const i = items.info(kind); return [n > 1 ? `${n} ${i.tr}` : i.tr, n > 1 ? `${n} ${gloss(i.en)}` : gloss(i.en)]; }),
+    bag: inventory.entries().map(([kind, n]) => { const i = items.info(kind); const m = meaning(i.tr, i.en); return [n > 1 ? `${n} ${i.tr}` : i.tr, m && n > 1 ? `${n} ${m}` : m]; }),
     words: vocab.size,
   }),
   onIntro: () => intro.show(),

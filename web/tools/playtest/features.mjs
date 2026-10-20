@@ -598,6 +598,58 @@ try {
     check('ad-free mode: no ad between days', !(await p2.$('.overlay.ad.interstitial')) && (await e2((j) => window.__game.story.state.chapter === j + 1, j)));
     await p2.close();
   }
+
+  // --- "Sadece Türkçe": no other language anywhere, the words explained in Turkish ------
+  {
+    const p3 = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage();
+    errors.push(...watchErrors(p3));
+    const e3 = (fn, a) => p3.evaluate(fn, a);
+    await p3.goto(`${server.url}/?debug&fakemic&nointro&fresh&gloss=tr&quality=low`);
+    await p3.waitForFunction(() => window.__game, null, { timeout: 90000 });
+    // English on the screen: common English words in any visible text
+    const english = () => e3(() => {
+      const out = [], walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+        const el = n.parentElement, t = n.textContent.trim();
+        if (t && el?.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true }) && /\b(the|you|your|and|with|what|press|tap|please)\b/i.test(t)) out.push(t.slice(0, 70));
+      }
+      return out;
+    });
+    const noEnglish = async (name) => { const en = await english(); check(`Sadece Türkçe: ${name}, no English`, !en.length, en.join(' | ')); };
+    check('Sadece Türkçe: offered with the languages, the page in Turkish-only mode', await e3(() => document.body.classList.contains('tr-only')));
+    await noEnglish('the menu');
+    await p3.click('text=Hikayeye başla'); await sleep(1200);
+    await noEnglish('the first card');
+    await e3(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(500);
+    await noEnglish('the game screen');
+    await e3(() => window.__game.dialogue.open('anne')); await sleep(600);
+    check('…a conversation: no meaning line, no translation button', await e3(() => { const en = document.querySelector('#dlg .en'), b = document.querySelector('#dlg .en-btn'); return !en.checkVisibility() && !b.checkVisibility(); }));
+    await noEnglish('a conversation');
+    await e3(() => window.__game.dialogue.close()); await sleep(300);
+    await e3(() => { const v = window.__game.vocab; [['süt', 'milk'], ['kitap', 'book'], ['elma', 'apple'], ['kapı', 'door'], ['okul', 'school'], ['tamir etmek', 'to repair']].forEach(([tr, en]) => v.learn(tr, en)); });
+    await e3(() => window.__game.help.open()); await sleep(300);
+    check('…the help panel in Turkish', (await e3(() => document.querySelector('.help-panel').textContent)).includes('Şimdiki görevin'));
+    await noEnglish('the help panel');
+    await e3(() => [...document.querySelectorAll('.help-panel button')].find((b) => b.textContent.includes('Kelimeler'))?.click()); await sleep(300);
+    const notebook = await e3(() => document.querySelector('.overlay.open .blist')?.textContent ?? '');
+    check('…the notebook explains the words in Turkish', notebook.includes('süt') && notebook.includes('İnekten sağılan beyaz içecek') && !notebook.includes('milk'), notebook.slice(0, 120));
+    await noEnglish('the notebook');
+    await e3(() => document.querySelector('.overlay.open .iconbtn')?.click()); await sleep(200);
+    await e3(() => { window.__game.intro.show(); }); await sleep(300);
+    check('…the introduction in Turkish', (await e3(() => document.querySelector('.intro .ctitle').textContent)) === 'Türk Ailem’e hoş geldin!');
+    for (let i = 0; i < 8; i++) { await noEnglish(`introduction slide ${i + 1}`); await e3(() => document.querySelector('.intro .row .btn:last-child').click()); await sleep(150); }
+    await e3(() => { window.__game.drill.open(); }); await sleep(300);
+    const asked = new Set();
+    for (let i = 0; i < 6; i++) {
+      asked.add(await e3(() => `${document.querySelector('.drill .drill-q').textContent} ${document.querySelector('.drill .cen').textContent} ${[...document.querySelectorAll('.drill .choice')].map((b) => b.textContent).join(' / ')}`));
+      await e3(() => { for (const b of document.querySelectorAll('.drill .choice:not(.no)')) b.click(); document.querySelector('.drill .mic:not(.rec)')?.click(); }); await sleep(900);
+    }
+    const drillText = [...asked].join(' || ');
+    check('…word practice with Turkish explanations (no English meanings)', !/\b(milk|book|apple|door|school|to repair)\b/.test(drillText) && /İnekten|Sayfaları|Odaya|Bozulan|meyve|ders/.test(drillText), drillText.slice(0, 200));
+    await e3(() => window.__game.drill.close());
+    check('…a meaning choice such as “milk”: a Turkish explanation instead', await e3(() => window.__game.glossProbe('milk')) === 'İnekten sağılan beyaz içecek');
+    await p3.close();
+  }
 } catch (e) {
   failed = true;
   log('FAIL ', e.stack ?? e.message);

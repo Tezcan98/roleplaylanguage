@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss, glossDir, glossLang } from '../i18n/Gloss.js';
+import { gloss, glossDir, glossLang, withGloss, turkishOnly } from '../i18n/Gloss.js';
 
 /**
  * First-launch introduction in the player's language (with a short Turkish line),
@@ -39,7 +39,8 @@ export class IntroSlides {
       const pop = this.modes.push('overlay');
       let i = 0;
       [this.title, this.text].forEach((n) => { n.dir = glossDir(); n.lang = glossLang(); });
-      this.skip.textContent = `${gloss('Skip')} · Geç`;
+      this.skip.textContent = withGloss('Geç', 'Skip');
+      this.tr.hidden = turkishOnly(); // the slide itself is in Turkish then
       const render = () => {
         const s = SLIDES[i];
         this.icon.textContent = s.icon;
@@ -48,7 +49,7 @@ export class IntroSlides {
         this.tr.textContent = s.tr;
         this.dots.replaceChildren(...SLIDES.map((_, k) => el('span', { class: k === i ? 'on' : '' })));
         this.prev.disabled = i === 0;
-        this.next.textContent = i === SLIDES.length - 1 ? `${gloss('Start')} · Başla` : `${gloss('Next')} · Sonraki`;
+        this.next.textContent = i === SLIDES.length - 1 ? withGloss('Başla', 'Start') : withGloss('Sonraki', 'Next');
       };
       const done = () => { this.root.classList.remove('open'); pop(); resolve(); };
       this.prev.onclick = () => { if (i > 0) { i--; render(); } };

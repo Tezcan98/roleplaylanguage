@@ -1,5 +1,5 @@
 {
-  "_comment": "Languages the meanings (glosses) can be shown in. To add one: copy en keys with `npm run i18n -- --missing <code>`, translate them into assets/i18n/<code>.json and add a line here. The game itself always speaks Turkish. Optional \"font\": the font family used for that language (load it in index.html and src/fonts.js). Optional \"scale\": bigger meaning text for scripts that look small at the same size.",
+  "_comment": "Languages the meanings (glosses) can be shown in. To add one: copy en keys with `npm run i18n -- --missing <code>`, translate them into assets/i18n/<code>.json and add a line here. The game itself always speaks Turkish. Optional \"font\": the font family used for that language (load it in index.html and src/fonts.js). Optional \"scale\": bigger meaning text for scripts that look small at the same size. \"turkishOnly\": no other language at all (children who speak Turkish): tr.json has Turkish only for the texts that stand alone (help, introduction), tr-words.json explains the words in simple Turkish.",
   "source": "en",
   "languages": [
     {
@@ -35,6 +35,13 @@
       "name": "Français",
       "short": "FR",
       "dir": "ltr"
+    },
+    {
+      "code": "tr",
+      "name": "Sadece Türkçe",
+      "short": "TR",
+      "dir": "ltr",
+      "turkishOnly": true
     }
   ]
 }

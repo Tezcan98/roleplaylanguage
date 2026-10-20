@@ -12,6 +12,7 @@ let languages = [{ code: 'en', name: 'English', short: 'EN', dir: 'ltr' }];
 let source = 'en';
 let lang = 'en';
 let dict = {};
+let words = {}; // Turkish-only mode: the word → a simple Turkish explanation (assets/i18n/tr-words.json)
 
 async function getJson(url) {
   const r = await fetch(url, { cache: 'no-cache' });
@@ -27,11 +28,13 @@ export async function loadGlossLang(code, base = 'assets/i18n/') {
     source = index.source ?? 'en';
   } catch (e) { console.warn('[i18n] no language list', e); }
   const known = languages.some((l) => l.code === code) ? code : source;
-  dict = {};
+  dict = {}; words = {};
   if (known !== source) {
     try { dict = await getJson(`${base}${known}.json`); } catch (e) { console.warn(`[i18n] ${known} missing`, e); }
   }
   lang = known;
+  if (turkishOnly()) { try { words = await getJson(`${base}${known}-words.json`); } catch (e) { console.warn(`[i18n] ${known}-words missing`, e); } }
+  document.body.classList.toggle('tr-only', turkishOnly());
   const dir = glossDir();
   document.body.classList.toggle('gloss-rtl', dir === 'rtl');
   document.documentElement.dataset.gloss = lang;
@@ -49,17 +52,44 @@ export const glossInfo = () => languages.find((l) => l.code === lang) ?? languag
 /** Text direction of the gloss language (e.g. Arabic and Urdu are right-to-left). */
 export const glossDir = () => glossInfo()?.dir ?? 'ltr';
 
-/** English → current gloss language (falls back to English). */
+/**
+ * "Yalnızca Türkçe" (languages.json `turkishOnly`): no foreign language anywhere, for children
+ * who speak Turkish (primary school). The meaning lines under the Turkish are hidden
+ * (body.tr-only), the help and the introduction are in simple Turkish (tr.json: English → Turkish,
+ * only for texts that stand alone), and a word is explained in Turkish (tr-words.json).
+ */
+export const turkishOnly = () => !!glossInfo()?.turkishOnly;
+
+/** English → current gloss language (falls back to English; in Turkish-only mode to nothing). */
 export function gloss(en, vars) {
   if (en == null || en === '') return en;
   const hit = lang !== source && (dict[en] || dict[boyKey(en)]);
+  if (!hit && turkishOnly()) return '';
   let s = hit ? personalizeGloss(hit, lang) : en;
   if (vars) s = s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
   return s;
 }
 
 /** "anne · mom" → "anne · أم" */
-export const glossRole = (role) => { const [tr, en] = String(role).split(' · '); return en ? `${tr} · ${gloss(en)}` : role; };
+export const glossRole = (role) => { const [tr, en] = String(role).split(' · '); return en ? withGloss(tr, en) : role; };
 
-/** "tr = gloss" for word notes. */
-export const wordNote = (tr, en) => `${tr} = ${gloss(en)}`;
+/** What a Turkish word means: in the player's language, or explained in Turkish in Turkish-only mode ('' when there is no explanation yet). */
+export const meaning = (tr, en) => (turkishOnly() ? words[tr] ?? words[String(tr).toLocaleLowerCase('tr')] ?? '' : gloss(en));
+
+/** "tr = gloss" for word notes (only the word when there is nothing to say about it). */
+export const wordNote = (tr, en) => { const m = meaning(tr, en); return m ? `${tr} = ${m}` : tr; };
+
+/** "Türkçe · meaning" — just the Turkish when there is no meaning to add (Turkish-only mode). */
+export const withGloss = (tr, en, sep = ' · ') => { const g = gloss(en); return g ? `${tr}${sep}${g}` : tr; };
+
+/** A hint such as "süt = milk": the English side explained in Turkish, or left out, in Turkish-only mode. */
+export function hintText(hint) {
+  if (!hint || !turkishOnly()) return hint;
+  const out = String(hint).split(/,\s*/).map((part) => {
+    const m = /^(.*?)\s*=\s*(.+)$/.exec(part);
+    if (!m || /^\d/.test(m[2])) return part;
+    const def = meaning(m[1].trim(), m[2].trim());
+    return def ? `${m[1].trim()} = ${def}` : m[1].trim();
+  }).join(', ');
+  return out;
+}

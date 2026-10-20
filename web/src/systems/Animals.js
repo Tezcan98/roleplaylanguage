@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, wordNote } from '../i18n/Gloss.js';
 import { RIDE_PRICE, RIDE_SECONDS } from '../content/rides.js';
 
 /**
@@ -149,7 +149,7 @@ export class Animals {
   pet(a) {
     const k = KINDS[a.kind];
     this.vocab.learn(k.tr, k.en);
-    this.toasts.show(`${k.tr} = ${gloss(k.en)}`, gloss(k.en));
+    this.toasts.show(wordNote(k.tr, k.en), gloss(k.en));
   }
 
   /** Time left on the rented horse, "2:41". */

@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss, glossLang } from '../i18n/Gloss.js';
+import { gloss, glossLang, meaning, hintText, turkishOnly } from '../i18n/Gloss.js';
 
 /** Book-shaped overlay; the controller fills the page body and wires navigation. */
 export class TextbookView {
@@ -43,10 +43,11 @@ export class TextbookView {
       el('p', {}, [tr, ' ', el('button', { class: 'chipbtn', html: ICONS.speaker, attrs: { type: 'button', 'aria-label': 'Dinle' }, style: { minHeight: '30px', padding: '0 6px' }, on: { click: () => onSpeak(tr) } })]),
       el('p', { class: 'en en-t', text: gloss(en), style: { lineHeight: '20px', marginTop: '-6px' } }),
     ));
-    if (page.words) this.body.append(el('div', { class: 'words' }, page.words.map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { class: 'en-t', text: `= ${gloss(en)}` })]))));
+    if (page.words) this.body.append(el('div', { class: 'words' }, page.words.map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { class: 'en-t def', text: meaning(tr, en) && `= ${meaning(tr, en)}` })]))));
   }
 
   memory(page, onSpeak) {
+    if (turkishOnly()) { this.#memoryTr(page, onSpeak); return; }
     // keyword method in the player's language when the card has sound-alikes for it, else English ones
     const lang = glossLang();
     const own = lang !== 'en' && page.cards.every((c) => c[lang]);
@@ -62,6 +63,15 @@ export class TextbookView {
     });
   }
 
+  /** Turkish-only mode: no sound-alikes in another language — each word with what it means, in Turkish. */
+  #memoryTr(page, onSpeak) {
+    this.body.append(el('h3', { text: page.title }), el('p', { class: 'en', text: 'Kelimeyi dinle, anlamını oku, sonra kendin söyle.', style: { lineHeight: '22px' } }));
+    page.cards.forEach((c) => this.body.append(el('div', { class: 'mncard' }, [
+      el('span', { class: 'w' }, [`${c.tr} `, el('button', { class: 'chipbtn', html: ICONS.speaker, attrs: { type: 'button', 'aria-label': 'Dinle' }, style: { minHeight: '30px', padding: '0 6px' }, on: { click: () => onSpeak(c.tr) } })]),
+      el('span', { class: 's', text: meaning(c.tr, c.en) && `= ${meaning(c.tr, c.en)}` }),
+    ])));
+  }
+
   exercise(page) {
     this.body.append(el('h3', { text: page.title }), el('p', { text: page.activity === 'listen' ? '🔊 Dinle ve seç.' : page.say }), el('p', { class: 'en en-t', text: page.activity === 'listen' ? '' : gloss(page.en), style: { lineHeight: '20px' } }));
     this.hint = el('div', { class: 'hint', style: { display: 'none' } });
@@ -72,6 +82,6 @@ export class TextbookView {
 
   enableNext() { this.next.disabled = false; }
 
-  showHint(text) { if (!text) return; this.hint.style.display = 'block'; this.hint.textContent = `İpucu: ${text}`; }
+  showHint(text) { if (!text) return; this.hint.style.display = 'block'; this.hint.textContent = `İpucu: ${hintText(text)}`; }
   done(text) { this.slot.append(el('p', { class: 'fb ok', text })); }
 }
