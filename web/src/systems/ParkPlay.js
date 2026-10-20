@@ -25,7 +25,7 @@ export class ParkPlay {
     const sw = this.#park.swings?.[1];
     if (!sw || this.#on) return;
     this.player.place({ x: sw.x, z: sw.z, rot: 0 });
-    this.player.sit(true);
+    this.player.sit(true, { x: sw.x, z: sw.z, h: this.#swingSeat(sw).h }); // the hips on the seat, HD body too (Character #onSeat)
     this.#on = 'swing'; this.#t0 = performance.now();
     this.#learn([['salıncak', 'swing'], ['sallanmak', 'to swing']]);
     this.toasts.show('Salıncakta sallanıyorsun! İnmek için yürü.', 'You are swinging! Walk to get off.');
@@ -35,7 +35,7 @@ export class ParkPlay {
     const s = this.#park.seesaw;
     if (!s || this.#on) return;
     this.player.place({ x: s.x - s.arm, z: s.z, rot: Math.PI / 2 });
-    this.player.sit(true);
+    this.player.sit(true, this.#seesawSeat(s, s.rest));
     this.#on = 'seesaw'; this.#t0 = performance.now();
     this.#learn([['tahterevalli', 'seesaw'], ['yukarı', 'up'], ['aşağı', 'down']]);
     this.toasts.show('Tahterevallidesin: bir yukarı, bir aşağı! İnmek için yürü.', 'On the seesaw: up and down! Walk to get off.');
@@ -51,6 +51,11 @@ export class ParkPlay {
     this.#learn([['kaydırak', 'slide'], ['kaymak', 'to slide']]);
   }
 
+  /** Where the swing's seat is now (its top), at the angle the park swings it. */
+  #swingSeat(sw) { return { x: sw.x, z: sw.z - Math.sin(sw.angle) * sw.len, h: sw.y - Math.cos(sw.angle) * sw.len + 0.03 }; }
+  /** The seesaw's low end at angle `a` (its top). */
+  #seesawSeat(s, a) { return { x: s.x - s.arm * Math.cos(a), z: s.z, h: s.y + 0.04 - s.arm * Math.sin(a) }; }
+
   #learn(words) { words.forEach(([tr, en]) => this.vocab?.learn(tr, en)); }
 
   update() {
@@ -63,12 +68,11 @@ export class ParkPlay {
       if (this.#on === 'swing') {
         const sw = park.swings[1];
         sw.seen = performance.now() / 1000; sw.stop = false; // the park swings it while it is taken
-        P.set(sw.x, sw.y - Math.cos(sw.angle) * sw.len - this.#hips() + 0.05, sw.z - Math.sin(sw.angle) * sw.len);
-        p.rig.legL.rotation.x = p.rig.legR.rotation.x = -Math.PI / 2 - sw.angle * 0.9; // legs out on the way up
+        if (p.seatSpot) Object.assign(p.seatSpot, this.#swingSeat(sw)); // the body follows the seat (Character puts the hips on it)
       } else {
         const s = park.seesaw, a = s.rest * Math.cos(this.#t * 2.2); // starts down, goes up, comes down…
         s.plank.rotation.z = a;
-        P.set(s.x - s.arm * Math.cos(a), s.y + 0.06 + s.arm * -Math.sin(a) - this.#hips(), s.z);
+        if (p.seatSpot) Object.assign(p.seatSpot, this.#seesawSeat(s, a));
       }
       return;
     }
