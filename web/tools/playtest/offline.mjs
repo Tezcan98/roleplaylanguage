@@ -22,8 +22,9 @@ try {
   await page.goto(`${server.url}/?debug&nointro&fakemic&fresh&quality=low`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   check('game loads without internet', true);
-  await page.click('text=Hikayeye başla'); await sleep(1500);
-  await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(800);
+  await page.click('.main-menu.open .menu-main'); await sleep(1500);
+  for (let i = 0; i < 5 && await page.evaluate(() => !!document.querySelector('.overlay.story-card.open')); i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(500); } // the welcome, mom calling
+  await page.evaluate(() => window.__game.travel.place('house', 'start', { force: true })); await sleep(800); // (a new game starts in the park: home to mom)
   await page.evaluate(() => { const g = window.__game, m = g.cast.get('anne').position; g.player.position.set(m.x, 0, m.z + 0.6); }); await sleep(300); // next to mom, wherever the kitchen is
   await page.keyboard.press('e'); await sleep(800);
   check('dialogue opens', (await page.evaluate(() => window.__game.dialogue.talking)) === 'anne');

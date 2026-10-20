@@ -20,27 +20,19 @@ const checks = [];
 const check = (name, ok, detail = '') => { checks.push(ok); log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`); };
 const room = `test-${Date.now().toString(36).slice(-5)}`; // our own room, also on a live server
 
-async function player(tag, name, { viaMenu = true } = {}) {
+async function player(tag, name) {
   const ctx = await browser.newContext({ viewport: { width: 900, height: 560 } });
   const page = await ctx.newPage();
   page.tag = tag;
   errors.push(...watchErrors(page, `${tag} `));
   await page.goto(`${server.url}/?debug&nointro&fresh&quality=low&mp=${encodeURIComponent(villageUrl)}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
-  await page.evaluate((r) => window.__game.settings.set('serverRegion', r), room);
-  if (viaMenu) {
-    await page.click('.main-menu.open button:has-text("Meydana gir")');
-    await waitFor(() => page.$('.overlay.open input'), 15000);
-    await page.fill('.overlay.open input', name); await page.click('.overlay.open button:has-text("Meydana gir")');
-  } else {
-    await page.click('text=Hikayeye başla'); await sleep(1200);
-    await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);
-    await page.evaluate((n) => window.__game.settings.set('username', n), name);
-    await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
-  }
-  await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 15000, 300);
+  await page.evaluate(([r, n]) => { const s = window.__game.settings; s.set('serverRegion', r); s.set('serverPicked', true); s.set('username', n); window.__game.village.chosenRoom = true; }, [room, name]); // stay in our own test room (not the busiest one)
+  await page.click('.main-menu.open .menu-main'); await sleep(1200); // "▶ Hikayeye başla": a new game starts in the park in the square
+  for (let i = 0; i < 5 && await page.evaluate(() => !!document.querySelector('.overlay.story-card.open')); i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(300); }
+  await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 20000, 300);
   await sleep(600);
-  await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);
+  for (let i = 0; i < 5 && await page.evaluate(() => !!document.querySelector('.overlay.story-card.open')); i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(300); }
   return page;
 }
 
@@ -88,7 +80,7 @@ let failed = false;
 try {
   log(`village server: ${villageUrl}, room ${room}`);
   const A = await player('A', 'Ayla');
-  const B = await player('B', 'Berk', { viaMenu: false }); // walks in from the story
+  const B = await player('B', 'Berk');
   const C = await player('C', 'Cem');
   const D = await player('D', 'Defne');
   const all = [A, B, C, D];

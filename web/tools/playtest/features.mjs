@@ -49,9 +49,12 @@ try {
   // --- new game: credits, story --------------------------------------------------------
   await page.goto(`${server.url}/?debug&fakemic&fastclass&nointro&fresh&kidout&quality=low`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
-  await page.click('text=Hikayeye başla'); await sleep(1200);
-  // the welcome, mom calling you home, the square's own card when it comes: all of them
-  for (let i = 0; i < 5 && await ev(() => !!document.querySelector('.overlay.story-card.open')); i++) { await ev(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(500); }
+  await page.click('.main-menu.open .menu-main'); await sleep(1200);
+  // the welcome, mom calling you home, then the square's own card once connected: all of them
+  for (let quiet = 0, i = 0; quiet < 6 && i < 40; i++) {
+    if (await ev(() => !!document.querySelector('.overlay.story-card.open'))) { quiet = 0; await ev(() => document.querySelector('.overlay.story-card.open .btn').click()); } else quiet++;
+    await sleep(400);
+  }
   await page.click('.credits-btn'); await sleep(400);
   check('the credits (coin) in the HUD open the shop', !!(await page.$('.shop.open')));
   await page.evaluate(() => window.__game.shop.close());
@@ -619,7 +622,7 @@ try {
     const noEnglish = async (name) => { const en = await english(); check(`Sadece Türkçe: ${name}, no English`, !en.length, en.join(' | ')); };
     check('Sadece Türkçe: offered with the languages, the page in Turkish-only mode', await e3(() => document.body.classList.contains('tr-only')));
     await noEnglish('the menu');
-    await p3.click('text=Hikayeye başla'); await sleep(1200);
+    await p3.click('.main-menu.open .menu-main'); await sleep(1200);
     await noEnglish('the first card');
     await e3(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(500);
     await noEnglish('the game screen');
@@ -659,7 +662,7 @@ try {
     const e4 = (fn, a) => p4.evaluate(fn, a);
     await p4.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low&feedbackin=3`);
     await p4.waitForFunction(() => window.__game, null, { timeout: 90000 });
-    await p4.click('text=Hikayeye başla'); await sleep(1500);
+    await p4.click('.main-menu.open .menu-main'); await sleep(1500);
     const cards = [];
     for (let i = 0; i < 4; i++) {
       const t = await e4(() => document.querySelector('.overlay.story-card.open .ctitle')?.textContent ?? null);
@@ -680,7 +683,7 @@ try {
     check('…the arrow points at the road home', await e4(() => { const p = window.__game.marker.resolve(); return !!p && p.x < -48; }));
 
     // feedback: opens by itself after a while of playing (?feedbackin=3 s)
-    check('feedback: the writing screen opens by itself after a while of playing', !!(await waitFor(() => e4(() => window.__game.feedback.isOpen), 40000))); // (game time: slow frames under load count less)
+    check('feedback: the writing screen opens by itself after a while of playing', !!(await waitFor(() => e4(() => { document.querySelector('.overlay.story-card.open .btn')?.click(); return window.__game.feedback.isOpen; }), 40000))); // (game time: slow frames under load count less; the square's card when it comes)
     check('…sending needs a real text (at least 15 letters)', await e4(() => { const t = document.querySelector('.feedback textarea'); t.value = 'güzel'; t.dispatchEvent(new Event('input')); return document.querySelector('.feedback .row .btn:last-child').disabled; }));
     const before = await e4(() => window.__game.wallet.balance);
     await e4(() => { const t = document.querySelector('.feedback textarea'); t.value = 'Parkta başlamak çok güzel, çocuklarla konuşmak eğlenceli. Ama meydan bazen yavaş açılıyor, salıncağa ben de binmek isterdim.'; t.dispatchEvent(new Event('input')); document.querySelector('.feedback .row .btn:last-child').click(); });

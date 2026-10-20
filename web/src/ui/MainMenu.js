@@ -8,20 +8,20 @@ import { COIN_HTML } from './coin.js';
 
 
 /**
- * Title screen, kept simple: play the story, or go to the online village square — that's
- * all on the first screen. The city for the square (with live player counts) and the
- * settings (new game, how to play, voices, picture quality) open only when asked for.
- * It is shown again when the player leaves the online square.
+ * Title screen, kept simple: one "▶ Hikayeye başla" (no separate way into the square). The game is one world — a new game starts in the park
+ * in the village square, among the other players, and the story goes on from there (a saved game
+ * goes on where it was). How many are in the squares right now is shown underneath; the settings
+ * (new game, how to play, voices, picture quality) open only when asked for.
  */
 /** How often the main menu shows a banner ad (when it opens). */
 const HOME_BANNER = CONFIG.ads.menuBannerChance; // (set on the server: config/remote.js)
 
 export class MainMenu {
-  #view = 'home'; // home | city | settings
+  #view = 'home'; // home | settings
   #homeAd = false; // this time the main menu carries a banner (HOME_BANNER of the times it opens)
 
-  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [] }) {
-    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onSquare, onHelp, onProfile, onShop, onStartAt, onBanner, chapters });
+  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [] }) {
+    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => { settings.set('serverRegion', id); settings.set('serverPicked', true); } }); // (picked by hand: kept even when busy)
     this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
     this.root = el('div', { class: 'overlay main-menu' });
@@ -33,8 +33,8 @@ export class MainMenu {
 
   #where = null;
   #whereText() {
-    const n = this.servers.count();
-    return `${this.servers.label} meydanı · ${n ? `${n} kişi var` : 'şimdilik boş'}`;
+    const n = SERVERS.reduce((sum, [id]) => sum + this.servers.count(id), 0);
+    return n ? `🏘️ Meydanlarda şu an ${n} kişi var` : '🏘️ Meydanda başka oyuncularla buluşursun';
   }
 
   /** Test mode: a new game from the chosen chapter (day, time and title of each). */
@@ -50,7 +50,7 @@ export class MainMenu {
   show(view = 'home') {
     this.#view = view;
     if (!this.isOpen) this.#homeAd = Math.random() < HOME_BANNER; // decided as the menu opens
-    this.onBanner?.(view === 'city' || (view === 'home' && this.#homeAd)); // the square's menu carries a banner ad (gone when you go in), the main menu now and then
+    this.onBanner?.(view === 'home' && this.#homeAd); // the main menu carries a banner ad now and then
     const s = this.settings;
     const save = this.hasSave();
     this.servers.value = s.get('serverRegion', 'ankara');
@@ -59,15 +59,7 @@ export class MainMenu {
     const back = btn('← Geri', 'chipbtn menu-back', () => this.show('home'));
     let body;
 
-    if (view === 'city') {
-      body = [
-        back,
-        el('h2', { class: 'ctitle', text: 'Hangi şehrin meydanı?' }),
-        el('p', { class: 'cen en-t', text: gloss('Village square · play online with others') }),
-        this.servers.root,
-        btn('Meydana gir', 'btn', go(() => this.onSquare(this.servers.value))),
-      ];
-    } else if (view === 'settings') {
+    if (view === 'settings') {
       const voice = el('input', { attrs: { type: 'checkbox', id: 'neuralVoices' } });
       voice.checked = s.get('neuralVoices', true);
       voice.addEventListener('change', () => s.set('neuralVoices', voice.checked));
@@ -101,8 +93,7 @@ export class MainMenu {
         el('p', { class: 'brand-meaning en-t', text: gloss('My Turkish Family') }), // the name in the player's own language (Türk + aile + -m)
         el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
         btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(save ? this.onContinue : this.onStart)),
-        btn('🏘️ Meydana gir', 'btn alt menu-main', go(() => this.onSquare(this.servers.value))),
-        el('p', { class: 'menu-where' }, [this.#where, ' · ', btn('Şehir değiştir', 'linkbtn', () => this.show('city'))]),
+        el('p', { class: 'menu-where' }, [this.#where]),
         canInstall() && el('button', { class: 'btn alt menu-install', text: '📲 Uygulama olarak yükle (hep tam ekran)', attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),
         el('div', { class: 'profile-line' }, [
           el('span', { class: 'profile-who' }, [el('img', { class: 'profile-pic', attrs: { src: pic, alt: '' } }), `${glossInfo().name}${s.get('username') ? ` · @${s.get('username')}` : ''}`]),

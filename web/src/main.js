@@ -760,6 +760,7 @@ const enterPlay = () => {
   modes.setBase('play');
   document.body.classList.remove('menu');
   autosaveOn = true;
+  if (village.places[world.current.id]) village.join(); // in the square already (a new game starts in the park; a saved one may be there): among the others at once
 };
 const intro = new IntroSlides(host, modes);
 const help = new HelpPanel(host, {
@@ -804,7 +805,6 @@ const menu = new MainMenu(host, {
   onStartAt: (i) => startNew(null, i), // test mode: a new game from any chapter
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onContinue: () => continueGame(),
-  onSquare: (server) => playOnline(server),
   onProfile: () => { menu.hide(); editProfile(); },
   onShop: () => shop.open(),
 });
@@ -827,20 +827,6 @@ if (native) scheduleDailyReminder(nativeKit.LocalNotifications); // keep tomorro
 // Play Games sign-in (silent for Play Games users): the player id goes with what they write, for the safety log
 if (native) nativeKit.PlayGames.signIn().then((r) => { if (r?.signedIn && r.playerId) settings.set('playGamesId', r.playerId); }).catch(() => {});
 
-/** Online square straight from the menu: no story (paused), no autosave; leaving returns here. */
-function playOnline(server) {
-  settings.set('serverRegion', server);
-  village.chosenRoom = true; // picked on the menu: that room, not the busiest one
-  gameCtx.online = true;
-  story.pause();
-  autosaveOn = false;
-  fader.run(() => {
-    travel.place('village', 'yardRoad', { force: true });
-    tts.preload();
-    modes.setBase('play');
-    document.body.classList.remove('menu');
-  });
-}
 function backToMenu() {
   fader.run(() => {
     gameCtx.online = false;

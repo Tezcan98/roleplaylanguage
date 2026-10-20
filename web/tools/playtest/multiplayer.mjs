@@ -22,36 +22,27 @@ const errors = [];
 const checks = [];
 const check = (name, ok, detail = '') => { checks.push([name, ok]); log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`); };
 
-/** A joins from the main menu (username + "Meydana gir"), B walks there from the story. */
-async function player(tag, name, { viaMenu = false, room = null } = {}) {
+/** A player: "▶ Hikayeye başla" — a new game starts in the park in the square, among the others (one world, no separate online mode). */
+async function player(tag, name, { room = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1000, height: 620 }, permissions: ['microphone'] });
   const page = await ctx.newPage();
   errors.push(...watchErrors(page, `${tag} `));
   await page.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${opt.relayonly ? '&relayonly' : ''}${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   if (room) await page.evaluate((r) => window.__game.settings.set('serverRegion', r), room);
-  if (viaMenu) {
-    await page.click('.main-menu.open button:has-text("Meydana gir")');
-    await waitFor(() => page.$('.overlay.open input'), 15000);
-    await page.fill('.overlay.open input', name); await page.click('.overlay.open button:has-text("Meydana gir")');
-    await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 15000, 400);
-    await sleep(800);
-    await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300); // first-visit card
-    return page;
-  }
-  await page.click('text=Hikayeye başla'); await sleep(1200);
-  await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300);
   if (name) await page.evaluate((n) => window.__game.settings.set('username', n), name); // set in the profile
-  await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
-  await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 15000, 300); await sleep(800);
-  await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(300); // first-visit card
+  await page.click('.main-menu.open .menu-main'); await sleep(1200);
+  await closeCards(page); // the welcome, mom calling: the game starts, in the square
+  await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 20000, 300); await sleep(800);
+  await closeCards(page); // the square's first-visit card
   return page;
 }
+const closeCards = async (page) => { for (let i = 0; i < 5 && await page.evaluate(() => !!document.querySelector('.overlay.story-card.open')); i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(400); } };
 
 let failed = false;
 try {
-  const A = await player('A', 'Ayşe', { viaMenu: true });
-  check('main menu → village square', (await A.evaluate(() => window.__game.world.current.id)) === 'village' && (await A.evaluate(() => window.__game.village.net.connected)));
+  const A = await player('A', 'Ayşe');
+  check('"▶ Hikayeye başla": a new game starts in the village square, online', (await A.evaluate(() => window.__game.world.current.id)) === 'village' && (await A.evaluate(() => window.__game.village.net.connected)));
   const B = await player('B', 'Ayşe'); // same name on purpose
   const at = (p, x, z) => p.evaluate(([x, z]) => window.__game.player.position.set(x, 0, z), [x, z]);
   const label = (p) => p.evaluate(() => (document.getElementById('act').hidden ? null : document.getElementById('act').textContent));
@@ -114,10 +105,7 @@ try {
     const C = await browser.newPage();
     await C.goto(`${server.url}/?nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
     const home = await waitFor(() => C.evaluate(() => document.querySelector('.menu-where')?.textContent.includes('2 kişi') && document.querySelector('.menu-where').textContent), 45000);
-    check('menu: the square button says how many people are there', !!home, home);
-    await C.click('text=Şehir değiştir');
-    const opt = await waitFor(() => C.evaluate(() => document.querySelector('.server-card[data-server="ankara"]')?.textContent.includes('👥 2') && document.querySelector('.server-card[data-server="ankara"]').textContent), 45000); // a third page next to two running games loads slowly on CI
-    check('menu shows live player counts per room', !!opt, opt);
+    check('menu: how many people are in the squares right now', !!home, home);
     await C.close();
   }
 
@@ -269,25 +257,23 @@ try {
     await C.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low${villageUrl ? `&mp=${encodeURIComponent(villageUrl)}` : ''}`);
     await C.waitForFunction(() => window.__game, null, { timeout: 90000 });
     await C.evaluate(() => { window.__game.settings.set('username', 'Yalnız'); window.__game.settings.set('villageIntroSeen', true); });
-    await C.click('text=Şehir değiştir');
-    await C.click('.server-card[data-server="izmir"]');
-    await C.click('.main-menu.open button:has-text("Meydana gir")');
-    await waitFor(() => C.evaluate(() => window.__game.village.net.connected), 15000, 400);
-    const offer = await waitFor(() => C.$('.overlay.open button:has-text("Ankara meydanına geç")'), 8000);
-    check('alone in a square picked on the menu: offered the busier one', !!offer);
-    if (offer) await offer.click();
-    check('…and switching joins the others', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 25000)), `C in ${await C.evaluate(() => window.__game.village.net.room)}, A sees ${await A.evaluate(() => window.__game.village.remotes.count)}`);
+    await C.evaluate(() => window.__game.settings.set('serverRegion', 'izmir')); // another city last time: the new game still goes where the others are
+    await C.click('.main-menu.open .menu-main'); await sleep(1200);
+    await closeCards(C);
+    await waitFor(() => C.evaluate(() => window.__game.village.net.connected), 20000, 400);
+    check('a new player joins the square where the others are', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 25000)), `C in ${await C.evaluate(() => window.__game.village.net.room)}, A sees ${await A.evaluate(() => window.__game.village.remotes.count)}`);
     await C.close();
   }
 
-  // online from the menu: the square's exit leads back to the main menu, not home
-  const exitLabel = await A.evaluate(() => { const g = window.__game; const h = g.world.current.hotspots.get('village.menu').pos; g.player.position.set(h.x + 0.2, 0, h.z); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });
-  check('online exit says "Ana menüye dön"', exitLabel.includes('Ana menüye dön'), exitLabel);
+  // one world: the square's exit is the road home (no separate online mode with its own exit to the menu)
+  const exitLabel = await A.evaluate(() => { const g = window.__game; const h = g.world.current.hotspots.get('village.yard').pos; g.player.position.set(h.x + 0.2, 0, h.z); return new Promise((r) => setTimeout(() => r(document.getElementById('act').textContent), 400)); });
+  check('the square\'s exit says "Eve dön"', exitLabel.includes('Eve dön'), exitLabel);
   await A.keyboard.press('e');
-  check('…and returns to the main menu', !!(await waitFor(() => A.$('.main-menu.open'), 8000)) && (await A.evaluate(() => window.__game.world.current.id)) === 'yard');
+  check('…and takes you home to the yard', !!(await waitFor(() => A.evaluate(() => window.__game.world.current.id === 'yard'), 8000)));
   check('B sees A leave', !!(await waitFor(async () => (await B.evaluate(() => window.__game.village.remotes.count)) === 0)));
-  await A.click('.main-menu.open button:has-text("Meydana gir")');
-  check('A can go back in from the menu', !!(await waitFor(() => A.evaluate(() => window.__game.village.net.connected), 15000)));
+  await A.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
+  check('A can walk back into the square', !!(await waitFor(() => A.evaluate(() => window.__game.village.net.connected), 15000)));
+  await closeCards(A);
 
   await B.evaluate(() => window.__game.travel.go('yard', 'gate'));
   check('leaving the square removes the player', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 0)));

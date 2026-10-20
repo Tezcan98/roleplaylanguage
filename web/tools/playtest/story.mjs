@@ -29,7 +29,7 @@ try {
   // test mode: debug handle, scripted microphone, fast classmates, no intro, empty save, light graphics
   await page.goto(`${server.url}/?debug&fakemic&fastclass&nointro&fresh&quality=low`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
-  await page.click('text=Hikayeye başla');
+  await page.click('.main-menu.open .menu-main');
   await sleep(1200);
   if (FROM) {
     await page.evaluate(() => document.querySelector('.overlay.open .card .btn')?.click());
