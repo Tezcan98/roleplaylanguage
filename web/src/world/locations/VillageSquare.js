@@ -240,6 +240,7 @@ export class VillageSquare extends Location {
     });
     // facing south: the camera (it looks north) sees the children's faces
     this.swings.forEach((sw, i) => { this.anchor(`swing${i + 1}`, sw.x, sw.z, 0); this.anchors.get(`swing${i + 1}`).swing = sw; });
+    this.hotspot('village.swing', this.swings[1].x, this.swings[1].z + 0.9, 1.0); // the middle one is free (the children have the others)
     this.animated.push((dt) => {
       const now = performance.now() / 1000;
       for (const sw of this.swings) {
@@ -252,6 +253,8 @@ export class VillageSquare extends Location {
 
     // the slide: a ladder on the north side, the platform, the chute down to the south
     const sx = x1 - 2.2, sz = z0 + 1.6, H = 1.6;
+    this.slide = { x: sx, ladderZ: sz - 0.05, topZ: sz + 0.45, bottomZ: sz + 0.9 + 2.9, h: H };
+    this.hotspot('village.slide', sx, sz - 0.8, 1.1); // at the foot of the ladder
     for (const dx of [-0.45, 0.45]) for (const dz of [0, 0.9]) add(mf.at(mf.box(0.08, H, 0.08, YELLOW), sx + dx, H / 2, sz + dz));
     add(mf.at(mf.box(1, 0.08, 1, BLUE), sx, H, sz + 0.45));
     for (const dx of [-0.36, 0.36]) add(mf.at(mf.box(0.06, 1.1, 0.06, YELLOW), sx + dx, H + 0.55, sz + 0.9)); // the rail at the top of the chute
@@ -270,8 +273,11 @@ export class VillageSquare extends Location {
     // the seesaw
     const kx = x1 - 3, kz = z1 - 1.8;
     add(mf.at(mf.box(0.3, 0.45, 0.3, BLUE), kx, 0.22, kz));
-    const plank = add(mf.at(mf.box(3.4, 0.08, 0.32, RED), kx, 0.5, kz)); plank.rotation.z = 0.16;
-    for (const dx of [-1.4, 1.4]) add(mf.at(mf.box(0.06, 0.35, 0.3, YELLOW), kx + dx, 0.5 - dx * 0.16 + 0.2, kz));
+    // the plank with its handles turns round the pivot (systems/ParkPlay.js rocks it with the player on it)
+    const plank = this.live(mf.group(mf.at(mf.box(3.4, 0.08, 0.32, RED), 0, 0, 0), ...[-1.4, 1.4].map((dx) => mf.at(mf.box(0.06, 0.35, 0.3, YELLOW), dx, 0.2, 0))));
+    plank.position.set(kx, 0.5, kz); plank.rotation.z = 0.16; add(plank);
+    this.seesaw = { plank, x: kx, z: kz, y: 0.5, arm: 1.4, rest: 0.16 };
+    this.hotspot('village.seesaw', kx - 1.4, kz + 0.75, 1.0); // its low end
     C.addBox(kx - 1.7, kx + 1.7, kz - 0.25, kz + 0.25);
 
     // where a new game starts (inside the gate, the swings and the slide ahead), and the runners' start

@@ -59,6 +59,7 @@ import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
 import { SettingsPanel } from './ui/SettingsPanel.js';
 import { FeedbackView } from './ui/FeedbackView.js';
+import { ParkPlay } from './systems/ParkPlay.js';
 import { Animals } from './systems/Animals.js';
 import { Bicycle, bikeMount } from './systems/Bicycle.js';
 import { Scooters, scooterMount } from './systems/Scooter.js';
@@ -315,6 +316,7 @@ effects
     toasts.show(`+${n} lira`, gloss('Pocket money'));
   })
   .register('flag', (name) => { state.flags[name] = true; bus.emit(EV.FLAG, { name }); })
+  .register('park', (toy) => parkPlay[toy]?.()) // swing, slide, seesaw in the park (systems/ParkPlay.js)
   .register('sit', (anchor) => { // a seat in the current place (sofra at home, tea-garden stools…)
     const here = world.current.anchors.has(anchor) ? world.current : world.get('house'), a = here.anchors.get(anchor);
     if (a) { player.place(a); player.sit(true, seatAt(here, a)); player.seatAnchor = anchor; } // the hips on the seat (world/seats.js); which seat: the dama tables (DamaClub)
@@ -893,7 +895,8 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, idleAd, feedbackAsk], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const parkPlay = new ParkPlay({ world, player, vocab, toasts });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -967,4 +970,4 @@ if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { parkPlay, feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

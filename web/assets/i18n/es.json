@@ -2575,5 +2575,8 @@
  "to slide": "deslizarse",
  "to swing": "columpiarse",
  "up": "arriba",
- "“it” (the one who chases)": "el que la lleva (en el juego)"
+ "“it” (the one who chases)": "el que la lleva (en el juego)",
+ "You are swinging! Walk to get off.": "¡Te estás columpiando! Camina para bajarte.",
+ "On the seesaw: up and down! Walk to get off.": "En el balancín: ¡arriba y abajo! Camina para bajarte.",
+ "Whee! You went down the slide!": "¡Yujuu! ¡Bajaste por el tobogán!"
 }
