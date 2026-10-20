@@ -98,6 +98,7 @@ export class MainMenu {
           btn('⚙️', 'iconbtn light', () => this.show('settings'), { 'aria-label': 'Ayarlar', title: 'Ayarlar' }),
         ]),
         el('h1', { class: 'big', text: 'Türk Ailem' }),
+        el('p', { class: 'brand-meaning en-t', text: gloss('My Turkish Family') }), // the name in the player's own language (Türk + aile + -m)
         el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
         btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(save ? this.onContinue : this.onStart)),
         btn('🏘️ Meydana gir', 'btn alt menu-main', go(() => this.onSquare(this.servers.value))),

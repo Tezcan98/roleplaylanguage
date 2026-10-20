@@ -1,3 +1,4 @@
+import { gloss } from '../i18n/Gloss.js';
 /**
  * Android (Capacitor) adapters. Imported dynamically and only inside the app, so the web
  * version never loads the Capacitor packages (they are bundled into the app by Vite).
@@ -62,7 +63,7 @@ export async function scheduleDailyReminder(LocalNotifications, { ask = false } 
     const at = (days) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(10, 0, 0, 0); return d; };
     await LocalNotifications.schedule({
       notifications: [1, 2].map((days, i) => ({
-        id: DAILY_ID + i, title: 'Türk Ailem 🎁', body: 'Bugünkü ödülünü al! Her gün gelirsen ödül büyür.',
+        id: DAILY_ID + i, title: `${gloss('My Turkish Family')} 🎁`, body: 'Bugünkü ödülünü al! Her gün gelirsen ödül büyür.',
         schedule: { at: at(days) }, // not exact to the minute: no special alarm permission needed
       })),
     });

@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Türk Ailem</string>
-    <string name="title_activity_main">Türk Ailem</string>
+    <!-- the name under the icon: English here (any other language), and each language its own (values-tr…: Türk Ailem) -->
+    <string name="app_name">My Turkish Family</string>
+    <string name="title_activity_main">My Turkish Family</string>
     <string name="package_name">com.anadolu</string>
     <string name="custom_url_scheme">com.anadolu</string>
     <string name="admob_app_id">ca-app-pub-8546179762858286~1444366533</string>

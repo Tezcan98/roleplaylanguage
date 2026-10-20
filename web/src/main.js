@@ -166,6 +166,7 @@ const quality = params.get('quality') ?? settings.get('quality', native ? 'low' 
 const pathLang = location.pathname.match(/\/oyun\/(ar|ur|en|es|fr)(?:\/|$)/)?.[1];
 if (pathLang && !params.has('gloss')) settings.set('glossLang', pathLang);
 await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
+document.title = `${gloss('My Turkish Family')} · Türk Ailem`; // the tab: the name in the player's language too
 const fullscreenBtn = setupLandscape(); // ⛶ in the HUD
 // boy (Ahmet) or girl (Sare): the content is rewritten once, before any system reads it
 setPlayerGender(params.get('gender') ?? settings.get('gender', 'boy'));
