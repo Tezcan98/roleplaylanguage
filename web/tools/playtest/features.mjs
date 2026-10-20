@@ -679,6 +679,18 @@ try {
     await e4(() => window.__game.dialogue.open('emre')); await sleep(500);
     check('…a child to talk to (mom is calling: he lets you go)', (await e4(() => [...document.querySelectorAll('#dlg .choice')].map((b) => b.textContent).join(' | '))).includes('annem beni çağırıyor'));
     await e4(() => window.__game.dialogue.close()); await sleep(300);
+    // the player on the park's toys
+    await e4(() => window.__game.parkPlay.swing()); await sleep(1500);
+    check('park: on the free swing, swinging', await e4(() => { const g = window.__game, sw = g.world.get('village').swings[1]; return g.player.seated && Math.abs(sw.angle) > 0.01 && g.player.position.y > 0.1; }));
+    await e4(() => window.__game.player.sit(false)); await sleep(300);
+    check('…walking off ends it', await e4(() => !window.__game.parkPlay.busy && window.__game.player.position.y === 0));
+    await e4(() => window.__game.parkPlay.slide()); await sleep(1300);
+    const top = await e4(() => window.__game.player.position.y);
+    check('…up the slide and down it, off at the bottom', top > 0.4 && !!(await waitFor(() => e4(() => !window.__game.parkPlay.busy && !window.__game.player.posed && window.__game.player.position.y === 0), 5000)), `top ${top.toFixed(2)} m`);
+    await e4(() => window.__game.parkPlay.seesaw()); await sleep(800);
+    const rock = await e4(async () => { const pl = window.__game.world.get('village').seesaw.plank, a = pl.rotation.z; await new Promise((r) => setTimeout(r, 400)); return Math.abs(pl.rotation.z - a); });
+    check('…on the seesaw: it rocks', rock > 0.01 && await e4(() => window.__game.player.seated), rock.toFixed(3));
+    await e4(() => window.__game.player.sit(false)); await sleep(300);
     // the arrow takes you home: the road to the yard first
     check('…the arrow points at the road home', await e4(() => { const p = window.__game.marker.resolve(); return !!p && p.x < -48; }));
 
