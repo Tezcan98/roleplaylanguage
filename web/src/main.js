@@ -594,6 +594,7 @@ const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en
 // --- shop, daily reward, ads between story days ---
 const shop = new ShopView(host, {
   modes, wallet, ads, billing, toasts, gender: playerGender(), look: settings.get('look', ''), share: shareGame,
+  feedback: { due: () => feedback.due, open: () => feedback.open() }, // "Yorum yaz, kazan" in the gold tab
   onDaily: () => takeDaily(),
   onEat: (food) => {
     if (food.glow) { // Altın baklava: the golden light on, seen by the others after a quick reconnect
@@ -754,6 +755,9 @@ cast.apply(STORY.chapters[0].cast);
 travel.place('yard', 'houseDoor', { silent: true });
 // --- save / continue ---
 const saves = new LocalSaveRepository();
+// a new game now starts in the park in the square: every old story save starts over once (credits, purchases,
+// outfits and settings stay — they are the wallet's, not the save's)
+if (!settings.get('parkStart', false)) { saves.clear(); settings.set('parkStart', true); }
 let saved = params.has('fresh') ? null : saves.load();
 let autosaveOn = false;
 new AutoSave({ bus, state, repo: saves, enabled: () => autosaveOn });

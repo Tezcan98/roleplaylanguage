@@ -37,6 +37,14 @@ export class MainMenu {
     return n ? `🏘️ Meydanlarda şu an ${n} kişi var` : '🏘️ Meydanda başka oyuncularla buluşursun';
   }
 
+  #taps = [];
+  /** Five quick taps on the settings title: the testers' chapter picker on / off. */
+  #testerTap() {
+    const now = performance.now();
+    this.#taps = [...this.#taps.filter((t) => now - t < 2500), now];
+    if (this.#taps.length >= 5 && this.onStartAt) { this.#taps = []; this.settings.set('testerMode', !this.settings.get('testerMode', false)); this.show('settings'); }
+  }
+
   /** Test mode: a new game from the chosen chapter (day, time and title of each). */
   #chapterPicker(go) {
     const pick = el('select', { attrs: { id: 'testChapter' } }, this.chapters.map((c) => el('option', { text: c.text, attrs: { value: String(c.i) } })));
@@ -76,9 +84,9 @@ export class MainMenu {
       quality.addEventListener('change', () => { s.set('quality', quality.value); location.reload(); });
       body = [
         back,
-        el('h2', { class: 'ctitle', text: '⚙️ Ayarlar' }),
-        // start the story from any day (testing): "🧪 Bölüm seç", the list opens in its place
-        this.onStartAt && (s.get('testerMode', false) ? this.#chapterPicker(go) : btn('🧪 Bölüm seç (gün seç)', 'btn alt', () => { s.set('testerMode', true); this.show('settings'); })),
+        el('h2', { class: 'ctitle', text: '⚙️ Ayarlar', on: { click: () => this.#testerTap() } }),
+        // start the story from any day (testers only: five taps on the title, as in the game's ⚙️)
+        this.onStartAt && s.get('testerMode', false) && this.#chapterPicker(go),
         btn('Nasıl oynanır?', 'btn alt', () => this.onHelp?.()),
         save && btn('Yeni oyun (baştan başla)', 'btn alt', go(this.onStart)),
         el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler' })]),

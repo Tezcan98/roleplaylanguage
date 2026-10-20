@@ -25,8 +25,9 @@ export class ShopView {
   #prices = {};
   #tab = 'gold';
 
-  constructor(host, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts, share = null, onEat = () => {} }) {
+  constructor(host, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts, share = null, feedback = null, onEat = () => {} }) {
     this.share = share; // "Paylaş, kazan": () => Promise<shared?> (platform/share.js)
+    this.feedback = feedback; // "Yorum yaz, kazan": { due(), open() } (ui/FeedbackView.js: once a day, up to 20 credits)
     Object.assign(this, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts, onEat });
     this.tabs = el('div', { class: 'shop-tabs', attrs: { role: 'tablist' } });
     this.body = el('div', { class: 'shop-body' });
@@ -92,6 +93,8 @@ export class ShopView {
             if (await this.share()) { w.shared(); this.toasts.show(`Teşekkürler! +${SHARE_REWARD} kredi`, 'Thanks for sharing!'); }
             this.render();
           }), { subTr: true }),
+        this.feedback && card('free feedback', '💬', '+20', 'Yorum yaz, kazan',
+          this.feedback.due() ? btn('Yaz', 'go', () => { this.close(); this.feedback.open(); }) : btn('Yarın yine ✓', '', () => {}, true), { subTr: true }),
         // the packs with their prices; not on sale yet (config.json sellPacks): shown, the button off
         ...PACKS.map((p, i) => card(`pack pack${i}`, ['🪙', '💰', '💎'][i] ?? '💎', `${p.credits}`, SELL_PACKS ? 'kredi' : 'kredi · yakında',
           btn(this.#prices[p.id] ?? p.price, 'buy', async (e) => {

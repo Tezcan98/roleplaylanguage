@@ -509,8 +509,39 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .dama-foot{display:flex;justify-content:space-between;align-items:center;font:700 16px Fredoka,sans-serif}
 @media (orientation:landscape) and (max-height:520px){.dama .card{width:min(760px,100%);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto 1fr auto;column-gap:12px}.dama-board{grid-row:1/5;grid-column:1;width:min(86vh,420px)}.dama-head,.dama-line,.dama-foot,.dama .btn{grid-column:2}}
 .overlay.dama,.overlay.shop,.overlay.daily,.overlay.ad,.overlay.ios-guide,.overlay.settings-panel{z-index:70} /* above the main menu */
-.settings-panel .card{max-width:420px}
-.settings-body{display:grid;gap:10px;margin-top:8px}
+/* ⚙️ Ayarlar (ui/SettingsPanel.js): one compact card — sound sliders, picture quality, three tiles */
+.settings-panel .card{max-width:400px;width:calc(100vw - 32px);padding:14px 16px 16px;max-height:calc(100dvh - 24px);overflow:auto}
+.set-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.set-title{margin:0;font:700 22px/1.1 Fredoka,sans-serif;color:var(--ink);cursor:default}
+.set-head small{display:block;font-size:12px;line-height:1.2;color:var(--muted)}
+html[data-gloss-scale] .set-head small{font-size:12px}
+.settings-body{display:grid;gap:10px;margin-top:10px}
+.set-group{display:grid;gap:2px;padding:4px 12px;border-radius:14px;background:rgba(255,255,255,.55);border:1px solid rgba(58,42,30,.14)}
+.set-ico{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--wood);color:var(--parch);flex:none}
+.set-ico svg{width:19px;height:19px}
+.settings-body .vol{display:grid;grid-template-columns:auto 88px 1fr auto;align-items:center;gap:10px;min-height:44px;cursor:pointer}
+.settings-body .vol+.vol{border-top:1px solid rgba(58,42,30,.1)}
+.vol-name{font:700 15px Nunito,sans-serif;color:var(--ink);line-height:1.15}
+.vol-name small{display:block;font-weight:600;font-size:11px;color:var(--muted)}
+.settings-body .vol .vol-val{min-width:44px;text-align:center;font:600 13px Fredoka,sans-serif;color:var(--wood);background:rgba(58,42,30,.08);border-radius:999px;padding:3px 6px}
+.settings-body .vol.off .set-ico{background:#B9A88E}
+.settings-body .vol.off .vol-val{color:#9A876D}
+.settings-body input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:0;--p:50%}
+.settings-body input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:999px;background:linear-gradient(90deg,var(--gold) var(--p),rgba(58,42,30,.18) var(--p))}
+.settings-body input[type=range]::-moz-range-track{height:6px;border-radius:999px;background:linear-gradient(90deg,var(--gold) var(--p),rgba(58,42,30,.18) var(--p))}
+.settings-body input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;background:#fff;border:3px solid var(--wood);box-shadow:0 2px 4px rgba(0,0,0,.25)}
+.settings-body input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--wood);box-shadow:0 2px 4px rgba(0,0,0,.25)}
+.set-row{grid-template-columns:auto auto 1fr;align-items:center;gap:10px;min-height:54px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:3px;border-radius:12px;background:rgba(58,42,30,.1)}
+.seg-btn{min-height:36px;border:0;border-radius:9px;background:transparent;font:700 13px Nunito,sans-serif;color:var(--muted);cursor:pointer}
+.seg-btn.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.set-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.set-tile{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:center;column-gap:8px;text-align:left;min-height:52px;padding:7px 8px;border-radius:14px;border:1px solid rgba(58,42,30,.16);background:rgba(255,255,255,.55);color:var(--ink);cursor:pointer;font-family:Nunito,sans-serif}
+.set-tile .set-ico{grid-row:span 2;width:30px;height:30px;border-radius:9px}
+.set-tile b{font-size:13px;line-height:1.1}
+.set-tile small{justify-self:start;font:700 10.5px Nunito,sans-serif;color:#2E7D32;background:#E3F3E1;border-radius:999px;padding:1px 6px;margin-top:2px}
+.set-tile:active,.seg-btn:active{transform:scale(.97)}
+@media (max-height:430px){.settings-panel .card{padding:10px 14px 12px}.settings-body{gap:8px;margin-top:6px}.settings-body .vol{min-height:38px}.set-row{min-height:44px}.set-tile{min-height:46px}}
 /* "Oyunu nasıl buldun?" (ui/FeedbackView.js) */
 .overlay.feedback{z-index:70}
 .feedback .card{max-width:460px}
@@ -519,12 +550,6 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .feedback .fb-count{display:block;text-align:right;opacity:.65;margin-top:4px}
 .feedback .fb-status{min-height:1.2em;margin:6px 0 0;font-weight:700}
 .feedback .row{display:flex;gap:10px;justify-content:center;margin-top:10px}
-.settings-body .toggle{display:flex;align-items:center;gap:10px;font:600 17px Nunito,sans-serif}
-.settings-body .toggle input[type=checkbox]{width:22px;height:22px;accent-color:var(--wood)}
-.settings-body .vol{display:grid;grid-template-columns:1fr auto;grid-template-areas:"t v" "r r";gap:2px 10px;font:600 17px Nunito,sans-serif}
-.settings-body .vol>span{grid-area:t}.settings-body .vol .vol-val{grid-area:v;font:700 15px Fredoka,sans-serif;color:var(--wood)}
-.settings-body .vol input[type=range]{grid-area:r;width:100%;height:28px;accent-color:var(--wood)}
-.settings-body select{font:600 16px Nunito,sans-serif;padding:6px 8px;border-radius:10px;border:2px solid var(--wood)}
 body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.open) #shot{display:none!important} /* the talk button never covers a conversation or a card */
 .tile.nope{animation:nope .35s;border-color:#C0392B;background:#FADBD8}
 @keyframes nope{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}

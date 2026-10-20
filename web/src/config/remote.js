@@ -7,7 +7,7 @@
  * site and the Android app): local test pages and node tools always use the defaults.
  */
 export const DEFAULTS = {
-  prices: { horseRide: 1, bikeLearn: 3, hd: 40, outfit: 30, aura: 25, adFree: 100, pepper: 5 },
+  prices: { horseRide: 1, bikeLearn: 3, hd: 40, outfit: 20, aura: 25, adFree: 100, pepper: 5 },
   rewards: { startCredits: 100, startMoney: 200, video: 3, videoEveryHours: 3, daily: [3, 4, 5, 6, 7, 8, 10], share: 5 },
   rides: { minutes: 10 },
   boosts: { pepperMinutes: 30, pepperSpeed: 1.5, glowDays: 3 }, // Urfa biberi: this much faster for this long; Altın baklava: shining this many days
