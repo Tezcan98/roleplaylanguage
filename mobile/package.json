@@ -2,7 +2,7 @@
   "name": "@yilmaz/mobile",
   "version": "0.5.0",
   "private": true,
-  "description": "Android uygulaması (Anadolu Ailesi): web/dist'i Capacitor ile paketler.",
+  "description": "Android uygulaması (Türk Ailem): web/dist'i Capacitor ile paketler.",
   "scripts": {
     "sync": "npm --prefix ../web run build && cap sync android",
     "open": "cap open android",

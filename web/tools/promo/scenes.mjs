@@ -173,7 +173,7 @@ export const SCENES = [
     name: 'title', seconds: 4,
     setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2500); return page; },
     act: async (kit, page) => {
-      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Anadolu Ailesi</h1><p>Türkçeyi köyde yaşayarak öğren</p><small>Learn Turkish by living it, in an Anatolian village</small>');
+      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Türk Ailem</h1><p>Türkçeyi köyde yaşayarak öğren</p><small>Learn Turkish by living it, in an Anatolian village</small>');
     },
   },
   {
@@ -271,7 +271,7 @@ export const SCENES = [
     name: 'end', seconds: 4,
     setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2500); return page; },
     act: async (kit, page) => {
-      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Anadolu Ailesi</h1><p>Türkçe Öğren</p><small>Learn Turkish by living it</small>');
+      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Türk Ailem</h1><p>Türkçe Öğren</p><small>Learn Turkish by living it</small>');
     },
   },
 ];
@@ -396,7 +396,7 @@ export const SHORT_SCENES = [
     name: 'sEnd', seconds: 4,
     setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2500); return page; },
     act: async (kit, page) => {
-      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Anadolu Ailesi</h1><p dir="rtl">قريبًا على Google Play و App Store</p><small>Yakında Google Play ve App Store’da</small><div class="promo-badges"><span>▶ Google Play</span><span> App Store</span></div>');
+      await kit.card(page, '<img src="assets/icons/icon-512.png" alt=""><h1>Türk Ailem</h1><p dir="rtl">قريبًا على Google Play و App Store</p><small>Yakında Google Play ve App Store’da</small><div class="promo-badges"><span>▶ Google Play</span><span> App Store</span></div>');
     },
   },
 ];

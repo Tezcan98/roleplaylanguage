@@ -1,6 +1,6 @@
 {
   "appId": "com.anadolu",
-  "appName": "Anadolu Ailesi",
+  "appName": "Türk Ailem",
   "webDir": "../web/dist",
   "plugins": {
     "SystemBars": {

@@ -5,7 +5,7 @@
  * a WhatsApp message — counted as shared when the game goes to the background for it.
  * Resolves true when it was (or very likely was) shared.
  */
-const TEXT = 'Türkçeyi bir Türk ailesiyle köyde yaşayarak öğren: Anadolu Ailesi 🇹🇷';
+const TEXT = 'Türkçeyi bir Türk ailesiyle köyde yaşayarak öğren: Türk Ailem 🇹🇷';
 const LINK = 'https://play.google.com/store/apps/details?id=com.anadolu';
 
 export async function shareGame() {
@@ -13,12 +13,12 @@ export async function shareGame() {
   if (native && cap.isPluginAvailable?.('Share')) {
     try {
       const { Share } = await import('@capacitor/share');
-      await Share.share({ title: 'Anadolu Ailesi', text: TEXT, url: LINK, dialogTitle: 'Arkadaşlarınla paylaş' });
+      await Share.share({ title: 'Türk Ailem', text: TEXT, url: LINK, dialogTitle: 'Arkadaşlarınla paylaş' });
       return true; // (closing the sheet without sharing rejects)
     } catch { return false; }
   }
   if (!native && navigator.share) {
-    try { await navigator.share({ title: 'Anadolu Ailesi', text: TEXT, url: LINK }); return true; } catch { return false; }
+    try { await navigator.share({ title: 'Türk Ailem', text: TEXT, url: LINK }); return true; } catch { return false; }
   }
   const away = new Promise((done) => {
     const on = () => { if (document.hidden) { off(); done(true); } };

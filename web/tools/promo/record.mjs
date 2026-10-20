@@ -217,7 +217,7 @@ async function featureGraphic() {
     <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(27,36,64,.92) 0%,rgba(27,36,64,.75) 45%,rgba(27,36,64,.1) 75%)"></div>
     <div style="position:absolute;left:56px;top:50%;transform:translateY(-50%);display:flex;gap:28px;align-items:center;color:#fff">
       <img src="${img('assets/icons/icon-512.png')}" style="width:150px;height:150px;border-radius:34px;box-shadow:0 10px 40px rgba(0,0,0,.45)">
-      <div><div style="font-size:60px;font-weight:700;line-height:1">Anadolu Ailesi</div>
+      <div><div style="font-size:60px;font-weight:700;line-height:1">Türk Ailem</div>
       <div style="font-size:30px;margin-top:10px;color:#FFC845;font-weight:500">Türkçe Öğren</div>
       <div style="font-size:20px;margin-top:6px;opacity:.9">Learn Turkish by living it</div></div></div></body>`, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.evaluate(() => document.fonts.ready);
@@ -229,7 +229,7 @@ async function featureGraphic() {
 /** What the voice says over each scene (it starts a moment after the scene does). */
 const NARRATION = {
   en: {
-    title: 'Learn Turkish by living it, with Anadolu Ailesi.',
+    title: 'Learn Turkish by living it, with Türk Ailem.',
     mpFountain: 'Meet Turkish learners from all over the world in the village square, and talk to them in Turkish.',
     grocer: 'Go shopping at the grocer’s, with Turkish lira.',
     mpTea: 'Sit down for a glass of tea, and chat together.',
@@ -238,14 +238,14 @@ const NARRATION = {
     school: 'Learn step by step at school, from A1.',
     mpChess: 'Play giant chess, football, read in the library, and much more.',
     shop: 'Dress up your character.',
-    end: 'Anadolu Ailesi. Learn Turkish by living it.',
+    end: 'Türk Ailem. Learn Turkish by living it.',
     sOpen: 'Coming soon…',
     sFamily: 'Live with a Turkish family.',
     sQuest: 'Learn Turkish by doing tasks with them.',
     sSpeak: 'Speak, and the game understands you.',
     sSquare: 'Meet learners from all over the world.',
     sVoice: 'Push to talk, or call them by voice.',
-    sEnd: 'Anadolu Ailesi. Coming soon to Google Play and the App Store.',
+    sEnd: 'Türk Ailem. Coming soon to Google Play and the App Store.',
   },
   ar: {
     title: 'تعلّم التركية بالعيش فيها.',

@@ -1,8 +1,8 @@
-# Anadolu Ailesi — Gizlilik Politikası
+# Türk Ailem — Gizlilik Politikası
 
 **Son güncelleme:** 10 Ekim 2026
 
-Anadolu Ailesi, Türkçe öğrenmeyi hikâye ve 3D köy yaşamı üzerinden sunan bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
+Türk Ailem, Türkçe öğrenmeyi hikâye ve 3D köy yaşamı üzerinden sunan bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
 
 ## 1. Mikrofon ve konuşma
 

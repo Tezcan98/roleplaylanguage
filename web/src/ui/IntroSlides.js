@@ -6,7 +6,7 @@ import { gloss, glossDir, glossLang } from '../i18n/Gloss.js';
  * reachable again from the menu and the help panel.
  */
 export const SLIDES = [
-  { icon: '🏡', title: 'Welcome to your Anatolian family!', text: 'Learn Turkish while living with the family in the village: help your mom, listen to grandpa’s tales, and go to school.', tr: 'Anadolu Ailesi’ne hoş geldin!' },
+  { icon: '🏡', title: 'Welcome to your Turkish family!', text: 'Learn Turkish while living with the family in the village: help your mom, listen to grandpa’s tales, and go to school.', tr: 'Türk Ailem’e hoş geldin!' },
   { icon: '🕹️', title: 'Walking and quests', text: 'Walk with the joystick or the WASD keys. Follow the golden arrow, and when the yellow button appears, press it (or E).', tr: 'Yürü, oku takip et, sarı düğmeye bas.' },
   { icon: '💬', title: 'Talking', text: 'The Turkish sentence is on top and the translation below it. Pick the answer, or press 🎤 and say it out loud. 🔊 reads the sentence to you.', tr: 'Cevabı seç ya da mikrofona bas ve söyle.' },
   { icon: '🧕', title: 'Grandma and free chat', text: 'Grandma (nine) on the sedir gives you a new piece of advice every day. With 💬 you can chat freely in Turkish with the people of the village.', tr: 'Nine her gün nasihat verir; 💬 ile serbest sohbet edebilirsin.' },

@@ -1,4 +1,4 @@
-# mobile — Android uygulaması (Anadolu Ailesi)
+# mobile — Android uygulaması (Türk Ailem)
 
 `web/dist`'i Capacitor ile Android uygulamasına paketler. Paket adı (applicationId) `com.anadolu`; Java paketi `com.anadoluailesi.app`.
 

@@ -20,7 +20,7 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# --- Anadolu Ailesi ---
+# --- Türk Ailem ---
 # The Capacitor plugins are found and called by name from the web side (and some read their
 # settings or saved data by reflection): kept whole. R8 still shrinks the libraries under them.
 -keep class com.getcapacitor.** { *; }

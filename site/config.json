@@ -1,5 +1,5 @@
 {
-  "_not": "Anadolu Ailesi uzaktan ayarları. Değiştirip siteyi yayınlayınca (tools/deploy-sehem2.sh) web'de ve uygulamada bir sonraki açılışta geçerli olur. Açıklama: docs/remote-config.md",
+  "_not": "Türk Ailem uzaktan ayarları. Değiştirip siteyi yayınlayınca (tools/deploy-sehem2.sh) web'de ve uygulamada bir sonraki açılışta geçerli olur. Açıklama: docs/remote-config.md",
   "prices": {
     "horseRide": 1,
     "bikeLearn": 3,

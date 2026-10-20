@@ -70,7 +70,7 @@ section('dersler', 'Okul dersleri', 'Öğretmenin anlattıkları, alıştırmala
 section('serbest', 'Serbest hareketler', 'Görevler dışında yapılabilenler: balonda düşünce, sonra öğrenilen cümle.', Object.values(FREE_ACTIONS).map((a) => `<div class="node"><span class="nid">${esc(a.label)}</span>${line('Ahmet (düşünür)', a.think, '', 'think')}${line('Ahmet', a.say, '')}</div>`).join(''));
 
 const lines = (sections.join('').match(/class="line |<li class="(wrong)?">/g) ?? []).length; // lines said + answers to choose
-const html = `<title>Anadolu Ailesi Senaryosu</title>
+const html = `<title>Türk Ailem Senaryosu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@500;700&family=Alegreya+Sans:wght@400;500;700&family=Courier+Prime:wght@400;700&display=swap">
 <style>
@@ -116,7 +116,7 @@ h3{font:700 1.1rem/1.3 var(--display);margin:24px 0 8px}h3 small{font:400 .85rem
 @media (max-width:760px){.wrap{grid-template-columns:minmax(0,1fr)}nav{position:static;max-height:none;display:flex;flex-wrap:wrap;gap:4px}.find{margin-left:0;width:100%}}
 </style>
 <div class="wrap">
-<header><div><h1>Anadolu Ailesi Senaryosu</h1><p>Oyundaki bütün konuşmalar, içerik dosyalarından üretildi · ${lines} replik</p></div>
+<header><div><h1>Türk Ailem Senaryosu</h1><p>Oyundaki bütün konuşmalar, içerik dosyalarından üretildi · ${lines} replik</p></div>
 <input class="find" id="find" type="search" placeholder="Replik ara (Türkçe ya da İngilizce)" aria-label="Replik ara"></header>
 <nav aria-label="Bölümler">${toc.map(([id, t]) => `<a href="#${id}">${esc(t)}</a>`).join('')}</nav>
 <main>${sections.join('')}</main>

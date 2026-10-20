@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Anadolu Ailesi</string>
-    <string name="title_activity_main">Anadolu Ailesi</string>
+    <string name="app_name">Türk Ailem</string>
+    <string name="title_activity_main">Türk Ailem</string>
     <string name="package_name">com.anadolu</string>
     <string name="custom_url_scheme">com.anadolu</string>
     <string name="admob_app_id">ca-app-pub-8546179762858286~1444366533</string>

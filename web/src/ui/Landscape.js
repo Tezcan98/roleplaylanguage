@@ -26,7 +26,7 @@ function showIosGuide() {
       el('ol', { class: 'ios-steps' }, [
         step('Safari’de alttaki Paylaş ⬆️ düğmesine bas.', gloss('In Safari, tap the Share ⬆️ button at the bottom.')),
         step('“Ana Ekrana Ekle”yi seç, sonra “Ekle”ye bas.', gloss('Choose “Add to Home Screen”, then tap “Add”.')),
-        step('Oyunu ana ekrandaki Anadolu Ailesi simgesinden aç.', gloss('Open the game from the Anadolu Ailesi icon on your home screen.')),
+        step('Oyunu ana ekrandaki Türk Ailem simgesinden aç.', gloss('Open the game from the Türk Ailem icon on your home screen.')),
       ]),
       el('button', { class: 'btn', text: 'Tamam', attrs: { type: 'button' }, on: { click: () => guide.classList.remove('open') } }),
     ])]);
