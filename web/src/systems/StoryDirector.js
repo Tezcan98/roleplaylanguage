@@ -67,7 +67,7 @@ export class StoryDirector {
     this.effects?.run(ch.enter);
     this.bus.emit(EV.CHAPTER, { chapter: ch });
     this.bus.emit(EV.QUEST, { quest: this.quest });
-    this.cards.show(ch.intro, () => { this.#announce(); onPlay?.(); });
+    this.cards.show(ch.intro, () => this.cards.show(ch.call, () => { this.#announce(); onPlay?.(); })); // `call`: what to do now, after the welcome
   }
 
   /** Continue a saved game: same chapter and quest, player at the saved location. */

@@ -58,6 +58,7 @@ import { shareGame } from './platform/share.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
 import { SettingsPanel } from './ui/SettingsPanel.js';
+import { FeedbackView } from './ui/FeedbackView.js';
 import { Animals } from './systems/Animals.js';
 import { Bicycle, bikeMount } from './systems/Bicycle.js';
 import { Scooters, scooterMount } from './systems/Scooter.js';
@@ -661,9 +662,35 @@ travel.beforeGo = async () => {
   await ads.showInterstitial();
 };
 
+// "Oyunu nasıl buldun?": once a day, credits for a real opinion (server/src/Feedback.js grades it with Gemini)
+const feedbackUrl = villageServer.replace(/^ws/, 'http').replace(/\/ws\/village$/, '/api/feedback');
+const feedback = new FeedbackView(host, {
+  modes, settings,
+  post: async (body) => { // the app: through Capacitor (no CORS), the web: fetch
+    if (native) { const { CapacitorHttp } = await import('@capacitor/core'); const r = await CapacitorHttp.post({ url: feedbackUrl, headers: { 'Content-Type': 'application/json' }, data: body }); return { status: r.status, data: r.data }; }
+    const r = await fetch(feedbackUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    return { status: r.status, data: await r.json().catch(() => ({})) };
+  },
+  onCredits: (n) => wallet.add(n, 'feedback'),
+  info: () => ({ lang: glossLang(), v: appVersion || 'web', place: world.current?.id ?? '' }),
+});
+/** It opens by itself after a while of playing (10 min, ?feedbackin=<s> in tests), when the player may write today and wasn't asked today. */
+const FEEDBACK_AFTER = Number(params.get('feedbackin') ?? 600);
+const feedbackAsk = {
+  played: 0,
+  update(dt) {
+    if (!modes.is('play') || menu.isOpen || dialogueView.isOpen) return;
+    this.played += dt;
+    if (this.played < FEEDBACK_AFTER || !feedback.due || Date.now() - Number(settings.get('feedbackAskedAt', 0)) < 86_400_000) return;
+    settings.set('feedbackAskedAt', Date.now());
+    feedback.open();
+  },
+};
+
 // ⚙️ in the HUD: voices and music, picture quality, how to play, back to the main menu
 const settingsPanel = new SettingsPanel(host, {
   modes, settings,
+  onFeedback: () => feedback.open(),
   onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onHelp: () => intro.show(),
@@ -880,7 +907,7 @@ function continueGame(then) {
 }
 
 
-const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, idleAd], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, idleAd, feedbackAsk], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -954,4 +981,4 @@ if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

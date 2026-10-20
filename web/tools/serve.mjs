@@ -12,11 +12,14 @@ import { VillageServer } from '../../server/src/VillageServer.js';
 import { NpcChat } from '../../server/src/NpcChat.js';
 import { npcChatRoute } from '../../server/src/npcChatRoute.js';
 import { Tts } from '../../server/src/Tts.js';
+import { Feedback } from '../../server/src/Feedback.js';
 
 // NPC chat: real Gemini with GEMINI_API_KEY, otherwise canned answers so the UI can be tried and tested
 // Turkish speech: PIPER_DIR=<piper folder> npm start (otherwise the game falls back to the browser)
 const tts = new Tts({ piperDir: process.env.PIPER_DIR, cacheDir: process.env.TTS_CACHE ?? '/tmp/yilmaz-tts', log: () => {} });
 const chat = new NpcChat({ apiKey: process.env.GEMINI_API_KEY, fake: !process.env.GEMINI_API_KEY, perMinute: 60 });
+// feedback: graded by Gemini with GEMINI_API_KEY, otherwise by a simple check; one a day per device only (all players are 127.0.0.1 here)
+const feedback = new Feedback({ apiKey: process.env.GEMINI_API_KEY ?? '', perIp: false, log: () => {} });
 
 // usage: node tools/serve.mjs [port] [dir]  (dir defaults to web/; `dist` serves the build)
 const repo = fileURLToPath(new URL('..', import.meta.url));
@@ -30,6 +33,7 @@ const TYPES = {
 
 const http = createServer(async (req, res) => {
   if (npcChatRoute(req, res, { chat })) return;
+  if (feedback.route(req, res)) return;
   if (req.url.startsWith('/api/tts')) {
     const u = new URL(req.url, 'http://x');
     const r = await tts.handle(u.searchParams.get('v'), u.searchParams.get('t'), req.socket.remoteAddress, u.searchParams.get('f') ?? undefined);

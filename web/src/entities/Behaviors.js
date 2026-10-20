@@ -127,6 +127,16 @@ export const Behaviors = {
     jump(r, t) { const s = Math.abs(Math.sin(t * 6)); r.armL.rotation.x = r.armR.rotation.x = -2.6 + s * 0.5; },
     talk(r) { r.armL.rotation.x = r.armR.rotation.x = 0; r.legL.rotation.x = r.legR.rotation.x = 0; },
   },
+  /**
+   * A child on a swing in the park (world/locations/VillageSquare.js PARK): sits on the seat and
+   * swings with it, legs out on the way forward; the swing slows down to talk (Npc moves the body).
+   */
+  swing: {
+    swing: true,
+    blockyPoses: true,
+    pose(r, t, angle = 0) { sitPose(0.38)(r); r.armL.rotation.x = r.armR.rotation.x = -2.7; r.legL.rotation.x = r.legR.rotation.x = -Math.PI / 2 + angle * 0.9; },
+    talk(r) { sitPose(0.38)(r); r.armL.rotation.x = r.armR.rotation.x = -2.7; },
+  },
   /** On a floor cushion at the sofra: lower, and talks with the people around. */
   sitFloor: { ...sitting(0.62), turnToPlayerWithin: 0, seated: true, blockyPoses: true },
   /** On a bench or sedir. */

@@ -32,9 +32,10 @@
  *   GEMINI_MODEL      default gemini-flash-latest
  *   NPC_CHAT_PER_MINUTE / NPC_CHAT_PER_DAY (per IP, default 8 / 150), NPC_CHAT_GLOBAL_PER_DAY (default 1200)
  *   AD_STATS_KEY, AD_STATS_DIR  the live ad numbers page (GET /api/ad-stats?key=…) and where its day files go (AdStats.js)
+ *   FEEDBACK_DIR, FEEDBACK_KEY (default AD_STATS_KEY), FEEDBACK_MODEL  the players' feedback, graded by Gemini for credits (Feedback.js)
  *
  * Endpoints: ws(s)://host/ws/village · GET /health · GET /health?name=&pid= (is the username free) · POST /api/npc-chat
- *            · POST /api/ad-event · GET /api/ad-stats?key=
+ *            · POST /api/ad-event · GET /api/ad-stats?key= · POST /api/feedback · GET /api/feedback-list?key=
  */
 import { createServer } from 'node:http';
 import { dirname, join } from 'node:path';
@@ -49,6 +50,7 @@ import { AuditLog } from './AuditLog.js';
 import { ChessScoreFile } from './ChessScoreFile.js';
 import { Moderator } from './Moderator.js';
 import { AdStats } from './AdStats.js';
+import { Feedback } from './Feedback.js';
 
 const env = process.env;
 const port = Number(process.argv[2] ?? env.PORT ?? 8090);
@@ -71,8 +73,15 @@ const chat = new NpcChat({
 // live ad numbers from the app (AdMob's own come a day or two late)
 const adStats = new AdStats({ dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '' });
 
+// what the players think of the game: once a day, credits for a real opinion
+const feedback = new Feedback({
+  apiKey: env.GEMINI_API_KEY ?? '', model: env.FEEDBACK_MODEL || undefined, key: env.FEEDBACK_KEY || env.AD_STATS_KEY || '',
+  dir: env.FEEDBACK_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'feedback') : null),
+});
+
 const http = createServer((req, res) => {
   if (adStats.route(req, res, { clientIp })) return;
+  if (feedback.route(req, res, { allowOrigin: (o) => originAllowed(o, origins), clientIp })) return;
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify({ ok: true, uptime: Math.round((Date.now() - started) / 1000), npcChat: chat.enabled, tts: tts.enabled, ...village.stats() }));

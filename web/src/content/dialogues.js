@@ -102,9 +102,10 @@ export const DIALOGUES = {
     },
     nodes: {
       // --- Sunday morning ---
-      bored: { say: 'Günaydın oğlum! Neyin var? Neden üzgünsün?', en: "Good morning, son! What's wrong? Why are you sad?", words: [['üzgün', 'sad'], ['günaydın', 'good morning']],
-        options: [{ tr: 'Canım sıkılıyor.', en: "I'm bored.", next: 'b2' }, { tr: 'Televizyonda hiçbir şey yok.', en: "There's nothing on TV.", next: 'b2' }] },
-      b2: { say: 'Dışarısı çok güzel! Deden bahçede. Git, ona yardım et.', en: "It's lovely outside! Grandpa is in the garden. Go help him.", words: [['dışarı', 'outside'], ['yardım etmek', 'to help']],
+      // you come home from the park: mom called you
+      bored: { say: 'Günaydın oğlum, geldin mi? Parkta eğlendin mi?', en: 'Good morning, son, are you back? Did you have fun in the park?', words: [['günaydın', 'good morning'], ['eğlenmek', 'to have fun']],
+        options: [{ tr: 'Evet, çok eğlendim!', en: 'Yes, I had a lot of fun!', next: 'b2' }, { tr: 'Evet, ama şimdi canım sıkılıyor.', en: "Yes, but now I'm bored.", next: 'b2' }] },
+      b2: { say: 'Deden bahçede, yardıma ihtiyacı var. Git, ona yardım et.', en: 'Grandpa is in the garden, he needs help. Go and help him.', words: [['ihtiyaç', 'need'], ['yardım etmek', 'to help']],
         options: [{ tr: 'Tamam anne!', en: 'Okay mom!', next: 'b3' }, { tr: 'Hava soğuk mu?', en: 'Is it cold?', next: 'b3' }] },
       b3: { say: 'Hava biraz soğuk. Önce montunu giy.', en: "It's a bit cold. Put on your jacket first.", words: [['soğuk', 'cold'], ['mont', 'jacket']],
         options: [{ tr: 'Montum nerede?', en: 'Where is my jacket?', next: 'b4' }, { tr: 'Tamam, giyiyorum. Nerede?', en: "Okay, I'm putting it on. Where is it?", next: 'b4' }] },

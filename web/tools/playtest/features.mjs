@@ -50,7 +50,8 @@ try {
   await page.goto(`${server.url}/?debug&fakemic&fastclass&nointro&fresh&kidout&quality=low`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   await page.click('text=Hikayeye başla'); await sleep(1200);
-  await ev(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(500);
+  // the welcome, mom calling you home, the square's own card when it comes: all of them
+  for (let i = 0; i < 5 && await ev(() => !!document.querySelector('.overlay.story-card.open')); i++) { await ev(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(500); }
   await page.click('.credits-btn'); await sleep(400);
   check('the credits (coin) in the HUD open the shop', !!(await page.$('.shop.open')));
   await page.evaluate(() => window.__game.shop.close());
@@ -68,7 +69,7 @@ try {
   const nodeSay = () => ev(() => window.__game.dialogue.node?.say ?? '');
   // --- headscarf: open at home, on outside --------------------------------------------
   const covered = () => ev(() => window.__game.player.covered);
-  await sleep(500);
+  await ev(() => window.__game.travel.place('house', 'start', { force: true })); await sleep(700); // (a new game starts in the park: home first)
   check('covered girl: hair open at home', (await covered()) === false);
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(700);
   check('…headscarf on outside', (await covered()) === true);
@@ -649,6 +650,50 @@ try {
     await e3(() => window.__game.drill.close());
     check('…a meaning choice such as “milk”: a Turkish explanation instead', await e3(() => window.__game.glossProbe('milk')) === 'İnekten sağılan beyaz içecek');
     await p3.close();
+  }
+
+  // --- a new game starts in the park; feedback once a day for credits --------------------
+  {
+    const p4 = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage();
+    errors.push(...watchErrors(p4));
+    const e4 = (fn, a) => p4.evaluate(fn, a);
+    await p4.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low&feedbackin=3`);
+    await p4.waitForFunction(() => window.__game, null, { timeout: 90000 });
+    await p4.click('text=Hikayeye başla'); await sleep(1500);
+    const cards = [];
+    for (let i = 0; i < 4; i++) {
+      const t = await e4(() => document.querySelector('.overlay.story-card.open .ctitle')?.textContent ?? null);
+      if (!t) break;
+      cards.push(t); await e4(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(600);
+    }
+    check('new game: the welcome first, then mom calls you home', cards[0] === 'Türk Ailem’e hoş geldin!' && cards.includes('“Oğlum, eve gel!”'), JSON.stringify(cards));
+    const start = await e4(() => { const g = window.__game, p = g.player.position; return { loc: g.world.current.id, x: p.x, z: p.z, q: g.story.quest?.id }; });
+    check('…in the park in the village square, the task: go home to mom', start.loc === 'village' && start.x > -46 && start.x < -32 && start.z > 13 && start.z < 25 && start.q === 'talk-mom', JSON.stringify(start));
+    const kids = await e4(() => ['defne', 'ayse', 'emre', 'mert'].map((k) => { const n = window.__game.cast.get(k); return { k, loc: n?.location, y: n?.position.y }; }));
+    check('…children playing in the park (two on the swings)', kids.every((k) => k.loc === 'village') && kids.filter((k) => k.y > 0.1).length >= 2, JSON.stringify(kids));
+    const swung = await e4(async () => { const sw = window.__game.world.get('village').swings, a = sw.map((s) => s.group.rotation.x); await new Promise((r) => setTimeout(r, 400)); return sw.map((s, i) => Math.abs(s.group.rotation.x - a[i]) > 0.01); });
+    check('…their swings swing, the free one stays still', swung[0] && swung[2] && !swung[1], JSON.stringify(swung));
+    await e4(() => window.__game.dialogue.open('emre')); await sleep(500);
+    check('…a child to talk to (mom is calling: he lets you go)', (await e4(() => [...document.querySelectorAll('#dlg .choice')].map((b) => b.textContent).join(' | '))).includes('annem beni çağırıyor'));
+    await e4(() => window.__game.dialogue.close()); await sleep(300);
+    // the arrow takes you home: the road to the yard first
+    check('…the arrow points at the road home', await e4(() => { const p = window.__game.marker.resolve(); return !!p && p.x < -48; }));
+
+    // feedback: opens by itself after a while of playing (?feedbackin=3 s)
+    check('feedback: the writing screen opens by itself after a while of playing', !!(await waitFor(() => e4(() => window.__game.feedback.isOpen), 40000))); // (game time: slow frames under load count less)
+    check('…sending needs a real text (at least 15 letters)', await e4(() => { const t = document.querySelector('.feedback textarea'); t.value = 'güzel'; t.dispatchEvent(new Event('input')); return document.querySelector('.feedback .row .btn:last-child').disabled; }));
+    const before = await e4(() => window.__game.wallet.balance);
+    await e4(() => { const t = document.querySelector('.feedback textarea'); t.value = 'Parkta başlamak çok güzel, çocuklarla konuşmak eğlenceli. Ama meydan bazen yavaş açılıyor, salıncağa ben de binmek isterdim.'; t.dispatchEvent(new Event('input')); document.querySelector('.feedback .row .btn:last-child').click(); });
+    await waitFor(() => e4(() => !document.querySelector('.feedback textarea')), 6000); // the answer came
+    const after = await e4(() => window.__game.wallet.balance);
+    check('…a real opinion earns credits', after > before, `${before} → ${after}`);
+    await e4(() => document.querySelector('.feedback .btn')?.click()); await sleep(200);
+    await e4(() => window.__game.feedback.open()); await sleep(300);
+    check('…once a day: the same day it says come back tomorrow', (await e4(() => document.querySelector('.feedback .card').textContent)).includes('yarın') && !(await p4.$('.feedback textarea')));
+    await e4(() => window.__game.feedback.close());
+    const server2 = await e4(async (url) => (await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: 'asdasd asdasd asdasd asdasd asdasd', pid: 'filler000001' }) })).json(), `${server.url}/api/feedback`);
+    check('…filler earns nothing (the server grades it)', server2.ok && server2.credits === 0, JSON.stringify(server2));
+    await p4.close();
   }
 } catch (e) {
   failed = true;

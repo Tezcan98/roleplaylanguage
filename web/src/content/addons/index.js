@@ -13,9 +13,10 @@ import seyis from './seyis.js';
 import simitci from './simitci.js';
 import ciftlik from './ciftlik.js';
 import imam from './imam.js';
+import park from './park.js';
 
 /** Teaching add-ons applied on top of the base story (see core/ContentComposer.js). */
-export const ADDONS = [prayer, market, nine, kardes, meydan, kahvehane, kutuphane, satranc, bahce, zarf, kantin, seyis, simitci, ciftlik, imam];
+export const ADDONS = [prayer, market, nine, kardes, meydan, kahvehane, kutuphane, satranc, bahce, zarf, kantin, seyis, simitci, ciftlik, imam, park];
 
 /** Which meal is on the sini in which chapter (the evening chore "set the table" adds dinner). */
 export const MEALS = { 'd1-breakfast': 'breakfast', 'd1-dinner': 'dinner' };

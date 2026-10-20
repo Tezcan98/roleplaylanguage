@@ -58,6 +58,12 @@ const SQUARE_BENCHES = [ // (content/square.js BENCHES)
   [62, -15.5, 0], [62, -6.5, Math.PI], [57.5, -11, Math.PI / 2], [66.5, -11, -Math.PI / 2],
 ];
 
+/**
+ * The children's park by the road from home, where a new game starts (anchor `park`): a low
+ * fence with its gate towards the square, swings, a slide, a sandbox and a seesaw, and room to run.
+ */
+export const PARK = { x: -39, z: 19, w: 14, d: 12, gate: [-39.2, -36.4] };
+
 /** Places where people sit and talk; sitting in one lets you listen in (TalkAreas). */
 export const TALK_SPOTS = {
   cay: { x: 15, z: 7.5, r: 10 },
@@ -196,6 +202,82 @@ export class VillageSquare extends Location {
     this.hotspot('village.menu', -HALF + 0.8, 0, 2.2); // same exit when playing online from the menu
     this.#mosque(mf, C, low);
     this.#town(mf);
+    this.#park(mf, C);
+  }
+
+  /**
+   * The children's park (PARK). Swings with a child on them swing: the child's `swing` behaviour
+   * (entities/Npc.js) marks the swing taken and sits on it at the angle this sets.
+   */
+  #park(mf, C) {
+    const P = PARK, x0 = P.x - P.w / 2, x1 = P.x + P.w / 2, z0 = P.z - P.d / 2, z1 = P.z + P.d / 2;
+    const add = (m) => this.add(m), RED = 0xD9483B, YELLOW = 0xF2C230, BLUE = 0x2F6FDB, GREEN = 0x3E9E57;
+    add(mf.ground(P.w, P.d, { tex: 'grass', repeat: [3, 3] }, 0.03)).position.set(P.x, 0.03, P.z);
+    // a low fence, painted; the gate on the north side, towards the square
+    const fence = (ax, az, bx, bz) => {
+      const len = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.round(len / 1.2));
+      for (let i = 0; i <= n; i++) add(mf.at(mf.box(0.1, 0.8, 0.1, i % 2 ? YELLOW : 0xFFFFFF), ax + (bx - ax) * i / n, 0.4, az + (bz - az) * i / n));
+      for (const y of [0.32, 0.62]) { const r = add(mf.at(mf.box(len, 0.06, 0.06, GREEN), (ax + bx) / 2, y, (az + bz) / 2)); r.rotation.y = -Math.atan2(bz - az, bx - ax); }
+      C.addBox(Math.min(ax, bx) - 0.1, Math.max(ax, bx) + 0.1, Math.min(az, bz) - 0.1, Math.max(az, bz) + 0.1);
+    };
+    fence(x0, z0, P.gate[0], z0); fence(P.gate[1], z0, x1, z0); fence(x0, z1, x1, z1); fence(x0, z0, x0, z1); fence(x1, z0, x1, z1);
+    for (const x of P.gate) add(mf.at(mf.box(0.14, 2.3, 0.14, WOOD), x, 1.15, z0));
+    this.#sign('Çocuk Parkı', (P.gate[0] + P.gate[1]) / 2, 2.05, z0 - 0.03, 2.6).rotation.y = Math.PI;
+
+    // swings: a frame along x, three swings that swing north–south
+    const SZ = z0 + 2.6, TOP = 2.4, LEN = 1.85, fx0 = x0 + 0.9, fx1 = fx0 + 5.6;
+    for (const x of [fx0, fx1]) for (const dz of [-0.7, 0.7]) {
+      const leg = add(mf.at(mf.cyl(0.06, 0.07, 2.5, BLUE, 8), x, 1.2, SZ + dz * 0.5)); leg.rotation.x = dz * 0.25;
+    }
+    add(mf.at(mf.box(fx1 - fx0 + 0.2, 0.12, 0.12, BLUE), (fx0 + fx1) / 2, TOP, SZ));
+    C.addCircle(fx0, SZ, 0.35); C.addCircle(fx1, SZ, 0.35);
+    this.swings = [fx0 + 1.3, fx0 + 2.8, fx0 + 4.3].map((x, i) => {
+      const g = this.live(mf.group(
+        ...[-0.22, 0.22].map((dx) => mf.at(mf.box(0.025, LEN, 0.025, 0x6F6F6F), dx, -LEN / 2, 0)),
+        mf.at(mf.box(0.56, 0.06, 0.26, [RED, YELLOW, GREEN][i]), 0, -LEN, 0)));
+      g.position.set(x, TOP, SZ); add(g);
+      return { group: g, x, y: TOP, z: SZ, len: LEN, angle: 0, amp: 0, seen: -1, stop: false, phase: i * 1.7 };
+    });
+    // facing south: the camera (it looks north) sees the children's faces
+    this.swings.forEach((sw, i) => { this.anchor(`swing${i + 1}`, sw.x, sw.z, 0); this.anchors.get(`swing${i + 1}`).swing = sw; });
+    this.animated.push((dt) => {
+      const now = performance.now() / 1000;
+      for (const sw of this.swings) {
+        const want = now - sw.seen < 0.4 && !sw.stop ? 0.55 : 0;
+        sw.amp += (want - sw.amp) * Math.min(1, dt * 1.2);
+        sw.angle = Math.sin(now * 2.3 + sw.phase) * sw.amp;
+        sw.group.rotation.x = sw.angle;
+      }
+    });
+
+    // the slide: a ladder on the north side, the platform, the chute down to the south
+    const sx = x1 - 2.2, sz = z0 + 1.6, H = 1.6;
+    for (const dx of [-0.45, 0.45]) for (const dz of [0, 0.9]) add(mf.at(mf.box(0.08, H, 0.08, YELLOW), sx + dx, H / 2, sz + dz));
+    add(mf.at(mf.box(1, 0.08, 1, BLUE), sx, H, sz + 0.45));
+    for (const dx of [-0.36, 0.36]) add(mf.at(mf.box(0.06, 1.1, 0.06, YELLOW), sx + dx, H + 0.55, sz + 0.9)); // the rail at the top of the chute
+    for (let k = 1; k <= 5; k++) add(mf.at(mf.box(0.8, 0.05, 0.06, 0x8A5A3B), sx, k * H / 6, sz - 0.05)); // rungs
+    const chute = add(mf.at(mf.box(0.8, 0.07, 3.3, RED), sx, H / 2 + 0.05, sz + 0.9 + 1.45)); chute.rotation.x = Math.atan2(H, 2.9);
+    for (const dx of [-0.4, 0.4]) { const side = add(mf.at(mf.box(0.05, 0.18, 3.3, RED), sx + dx, H / 2 + 0.14, sz + 0.9 + 1.45)); side.rotation.x = chute.rotation.x; }
+    C.addBox(sx - 0.55, sx + 0.55, sz - 0.2, sz + 3.8);
+
+    // the sandbox, with a bucket and a spade left in it
+    const bx = x0 + 3.2, bz = z1 - 2.6;
+    for (const [dx, dz, w, d] of [[0, -1.5, 3.1, 0.16], [0, 1.5, 3.1, 0.16], [-1.5, 0, 0.16, 3.1], [1.5, 0, 0.16, 3.1]]) add(mf.at(mf.box(w, 0.24, d, LIGHT_WOOD), bx + dx, 0.12, bz + dz));
+    add(mf.at(mf.box(2.9, 0.1, 2.9, 0xE8D39A), bx, 0.08, bz));
+    add(mf.at(mf.cyl(0.13, 0.1, 0.22, BLUE, 10), bx + 0.6, 0.24, bz - 0.4));
+    const spade = add(mf.at(mf.box(0.08, 0.04, 0.42, YELLOW), bx - 0.5, 0.16, bz + 0.5)); spade.rotation.y = 0.7;
+
+    // the seesaw
+    const kx = x1 - 3, kz = z1 - 1.8;
+    add(mf.at(mf.box(0.3, 0.45, 0.3, BLUE), kx, 0.22, kz));
+    const plank = add(mf.at(mf.box(3.4, 0.08, 0.32, RED), kx, 0.5, kz)); plank.rotation.z = 0.16;
+    for (const dx of [-1.4, 1.4]) add(mf.at(mf.box(0.06, 0.35, 0.3, YELLOW), kx + dx, 0.5 - dx * 0.16 + 0.2, kz));
+    C.addBox(kx - 1.7, kx + 1.7, kz - 0.25, kz + 0.25);
+
+    // where a new game starts (inside the gate, the swings and the slide ahead), and the runners' start
+    this.anchor('park', P.x + 1.5, P.z + 2.2, Math.PI);
+    this.anchor('parkRun', P.x + 1, P.z, 0);
+    this.anchor('parkRun2', P.x + 3, P.z + 2, 0);
   }
 
   /** A running track all round the square, just inside the fence (TRACK): a lap is about 490 m. */

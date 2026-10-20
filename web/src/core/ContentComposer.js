@@ -6,7 +6,7 @@
  *   quests:    [{ chapter, after, quests: [...] }]   insert quests after a quest id
  *   cast:      { [chapterId]: { npc: [loc, anchor, behaviour] | null } }
  *   chapters:  [{ after: chapterId, chapter }]       whole new chapters inserted into the story
- *   castAll:   { npc: [loc, anchor, behaviour] }     for every chapter that doesn't set it
+ *   castAll:   { npc: [loc, anchor, behaviour] | (chapter) => spot | null }  for every chapter that doesn't set it
  *   dialogues: { npc: { start?(ctx) → node | undefined, nodes } }  start runs before the base one
  *   hotspots, kindNames, npcs, voices: merged into the matching tables
  */
@@ -30,7 +30,7 @@ export function composeContent(base, addons) {
     }
     for (const [id, cast] of Object.entries(a.cast ?? {})) Object.assign(chapter(id).cast, cast);
     for (const ch of base.story.chapters) {
-      for (const [npc, spot] of Object.entries(a.castAll ?? {})) if (!(npc in ch.cast)) ch.cast[npc] = spot;
+      for (const [npc, spot] of Object.entries(a.castAll ?? {})) if (!(npc in ch.cast)) ch.cast[npc] = typeof spot === 'function' ? spot(ch) : spot;
     }
     for (const [who, d] of Object.entries(a.dialogues ?? {})) {
       const b = base.dialogues[who];
@@ -43,7 +43,7 @@ export function composeContent(base, addons) {
   // chapters added by a later add-on get the earlier add-ons' everyday cast too
   for (const a of addons) {
     for (const ch of base.story.chapters) {
-      for (const [npc, spot] of Object.entries(a.castAll ?? {})) if (!(npc in ch.cast)) ch.cast[npc] = spot;
+      for (const [npc, spot] of Object.entries(a.castAll ?? {})) if (!(npc in ch.cast)) ch.cast[npc] = typeof spot === 'function' ? spot(ch) : spot;
     }
   }
   return base;

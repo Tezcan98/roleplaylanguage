@@ -24,7 +24,9 @@ const laundryCount = (c) => c.count('camasir');
 export const STORY = {
   chapters: [
     {
-      id: 'd1-morning', day: 1, time: '08:00', location: 'house', spawn: 'start',
+      // a new game starts in the park in the village square (the welcome, then mom calls you home):
+      // go home and on with the story, or look round the square first — the task waits
+      id: 'd1-morning', day: 1, time: '08:00', location: 'village', spawn: 'park',
       cast: {
         anne: ['house', 'kitchen', 'cook'],
         dede: ['yard', 'garden', 'garden'],
@@ -32,13 +34,20 @@ export const STORY = {
         ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Pazar · Bölüm 1', title: 'Canım sıkılıyor',
-        text: 'Pazar sabahı. Evdesin. Televizyonda hiçbir şey yok. Annen mutfakta çay demliyor.',
-        en: "Sunday morning. You are at home. There's nothing on TV. Your mom is brewing tea in the kitchen.",
+        num: 'Pazar · Bölüm 1', title: 'Türk Ailem’e hoş geldin!',
+        text: 'Bu köyde bir Türk ailesiyle yaşıyorsun: annen, baban, deden, ninen ve küçük kardeşin Ali. Bugün pazar. Sabah erkenden meydandaki parka geldin, çocuklarla oynuyorsun.',
+        en: 'You live in this village with a Turkish family: your mom, dad, grandpa, grandma and your little brother Ali. Today is Sunday. You came to the park in the square early in the morning and you are playing with the children.',
+        button: 'Devam',
       },
-      think: 'Canım sıkılıyor…',
+      // after the welcome: what to do now (StoryDirector shows it after the intro card)
+      call: {
+        num: '📣 Annen seni çağırıyor', title: '“Oğlum, eve gel!”',
+        text: 'Annen evde seni bekliyor. Altın oku takip et, eve git ve annenle konuş. İstersen önce biraz meydanı gez, parkta oyna: görevin seni bekler.',
+        en: 'Your mom is waiting for you at home. Follow the golden arrow, go home and talk to her. Or look round the square and play in the park first: your task will wait for you.',
+        button: 'Tamam',
+      },
       quests: [
-        { id: 'talk-mom', title: 'Canım sıkılıyor', obj: 'Annenle konuş', en: 'Talk to your mom', target: { npc: 'anne' } },
+        { id: 'talk-mom', title: 'Annen çağırıyor', obj: 'Eve git, annenle konuş', en: 'Go home and talk to your mom', target: { npc: 'anne' } },
         { id: 'take-jacket', title: 'Mont', obj: 'Montunu al', en: 'Take your jacket (next to the door)', target: { item: 'mont' }, complete: { pick: 'mont' }, minutes: 5 },
         { id: 'go-out', title: 'Dışarısı', obj: 'Kapıdan dışarı çık', en: 'Go out the door', target: { hotspot: 'house.door' }, complete: { enter: 'yard' }, minutes: 2 },
         {

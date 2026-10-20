@@ -9,8 +9,8 @@ import { gloss } from '../i18n/Gloss.js';
 export class SettingsPanel {
   #pop = null;
 
-  constructor(host, { modes, settings, onHelp, onMenu, onSound, onStartAt = null, chapters = [] }) {
-    Object.assign(this, { modes, settings, onHelp, onMenu, onSound, onStartAt, chapters });
+  constructor(host, { modes, settings, onHelp, onMenu, onSound, onFeedback = null, onStartAt = null, chapters = [] }) {
+    Object.assign(this, { modes, settings, onHelp, onMenu, onSound, onFeedback, onStartAt, chapters });
     this.body = el('div', { class: 'settings-body' });
     this.root = el('div', { class: 'overlay dim settings-panel' }, [el('div', { class: 'card' }, [
       el('h2', { class: 'ctitle', text: '⚙️ Ayarlar' }),
@@ -67,6 +67,7 @@ export class SettingsPanel {
       slider('music', 'Müzik', 'Music'),
       el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
       btn('Nasıl oynanır?', 'btn alt', () => { this.close(); this.onHelp?.(); }),
+      this.onFeedback && btn('💬 Görüşünü yaz, kredi kazan', 'btn alt', () => { this.close(); this.onFeedback(); }),
       btn('Ana menüye dön', 'btn alt', () => { this.close(); this.onMenu(); }),
       btn('Oyuna dön', 'btn', () => this.close()),
     );

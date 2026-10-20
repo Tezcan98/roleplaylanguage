@@ -511,6 +511,14 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .overlay.dama,.overlay.shop,.overlay.daily,.overlay.ad,.overlay.ios-guide,.overlay.settings-panel{z-index:70} /* above the main menu */
 .settings-panel .card{max-width:420px}
 .settings-body{display:grid;gap:10px;margin-top:8px}
+/* "Oyunu nasıl buldun?" (ui/FeedbackView.js) */
+.overlay.feedback{z-index:70}
+.feedback .card{max-width:460px}
+.feedback textarea{display:block;width:100%;box-sizing:border-box;min-height:120px;margin-top:10px;padding:10px 12px;border:2px solid #C9A86A;border-radius:12px;background:#FFFDF6;color:#2B2118;font:16px/1.4 Nunito,var(--gloss-font,sans-serif);resize:vertical}
+.feedback textarea:focus{outline:none;border-color:#E0A526}
+.feedback .fb-count{display:block;text-align:right;opacity:.65;margin-top:4px}
+.feedback .fb-status{min-height:1.2em;margin:6px 0 0;font-weight:700}
+.feedback .row{display:flex;gap:10px;justify-content:center;margin-top:10px}
 .settings-body .toggle{display:flex;align-items:center;gap:10px;font:600 17px Nunito,sans-serif}
 .settings-body .toggle input[type=checkbox]{width:22px;height:22px;accent-color:var(--wood)}
 .settings-body .vol{display:grid;grid-template-columns:1fr auto;grid-template-areas:"t v" "r r";gap:2px 10px;font:600 17px Nunito,sans-serif}

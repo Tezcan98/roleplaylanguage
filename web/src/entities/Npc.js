@@ -122,6 +122,7 @@ export class Npc extends Character {
     st.jumping = !!stop.jump;
     if (stop.rot !== undefined) this.turnTo(stop.rot, 0.2);
     if (stop.jump) { this.position.y = 0.42 + Math.abs(Math.sin(t * 6)) * 0.45; b.jump(this.rig, t); } // on the bed
+    else if (stop.hop) { this.position.y = Math.abs(Math.sin(t * 6)) * 0.3; b.jump(this.rig, t); } // happy hops on the ground (the park)
     else { this.position.y = 0; this.walk(t, 0); b.poses?.[stop.pose]?.(this.rig, t); }
     if (st.wait <= 0) { st.leg++; st.wait = route[st.leg % route.length].wait ?? 1 + Math.random() * 2; }
   }
@@ -170,8 +171,21 @@ export class Npc extends Character {
     this.walk(t, 0);
   }
 
+  /** On a park swing: the swing (its anchor's `swing`) swings while taken, the child sits on its seat. */
+  #swing(player) {
+    const sw = this.home.swing;
+    if (!sw) return;
+    sw.seen = performance.now() / 1000; sw.stop = this.talking;
+    const hips = (0.8 - 0.38) * (this.def.look?.scale ?? 1);
+    this.position.set(sw.x, sw.y - Math.cos(sw.angle) * sw.len - hips + 0.05, sw.z - Math.sin(sw.angle) * sw.len);
+    this.turnTo(this.home.rot, 0.3);
+    if (this.talking) { this.behavior.talk(this.rig); this.rig.head.rotation.y = Math.max(-0.9, Math.min(0.9, this.#headTowards(player))); }
+    else { this.behavior.pose(this.rig, 0, sw.angle); this.rig.head.rotation.y *= 0.9; }
+  }
+
   update(dt, t, player) {
     super.update(dt);
+    if (this.behavior.swing) { this.#swing(player); return; }
     if (this.behavior.roam && !this.talking) { this.#roam(dt, t); return; }
     if (this.behavior.halay && !this.talking) { // the wedding's line dance: steps to the side and back, facing the middle
       const rot = this.home.rot ?? 0, s = Math.sin(t * 2.4 + (this.home.x + this.home.z) * 0.15) * 0.3;
