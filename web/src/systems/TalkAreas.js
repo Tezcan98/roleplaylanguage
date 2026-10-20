@@ -64,9 +64,20 @@ export class TalkAreas {
     return secs;
   }
 
-  /** A move on the giant board: İsmail Dede reacts (right away, before his next remark). */
+  #plainAt = -Infinity; // when he last said something about a plain move
+
+  /**
+   * A move on the giant board: İsmail Dede reacts (right away, before his next remark) — always to a
+   * take, a check or a mate; to a plain move only now and then ("Piyon ileri gitti." every move was too much).
+   */
   chessMoved({ piece, captured, check, mate }) {
     const c = CHESS_COMMENTS;
+    const plain = !mate && !check && !captured;
+    if (plain) {
+      const now = performance.now();
+      if (Math.random() > 0.2 || now - this.#plainAt < 30000) return;
+      this.#plainAt = now;
+    }
     const line = mate ? c.mate : check ? c.check : captured ? c.capture[captured] : c.move[piece];
     if (!line) return;
     this.#queue = this.#queue.filter((l) => l.spot !== 'chess');

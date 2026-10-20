@@ -106,7 +106,7 @@ export class ShopView {
       // eaten at once, good for a few minutes; another one adds its minutes on
       cards = FOODS.map((f) => {
         const left = w.boostLeft(f.id);
-        const art = el('div', { class: `shop-food${f.glow ? ' glow' : ''}` }, [el('span', { class: 'shop-card-top', text: f.icon }), el('span', { class: 'shop-badge', text: f.speed ? `⚡ ×${f.speed} · ${span(f.minutes)}` : `✨ ${span(f.minutes)}` })]);
+        const art = el('div', { class: `shop-food${f.glow ? ' glow' : ''}` }, [el('span', { class: 'shop-card-top', ...(f.art ? { html: f.art } : { text: f.icon }) }), el('span', { class: 'shop-badge', text: f.speed ? `⚡ ×${f.speed} · ${span(f.minutes)}` : `✨ ${span(f.minutes)}` })]);
         return card(`food${f.glow ? ' gold' : ''}${left ? ' on' : ''}`, art, f.title, left ? `⏱ ${left_(left)} kaldı` : gloss(f.en), price(f.price, () => {
           if (!w.eat(f)) return;
           this.onEat(f);

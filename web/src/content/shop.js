@@ -28,9 +28,12 @@ export const SHOP = [
  * on). Urfa biberi: so hot you run faster (systems/PlayerController.js `boost`). Altın baklava: a
  * golden light shines under your feet for days, seen by everyone in the square.
  */
+/** A piece of baklava (there is no emoji for it): the diamond, its layers, pistachio on top. */
+const BAKLAVA_SVG = '<svg viewBox="0 0 64 64" width="72" height="72" aria-hidden="true"><polygon points="6,27 32,44 58,27 58,40 32,57 6,40" fill="#B9742A"/><g fill="none" stroke="#F3CC6E" stroke-width="2"><polyline points="6,31 32,48 58,31"/><polyline points="6,35.5 32,52.5 58,35.5"/></g><polygon points="32,10 58,27 32,44 6,27" fill="#E9AE45"/><g stroke="#C98A2A" stroke-width="1.4" opacity=".75"><line x1="19" y1="18.5" x2="45" y2="35.5"/><line x1="45" y1="18.5" x2="19" y2="35.5"/></g><polygon points="32,10 58,27 32,44 6,27" fill="none" stroke="#FFE08A" stroke-width="1.5" opacity=".8"/><g fill="#5FA84A"><circle cx="32" cy="27" r="3.2"/><circle cx="27.5" cy="25" r="1.8"/><circle cx="36.5" cy="25.5" r="1.8"/><circle cx="30" cy="30.5" r="1.6"/><circle cx="35" cy="30" r="1.5"/></g><ellipse cx="25" cy="21" rx="5" ry="1.6" fill="#FFF3C4" opacity=".7" transform="rotate(-33 25 21)"/></svg>';
+
 export const FOODS = [
   { id: 'pepper', icon: '🌶️', title: 'Urfa biberi', en: 'So hot you run faster!', price: CONFIG.prices.pepper, minutes: CONFIG.boosts.pepperMinutes, speed: CONFIG.boosts.pepperSpeed },
-  { id: 'baklava', icon: '🍯', title: 'Altın baklava', en: 'You shine with a golden light — everyone in the square sees you', price: CONFIG.prices.aura, minutes: CONFIG.boosts.glowDays * 24 * 60, glow: true },
+  { id: 'baklava', icon: '✨', art: BAKLAVA_SVG, title: 'Altın baklava', en: 'You shine with a golden light — everyone in the square sees you', price: CONFIG.prices.aura, minutes: CONFIG.boosts.glowDays * 24 * 60, glow: true },
 ];
 
 /** The glowing ring under the player is on (Altın baklava eaten; whoever bought the old golden light keeps it on). */

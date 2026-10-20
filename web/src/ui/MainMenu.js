@@ -49,7 +49,11 @@ export class MainMenu {
 
   show(view = 'home') {
     this.#view = view;
-    if (!this.isOpen) this.#homeAd = Math.random() < HOME_BANNER; // decided as the menu opens
+    if (!this.isOpen) { // decided as the menu opens: always the very first time (a new player shows up in AdMob), then now and then
+      const first = view === 'home' && !this.settings.get('firstBannerSeen', false);
+      this.#homeAd = first || Math.random() < HOME_BANNER;
+      if (first && this.settings.get('profileDone', false)) this.settings.set('firstBannerSeen', true); // (after the character setup: the menu is really seen)
+    }
     this.onBanner?.(view === 'home' && this.#homeAd); // the main menu carries a banner ad now and then
     const s = this.settings;
     const save = this.hasSave();

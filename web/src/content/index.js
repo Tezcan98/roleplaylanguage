@@ -15,7 +15,7 @@ import { KAHVE_TALKS } from './addons/kahvehane.js';
 import { PRAYER_STEPS, PRAYER_WORDS } from './addons/prayer.js';
 import { TALKS, CHESS_COMMENTS } from './talks.js';
 import { BOOKS } from './books.js';
-import { SHOP } from './shop.js';
+import { SHOP, FOODS } from './shop.js';
 import { composeContent } from '../core/ContentComposer.js';
 import { addVariants } from './variants.js';
 
@@ -24,5 +24,5 @@ addVariants(DIALOGUES); // other first lines, so the villagers don't always say 
 
 export {
   STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, TEACHER_MAN, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
-  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS, TALKS, CHESS_COMMENTS, KAHVE_TALKS, BOOKS, SHOP,
+  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS, TALKS, CHESS_COMMENTS, KAHVE_TALKS, BOOKS, SHOP, FOODS,
 };
