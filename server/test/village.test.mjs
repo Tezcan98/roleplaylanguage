@@ -404,7 +404,7 @@ test('usernames are unique: a name belongs to the device that took it first', as
   [a, b, a2, g1, g2, renamed, b2].forEach((c) => c.ws.close()); v.close(); h.close();
 });
 
-test('reports: own voice kept only in a call, a report reaches Reports, the operator\'s ban sends the player away', async () => {
+test('reports: own voice kept only in a call, a report reaches Reports, a banned player is quietly left alone', async () => {
   const { Reports } = await import('../src/Reports.js');
   const written = [];
   const srv = createServer();
@@ -440,11 +440,17 @@ test('reports: own voice kept only in a call, a report reaches Reports, the oper
     assert.equal((await a.next('report-failed')).reason, 'again');
 
     reports.decide(item.id, 'ban');
-    assert.equal((await b.next('banned')).until, 0);
-    const again = client();
-    await again.open();
-    again.send({ type: 'hello', name: 'BaşkaAd', room: 'rep', pid: 'bbbbbbbb22' });
-    assert.equal((await again.next('error')).code, 'banned');
+    await new Promise((r) => b.ws.once('close', r)); // dropped, as if the network went
+    assert.equal(b.inbox.some((m) => m.type === 'banned' || m.type === 'error'), false, 'not told');
+    await a.next('leave');
+    a.inbox.length = 0;
+    // back in: let in without a word, but alone — sees nobody, nobody sees them
+    const again = await join('BaşkaAd', 'rep', { pid: 'bbbbbbbb22' });
+    assert.deepEqual(again.welcome.peers, []);
+    again.send({ type: 'say', text: 'merhaba' });
+    await silence(300);
+    assert.equal(a.inbox.some((m) => m.type === 'join' || m.type === 'say'), false);
+    assert.deepEqual(v.stats().rooms, { rep: 1 }, 'the room of one is not listed');
     await Promise.all([a.close(), again.close()]);
   } finally {
     url = saved;

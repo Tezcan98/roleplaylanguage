@@ -23,8 +23,8 @@ const REPORT_FAILED = {
   limit: ['Kısa sürede çok şikayet gönderdin, biraz sonra tekrar dene.', 'Too many reports — try again a little later.'],
   again: ['Bu oyuncuyu az önce şikayet ettin, inceleniyor.', 'You already reported this player; it is being checked.'],
   gone: ['Bu oyuncu meydandan ayrılmış.', 'That player has left the square.'],
+  paused: ['Son şikayetlerin asılsız çıktı. {d} gün şikayet edemezsin.', 'Your last reports were unfounded, so you cannot report for a few days.'],
 };
-const BANNED_TEXT = ['Bir şikayet üzerine meydana giremezsin.', 'You cannot join the square after a report.'];
 const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Oyuncu engellendi, sohbet bitti.' };
 
 /**
@@ -56,7 +56,6 @@ export class VillageMultiplayer {
   constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null, consent = null }) {
     Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog, consent });
     this.consentDeclined = false; // said no this time: offline in the square until the next game (or the menu)
-    this.bannedUntil = null; // the operator banned this player after a report (0: for good)
     ptt.onReport = () => this.report();
     this.locationId = 'village'; // the main square (chess, menu entry)
     this.joinedAt = null;
@@ -109,12 +108,14 @@ export class VillageMultiplayer {
     });
     net.on('call-start', ({ with: id, initiator }) => this.#startCall(id, initiator));
     net.on('report-ok', ({ name }) => this.toasts.show(`Şikayetin alındı${name ? ` (${name})` : ''}. İnceleyeceğiz, teşekkürler!`, 'Thanks — your report was sent and will be checked.'));
-    net.on('report-failed', ({ reason }) => { const [tr, en] = REPORT_FAILED[reason] ?? ['Şikayet şu an gönderilemedi.', 'The report could not be sent right now.']; this.toasts.show(tr, en); });
-    net.on('banned', ({ until }) => { this.bannedUntil = until ?? 0; this.toasts.show(BANNED_TEXT[0], BANNED_TEXT[1]); });
+    net.on('report-failed', ({ reason, until }) => {
+      const [tr, en] = REPORT_FAILED[reason] ?? ['Şikayet şu an gönderilemedi.', 'The report could not be sent right now.'];
+      this.toasts.show(tr.replace('{d}', Math.max(1, Math.ceil(((until ?? 0) - Date.now()) / 86_400_000))), en);
+    });
     net.on('call-end', ({ reason }) => this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup));
     net.on('disconnected', () => {
       this.#reset({ keepChess: true }); // the server keeps the game: show it as it was until we are back
-      if (!this.#inSquare() || document.hidden || this.#banned()) return; // (sent away after a report: no coming back) // in the background: we come back when the page does
+      if (!this.#inSquare() || document.hidden) return; // in the background: we come back when the page does
       this.toasts.show('Bağlantı koptu, yeniden bağlanılıyor…', 'Disconnected — reconnecting…');
       this.#retryLater();
     });
@@ -210,12 +211,8 @@ export class VillageMultiplayer {
   }
   #count() { this.ptt.setOnline(this.remotes.count + 1, this.net.name, this.#roomLabel()); }
 
-  /** Banned after a report (and not run out yet)? */
-  #banned() { return this.bannedUntil !== null && (this.bannedUntil === 0 || this.bannedUntil > Date.now()); }
-
   async join() {
     if (this.net.connected || this.joining) return;
-    if (this.#banned()) { this.toasts.show(BANNED_TEXT[0], BANNED_TEXT[1]); return; }
     this.joining = true;
     try {
       // before the first time online: agree that what is said here is recorded and may be processed
@@ -250,7 +247,6 @@ export class VillageMultiplayer {
       this.#retryDelay = 0;
       this.#suggestBusierRoom();
     } catch (e) {
-      if (e.code === 'banned') { this.bannedUntil = 0; this.toasts.show(e.message || BANNED_TEXT[0], BANNED_TEXT[1]); return; } // (the server says until when; it is asked again next game)
       if (e.code === 'name-taken') { // the name is another device's (names are unique): pick another
         this.settings.set('username', null);
         this.nameNote = 'Bu kullanıcı adı alınmış, başka bir ad seç.';

@@ -12,9 +12,13 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
  *      para / hesap isteme) or clean;
  *   2. the report and Gemini's answer are kept (DIR/reports.jsonl) and listed on GET /api/reports;
  *   3. immoral or commercial: the operator gets a mail with the transcript and three links —
- *      ban for 7 days, ban for good, dismiss. Nobody is banned before the operator decides.
- * A ban holds the player's device id, Play Games id and username (DIR/bans.json); a banned player
- * can't join, and is sent away at once when online.
+ *      ban for 7 days, ban for good, dismiss. Nobody is banned before the operator decides;
+ *   4. clean, but three different players reported the same one within a day: the operator gets
+ *      a mail anyway, with the voice pieces attached (the AI may have missed something).
+ * A ban holds the player's device id, Play Games id and username (DIR/bans.json). A banned player
+ * is not told: the square lets them in, but alone (VillageServer puts them in a room of their own).
+ * A reporter whose reports came back clean five times can't report for three days
+ * (DIR/reporters.json).
  *
  *   GET /api/reports?key=…                       the latest reports, newest first (&format=json)
  *   GET /api/report-action?id=…&key=…&do=ban7|ban|dismiss|unban
@@ -24,6 +28,10 @@ export const KEEP = 10 * MINUTE;              // what is kept of each player for
 const PER_REPORTER = 3;                       // reports per reporter in ten minutes
 const SAME_TARGET = 30 * MINUTE;              // the same reporter → the same player once per half hour
 export const VERDICTS = ['ahlaksiz', 'ticari', 'temiz'];
+export const FALSE_REPORTS = 5;               // clean reports in a row that stop a reporter…
+export const REPORT_PAUSE = 3 * 1440 * MINUTE; // …for three days
+export const CROWD = 3;                       // different reporters of the same player in a day: the operator hears it anyway
+const DAY = 1440 * MINUTE;
 
 const SCHEMA = {
   type: 'OBJECT',
@@ -53,6 +61,7 @@ export class Reports {
   #sent = new Map();   // reporter key → [times]; `${reporter}>${target}` → time
   #items = [];         // the latest reports, newest last
   #bans = [];          // [{ pid, gid, name, until, reason, report, t }] (until 0: for good)
+  #paused = {};        // reporter key → { until, since }: no reports until `until`; clean ones counted after `since`
 
   /**
    * @param {object} o
@@ -72,6 +81,7 @@ export class Reports {
 
   #load() {
     try { this.#bans = JSON.parse(readFileSync(join(this.dir, 'bans.json'), 'utf8')); } catch { /* none yet */ }
+    try { this.#paused = JSON.parse(readFileSync(join(this.dir, 'reporters.json'), 'utf8')); } catch { /* none yet */ }
     const file = join(this.dir, 'reports.jsonl');
     if (!existsSync(file)) return;
     const byId = new Map();
@@ -83,6 +93,11 @@ export class Reports {
   #save(item) {
     if (!this.dir) return;
     try { appendFileSync(join(this.dir, 'reports.jsonl'), `${JSON.stringify(item)}\n`, { mode: 0o600 }); } catch (e) { this.log(`[reports] ${e.message}`); }
+  }
+
+  #savePaused() {
+    if (!this.dir) return;
+    try { writeFileSync(join(this.dir, 'reporters.json'), JSON.stringify(this.#paused), { mode: 0o600 }); } catch (e) { this.log(`[reports] ${e.message}`); }
   }
 
   #saveBans() {
@@ -120,12 +135,14 @@ export class Reports {
 
   /**
    * `reporter` / `target`: { name, pid?, gid?, ip?, room }. Returns { ok: true, id } or
-   * { ok: false, reason: 'limit' | 'again' | 'self' }; the analysis goes on afterwards
+   * { ok: false, reason: 'limit' | 'again' | 'self' | 'paused', until? }; the analysis goes on afterwards
    * (`done` resolves when it is finished — for tests).
    */
   report(reporter, target, reason = '') {
     const now = this.now(), rk = Reports.keyOf(reporter), tk = Reports.keyOf(target);
     if (rk === tk) return { ok: false, reason: 'self' };
+    const paused = this.#paused[rk]?.until ?? 0;
+    if (paused > now) return { ok: false, reason: 'paused', until: paused };
     const times = (this.#sent.get(rk) ?? []).filter((t) => now - t < 10 * MINUTE);
     if (times.length >= PER_REPORTER) return { ok: false, reason: 'limit' };
     const last = this.#sent.get(`${rk}>${tk}`);
@@ -137,7 +154,7 @@ export class Reports {
     const said = this.#of(target);
     const who = ({ name, pid, gid, ip }) => ({ name, ...(pid ? { pid } : {}), ...(gid ? { gid } : {}), ...(ip ? { ip } : {}) });
     const item = {
-      id: randomBytes(5).toString('hex'), t: now, room: target.room, status: 'analysing',
+      id: randomBytes(5).toString('hex'), t: now, room: target.room, status: 'analysing', rk, tk,
       reporter: who(reporter), target: who(target), reason: String(reason).slice(0, 40),
       texts: said.texts.map((x) => x.text), voiceSeconds: said.voice.length * 10,
     };
@@ -164,7 +181,55 @@ export class Reports {
     }
     this.#save(item);
     // the operator decides: a mail for anything Gemini flagged, and for what it could not check
-    if (item.verdict === 'ahlaksiz' || item.verdict === 'ticari' || item.status === 'unchecked') await this.#mail(item);
+    if (item.verdict === 'ahlaksiz' || item.verdict === 'ticari' || item.status === 'unchecked') return this.#mail(item);
+    if (item.verdict !== 'temiz') return;
+    // clean — but several players reported the same one today: the operator listens to it after all
+    const day = this.#items.filter((r) => r.tk === item.tk && item.t - r.t < DAY);
+    if (new Set(day.map((r) => r.rk)).size >= CROWD && !day.some((r) => r.crowd)) {
+      day.forEach((r) => { r.crowd = item.id; this.#save(r); });
+      return this.#mailCrowd(item, day, voice);
+    }
+    if (item.crowd) return;
+    // a reporter whose reports keep coming back clean: no reports for a while
+    const since = this.#paused[item.rk]?.since ?? 0;
+    const clean = this.#items.filter((r) => r.rk === item.rk && r.t > since && r.verdict === 'temiz' && !r.crowd);
+    if (clean.length >= FALSE_REPORTS) {
+      this.#paused[item.rk] = { until: this.now() + REPORT_PAUSE, since: this.now() };
+      this.#savePaused();
+      this.log(`[reports] ${item.reporter.name}: ${clean.length} şikayeti asılsız çıktı, 3 gün şikayet edemez`);
+    }
+  }
+
+  /** Three or more players reported the same one, Gemini found nothing: the voice goes to the operator. */
+  async #mailCrowd(item, reports, voice) {
+    if (!this.mailer) return;
+    const ext = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/aac': 'aac', 'audio/mpeg': 'mp3', 'audio/wav': 'wav' };
+    const attachments = voice.map((v, i) => {
+      const type = v.mime.split(';')[0];
+      return { filename: `${String(i + 1).padStart(2, '0')}_${new Date(v.t).toISOString().slice(11, 19).replace(/:/g, '-')}.${ext[type] ?? 'bin'}`, contentType: type, content: v.data };
+    });
+    const text = [
+      `${reports.length} şikayet, ${new Set(reports.map((r) => r.rk)).size} farklı oyuncudan, son 24 saatte: ${item.target.name} (${item.room}).`,
+      'Gemini hepsine "temiz" dedi; sesleri ekte (son şikayetteki son 10 dakika, her parça ~10 sn). Kendin dinle.',
+      '',
+      ...reports.map((r) => `- ${time(r.t)} · ${r.reporter.name} (${r.reason || '—'}): ${r.verdict ?? r.status} — ${r.analysis ?? ''}`),
+      '',
+      `Son ses dökümü:\n${item.transcript || '(yok)'}`,
+      '',
+      `Yazılı mesajları:\n${item.texts.length ? item.texts.map((t) => `- ${t}`).join('\n') : '(yok)'}`,
+      '',
+      `Şikayet edilen: ${item.target.name} · cihaz ${item.target.pid ?? '-'} · Play Games ${item.target.gid ?? '-'} · IP ${item.target.ip ?? '-'}`,
+      '',
+      'Karar:',
+      `  7 gün engelle:    ${this.#link(item, 'ban7')}`,
+      `  Kalıcı engelle:   ${this.#link(item, 'ban')}`,
+      `  Şikayeti kapat:   ${this.#link(item, 'dismiss')}`,
+    ].join('\n');
+    try {
+      const ok = await this.mailer.send({ subject: `[Şikayet] ${reports.length} KİŞİ ŞİKAYET ETTİ: ${item.target.name} (${item.id})`, text, attachments });
+      Object.assign(item, { mailed: !!ok });
+      this.#save(item);
+    } catch (e) { this.log(`[reports] ${item.id}: mail ${e.message}`); }
   }
 
   async #ask(item, voice) {

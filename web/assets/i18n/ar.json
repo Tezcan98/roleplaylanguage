@@ -2689,7 +2689,6 @@
  "Too many reports — try again a little later.": "بلاغات كثيرة — حاول بعد قليل.",
  "Who are you reporting?": "عمّن تبلّغ؟",
  "You already reported this player; it is being checked.": "لقد أبلغت عن هذا اللاعب للتو؛ البلاغ قيد المراجعة.",
- "You cannot join the square after a report.": "لا يمكنك دخول الساحة بسبب بلاغ.",
  "Everyone in here hears each other. Hold the talk button to speak.": "هنا يسمع الجميع بعضهم بعضًا. اضغط مطولًا على الزر لتتكلم.",
  "Before you go in": "قبل أن تدخل",
  "If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.": "إذا أبلغ عنك أحد، يُفرَّغ ما قلته في آخر 10 دقائق نصًا ويفحصه الذكاء الاصطناعي (Google Gemini)؛ ثم ينظر فيه مشرف وقد يمنعك من الساحة.",
@@ -2698,5 +2697,6 @@
  "You go on offline in the square": "تتابع في الساحة دون اتصال",
  "Your voice in voice chats is kept encrypted for 48 hours.": "صوتك في الدردشات الصوتية يُحفظ مشفّرًا لمدة 48 ساعة.",
  "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "هنا لاعبون حقيقيون. ما تقوله يظهر نصًا فوق رأسك («Bas, konuş» أو T). الدردشة الصوتية بين شخصين فقط، بعد موافقة الطرف الآخر. إن أزعجك أحد فأبلغ عنه بعلامة 🚩 في الأعلى. كن لطيفًا!",
- "This is a talking area: everyone inside hears you.": "هذه منطقة كلام جماعي: كل من في الداخل يسمعك."
+ "This is a talking area: everyone inside hears you.": "هذه منطقة كلام جماعي: كل من في الداخل يسمعك.",
+ "Your last reports were unfounded, so you cannot report for a few days.": "بلاغاتك الأخيرة لم تكن صحيحة، لذا لا يمكنك الإبلاغ لبضعة أيام."
 }

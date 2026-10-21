@@ -2688,7 +2688,6 @@
  "Too many reports — try again a little later.": "بہت زیادہ شکایتیں — تھوڑی دیر بعد دوبارہ کوشش کریں۔",
  "Who are you reporting?": "آپ کس کی شکایت کر رہے ہیں؟",
  "You already reported this player; it is being checked.": "آپ نے ابھی اس کھلاڑی کی شکایت کی ہے؛ جائزہ جاری ہے۔",
- "You cannot join the square after a report.": "ایک شکایت کی وجہ سے آپ چوک میں داخل نہیں ہو سکتے۔",
  "Everyone in here hears each other. Hold the talk button to speak.": "یہاں سب ایک دوسرے کو سنتے ہیں۔ بولنے کے لیے بٹن دبا کر رکھیں۔",
  "Before you go in": "اندر جانے سے پہلے",
  "If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.": "اگر کوئی آپ کی شکایت کرے تو آپ کی پچھلے 10 منٹ کی باتیں مصنوعی ذہانت (Google Gemini) سے لکھی اور جانچی جاتی ہیں؛ پھر ایک نگران دیکھتا ہے اور آپ کو چوک سے روک سکتا ہے۔",
@@ -2697,5 +2696,6 @@
  "You go on offline in the square": "آپ چوک میں آف لائن جاری رکھتے ہیں",
  "Your voice in voice chats is kept encrypted for 48 hours.": "صوتی گفتگو میں آپ کی آواز 48 گھنٹے تک خفیہ طور پر محفوظ رہتی ہے۔",
  "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "یہاں اصلی کھلاڑی ہیں۔ آپ جو کہتے ہیں وہ آپ کے سر کے اوپر لکھا نظر آتا ہے («Bas, konuş» یا T)۔ صوتی گفتگو صرف دو لوگوں کے درمیان ہوتی ہے، دوسرے کی رضامندی کے بعد۔ اگر کوئی آپ کو تنگ کرے تو اوپر 🚩 سے شکایت کریں۔ مہربان رہیں!",
- "This is a talking area: everyone inside hears you.": "یہ اجتماعی گفتگو کی جگہ ہے: اندر سب آپ کو سنتے ہیں۔"
+ "This is a talking area: everyone inside hears you.": "یہ اجتماعی گفتگو کی جگہ ہے: اندر سب آپ کو سنتے ہیں۔",
+ "Your last reports were unfounded, so you cannot report for a few days.": "آپ کی پچھلی شکایتیں بے بنیاد نکلیں، اس لیے آپ کچھ دن شکایت نہیں کر سکتے۔"
 }

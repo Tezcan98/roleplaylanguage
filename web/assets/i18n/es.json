@@ -2688,7 +2688,6 @@
  "Too many reports — try again a little later.": "Demasiadas denuncias — inténtalo un poco más tarde.",
  "Who are you reporting?": "¿A quién denuncias?",
  "You already reported this player; it is being checked.": "Ya denunciaste a este jugador; se está revisando.",
- "You cannot join the square after a report.": "No puedes entrar en la plaza tras una denuncia.",
  "Everyone in here hears each other. Hold the talk button to speak.": "Aquí todos se oyen. Mantén pulsado el botón para hablar.",
  "Before you go in": "Antes de entrar",
  "If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.": "Si alguien te denuncia, lo que dijiste en los últimos 10 minutos se transcribe y lo revisa una IA (Google Gemini); un moderador lo mira y puede expulsarte de la plaza.",
@@ -2697,5 +2696,6 @@
  "You go on offline in the square": "Sigues sin conexión en la plaza",
  "Your voice in voice chats is kept encrypted for 48 hours.": "Tu voz en los chats de voz se guarda cifrada durante 48 horas.",
  "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "Aquí hay jugadores reales. Lo que dices aparece como texto sobre tu cabeza («Bas, konuş» o T). El chat de voz es solo entre dos personas, después de que la otra acepte. Si alguien te molesta, denúncialo con la 🚩 de arriba. ¡Sé amable!",
- "This is a talking area: everyone inside hears you.": "Es una zona de conversación: todos los de dentro te oyen."
+ "This is a talking area: everyone inside hears you.": "Es una zona de conversación: todos los de dentro te oyen.",
+ "Your last reports were unfounded, so you cannot report for a few days.": "Tus últimas denuncias no tenían fundamento: no puedes denunciar durante unos días."
 }

@@ -107,3 +107,41 @@ test('Mailer: logs only until it is configured; posts to the mail API', async ()
   assert.equal(calls[0][1].headers.Authorization, 'Bearer k');
   assert.deepEqual(JSON.parse(calls[0][1].body), { to: 'op@example.org', subject: 's', text: 't' });
 });
+
+test('five clean reports: three days without reporting', async () => {
+  let now = 10_000_000;
+  const dir = mkdtempSync(join(tmpdir(), 'reports-'));
+  const r = new Reports({ dir, apiKey: 'k', fetchImpl: gemini({ transcript: '', verdict: 'temiz', reason: 'yok' }), log: () => {}, now: () => now });
+  for (let i = 0; i < 5; i++) {
+    const t = { name: `Hedef${i}`, pid: `hedef0000${i}`, room: 'r' };
+    r.said(t, 'merhaba');
+    assert.equal(r.report(A, t).ok, true);
+    await r.done;
+    now += 11 * 60_000; // past the ten-minute limit
+  }
+  const res = r.report(A, B);
+  assert.equal(res.reason, 'paused');
+  assert.ok(res.until > now);
+  assert.equal(new Reports({ dir, log: () => {}, now: () => now }).report(A, B).reason, 'paused', 'kept across a restart');
+  now += 3 * 86_400_000 + 1;
+  assert.equal(r.report(A, B).ok, true, 'three days later');
+});
+
+test('clean, but three players reported the same one today: the operator gets the voice anyway', async () => {
+  let now = 20_000_000;
+  const mailer = mailbox();
+  const r = new Reports({ apiKey: 'k', fetchImpl: gemini({ transcript: 'selam', verdict: 'temiz', reason: 'yok' }), mailer, log: () => {}, now: () => now });
+  r.spoke(B, { mime: 'audio/webm;codecs=opus', data: 'AAAA', ctx: 'zone' });
+  const reporters = ['r1aaaaaaa', 'r2aaaaaaa', 'r3aaaaaaa', 'r4aaaaaaa'].map((pid, i) => ({ name: `R${i}`, pid, room: 'r' }));
+  for (const [i, rep] of reporters.slice(0, 3).entries()) {
+    r.report(rep, B);
+    await r.done;
+    assert.equal(mailer.sent.length, i < 2 ? 0 : 1);
+    now += 60_000;
+  }
+  assert.match(mailer.sent[0].subject, /3 KİŞİ/);
+  assert.deepEqual(mailer.sent[0].attachments.map((a) => [a.contentType, a.content]), [['audio/webm', 'AAAA']]);
+  r.report(reporters[3], B); // a fourth the same day: no second mail
+  await r.done;
+  assert.equal(mailer.sent.length, 1);
+});

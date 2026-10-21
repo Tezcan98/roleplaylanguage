@@ -40,10 +40,14 @@ oyuncunun **son 10 dakikasını** (yazılar + ses; yalnızca bellekte tutulur) G
 
 - **Ahlaksız ya da ticari** (ya da Gemini cevap vermediyse): yetkiliye mail gider — döküm, gerekçe ve üç bağlantı:
   7 gün engelle · kalıcı engelle · şikayeti kapat. **Sen karar verene kadar kimse engellenmez.**
-- **Temiz**: mail gitmez, kayıt listede kalır.
+- **Temiz**: mail gitmez, kayıt listede kalır. **Ama** aynı oyuncuyu 24 saat içinde **3 farklı kişi** şikayet
+  ettiyse Gemini temiz dese de mail gelir; ses parçaları **ekte** (~10 sn'lik dosyalar, kendin dinle).
+- **Asılsız şikayet**: bir oyuncunun **5 şikayeti** temiz çıkarsa **3 gün şikayet edemez**
+  (`<REPORTS_DIR>/reporters.json`; 3 kişilik şikayetler sayılmaz).
 - Hepsi: `https://<sunucu>/api/reports?key=<REPORT_KEY>` (engeli buradan kaldırmak da mümkün).
-- Engel cihaz kimliği + Play Games kimliği + kullanıcı adıyla tutulur (`<REPORTS_DIR>/bans.json`); oyuncu o an
-  meydandaysa hemen çıkarılır, tekrar giremez.
+- Engel cihaz kimliği + Play Games kimliği + kullanıcı adıyla tutulur (`<REPORTS_DIR>/bans.json`). Oyuncuya
+  **söylenmez**: meydana girer ama **tek başınadır** (kendine ait boş bir oda; kimseyi görmez, kimse onu görmez,
+  oda sayılarında görünmez). O an meydandaysa bağlantısı kopmuş gibi düşer, oyun kendiliğinden geri bağlanır.
 - Mail: `MAIL_API_URL`, `MAIL_API_KEY`, `REPORT_MAIL_TO` (SMTP başka sunucuda; ayrıntı `docs/TODO.md`).
   Ayarlı değilken mail yalnızca sunucu loguna yazılır, şikayetler yine listede.
 
