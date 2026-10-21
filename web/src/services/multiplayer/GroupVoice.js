@@ -5,7 +5,11 @@
  * only); the newcomer calls those already there (the village server relays the offer and the
  * answer between two players of the same zone only). Offers and answers carry their ICE
  * candidates (no trickling: a room of sixteen would flood the server with small messages).
+ * While the talk button is held my voice also goes to the server, in pieces, for the safety log
+ * and reports (VoiceRecorder).
  */
+import { VoiceRecorder } from './VoiceRecorder.js';
+
 const GATHER_MS = 1500; // (a phone's candidates are in well before: a quicker start in the zone)
 
 export class GroupVoice {
@@ -16,6 +20,7 @@ export class GroupVoice {
 
   constructor({ net, iceServers = [{ urls: 'stun:stun.l.google.com:19302' }], onState }) {
     Object.assign(this, { net, iceServers, onState });
+    this.recorder = new VoiceRecorder(net);
     this.zone = null;
     net.on('zone-peers', ({ zone, ids }) => { if (zone === this.zone) ids.forEach((id) => this.#call(id)); });
     net.on('zone-leave', ({ id }) => this.#drop(id));
@@ -48,6 +53,7 @@ export class GroupVoice {
 
   /** Out of the zone: every connection closed, the mic let go. */
   leave({ tell = true } = {}) {
+    this.recorder.stop();
     if (this.zone && tell) this.net.send({ type: 'zone', zone: null });
     this.zone = null;
     [...this.#peers.keys()].forEach((id) => this.#drop(id));
@@ -57,7 +63,11 @@ export class GroupVoice {
   }
 
   /** The talk button: the mic goes out to everyone in the zone while it is held. */
-  talk(on) { if (this.#mic) this.#mic.enabled = on; }
+  talk(on) {
+    if (!this.#mic) return;
+    this.#mic.enabled = on;
+    if (on) this.recorder.start(this.#mic, 'zone'); else this.recorder.stop();
+  }
 
   /** How loud this player is for me (0–1). */
   setVolume(id, v) {

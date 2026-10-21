@@ -81,6 +81,7 @@ import { VillageMultiplayer } from './systems/VillageMultiplayer.js';
 import { UsernameDialog } from './ui/UsernameDialog.js';
 import { PushToTalk } from './ui/PushToTalk.js';
 import { CallUI } from './ui/CallUI.js';
+import { ReportDialog } from './ui/ReportDialog.js';
 import { CaptionView } from './ui/CaptionView.js';
 import { HelpPanel } from './ui/HelpPanel.js';
 import { IntroSlides } from './ui/IntroSlides.js';
@@ -426,12 +427,13 @@ const village = new VillageMultiplayer({
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
   calls: new CallUI(host, modes),
+  reportDialog: new ReportDialog(host, modes), // "Şikayet et" (🚩 in the top bar and in the call bar)
   usernames: new UsernameDialog(host, modes),
   // first time in the square: how talking works here (Arabic, with Turkish)
   onFirstVisit: () => cards.show({
     num: 'Köy meydanı', title: 'Burada gerçek oyuncular var',
-    text: 'Söylediğin cümle başının üstünde yazı olarak görünür. Sesli sohbet sadece iki kişi arasında ve karşı taraf kabul ederse açılır. Güvenliğin için yazılı konuşmalar şifreli olarak 90 gün saklanır.',
-    en: 'There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written conversations are kept encrypted for 90 days. Be kind!',
+    text: 'Söylediğin cümle başının üstünde yazı olarak görünür. Sesli sohbet sadece iki kişi arasında ve karşı taraf kabul ederse açılır. Güvenliğin için yazılı ve sesli konuşmalar şifreli olarak 90 gün saklanır. Seni rahatsız eden olursa üstteki 🚩 ile şikayet et.',
+    en: 'There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written and voice conversations are kept encrypted for 90 days. If someone bothers you, report them with the 🚩 at the top. Be kind!',
     button: 'Tamam',
   }),
   recognizer: chatRecognizer,
@@ -781,6 +783,7 @@ const help = new HelpPanel(host, {
 });
 hud.addRight(help.button); // a small ? in the top bar (it took a corner of the game)
 hud.addRight(village.ptt.status); // who is online, next to it (not over the talk button)
+hud.addRight(village.ptt.reportBtn); // 🚩 "Şikayet et", right by it
 village.ptt.status.hidden = true;
 
 // the first time, the introduction comes before the story (skip with ?nointro)

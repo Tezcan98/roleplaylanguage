@@ -688,3 +688,8 @@ body.menu #run{display:none!important}
   .inv-slot{max-height:58px}.inv-grid{grid-auto-rows:58px}
   .inv-overlay.overlay{padding-top:54px} /* below the HUD */
 }
+/* "Şikayet et": the flag next to who is online, and its dialog */
+.pill.report{font-size:18px;padding:4px 12px;justify-content:center}
+.card.report .report-list{display:flex;flex-direction:column;gap:8px}
+.card.report .report-list .btn{text-align:left}
+.card.report .report-list small{font-weight:500;opacity:.75}

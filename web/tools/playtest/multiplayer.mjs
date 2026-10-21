@@ -112,6 +112,7 @@ try {
   await at(A, 2, 4); await at(B, 3.5, 4);
   const l = await waitFor(async () => { const x = await label(A); return x?.includes('sesli sohbet') ? x : null; }) ?? await label(A);
   check('"voice chat" offered next to a player', !!l && l.includes('sesli sohbet'), l);
+  await A.evaluate(() => { const net = window.__game.village.net, send = net.send.bind(net); window.__voiceOut = 0; net.send = (m) => { if (m.type === 'voice') window.__voiceOut++; return send(m); }; }); // count my voice pieces to the server
   await A.keyboard.press('e'); await sleep(800);
   check('the other player is asked first', !!(await waitFor(() => B.$('text=Kabul et'))));
   await B.click('text=Kabul et');
@@ -121,8 +122,16 @@ try {
   const inbound = () => B.evaluate(async () => { let n = 0; for (const pc of window.__game.village.voice._debugPeers()) (await pc.getStats()).forEach((r) => { if (r.type === 'inbound-rtp' && r.kind === 'audio') n += r.bytesReceived; }); return n; });
   const bytes = await waitFor(async () => { const n = await inbound(); return n > 1000 ? n : 0; }, 8000) || await inbound();
   check('audio flows', bytes > 0, `${bytes} bytes`);
+  check('…the call bar has the 🚩 report button', await A.evaluate(() => !!document.querySelector('.callbar button[aria-label="Şikayet et"]')));
   await A.click('.callbar .danger');
   check('hang up ends the call on both sides', !!(await waitFor(async () => !(await inCall(A)) && !(await inCall(B)))));
+  check('…my voice in the call went to the server in pieces (safety log, reports)', !!(await waitFor(() => A.evaluate(() => window.__voiceOut > 0), 5000)), String(await A.evaluate(() => window.__voiceOut)));
+  await A.click('.hud .pill.report');
+  await waitFor(() => A.$('.card.report'));
+  const bName = await B.evaluate(() => window.__game.village.net.name);
+  await A.click(`.card.report .btn:has-text("${bName}")`);
+  await A.click('.card.report .btn:has-text("Küfür")');
+  check('🚩 in the top bar: pick the player and why — the server takes the report', !!(await waitFor(() => A.evaluate(() => document.body.innerText.includes('Şikayetin alındı')), 5000)));
 
   await A.keyboard.press('e'); await waitFor(() => B.$('text=Reddet')); await B.click('text=Reddet'); await sleep(800);
   check('declining is reported and no call starts', !(await inCall(A)) && !(await inCall(B)));

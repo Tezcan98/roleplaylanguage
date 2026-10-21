@@ -403,3 +403,51 @@ test('usernames are unique: a name belongs to the device that took it first', as
   assert.equal(b2.reply.type, 'welcome');
   [a, b, a2, g1, g2, renamed, b2].forEach((c) => c.ws.close()); v.close(); h.close();
 });
+
+test('reports: own voice kept only in a call, a report reaches Reports, the operator\'s ban sends the player away', async () => {
+  const { Reports } = await import('../src/Reports.js');
+  const written = [];
+  const srv = createServer();
+  let v;
+  const reports = new Reports({ log: () => {}, onBan: (b) => v.kick(b) });
+  v = new VillageServer({ server: srv, log: () => {}, reports, audit: { write: (r) => written.push(r) } });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  const saved = url;
+  url = `ws://127.0.0.1:${srv.address().port}/ws/village`;
+  try {
+    const a = await join('Rapor1', 'rep', { pid: 'aaaaaaaa11' });
+    const b = await join('Rapor2', 'rep', { pid: 'bbbbbbbb22' });
+    b.send({ type: 'voice', ctx: 'call', mime: 'audio/webm;codecs=opus', data: 'AAAA' }); // not in a call: ignored
+    b.send({ type: 'state', x: 0, z: 0, rot: 0 }); a.send({ type: 'state', x: 1, z: 0, rot: 0 });
+    await silence();
+    a.send({ type: 'call-request', to: b.welcome.id });
+    await b.next('call-request');
+    b.send({ type: 'call-answer', to: a.welcome.id, accept: true });
+    await b.next('call-start');
+    b.send({ type: 'voice', ctx: 'call', mime: 'audio/webm;codecs=opus', data: 'BBBB' });
+    b.send({ type: 'voice', ctx: 'call', mime: 'text/html', data: 'CCCC' }); // not audio: ignored
+    await silence();
+    assert.deepEqual(written.filter((r) => r.kind === 'voice').map((r) => [r.name, r.with, r.audio]), [['Rapor2', 'Rapor1', 'BBBB']]);
+    assert.equal(a.inbox.some((m) => m.type === 'voice'), false, 'voice is never relayed');
+
+    a.send({ type: 'report', to: b.welcome.id, reason: 'ahlaksiz' });
+    assert.equal((await a.next('report-ok')).name, 'Rapor2');
+    await reports.done;
+    const item = reports.items.at(-1);
+    assert.equal(item.target.name, 'Rapor2');
+    assert.equal(item.status, 'unchecked'); // (no Gemini key here)
+    a.send({ type: 'report', to: b.welcome.id });
+    assert.equal((await a.next('report-failed')).reason, 'again');
+
+    reports.decide(item.id, 'ban');
+    assert.equal((await b.next('banned')).until, 0);
+    const again = client();
+    await again.open();
+    again.send({ type: 'hello', name: 'BaşkaAd', room: 'rep', pid: 'bbbbbbbb22' });
+    assert.equal((await again.next('error')).code, 'banned');
+    await Promise.all([a.close(), again.close()]);
+  } finally {
+    url = saved;
+    v.close(); srv.close();
+  }
+});

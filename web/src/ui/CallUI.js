@@ -9,10 +9,11 @@ export class CallUI {
     this.name = el('span');
     this.muteBtn = el('button', { class: 'chipbtn', text: '🔇 Sessize al', attrs: { type: 'button' } });
     this.endBtn = el('button', { class: 'chipbtn danger', text: 'Bitir', attrs: { type: 'button' } });
+    this.reportBtn = el('button', { class: 'chipbtn', text: '🚩', attrs: { type: 'button', title: 'Şikayet et', 'aria-label': 'Şikayet et' } });
     // the browser blocked the other side's audio until a tap
     this.unmuteBtn = el('button', { class: 'chipbtn primary', text: '🔊 Sesi aç', attrs: { type: 'button' } });
     this.unmuteBtn.hidden = true;
-    this.bar = el('div', { class: 'callbar' }, [el('span', { class: 'live', text: '● SESLİ' }), this.name, this.unmuteBtn, this.muteBtn, this.endBtn]);
+    this.bar = el('div', { class: 'callbar' }, [el('span', { class: 'live', text: '● SESLİ' }), this.name, this.unmuteBtn, this.muteBtn, this.reportBtn, this.endBtn]);
     this.bar.hidden = true;
     host.append(this.bar);
   }
@@ -29,6 +30,7 @@ export class CallUI {
         el('p', { class: 'chap', text: 'Sesli sohbet isteği' }),
         el('h2', { class: 'ctitle', text: `${fromName} seninle konuşmak istiyor` }),
         el('p', { class: 'cen en-t', text: gloss('{name} wants to voice chat with you', { name: fromName }) }),
+        el('p', { class: 'note', text: 'Güvenliğin için sesli sohbetler kaydedilir.' }),
         count, yes, no, block,
       ])]);
       let left = seconds;
@@ -43,7 +45,8 @@ export class CallUI {
     });
   }
 
-  showCall(name, { onMute, onEnd }) {
+  showCall(name, { onMute, onEnd, onReport }) {
+    this.reportBtn.onclick = onReport;
     this.name.textContent = name; // (short: the bar sits over the game)
     let muted = false;
     this.muteBtn.textContent = '🔇';

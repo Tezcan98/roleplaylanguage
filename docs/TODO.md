@@ -12,6 +12,15 @@ Sıradakiler yukarıdan aşağıya. Biten bir iş buradan silinir (ayrıntısı 
 
 ## Bekleyen (karar / dış iş)
 
+- **Şikayet mailleri**: SMTP başka sunucuda; oraya erişim verilince `server/src/Mailer.js` `send()` o sunucunun
+  API'sine göre düzeltilecek (şimdilik `POST MAIL_API_URL` + `Bearer MAIL_API_KEY`, gövde `{ to, subject, text }`).
+  Canlı sunucuya `MAIL_API_URL`, `MAIL_API_KEY`, `REPORT_MAIL_TO`, `PUBLIC_URL` (maildeki bağlantılar) eklenecek.
+  O zamana dek şikayetler `https://<sunucu>/api/reports?key=<REPORT_KEY>` sayfasında; karar da oradan verilir.
+- **Gemini ses formatı**: tarayıcılar sesi `audio/webm` / `audio/ogg` (opus), iPhone `audio/mp4` kaydediyor. Gemini'nin
+  bunları gerçek bir şikayette doğru yazıya döktüğü canlıda denenmeli (`/api/reports` sayfasındaki döküm).
+- **Gizlilik politikası / Play veri beyanı**: sesli sohbetler artık kaydediliyor ve şikayette Gemini'ye gidiyor;
+  `docs/store/privacy-policy.md` güncellendi, yayımlanan sayfa ve Play Console "Veri güvenliği" formu (ses kaydı) da güncellenmeli.
+
 - **Cloudflare önbellek kuralı**: modeller ve çeviriler için panelde tek bir Cache Rule (`docs/cdn.md`); sunucu tarafı hazır.
 - **Play Store 1.0.17** (paket `com.anadolu`): AAB, metinler (tr/en/ru/ar), görseller ve sürüm notları `~/Desktop/AnadoluAilesi-release/` içinde; yükleme Play Console'dan.
 - **Play Store veri beyanı**: konuşmaların saklandığı belirtildi; Play Console "Veri güvenliği" formu ve

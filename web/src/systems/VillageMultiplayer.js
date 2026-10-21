@@ -18,6 +18,12 @@ const BLOCKED_TEXT = {
   harm: ['Bu mesaj meydana uygun değil, gösterilmedi.', 'This message is not suitable for the square, so it was not shown.'],
   muted: ['Bir süre mesaj gönderemezsin ({m} dk).', 'You cannot send messages for a little while.'],
 };
+const REPORT_FAILED = {
+  limit: ['Kısa sürede çok şikayet gönderdin, biraz sonra tekrar dene.', 'Too many reports — try again a little later.'],
+  again: ['Bu oyuncuyu az önce şikayet ettin, inceleniyor.', 'You already reported this player; it is being checked.'],
+  gone: ['Bu oyuncu meydandan ayrılmış.', 'That player has left the square.'],
+};
+const BANNED_TEXT = ['Bir şikayet üzerine meydana giremezsin.', 'You cannot join the square after a report.'];
 const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Oyuncu engellendi, sohbet bitti.' };
 
 /**
@@ -43,8 +49,10 @@ export class VillageMultiplayer {
    * @param {Object<string, { suffix: string, balls?: object[], label: string }>} o.places
    *   public places: location id → room suffix (the city server + suffix is the room), its shared balls
    */
-  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null }) {
-    Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice });
+  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null }) {
+    Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog });
+    this.bannedUntil = null; // the operator banned this player after a report (0: for good)
+    ptt.onReport = () => this.report();
     this.locationId = 'village'; // the main square (chess, menu entry)
     this.joinedAt = null;
     this.chosenRoom = false; // true when the player picked the square on the main menu
@@ -95,10 +103,13 @@ export class VillageMultiplayer {
       this.toasts.show(`${this.remotes.get(id)?.name ?? 'Oyuncu'} ${tr}`, en);
     });
     net.on('call-start', ({ with: id, initiator }) => this.#startCall(id, initiator));
+    net.on('report-ok', ({ name }) => this.toasts.show(`Şikayetin alındı${name ? ` (${name})` : ''}. İnceleyeceğiz, teşekkürler!`, 'Thanks — your report was sent and will be checked.'));
+    net.on('report-failed', ({ reason }) => { const [tr, en] = REPORT_FAILED[reason] ?? ['Şikayet şu an gönderilemedi.', 'The report could not be sent right now.']; this.toasts.show(tr, en); });
+    net.on('banned', ({ until }) => { this.bannedUntil = until ?? 0; this.toasts.show(BANNED_TEXT[0], BANNED_TEXT[1]); });
     net.on('call-end', ({ reason }) => this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup));
     net.on('disconnected', () => {
       this.#reset({ keepChess: true }); // the server keeps the game: show it as it was until we are back
-      if (!this.#inSquare() || document.hidden) return; // in the background: we come back when the page does
+      if (!this.#inSquare() || document.hidden || this.#banned()) return; // (sent away after a report: no coming back) // in the background: we come back when the page does
       this.toasts.show('Bağlantı koptu, yeniden bağlanılıyor…', 'Disconnected — reconnecting…');
       this.#retryLater();
     });
@@ -194,8 +205,12 @@ export class VillageMultiplayer {
   }
   #count() { this.ptt.setOnline(this.remotes.count + 1, this.net.name, this.#roomLabel()); }
 
+  /** Banned after a report (and not run out yet)? */
+  #banned() { return this.bannedUntil !== null && (this.bannedUntil === 0 || this.bannedUntil > Date.now()); }
+
   async join() {
     if (this.net.connected || this.joining) return;
+    if (this.#banned()) { this.toasts.show(BANNED_TEXT[0], BANNED_TEXT[1]); return; }
     this.joining = true;
     try {
       if (!this.settings.get('deviceId')) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (a username belongs to this device)
@@ -228,6 +243,7 @@ export class VillageMultiplayer {
       this.#retryDelay = 0;
       this.#suggestBusierRoom();
     } catch (e) {
+      if (e.code === 'banned') { this.bannedUntil = 0; this.toasts.show(e.message || BANNED_TEXT[0], BANNED_TEXT[1]); return; } // (the server says until when; it is asked again next game)
       if (e.code === 'name-taken') { // the name is another device's (names are unique): pick another
         this.settings.set('username', null);
         this.nameNote = 'Bu kullanıcı adı alınmış, başka bir ad seç.';
@@ -371,7 +387,7 @@ export class VillageMultiplayer {
     const c = this.remotes.get(id);
     const name = c?.name ?? 'Oyuncu';
     if (c) c.call = true;
-    this.calls.showCall(name, { onMute: (m) => this.voice.setMuted(m), onEnd: () => this.net.send({ type: 'call-end' }) });
+    this.calls.showCall(name, { onMute: (m) => this.voice.setMuted(m), onEnd: () => this.net.send({ type: 'call-end' }), onReport: () => this.report(id) });
     const micOk = await this.voice.start(id, initiator);
     this.toasts.show(`${name} ile sesli sohbet başladı`, micOk ? 'Voice chat started' : 'Mikrofon yok: sadece dinleyebilirsin · listen only');
   }
@@ -393,6 +409,27 @@ export class VillageMultiplayer {
     if (message) this.toasts.show(message, 'Voice chat ended');
   }
 
+  // --- reports ("Şikayet et") ----------------------------------------------------------
+
+  /**
+   * Pick a player here (the call partner, or the nearest first) and why; the server checks what
+   * they said in the last ten minutes, text and voice, and the operator decides on a ban.
+   */
+  async report(only = null) {
+    if (!this.net.connected) { this.toasts.show('Meydana bağlı değilsin', 'Not connected to the square'); return; }
+    const here = this.player.position;
+    const players = this.remotes.ids()
+      .filter((id) => !only || id === only)
+      .map((id) => { const c = this.remotes.get(id); return { id, name: c.name, dist: Math.hypot(c.position.x - here.x, c.position.z - here.z) }; })
+      .sort((a, b) => (b.id === this.voice.partner) - (a.id === this.voice.partner) || a.dist - b.dist)
+      .slice(0, 12)
+      .map((p) => ({ ...p, note: p.id === this.voice.partner ? 'sesli sohbet' : this.group?.ids().includes(p.id) ? 'yanında konuşuyor' : `${Math.round(p.dist)} m` }));
+    if (!players.length) { this.toasts.show('Şikayet edilecek kimse yok', 'Nobody here to report'); return; }
+    const pick = await this.reportDialog?.ask(players);
+    if (!pick || !this.net.connected) return;
+    this.net.send({ type: 'report', to: pick.id, reason: pick.reason });
+  }
+
   // --- talking zones (the kahvehane) ----------------------------------------------------
 
   /** Which talking zone the player stands in (a step of slack on the way out). */
@@ -411,7 +448,7 @@ export class VillageMultiplayer {
     if (zone) {
       this.group.enter(zone);
       this.ptt.setZone(this.zones[zone].name);
-      this.toasts.show(`${this.zones[zone].name}: toplu konuşma alanı 🎙️ Konuşmak için butona basılı tut.`, 'Everyone in here hears each other. Hold the talk button to speak.');
+      this.toasts.show(`${this.zones[zone].name}: toplu konuşma alanı 🎙️ Konuşmak için butona basılı tut. Sesler güvenlik için kaydedilir.`, 'Everyone in here hears each other. Hold the talk button to speak. Voices are recorded for safety.');
     } else {
       this.group.leave({ tell });
       this.ptt.setZone(null);

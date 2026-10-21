@@ -33,9 +33,14 @@
  *   NPC_CHAT_PER_MINUTE / NPC_CHAT_PER_DAY (per IP, default 8 / 150), NPC_CHAT_GLOBAL_PER_DAY (default 1200)
  *   AD_STATS_KEY, AD_STATS_DIR  the live ad numbers page (GET /api/ad-stats?key=…) and where its day files go (AdStats.js)
  *   FEEDBACK_DIR, FEEDBACK_KEY (default AD_STATS_KEY), FEEDBACK_MODEL  the players' feedback, graded by Gemini for credits (Feedback.js)
+ *   REPORTS_DIR, REPORT_KEY (default AD_STATS_KEY), REPORT_MODEL  player reports ("Şikayet et"): the reported player's last
+ *                     ten minutes (bubbles + voice) go to Gemini; the operator decides on a ban from the mail (Reports.js)
+ *   PUBLIC_URL        this server's https address for the links in those mails, e.g. https://sehem2.com.tr
+ *   MAIL_API_URL, MAIL_API_KEY, REPORT_MAIL_TO  the mail API on the SMTP machine and the operator's address (Mailer.js; TODO)
  *
  * Endpoints: ws(s)://host/ws/village · GET /health · GET /health?name=&pid= (is the username free) · POST /api/npc-chat
  *            · POST /api/ad-event · GET /api/ad-stats?key= · POST /api/feedback · GET /api/feedback-list?key=
+ *            · GET /api/reports?key= · GET /api/report-action?id=&key=&do=ban7|ban|dismiss|unban
  */
 import { createServer } from 'node:http';
 import { dirname, join } from 'node:path';
@@ -51,6 +56,8 @@ import { ChessScoreFile } from './ChessScoreFile.js';
 import { Moderator } from './Moderator.js';
 import { AdStats } from './AdStats.js';
 import { Feedback } from './Feedback.js';
+import { Reports } from './Reports.js';
+import { Mailer } from './Mailer.js';
 
 const env = process.env;
 const port = Number(process.argv[2] ?? env.PORT ?? 8090);
@@ -79,8 +86,16 @@ const feedback = new Feedback({
   dir: env.FEEDBACK_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'feedback') : null),
 });
 
+// player reports: Gemini listens to the reported player's last ten minutes, the operator decides from the mail
+const reports = new Reports({
+  apiKey: env.GEMINI_API_KEY ?? '', model: env.REPORT_MODEL || undefined, key: env.REPORT_KEY || env.AD_STATS_KEY || '',
+  dir: env.REPORTS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'reports') : null),
+  publicUrl: env.PUBLIC_URL ?? '', mailer: Mailer.fromEnv(env), onBan: (ban) => village.kick(ban),
+});
+
 const http = createServer((req, res) => {
   if (adStats.route(req, res, { clientIp })) return;
+  if (reports.route(req, res)) return;
   if (feedback.route(req, res, { allowOrigin: (o) => originAllowed(o, origins), clientIp })) return;
   if (req.url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
@@ -127,7 +142,7 @@ const moderator = new Moderator({
 });
 const chessScores = new ChessScoreFile(env.CHESS_SCORES ?? '/tmp/yilmaz-chess-scores.json');
 const names = new NameRegistry(env.USERNAMES || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'usernames.json') : null)).load(); // next to the chess scores on the real server; without them (tests, a quick local run) only in memory
-const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit, names });
+const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit, names, reports });
 http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'}; moderation ${moderator.provider}; safety log ${audit ? `on (${audit.days} days)` : 'off'}; turn ${village.turn ? 'on' : 'off'})`));
 
 for (const sig of ['SIGINT', 'SIGTERM']) {

@@ -1,6 +1,6 @@
 # Türk Ailem — Gizlilik Politikası
 
-**Son güncelleme:** 10 Ekim 2026
+**Son güncelleme:** 21 Ekim 2026
 
 Türk Ailem, Türkçe öğrenmeyi hikâye ve 3D köy yaşamı üzerinden sunan bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
 
@@ -9,11 +9,11 @@ Türk Ailem, Türkçe öğrenmeyi hikâye ve 3D köy yaşamı üzerinden sunan b
 Uygulama mikrofonu iki özellik için kullanabilir:
 
 - **Konuşma tanıma:** Oyuncunun söylediği Türkçe cümleyi oyundaki konuşma etkinliklerinde değerlendirmek için kullanılır.
-- **Birebir sesli sohbet:** Köy meydanında iki oyuncu birbirinin isteğini kabul ettiğinde sesli iletişim kurulabilir.
+- **Sesli sohbet:** Köy meydanında iki oyuncu birbirinin isteğini kabul ettiğinde ya da kahvehane, cami avlusu gibi toplu konuşma alanlarında konuş düğmesine basılı tutulduğunda sesli iletişim kurulur.
 
-Oyunun kendisi **ses kayıtlarını kalıcı olarak saklamaz**. Android'de konuşma tanıma için cihazın yerel konuşma tanıma servisi kullanılır. İsteğe bağlı bir uzak STT sunucusu yapılandırılırsa ses verisi tanıma amacıyla bu sunucuya geçici olarak gönderilebilir; bu sunucunun işletmecisi veriyi saklamayacak şekilde yapılandırılmalıdır.
+Konuşma tanımada söylenenler kaydedilmez. Android'de konuşma tanıma için cihazın yerel konuşma tanıma servisi kullanılır. İsteğe bağlı bir uzak STT sunucusu yapılandırılırsa ses verisi tanıma amacıyla bu sunucuya geçici olarak gönderilebilir; bu sunucunun işletmecisi veriyi saklamayacak şekilde yapılandırılmalıdır.
 
-Sesli sohbet WebRTC ile iki oyuncu arasında kurulur; sinyalleşme sunucusu bağlantının kurulmasına yardımcı olur ancak konuşma kaydı tutmak oyunun özelliği değildir.
+Sesli sohbet WebRTC ile oyuncular arasında kurulur. **Güvenlik için, oyuncunun mikrofonu sesli sohbette açıkken kendi sesi kısa parçalar hâlinde oyunun sunucusuna da gönderilir ve güvenlik kaydında saklanır** (bkz. 2c). Oyun içinde sesli sohbet isteğinde, toplu konuşma alanına girerken ve meydana ilk girişte bu bilgi verilir.
 
 ## 2. Kullanıcı adı ve cihaz kimliği
 
@@ -33,11 +33,12 @@ Karakterlerin sabit repliklerinin sesi oyunun sunucusunda üretilir: erkek sesle
 
 ## 2c. Güvenlik kaydı (90 gün)
 
-Oyuncuları, özellikle çocukları korumak için **köy meydanındaki yazılı konuşmalar** (konuşma balonları) ve **karakterlerle serbest sohbetteki mesajlar**, sunucuda **şifreli olarak 90 gün** saklanır; sonra otomatik olarak silinir. Kayıtta mesajın metni (karakter sohbetinde karakterin cevabı da), zamanı, oda, kullanıcı adı, cihaz kimliği, varsa Google Play Games oyuncu kimliği ve IP adresi bulunur.
+Oyuncuları, özellikle çocukları korumak için **köy meydanındaki yazılı konuşmalar** (konuşma balonları), **sesli sohbetler** (birebir ve toplu konuşma alanları; her oyuncunun mikrofonu açıkken kendi sesi) ve **karakterlerle serbest sohbetteki mesajlar**, sunucuda **şifreli olarak 90 gün** saklanır; sonra otomatik olarak silinir. Kayıtta mesajın metni ya da ses parçası (karakter sohbetinde karakterin cevabı da), zamanı, oda, kiminle konuşulduğu, kullanıcı adı, cihaz kimliği, varsa Google Play Games oyuncu kimliği ve IP adresi bulunur.
 
 - Kayıtlar, yalnızca yetkili güvenlik görevlisinde bulunan bir anahtarla açılabilecek şekilde şifrelenir; oyunun sunucusu kayıtları yazabilir ama okuyamaz.
 - Kayıtlar yalnızca zararlı veya tehlikeli konuşmaları (taciz, zorbalık, tehdit, uygunsuz içerik, kişisel bilgi isteme vb.) incelemek, gerekirse ilgili hesabı engellemek ve yasal bir talep olduğunda yetkili makamlarla paylaşmak için kullanılır.
-- **Sesli sohbet kaydedilmez:** iki oyuncu arasında doğrudan kurulur.
+- **Şikayet:** Oyuncular rahatsız oldukları birini oyun içindeki 🚩 düğmesiyle şikayet edebilir. Bu durumda şikayet edilen oyuncunun son 10 dakikada yazdıkları ve sesli söyledikleri (sunucunun belleğinde yalnızca 10 dakika tutulur) yazıya dökülüp değerlendirilmek üzere **Google Gemini** hizmetine gönderilir. Sonuç (döküm, karar, gerekçe) şikayet kaydıyla birlikte sunucuda saklanır ve bir yetkiliye iletilir; engelleme kararını yetkili verir. Şikayet edilen oyuncuya kimin şikayet ettiği söylenmez.
+- **Engelleme:** Engellenen oyuncunun cihaz kimliği, varsa Play Games kimliği ve kullanıcı adı, engel süresince sunucuda tutulur.
 - Oyun içinde meydana ilk girişte ve sohbet kutusunda bu kayıt hakkında bilgi verilir.
 
 ## 2d. Google Play Games girişi (Android)
@@ -60,13 +61,14 @@ Doğal/neural karakter sesleri etkinleştirilirse gerekli ses modelleri **Huggin
 
 ## 6. Çok oyunculu güvenlik
 
-Köy meydanında kullanıcı adları ve genel konuşma metinleri sunucudan diğer oyunculara aktarılır. Kötüye kullanımı azaltmak için kullanıcı adı ve genel konuşmada Türkçe, Arapça ve İngilizce kısa bir küfür filtresi uygulanır. Oyuncular ayrıca cihazlarında başka oyuncuları engelleyebilir.
+Köy meydanında kullanıcı adları ve genel konuşma metinleri sunucudan diğer oyunculara aktarılır. Kötüye kullanımı azaltmak için kullanıcı adı ve genel konuşmada Türkçe, Arapça ve İngilizce kısa bir küfür filtresi uygulanır. Oyuncular ayrıca cihazlarında başka oyuncuları engelleyebilir ve 🚩 düğmesiyle şikayet edebilir (bkz. 2c).
 
 ## 7. Saklama ve silme
 
 - Yerel oyun ilerlemesi ve ayarlar, uygulamanın cihazdaki localStorage verisi temizlendiğinde silinir.
 - Kullanıcı adı ve cihaz kimliği, çok oyunculu bağlantı açık olduğu sürece sunucu tarafında oturum verisi olarak tutulur; kalıcı hesap sistemi yoktur.
-- Güvenlik kaydı (meydan ve karakter sohbeti mesajları) şifreli olarak 90 gün saklanır ve sonra otomatik silinir.
+- Güvenlik kaydı (meydan mesajları, sesli sohbetler ve karakter sohbeti mesajları) şifreli olarak 90 gün saklanır ve sonra otomatik silinir.
+- Şikayet kayıtları (döküm ve karar) ve engel listesi, incelemeyi ve engeli yürütmek için sunucuda tutulur.
 - Satranç skor tablosundaki kullanıcı adı ve oyun sayıları sunucuda kalır; silinmesini istediğiniz kullanıcı adı için geliştiriciye yazabilirsiniz.
 - Karakter sesleri (kişisel veri içermeyen ses dosyaları) sunucuda önbellek olarak saklanır.
 - Sunucunun geçici bağlantı/log verileri üretim sunucusunun yapılandırmasına bağlıdır ve yayın öncesinde gerçek saklama süresi ayrıca belirlenmelidir.

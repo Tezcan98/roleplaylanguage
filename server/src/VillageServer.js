@@ -28,6 +28,10 @@ const MAX_BALLS = 4;                        // shared balls per room (the square
 const SAY_GAP = 1200;                       // ms between two public speech bubbles
 const STRIKES = 3, STRIKE_WINDOW = 10 * 60_000, MUTE = 5 * 60_000; // held-back bubbles → a short silence
 const HEARTBEAT = 30000;                    // ms; silent connections are dropped
+const VOICE_MIME = /^audio\/(webm|ogg|mp4|aac|mpeg|wav)(;\s*codecs=[\w.]+)?$/;
+const VOICE_MAX = 60000;                    // base64 characters in one piece of voice (~10 s at 16 kbit/s is ~27 000)
+const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
+const LAST_PIECE = 15000;                   // ms after a call / a zone during which its last piece of voice is still taken
 const IDLE = 45000;                         // ms without any message from a page that promised a keep-alive (`ka`): its game is frozen (phone locked) — drop it
 
 
@@ -55,6 +59,10 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'zone', zone }                walked into a talking zone ('kahve' | 'avlu') or out of it (null)
  *   { type: 'zone-rtc', to, data }        WebRTC offer / answer (with its candidates) to someone in the same zone
  *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
+ *   { type: 'voice', ctx, mime, data }    a piece (≤ ~10 s, base64) of my own voice while my mic is open in a call
+ *                                         (ctx 'call') or a talking zone ('zone'): into the encrypted safety log and,
+ *                                         for ten minutes, into memory for reports (Reports.js); never relayed
+ *   { type: 'report', to, reason? }       report a player in this room ("Şikayet et"; Reports.js)
  *   { type: 'jump' }                      my horse jumped (relayed: { type: 'jump', id })
  *   { type: 'chess-ask', color } | { type: 'chess-dede', color? } | { type: 'chess-leave' } | { type: 'chess-resign' }
  *   | { type: 'chess-move', from, to, promotion? }
@@ -69,6 +77,8 @@ const IDLE = 45000;                         // ms without any message from a pag
  *     ice: WebRTC ICE servers for voice calls (STUN + TURN with short-lived credentials)
  *   { type: 'join', peer } | { type: 'leave', id } | { type: 'states', players }
  *   { type: 'say-blocked', reason, until? }  your bubble was held back (not Turkish / harmful; `until` = muted till)
+ *   { type: 'report-ok' } | { type: 'report-failed', reason }  ('limit' | 'again' | 'gone' | 'off' | 'self')
+ *   { type: 'banned', until }             the operator banned this player after a report: sent away (also code 'banned' on hello)
  *   { type: 'talk', id, on } | { type: 'say', id, text } | { type: 'ball', id, n, x, z, vx, vz }
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
  *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
@@ -100,7 +110,8 @@ export class VillageServer {
    *   (username "<expiry>:<id>", password HMAC-SHA1(secret, username)), valid for a day
    * @param {Map} [o.chessScores]  chess score board to start from; `onChessScore()` after every game (to save it)
    */
-  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null, names = null } = {}) {
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null, names = null, reports = null } = {}) {
+    this.reports = reports; // player reports, what each said lately and the bans (Reports.js), or null
     this.names = names; // unique usernames (NameRegistry), or null: any name, numbered in a room
     this.moderator = moderator; // decides which public bubbles may be shown (word list, language, Jev / Laya)
     this.audit = audit; // the encrypted 90-day safety log (AuditLog.js), or null
@@ -109,7 +120,7 @@ export class VillageServer {
     this.onChessScore = onChessScore;
     this.turn = turn?.issue || (turn?.secret && turn.urls?.length) ? turn : null;
     this.wss = new WebSocketServer({
-      server, path, maxPayload: 32 * 1024,
+      server, path, maxPayload: 96 * 1024, // (a piece of voice is up to ~40 KB)
       verifyClient: ({ origin, req }, done) => {
         if (!allowOrigin(origin)) { this.log(`[village] refused origin ${origin}`); return done(false, 403, 'Origin not allowed'); }
         if ((this.#perIp.get(clientIp(req)) ?? 0) >= maxPerIp) return done(false, 429, 'Too many connections');
@@ -124,6 +135,7 @@ export class VillageServer {
       ws.alive = false;
       ws.ping();
     }), HEARTBEAT);
+    this.pruner = setInterval(() => this.reports?.prune(), HEARTBEAT); // what players said more than ten minutes ago
   }
 
   /**
@@ -273,6 +285,24 @@ export class VillageServer {
       case 'goal': // a match in the schoolyard: the scorer's screen tells the others
         if (msg.side === 'a' || msg.side === 'b') this.#toRoom(c, { type: 'goal', id: c.id, side: msg.side });
         break;
+      case 'voice': { // my own voice in a call or a talking zone: kept for safety, never relayed
+        const ctx = msg.ctx === 'call' ? 'call' : msg.ctx === 'zone' ? 'zone' : null;
+        if (typeof msg.mime !== 'string' || !VOICE_MIME.test(msg.mime) || typeof msg.data !== 'string' || msg.data.length > VOICE_MAX || !BASE64.test(msg.data)) return;
+        const recent = (last) => (last && Date.now() < last.until ? last.with : null); // the last piece arrives just after hanging up / walking out
+        const peer = ctx === 'call' ? members.get(c.partner)?.name ?? recent(c.lastCall) : ctx === 'zone' ? c.zone ?? recent(c.lastZone) : null;
+        if (!peer) return;
+        this.audit?.write({ kind: 'voice', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, ctx, with: peer, mime: msg.mime, audio: msg.data });
+        this.reports?.spoke(c, { mime: msg.mime, data: msg.data, ctx });
+        break;
+      }
+      case 'report': {
+        const target = members.get(msg.to);
+        if (!this.reports) return this.#send(c, { type: 'report-failed', reason: 'off' });
+        if (!target) return this.#send(c, { type: 'report-failed', reason: 'gone' });
+        const r = this.reports.report(c, target, typeof msg.reason === 'string' ? msg.reason : '');
+        this.#send(c, r.ok ? { type: 'report-ok', name: target.name } : { type: 'report-failed', reason: r.reason });
+        break;
+      }
       case 'call-diag': // the client reports how a voice connection went
         if (typeof msg.state === 'string') this.log(`[village] voice ${c.name}: ${msg.state.slice(0, 20)}${typeof msg.detail === 'string' ? ` (${msg.detail.slice(0, 120)})` : ''}`);
         break;
@@ -311,6 +341,8 @@ export class VillageServer {
       c.pid = pid;
       for (const old of members.values()) if (old.pid === pid) { this.#leave(old); old.id = null; old.ws.terminate(); }
     }
+    const ban = this.reports?.banned({ pid: c.pid, gid: c.gid, name: clean });
+    if (ban) return this.#send(c, { type: 'error', code: 'banned', until: ban.until, message: ban.until ? `Bir şikayet üzerine ${new Date(ban.until).toLocaleDateString('tr-TR')} tarihine kadar meydana giremezsin.` : 'Bir şikayet üzerine meydana giremezsin.' });
     if (this.names?.claim(clean, c.pid) === 'taken') return this.#send(c, { type: 'error', code: 'name-taken', message: 'Bu kullanıcı adı alınmış, başka bir ad seç.' }); // (unique names: NameRegistry)
     if (members.size >= MAX_PER_ROOM) return this.#send(c, { type: 'error', message: 'Meydan dolu, biraz sonra tekrar dene.' });
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
@@ -332,6 +364,7 @@ export class VillageServer {
   async #say(c, text) {
     const now = Date.now();
     const who = { kind: 'say', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, text };
+    this.reports?.said(c, text); // (held back or not: a report sees it)
     if (c.mutedUntil > now) { this.audit?.write({ ...who, shown: false, flag: 'muted' }); return this.#send(c, { type: 'say-blocked', reason: 'muted', until: c.mutedUntil }); }
     const v = await this.moderator.check(text);
     this.audit?.write({ ...who, shown: !!v.ok && !!c.id, ...(v.ok ? {} : { flag: v.reason }) }); // the safety log (AuditLog.js)
@@ -348,6 +381,7 @@ export class VillageServer {
     if (c.zone === zone) return;
     const members = [...this.#room(c.room).values()];
     if (c.zone) members.forEach((m) => { if (m !== c && m.zone === c.zone) this.#send(m, { type: 'zone-leave', id: c.id }); });
+    if (c.zone) c.lastZone = { with: c.zone, until: Date.now() + LAST_PIECE };
     c.zone = null;
     if (!zone) return;
     const there = members.filter((m) => m !== c && m.zone === zone);
@@ -361,6 +395,7 @@ export class VillageServer {
     if (!c.partner) return;
     const peer = this.#room(c.room).get(c.partner);
     c.partner = null;
+    if (peer) { c.lastCall = { with: peer.name, until: Date.now() + LAST_PIECE }; peer.lastCall = { with: c.name, until: Date.now() + LAST_PIECE }; }
     this.#send(c, { type: 'call-end', with: peer?.id, reason });
     if (peer && peer.partner === c.id) { peer.partner = null; this.#send(peer, { type: 'call-end', with: c.id, reason }); }
   }
@@ -378,6 +413,19 @@ export class VillageServer {
     if (!members.delete(c.id)) return;
     this.#toRoom(c, { type: 'leave', id: c.id });
     this.log(`[village] ${c.name} left ${c.room} (${members.size})`);
+  }
+
+  /** A ban decided after a report: whoever it names is sent away now. */
+  kick(ban) {
+    for (const members of this.#rooms.values()) {
+      for (const c of [...members.values()]) {
+        const named = (ban.pid && c.pid === ban.pid) || (ban.gid && c.gid === ban.gid) || ban.name === c.name.toLocaleLowerCase('tr');
+        if (!named) continue;
+        this.#send(c, { type: 'banned', until: ban.until });
+        this.#leave(c);
+        c.ws.close(1008, 'Banned');
+      }
+    }
   }
 
   #dropFarCalls() {
@@ -438,6 +486,7 @@ export class VillageServer {
   close() {
     clearInterval(this.timer);
     clearInterval(this.heartbeat);
+    clearInterval(this.pruner);
     this.wss.clients.forEach((ws) => ws.close(1001, 'Server shutting down'));
     this.wss.close();
   }
