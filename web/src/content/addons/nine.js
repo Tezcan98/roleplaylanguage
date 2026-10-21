@@ -1,7 +1,8 @@
 /**
  * Fatma Nine (grandma) sits on the sedir at home. She doesn't announce lessons — she just
  * talks to you like a grandmother: did you pray, which surahs do you know, how was school,
- * stories from the old days, a cookie she baked. Every visit is a different little chat
+ * stories from the old days, a cookie she baked, now and then a short word on the prayer from an
+ * ayah, a hadith or the Risale-i Nur. Every visit is a different little chat
  * (some end with a short question); after all of them she starts again from a different
  * one each game hour.
  */
@@ -119,6 +120,56 @@ const CHATS = [
       words: [['birlikte', 'together']], options: [ok('Gelirim nine!', "I'll come, grandma!", { next: 'end' })] },
     end: { say: 'Her gün biraz oku kuzum. Damlaya damlaya göl olur.', en: 'Read a little every day, my dear. Drop by drop a lake is formed.',
       words: [['damla', 'drop'], ['göl', 'lake']], options: [ok('İnşallah nine.', 'God willing, grandma.')] },
+  } },
+  // short nasihat on the prayer: one ayah, hadith or Risale-i Nur passage each, told the way a grandmother would
+  { id: 'nehir', nodes: {
+    start: { say: 'Kuzum, sana Peygamberimizin güzel bir sözünü anlatayım mı?', en: 'My dear, shall I tell you a beautiful saying of our Prophet?',
+      words: [['Peygamber', 'Prophet'], ['söz', 'word, saying']],
+      options: [ok('Anlat nine.', 'Tell me, grandma.', { next: 'hadis' })] },
+    hadis: { say: 'Peygamberimiz sormuş: “Kapınızın önünde bir nehir olsa, her gün beş kere yıkansanız, üstünüzde kir kalır mı?”', en: 'Our Prophet asked: “If there were a river at your door and you bathed in it five times a day, would any dirt remain on you?” (Bukhari, Muslim)',
+      words: [['nehir', 'river'], ['yıkanmak', 'to wash oneself'], ['kir', 'dirt']],
+      options: [ok('Kalmaz nine.', 'None would remain, grandma.', { next: 'end' }), ok('Biraz kalır.', 'A little would remain.', { wrong: true })] },
+    end: { say: 'Sahabeler de öyle demiş. Peygamberimiz buyurmuş: “İşte beş vakit namaz da böyledir. Allah onlarla günahları siler.”', en: 'The Companions said so too. Our Prophet said: “That is how the five daily prayers are. Allah wipes away sins with them.”',
+      words: [['günah', 'sin'], ['silmek', 'to wipe away']],
+      options: [ok('Ne güzel bir benzetme!', 'What a beautiful comparison!')] },
+  } },
+  { id: 'yirmidort', nodes: {
+    start: { say: 'Bediüzzaman Hazretleri Risale-i Nur’da güzel bir hesap yapar. Allah bize her gün yirmi dört saat veriyor. Namaz için ne kadarını istiyor, biliyor musun?', en: 'Bediüzzaman does a beautiful sum in the Risale-i Nur. Allah gives us twenty-four hours every day. How much of it does He ask for the prayer, do you know? (The Fourth Word)',
+      words: [['saat', 'hour'], ['hesap', 'calculation, sum']], hint: 'bir saat',
+      options: [ok('On saat.', 'Ten hours.', { wrong: true }), ok('Bir saat kadar.', 'About one hour.', { next: 'end' }), ok('Bütün günü.', 'The whole day.', { wrong: true })] },
+    end: { say: 'Aferin! Yirmi dört saatin sadece bir saati. Az bir emek, ama ahirette çok büyük bir kazanç. Sen olsan bu ticareti yapmaz mısın?', en: 'Well done! Just one hour of the twenty-four. A little effort, but a very great gain in the hereafter. Wouldn’t you make that trade?',
+      words: [['emek', 'effort'], ['kazanç', 'gain, profit'], ['ahiret', 'the hereafter']],
+      options: [ok('Yaparım nine!', 'I would, grandma!')] },
+  } },
+  { id: 'gida', nodes: {
+    start: { say: 'Bazen namaz kılmak sana zor geliyor mu kuzum? Doğru söyle.', en: 'Does praying sometimes feel hard to you, my dear? Tell the truth.',
+      words: [['zor gelmek', 'to feel hard (to someone)']],
+      options: [ok('Bazen geliyor nine.', 'Sometimes it does, grandma.', { next: 'ekmek' }), ok('Hayır, seviyorum.', 'No, I love it.', { next: 'ekmek' })] },
+    ekmek: { say: 'Risale-i Nur’da der ki: Her gün ekmek yeriz, su içeriz, hava alırız. Hiç “usandım” der miyiz?', en: 'The Risale-i Nur says: every day we eat bread, drink water and breathe air. Do we ever say “I’m tired of it”? (The Twenty-First Word)',
+      words: [['ekmek', 'bread'], ['usanmak', 'to grow weary of']],
+      options: [ok('Demeyiz nine.', "We don't, grandma.", { next: 'end' })] },
+    end: { say: 'İşte namaz da kalbin ekmeği, ruhun suyu ve havası gibidir. Beden yemeksiz olmadığı gibi, ruh da namazsız olmaz.', en: 'The prayer, too, is like bread for the heart, water and air for the soul. As the body cannot do without food, the soul cannot do without prayer.',
+      words: [['kalp', 'heart'], ['ruh', 'soul'], ['beden', 'body']],
+      options: [ok('Bunu hiç böyle düşünmemiştim.', "I'd never thought of it like that.")] },
+  } },
+  { id: 'huzur', nodes: {
+    start: { say: 'Namaz vakti gelince Peygamberimiz Bilal’e ne derdi, biliyor musun?', en: 'Do you know what our Prophet used to say to Bilal when the prayer time came?',
+      words: [['vakit gelmek', '(the time) to come']],
+      options: [ok('Bilmiyorum nine, ne derdi?', "I don't know, grandma, what did he say?", { next: 'bilal' })] },
+    bilal: { say: '“Ey Bilal, kalk da bizi namazla rahatlat!” derdi. Yani namaz bir yük değil, bir dinlenmedir.', en: '“O Bilal, get up and give us rest with the prayer!” (Abu Dawud) So the prayer is not a burden, it is a rest.',
+      words: [['rahatlatmak', 'to give rest, to relieve'], ['yük', 'burden, load'], ['dinlenmek', 'to rest']],
+      options: [ok('Ne güzel!', 'How lovely!', { next: 'end' })] },
+    end: { say: 'Kur’an’da da şöyle buyrulur: “Kalpler ancak Allah’ı anmakla huzur bulur.” Sen de üzülünce seccadeye koş, olur mu?', en: 'And the Quran says: “Hearts find peace only in the remembrance of Allah.” (Ar-Ra‘d 13:28) When you are sad, run to your prayer rug too, all right?',
+      words: [['huzur', 'peace (of mind)'], ['anmak', 'to remember, to mention']],
+      options: [ok('Olur nine, söz.', 'All right grandma, I promise.')] },
+  } },
+  { id: 'sevilen', nodes: {
+    start: { say: 'Bir gün Peygamberimize sormuşlar: “Allah’ın en çok sevdiği amel hangisidir?” Sence ne demiş?', en: 'One day they asked our Prophet: “Which deed does Allah love most?” What do you think he said?',
+      words: [['amel', 'deed'], ['sevmek', 'to love']], hint: 'vaktinde namaz',
+      options: [ok('Çok para kazanmak.', 'Earning a lot of money.', { wrong: true }), ok('Vaktinde kılınan namaz.', 'The prayer prayed on time.', { next: 'end' }), ok('Çok uyumak.', 'Sleeping a lot.', { wrong: true })] },
+    end: { say: 'Bildin! “Vaktinde kılınan namaz” buyurmuş. Kur’an da der ki: “Namaz, insanı kötülükten alıkoyar.” Namazını geciktirme kuzum.', en: 'You got it! He said: “The prayer prayed on time.” (Bukhari, Muslim) And the Quran says: “The prayer keeps a person from evil.” (Al-‘Ankabut 29:45) Don’t delay your prayer, my dear.',
+      words: [['vaktinde', 'on time'], ['kötülük', 'evil, wrongdoing'], ['geciktirmek', 'to delay']],
+      options: [ok('Geciktirmem nine.', "I won't delay it, grandma.")] },
   } },
 ];
 
