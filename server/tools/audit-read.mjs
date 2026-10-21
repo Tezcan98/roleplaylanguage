@@ -20,7 +20,8 @@ if (audioDir) mkdirSync(audioDir, { recursive: true });
 const EXT = { 'audio/webm': 'webm', 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/aac': 'aac', 'audio/mpeg': 'mp3', 'audio/wav': 'wav' };
 const from = arg('--from') ?? '0000', to = arg('--to') ?? '9999', who = arg('--who')?.toLocaleLowerCase('tr'), word = arg('--text')?.toLocaleLowerCase('tr');
 
-const files = readdirSync(dir).filter((f) => /^audit-\d{4}-\d{2}-\d{2}\.log$/.test(f)).sort().filter((f) => { const d = f.slice(6, 16); return d >= from && d <= to; });
+// the text log (audit-YYYY-MM-DD.log, 90 days) and the voice log (voice-YYYY-MM-DDTHH.log, 48 hours)
+const files = readdirSync(dir).filter((f) => /^(audit|voice)-\d{4}-\d{2}-\d{2}(T\d{2})?\.log$/.test(f)).sort((a, b) => a.slice(6).localeCompare(b.slice(6))).filter((f) => { const d = f.slice(6, 16); return d >= from && d <= to; });
 let shown = 0, broken = 0;
 for (const f of files) {
   let key = null;
@@ -30,10 +31,10 @@ for (const f of files) {
     if (o.key) { key = privateDecrypt({ key: priv, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' }, Buffer.from(o.key, 'base64')); continue; }
     if (!key) { broken++; continue; }
     let r;
+    const open = (s) => { const d = createDecipheriv('aes-256-gcm', key, Buffer.from(s.iv, 'base64')); d.setAuthTag(Buffer.from(s.tag, 'base64')); return Buffer.concat([d.update(Buffer.from(s.data, 'base64')), d.final()]); };
     try {
-      const d = createDecipheriv('aes-256-gcm', key, Buffer.from(o.iv, 'base64'));
-      d.setAuthTag(Buffer.from(o.tag, 'base64'));
-      r = JSON.parse(Buffer.concat([d.update(Buffer.from(o.data, 'base64')), d.final()]).toString('utf8'));
+      r = JSON.parse(open(o).toString('utf8'));
+      if (o.a) r.audio = open(o.a).toString('base64'); // the voice, sealed apart as raw bytes
     } catch { broken++; continue; } // altered or damaged: it does not open
     if (has('--flagged') && !r.flag) continue;
     if (who && ![r.name, r.pid, r.gid].some((x) => String(x ?? '').toLocaleLowerCase('tr') === who)) continue;

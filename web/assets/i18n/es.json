@@ -2678,7 +2678,6 @@
  "Well done! Just one hour of the twenty-four. A little effort, but a very great gain in the hereafter. Wouldn’t you make that trade?": "¡Muy bien! Solo una hora de las veinticuatro. Un pequeño esfuerzo, pero una ganancia enorme en la otra vida. ¿No harías tú ese negocio?",
  "Yes, the one who writes! Not even one letter writes itself. So can this great book of the universe be without a Scribe? Think about it, child.": "¡Sí, el que escribe! Ni una sola letra se escribe sola. ¿Puede entonces este gran libro del universo existir sin Escriba? Piénsalo, hijo.",
  "Ads, selling, links, asking for money": "Anuncios, ventas, enlaces, pedir dinero",
- "Everyone in here hears each other. Hold the talk button to speak. Voices are recorded for safety.": "Aquí todos se oyen. Mantén pulsado el botón para hablar. Las voces se graban por seguridad.",
  "Harassment, bullying": "Acoso, intimidación",
  "Nobody here to report": "No hay nadie aquí para denunciar",
  "Something else": "Otra cosa",
@@ -2686,9 +2685,11 @@
  "Thanks — your report was sent and will be checked.": "Gracias — tu denuncia se ha enviado y se revisará.",
  "That player has left the square.": "Ese jugador ha salido de la plaza.",
  "The report could not be sent right now.": "La denuncia no se pudo enviar ahora.",
- "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written and voice conversations are kept encrypted for 90 days. If someone bothers you, report them with the 🚩 at the top. Be kind!": "Aquí hay jugadores reales. Lo que dices aparece como texto sobre tu cabeza («Bas, konuş» o T). El chat de voz es solo entre dos personas, después de que la otra acepte. Por tu seguridad, las conversaciones escritas y de voz se guardan cifradas durante 90 días. Si alguien te molesta, denúncialo con la 🚩 de arriba. ¡Sé amable!",
  "Too many reports — try again a little later.": "Demasiadas denuncias — inténtalo un poco más tarde.",
  "Who are you reporting?": "¿A quién denuncias?",
  "You already reported this player; it is being checked.": "Ya denunciaste a este jugador; se está revisando.",
- "You cannot join the square after a report.": "No puedes entrar en la plaza tras una denuncia."
+ "You cannot join the square after a report.": "No puedes entrar en la plaza tras una denuncia.",
+ "Everyone in here hears each other. Hold the talk button to speak.": "Aquí todos se oyen. Mantén pulsado el botón para hablar.",
+ "Everyone inside hears each other, and they hear you while you hold the talk button. For safety your voice is recorded while you talk and kept for 48 hours. Go in?": "Dentro todos se oyen, y te oyen a ti mientras mantienes pulsado el botón. Por seguridad, tu voz se graba mientras hablas y se guarda 48 horas. ¿Entrar?",
+ "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written conversations are kept encrypted for 90 days and voice conversations for 48 hours. If someone bothers you, report them with the 🚩 at the top. Be kind!": "Aquí hay jugadores reales. Lo que dices aparece como texto sobre tu cabeza («Bas, konuş» o T). El chat de voz es solo entre dos personas, después de que la otra acepte. Por tu seguridad, las conversaciones escritas se guardan cifradas 90 días y las de voz 48 horas. Si alguien te molesta, denúncialo con la 🚩 de arriba. ¡Sé amable!"
 }

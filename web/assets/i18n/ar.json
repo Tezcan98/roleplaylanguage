@@ -2679,7 +2679,6 @@
  "Well done! Just one hour of the twenty-four. A little effort, but a very great gain in the hereafter. Wouldn’t you make that trade?": "أحسنت! ساعة واحدة فقط من أربع وعشرين. جهد قليل، لكنه ربح عظيم في الآخرة. ألا تقوم بهذه التجارة؟",
  "Yes, the one who writes! Not even one letter writes itself. So can this great book of the universe be without a Scribe? Think about it, child.": "نعم، الذي يكتب! حتى حرف واحد لا يكتب نفسه. فهل يمكن أن يكون كتاب الكون العظيم هذا بلا كاتب؟ تفكّر في ذلك يا بني.",
  "Ads, selling, links, asking for money": "إعلانات، بيع، روابط، طلب مال",
- "Everyone in here hears each other. Hold the talk button to speak. Voices are recorded for safety.": "هنا يسمع الجميع بعضهم بعضًا. اضغط مطولًا على الزر لتتكلم. تُسجَّل الأصوات من أجل السلامة.",
  "Harassment, bullying": "تحرش، تنمر",
  "Nobody here to report": "لا يوجد أحد هنا للإبلاغ عنه",
  "Something else": "شيء آخر",
@@ -2687,9 +2686,11 @@
  "Thanks — your report was sent and will be checked.": "شكرًا — أُرسل بلاغك وستتم مراجعته.",
  "That player has left the square.": "غادر هذا اللاعب الساحة.",
  "The report could not be sent right now.": "تعذّر إرسال البلاغ الآن.",
- "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written and voice conversations are kept encrypted for 90 days. If someone bothers you, report them with the 🚩 at the top. Be kind!": "هنا لاعبون حقيقيون. ما تقوله يظهر نصًا فوق رأسك («Bas, konuş» أو T). الدردشة الصوتية بين شخصين فقط، بعد موافقة الطرف الآخر. من أجل سلامتك تُحفظ المحادثات المكتوبة والصوتية مشفّرة لمدة 90 يومًا. إن أزعجك أحد فأبلغ عنه بعلامة 🚩 في الأعلى. كن لطيفًا!",
  "Too many reports — try again a little later.": "بلاغات كثيرة — حاول بعد قليل.",
  "Who are you reporting?": "عمّن تبلّغ؟",
  "You already reported this player; it is being checked.": "لقد أبلغت عن هذا اللاعب للتو؛ البلاغ قيد المراجعة.",
- "You cannot join the square after a report.": "لا يمكنك دخول الساحة بسبب بلاغ."
+ "You cannot join the square after a report.": "لا يمكنك دخول الساحة بسبب بلاغ.",
+ "Everyone in here hears each other. Hold the talk button to speak.": "هنا يسمع الجميع بعضهم بعضًا. اضغط مطولًا على الزر لتتكلم.",
+ "Everyone inside hears each other, and they hear you while you hold the talk button. For safety your voice is recorded while you talk and kept for 48 hours. Go in?": "في الداخل يسمع الجميع بعضهم بعضًا، ويسمعونك عندما تضغط مطولًا على زر الكلام. من أجل السلامة يُسجَّل صوتك أثناء الكلام ويُحفظ 48 ساعة. هل تدخل؟",
+ "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written conversations are kept encrypted for 90 days and voice conversations for 48 hours. If someone bothers you, report them with the 🚩 at the top. Be kind!": "هنا لاعبون حقيقيون. ما تقوله يظهر نصًا فوق رأسك («Bas, konuş» أو T). الدردشة الصوتية بين شخصين فقط، بعد موافقة الطرف الآخر. من أجل سلامتك تُحفظ المحادثات المكتوبة مشفّرة 90 يومًا والمحادثات الصوتية 48 ساعة. إن أزعجك أحد فأبلغ عنه بعلامة 🚩 في الأعلى. كن لطيفًا!"
 }

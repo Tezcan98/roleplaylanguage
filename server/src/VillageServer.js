@@ -60,7 +60,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'zone-rtc', to, data }        WebRTC offer / answer (with its candidates) to someone in the same zone
  *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
  *   { type: 'voice', ctx, mime, data }    a piece (≤ ~10 s, base64) of my own voice while my mic is open in a call
- *                                         (ctx 'call') or a talking zone ('zone'): into the encrypted safety log and,
+ *                                         (ctx 'call') or a talking zone ('zone'): into the encrypted voice log (48 h) and,
  *                                         for ten minutes, into memory for reports (Reports.js); never relayed
  *   { type: 'report', to, reason? }       report a player in this room ("Şikayet et"; Reports.js)
  *   { type: 'jump' }                      my horse jumped (relayed: { type: 'jump', id })
@@ -110,11 +110,12 @@ export class VillageServer {
    *   (username "<expiry>:<id>", password HMAC-SHA1(secret, username)), valid for a day
    * @param {Map} [o.chessScores]  chess score board to start from; `onChessScore()` after every game (to save it)
    */
-  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null, names = null, reports = null } = {}) {
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null, voiceAudit = null, names = null, reports = null } = {}) {
     this.reports = reports; // player reports, what each said lately and the bans (Reports.js), or null
     this.names = names; // unique usernames (NameRegistry), or null: any name, numbered in a room
     this.moderator = moderator; // decides which public bubbles may be shown (word list, language, Jev / Laya)
     this.audit = audit; // the encrypted 90-day safety log (AuditLog.js), or null
+    this.voiceAudit = voiceAudit; // …and its 48-hour voice log
     this.log = log;
     this.chessScores = chessScores; // İsmail Dede's score board, shared by every square (name → games, wins…)
     this.onChessScore = onChessScore;
@@ -291,7 +292,7 @@ export class VillageServer {
         const recent = (last) => (last && Date.now() < last.until ? last.with : null); // the last piece arrives just after hanging up / walking out
         const peer = ctx === 'call' ? members.get(c.partner)?.name ?? recent(c.lastCall) : ctx === 'zone' ? c.zone ?? recent(c.lastZone) : null;
         if (!peer) return;
-        this.audit?.write({ kind: 'voice', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, ctx, with: peer, mime: msg.mime, audio: msg.data });
+        this.voiceAudit?.write({ kind: 'voice', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, ctx, with: peer, mime: msg.mime, audio: msg.data });
         this.reports?.spoke(c, { mime: msg.mime, data: msg.data, ctx });
         break;
       }

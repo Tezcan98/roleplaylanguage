@@ -25,6 +25,7 @@
  *   AUDIT_PUBLIC_KEY  the operator's public key (.pem, tools/audit-keygen.mjs): turns on the encrypted
  *                     safety log of square bubbles and character chat (AuditLog.js; read it with tools/audit-read.mjs)
  *   AUDIT_DIR, AUDIT_DAYS  where the day files go (default /var/lib/yilmaz-village/audit) and how long they stay (90)
+ *   AUDIT_VOICE_HOURS  how long the voice pieces (calls, talking zones) stay in that folder (default 48)
  *   MODERATION_TURKISH_ONLY=0  allow other languages · MODERATION_FAIL_CLOSED=1  hold back everything while the model is down
  *   CHESS_SCORES      file for İsmail Dede's chess score board, default /tmp/yilmaz-chess-scores.json
  *   GEMINI_API_KEY    enables free conversation with village characters (POST /api/npc-chat) and the women's voices
@@ -65,6 +66,7 @@ const host = env.HOST ?? '0.0.0.0';
 const origins = parseOrigins(env.ALLOWED_ORIGINS ?? DEFAULT_ORIGINS);
 // the safety log: square bubbles and character chat, encrypted for the operator, kept AUDIT_DAYS (90) days (AuditLog.js)
 const audit = AuditLog.fromEnv(env);
+const voiceAudit = AuditLog.voiceFromEnv(env); // voice in calls and talking zones: the same key, kept AUDIT_VOICE_HOURS (48) hours
 const clientIp = (req) => (env.TRUST_PROXY === '1' && String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim()) || req.socket.remoteAddress;
 const started = Date.now();
 const tts = new Tts({
@@ -142,7 +144,7 @@ const moderator = new Moderator({
 });
 const chessScores = new ChessScoreFile(env.CHESS_SCORES ?? '/tmp/yilmaz-chess-scores.json');
 const names = new NameRegistry(env.USERNAMES || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'usernames.json') : null)).load(); // next to the chess scores on the real server; without them (tests, a quick local run) only in memory
-const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit, names, reports });
+const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit, voiceAudit, names, reports });
 http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'}; moderation ${moderator.provider}; safety log ${audit ? `on (${audit.days} days)` : 'off'}; turn ${village.turn ? 'on' : 'off'})`));
 
 for (const sig of ['SIGINT', 'SIGTERM']) {

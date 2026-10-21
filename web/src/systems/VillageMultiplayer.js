@@ -43,6 +43,9 @@ export class VillageMultiplayer {
   #sentAt = 0; // when my state last went out (wall clock: slow phones have few frames)
   #retryDelay = 0;
   #rolling = new Set(); // balls we kicked last: report where they stop, for players who join later
+  #zoneOk = new Set();  // talking zones the player said yes to at the door (until leaving the square)
+  #atDoor = false;      // the "go in?" card is up
+  #outside = null;      // where the player last stood outside every zone (stopped there at the door)
 
   /**
    * @param {object} o
@@ -290,6 +293,7 @@ export class VillageMultiplayer {
 
   #reset({ keepChess = false } = {}) {
     if (!keepChess) this.chess?.goOffline();
+    this.#zoneOk.clear();
     this.#setZone(null, { tell: false });
     this.#endCall(null);
     this.remotes.clear();
@@ -448,11 +452,35 @@ export class VillageMultiplayer {
     if (zone) {
       this.group.enter(zone);
       this.ptt.setZone(this.zones[zone].name);
-      this.toasts.show(`${this.zones[zone].name}: toplu konuşma alanı 🎙️ Konuşmak için butona basılı tut. Sesler güvenlik için kaydedilir.`, 'Everyone in here hears each other. Hold the talk button to speak. Voices are recorded for safety.');
+      this.toasts.show(`${this.zones[zone].name}: toplu konuşma alanı 🎙️ Konuşmak için butona basılı tut.`, 'Everyone in here hears each other. Hold the talk button to speak.');
     } else {
       this.group.leave({ tell });
       this.ptt.setZone(null);
     }
+  }
+
+  /**
+   * Walking into a talking zone: the player stops at the door and is asked first — in there the
+   * others hear them, and their voice is recorded (kept 48 hours). Yes: in (not asked again until
+   * they leave the square); no: they stay outside.
+   */
+  async #door(zone) {
+    if (this.#atDoor) return;
+    if (!this.choice) { this.#zoneOk.add(zone); return; }
+    this.#atDoor = true;
+    const inside = { x: this.player.position.x, z: this.player.position.z, rot: this.player.group.rotation.y };
+    if (this.#outside) this.player.place(this.#outside);
+    const name = this.zones[zone].name;
+    const go = await this.choice.ask({
+      title: `${name}: toplu konuşma alanı`,
+      text: 'İçeridekiler birbirini duyar; konuş düğmesine basılı tuttuğunda seni de duyarlar. Güvenlik için konuşurken sesin kaydedilir ve 48 saat saklanır. Girmek istiyor musun?',
+      en: 'Everyone inside hears each other, and they hear you while you hold the talk button. For safety your voice is recorded while you talk and kept for 48 hours. Go in?',
+      yes: 'Gir', no: 'Girme',
+    });
+    this.#atDoor = false;
+    if (!go || !this.net.connected) return;
+    this.#zoneOk.add(zone);
+    this.player.place(inside);
   }
 
   /** How the zone's voices are doing (from GroupVoice). */
@@ -465,7 +493,10 @@ export class VillageMultiplayer {
   update(dt, t) {
     if (!this.net.connected) return;
     if (this.group) {
-      this.#setZone(this.#zoneAt(this.player.position));
+      const P = this.player.position, zone = this.#zoneAt(P);
+      if (!zone) this.#outside = { x: P.x, z: P.z, rot: this.player.group.rotation.y };
+      if (zone && zone !== this.group.zone && !this.#zoneOk.has(zone)) this.#door(zone); // not in yet: stop at the door and ask
+      else this.#setZone(zone);
       for (const id of this.group.ids()) {
         const c = this.remotes.get(id);
         const d = c ? Math.hypot(c.position.x - this.player.position.x, c.position.z - this.player.position.z) : 99;

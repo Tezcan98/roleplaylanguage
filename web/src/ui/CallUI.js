@@ -30,7 +30,7 @@ export class CallUI {
         el('p', { class: 'chap', text: 'Sesli sohbet isteği' }),
         el('h2', { class: 'ctitle', text: `${fromName} seninle konuşmak istiyor` }),
         el('p', { class: 'cen en-t', text: gloss('{name} wants to voice chat with you', { name: fromName }) }),
-        el('p', { class: 'note', text: 'Güvenliğin için sesli sohbetler kaydedilir.' }),
+        el('p', { class: 'note', text: 'Güvenliğin için sesli sohbetler kaydedilir ve 48 saat saklanır.' }),
         count, yes, no, block,
       ])]);
       let left = seconds;

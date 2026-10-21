@@ -13,7 +13,7 @@ Uygulama mikrofonu iki özellik için kullanabilir:
 
 Konuşma tanımada söylenenler kaydedilmez. Android'de konuşma tanıma için cihazın yerel konuşma tanıma servisi kullanılır. İsteğe bağlı bir uzak STT sunucusu yapılandırılırsa ses verisi tanıma amacıyla bu sunucuya geçici olarak gönderilebilir; bu sunucunun işletmecisi veriyi saklamayacak şekilde yapılandırılmalıdır.
 
-Sesli sohbet WebRTC ile oyuncular arasında kurulur. **Güvenlik için, oyuncunun mikrofonu sesli sohbette açıkken kendi sesi kısa parçalar hâlinde oyunun sunucusuna da gönderilir ve güvenlik kaydında saklanır** (bkz. 2c). Oyun içinde sesli sohbet isteğinde, toplu konuşma alanına girerken ve meydana ilk girişte bu bilgi verilir.
+Sesli sohbet WebRTC ile oyuncular arasında kurulur. **Güvenlik için, oyuncunun mikrofonu sesli sohbette açıkken kendi sesi kısa parçalar hâlinde oyunun sunucusuna da gönderilir ve güvenlik kaydında saklanır** (bkz. 2c). Sessiz anlar gönderilmez. Oyun içinde sesli sohbet isteğinde, toplu konuşma alanının kapısında (girmeden önce sorulur) ve meydana ilk girişte bu bilgi verilir.
 
 ## 2. Kullanıcı adı ve cihaz kimliği
 
@@ -33,7 +33,7 @@ Karakterlerin sabit repliklerinin sesi oyunun sunucusunda üretilir: erkek sesle
 
 ## 2c. Güvenlik kaydı (90 gün)
 
-Oyuncuları, özellikle çocukları korumak için **köy meydanındaki yazılı konuşmalar** (konuşma balonları), **sesli sohbetler** (birebir ve toplu konuşma alanları; her oyuncunun mikrofonu açıkken kendi sesi) ve **karakterlerle serbest sohbetteki mesajlar**, sunucuda **şifreli olarak 90 gün** saklanır; sonra otomatik olarak silinir. Kayıtta mesajın metni ya da ses parçası (karakter sohbetinde karakterin cevabı da), zamanı, oda, kiminle konuşulduğu, kullanıcı adı, cihaz kimliği, varsa Google Play Games oyuncu kimliği ve IP adresi bulunur.
+Oyuncuları, özellikle çocukları korumak için **köy meydanındaki yazılı konuşmalar** (konuşma balonları) ve **karakterlerle serbest sohbetteki mesajlar** sunucuda **şifreli olarak 90 gün**, **sesli sohbetler** (birebir ve toplu konuşma alanları; her oyuncunun mikrofonu açıkken kendi sesi) ise **şifreli olarak 48 saat** saklanır; sonra otomatik olarak silinir. Kayıtta mesajın metni ya da ses parçası (karakter sohbetinde karakterin cevabı da), zamanı, oda, kiminle konuşulduğu, kullanıcı adı, cihaz kimliği, varsa Google Play Games oyuncu kimliği ve IP adresi bulunur.
 
 - Kayıtlar, yalnızca yetkili güvenlik görevlisinde bulunan bir anahtarla açılabilecek şekilde şifrelenir; oyunun sunucusu kayıtları yazabilir ama okuyamaz.
 - Kayıtlar yalnızca zararlı veya tehlikeli konuşmaları (taciz, zorbalık, tehdit, uygunsuz içerik, kişisel bilgi isteme vb.) incelemek, gerekirse ilgili hesabı engellemek ve yasal bir talep olduğunda yetkili makamlarla paylaşmak için kullanılır.
@@ -67,7 +67,7 @@ Köy meydanında kullanıcı adları ve genel konuşma metinleri sunucudan diğe
 
 - Yerel oyun ilerlemesi ve ayarlar, uygulamanın cihazdaki localStorage verisi temizlendiğinde silinir.
 - Kullanıcı adı ve cihaz kimliği, çok oyunculu bağlantı açık olduğu sürece sunucu tarafında oturum verisi olarak tutulur; kalıcı hesap sistemi yoktur.
-- Güvenlik kaydı (meydan mesajları, sesli sohbetler ve karakter sohbeti mesajları) şifreli olarak 90 gün saklanır ve sonra otomatik silinir.
+- Güvenlik kaydı şifreli olarak saklanır ve sonra otomatik silinir: meydan ve karakter sohbeti mesajları 90 gün, sesli sohbetler 48 saat.
 - Şikayet kayıtları (döküm ve karar) ve engel listesi, incelemeyi ve engeli yürütmek için sunucuda tutulur.
 - Satranç skor tablosundaki kullanıcı adı ve oyun sayıları sunucuda kalır; silinmesini istediğiniz kullanıcı adı için geliştiriciye yazabilirsiniz.
 - Karakter sesleri (kişisel veri içermeyen ses dosyaları) sunucuda önbellek olarak saklanır.

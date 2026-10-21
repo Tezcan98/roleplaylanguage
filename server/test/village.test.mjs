@@ -410,7 +410,7 @@ test('reports: own voice kept only in a call, a report reaches Reports, the oper
   const srv = createServer();
   let v;
   const reports = new Reports({ log: () => {}, onBan: (b) => v.kick(b) });
-  v = new VillageServer({ server: srv, log: () => {}, reports, audit: { write: (r) => written.push(r) } });
+  v = new VillageServer({ server: srv, log: () => {}, reports, voiceAudit: { write: (r) => written.push(r) } });
   await new Promise((r) => srv.listen(0, '127.0.0.1', r));
   const saved = url;
   url = `ws://127.0.0.1:${srv.address().port}/ws/village`;

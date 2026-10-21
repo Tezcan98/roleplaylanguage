@@ -13,11 +13,11 @@ Sıradakiler yukarıdan aşağıya. Biten bir iş buradan silinir (ayrıntısı 
    - Günlük oyun süresi yarım saati geçince uyarı çıksın.
    - Bir saati geçince oyun 6 saat dinlenmeye girsin; bu sürede oyuncu karakteri uyuyor görünsün (yatakta, "Zzz").
    - Kalan dinlenme süresi ekranda görünsün.
-   - Açık kararlar:
-     - Türkiye nasıl anlaşılacak: cihaz dili/bölgesi, saat dilimi, IP ya da Play Store ülkesi.
-     - Süre nerede tutulacak: sadece cihazda (silinip yeniden kurulunca sıfırlanır) ya da sunucuda cihaz kimliğiyle.
-     - Gün ne zaman sıfırlanacak: gece yarısı ya da 6 saatlik dinlenme bitince.
-     - Meydan da kapansın mı: dinlenmedeki oyuncu çok oyunculu alana girebilecek mi.
+   - Kararlar:
+     - Türkiye: **Play Store ülkesinden** (Play Billing `getBillingConfig().countryCode`; web sürümünde sınır yok).
+     - Süre **telefonda** tutulur; uygulamayı silip yeniden kuran çok meraklıysa girsin, önemli değil.
+     - Dinlenmede **hiçbir şey oynanmaz** (hikâye, meydan, okul hepsi kapalı); bekleme ekranına **banner reklam**.
+     - Henüz açık: sayaç ne zaman sıfırlanır (gece yarısı mı, dinlenme bitince mi).
 
 ## Bekleyen (karar / dış iş)
 

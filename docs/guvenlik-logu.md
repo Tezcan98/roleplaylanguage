@@ -1,7 +1,9 @@
 # Güvenlik kaydı (90 gün, şifreli) — operatör rehberi
 
-Meydandaki yazılı konuşmalar, **sesli sohbetler** (birebir ve kahvehane / cami avlusu; her oyuncunun mikrofonu açıkken
-kendi sesi, ~10 saniyelik parçalar) ve karakterlerle serbest sohbet, sunucuda **şifreli** olarak 90 gün saklanır
+Meydandaki yazılı konuşmalar ve karakterlerle serbest sohbet sunucuda **şifreli** olarak 90 gün (`audit-*.log`),
+**sesli sohbetler** (birebir ve kahvehane / cami avlusu; her oyuncunun mikrofonu açıkken kendi sesi, ~10 saniyelik
+Opus parçaları, 8 kbit/s, sessiz parçalar hiç gönderilmez) **48 saat** (`voice-*.log`, saatlik dosyalar,
+`AUDIT_VOICE_HOURS`) saklanır
 (`server/src/AuditLog.js`). Sunucu yazar ama okuyamaz: her günün anahtarı **operatörün açık anahtarıyla**
 kilitlenir; açmak için **gizli anahtar** gerekir ve o sunucuda değildir.
 
