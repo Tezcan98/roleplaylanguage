@@ -15,6 +15,7 @@ import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { startServer, startVillageServer, sleep } from '../playtest/lib.mjs';
 import { SCENES as LONG_SCENES, CUT as LONG_CUT, SHORT_SCENES, SHORT_CUT } from './scenes.mjs'; // SCENES: recording order; CUT: the order in the video
+import { KIDS_SCENES, KIDS_CUT, KIDS_VO } from './kids-scenes.mjs';
 
 const out = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'promo-out';
 const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
@@ -22,9 +23,10 @@ const JOIN = process.argv.includes('--join'); // --join: only join the scene cli
 const CLEAN = process.argv.includes('--clean'); // --clean: no interface, no captions (a background loop for the website)
 const opt = (k) => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const LANG = opt('lang') ?? null; // en | ar: captions, meanings and voice-over in that language
-const SHORT = process.argv.includes('--short'); // --short: the vertical YouTube Short (9:16, 1080×1920)
+const KIDS = process.argv.includes('--kids'); // --kids: the 15-second Shorts for parents (kids-scenes.mjs), --lang=tr|en|ar
+const SHORT = process.argv.includes('--short') || KIDS; // --short: the vertical YouTube Short (9:16, 1080×1920)
 const FPS = 30, W = SHORT ? 540 : 1280, H = SHORT ? 960 : 720, SCALE = SHORT ? 2 : 1.5; // 1920×1080 frames (a Short: 1080×1920), UI the size of a tablet's / a phone's
-const SCENES = SHORT ? SHORT_SCENES : LONG_SCENES, CUT = SHORT ? SHORT_CUT : LONG_CUT;
+const SCENES = KIDS ? KIDS_SCENES : SHORT ? SHORT_SCENES : LONG_SCENES, CUT = KIDS ? KIDS_CUT : SHORT ? SHORT_CUT : LONG_CUT;
 mkdirSync(out, { recursive: true });
 
 const server = await startServer();
@@ -106,6 +108,8 @@ const PROMO_CSS = `
   .promo-card p{margin:0;font-size:30px}.promo-card small{font-size:22px;opacity:.85}
   .promo-card .badge{margin-top:10px;background:#FFC845;color:#1B2440;border-radius:999px;padding:10px 26px;font-size:26px;font-weight:600}
   .promo-hide #joy,.promo-hide .help-btn,.promo-hide #quest,.promo-hide #toasts,.promo-hide .ptt-wrap,.promo-hide #shot,.promo-hide #act,.promo-hide #act-more{visibility:hidden!important}
+  body.short .promo-cap.kids{top:7vh;padding:18px 22px 16px;background:rgba(20,28,52,.82);border:2px solid rgba(255,200,69,.55)}body.short .promo-cap.kids b{font-size:44px;line-height:1.14}
+  .promo-badges .free{background:#FFC845;color:#1B2440;border-color:#FFC845}
   @keyframes promoIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1}}
   .promo-card{animation-name:promoCard}@keyframes promoCard{from{opacity:0}to{opacity:1}}`;
 
@@ -135,7 +139,7 @@ const CARDS = {
   ar: ['تعلّم التركية بالعيش فيها', 'في قرية أناضولية', 'تعلّم التركية'],
 };
 const localCard = (html) => {
-  if (!LANG) return html;
+  if (!LANG || !CARDS[LANG]) return html; // (the kids' Shorts write their card in the video's language already)
   const [a, b, c] = CARDS[LANG];
   return html.replace(/<p>Türkçeyi köyde yaşayarak öğren<\/p><small>[^<]*<\/small>/, `<p dir="auto">${a}</p><small dir="auto">${b} · Türkçeyi köyde yaşayarak öğren</small>`)
     .replace(/<p>Türkçe Öğren<\/p><small>[^<]*<\/small>/, `<p dir="auto">${c}</p><small>Türkçe Öğren</small>`);
@@ -143,7 +147,12 @@ const localCard = (html) => {
 
 /** Helpers the scenes use. */
 const kit = {
-  open, sleep: vsleep,
+  open, sleep: vsleep, lang: LANG ?? 'tr',
+  /** One big line in the video's language (the kids' Shorts): `texts` { tr, en, ar }. */
+  big: (page, texts) => page.evaluate((t) => {
+    document.querySelector('.promo-cap')?.remove();
+    const d = document.createElement('div'); d.className = 'promo-cap kids'; d.innerHTML = '<b dir="auto"></b>'; d.querySelector('b').textContent = t; document.body.append(d);
+  }, texts[LANG ?? 'tr'] ?? texts.tr),
   caption: (page, tr0, en0, { bottom = false, side = false } = {}) => CLEAN ? null : page.evaluate(([tr, en, bottom, side]) => {
     document.querySelector('.promo-cap')?.remove();
     if (!tr) return;
@@ -295,6 +304,36 @@ function voiceOver(video, clips, fade) {
   console.log(`→ ${final} (voice-over: ${LANG})`);
 }
 
+/**
+ * The kids' Shorts' sound: the game's garden music under it, and one voice line at the start of each
+ * shot — read by Gemini through our server's /api/tts (a draft), or the ElevenLabs files in --vo=<dir>
+ * (1.mp3 … 5.mp3, or .wav). Writes <name>-muzik.mp4 (music only, for a voice added elsewhere),
+ * <name>-ses.mp4 (music + voice) and <name>-seslendirme.txt (the lines and when each starts).
+ */
+async function kidsAudio(video, clips, fade) {
+  const lang = LANG ?? 'tr', lines = KIDS_VO[lang], dir = join(out, `vo-${lang}`); mkdirSync(dir, { recursive: true });
+  const total = clips.reduce((n, c) => n + c.seconds, 0) - fade * (clips.length - 1);
+  const starts = []; let t = 0; clips.forEach((c) => { starts.push(t); t += c.seconds - fade; });
+  const music = new URL('../../assets/audio/bahce.mp3', import.meta.url).pathname;
+  const bed = `[1:a]atrim=0:${total.toFixed(2)},afade=t=in:d=0.4,afade=t=out:st=${(total - 1.2).toFixed(2)}:d=1.2,volume=0.28[m]`;
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, '-stream_loop', '-1', '-i', music, '-filter_complex', bed, '-map', '0:v', '-map', '[m]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-t', total.toFixed(2), '-movflags', '+faststart', video.replace(/\.mp4$/, '-muzik.mp4')]);
+  const voDir = opt('vo'), files = [];
+  for (let i = 0; i < lines.length; i++) {
+    const given = voDir && ['mp3', 'wav', 'm4a'].map((x) => join(voDir, `${i + 1}.${x}`)).find((f) => { try { return readFileSync(f).length > 0; } catch { return false; } });
+    if (given) { files.push(given); continue; }
+    const wav = join(dir, `${i + 1}.wav`), res = await fetch(`https://sehem2.com.tr/api/tts?v=kadin&t=${encodeURIComponent(lines[i])}`, { headers: { Origin: 'https://sehem2.com.tr' } });
+    if (!res.ok) throw new Error(`tts ${res.status} for "${lines[i]}"`);
+    writeFileSync(wav, Buffer.from(await res.arrayBuffer())); files.push(wav);
+  }
+  const len = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
+  const parts = files.map((f, i) => { const room = (i < files.length - 1 ? starts[i + 1] : total) - starts[i] - 0.35; return { f, at: starts[i] + 0.2, tempo: Math.min(1.3, Math.max(1, len(f) / room)) }; });
+  const vo = parts.map((p, i) => `[${i + 2}:a]atempo=${p.tempo.toFixed(3)},adelay=${Math.round(p.at * 1000)}|${Math.round(p.at * 1000)},volume=1.5[v${i}]`).join(';');
+  const mix = `${bed.replace('volume=0.28', 'volume=0.16')};${vo};[m]${parts.map((_, i) => `[v${i}]`).join('')}amix=inputs=${parts.length + 1}:normalize=0,alimiter=limit=0.95[a]`;
+  execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, '-stream_loop', '-1', '-i', music, ...parts.flatMap((p) => ['-i', p.f]), '-filter_complex', mix, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-t', total.toFixed(2), '-movflags', '+faststart', video.replace(/\.mp4$/, voDir ? '-elevenlabs.mp4' : '-ses.mp4')]);
+  writeFileSync(video.replace(/\.mp4$/, '-seslendirme.txt'), `${lines.map((l, i) => `${i + 1}. ${starts[i].toFixed(1)} sn – ${(i < lines.length - 1 ? starts[i + 1] : total).toFixed(1)} sn: ${l}`).join('\n')}\n\nElevenLabs: her satırı ayrı dosya yap (1.mp3 … ${lines.length}.mp3), sonra: node tools/promo/record.mjs <klasör> --kids --lang=${lang} --join --vo=<mp3 klasörü>\n`);
+  console.log(`→ ${video.replace(/\.mp4$/, '-muzik.mp4')} · ${video.replace(/\.mp4$/, voDir ? '-elevenlabs.mp4' : '-ses.mp4')}`);
+}
+
 const clips = [];
 let shots = 0;
 mkdirSync(join(out, 'screens'), { recursive: true });
@@ -319,10 +358,10 @@ try {
       chain += `${last}[${i + 1}:v]xfade=transition=fade:duration=${F}:offset=${offset.toFixed(2)}${label};`;
       last = label;
     });
-    const final = join(out, SHORT ? 'anadolu-ailesi-short.mp4' : 'anadolu-ailesi-promo.mp4');
+    const final = join(out, KIDS ? `turk-ailem-15sn-${LANG ?? 'tr'}.mp4` : SHORT ? 'anadolu-ailesi-short.mp4' : 'anadolu-ailesi-promo.mp4');
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...inputs, '-filter_complex', chain.replace(/;$/, ''), '-map', '[v]', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', final]);
     console.log(`→ ${final}`);
-    if (LANG) voiceOver(final, clips, F);
+    if (KIDS) await kidsAudio(final, clips, F); else if (LANG) voiceOver(final, clips, F);
   }
   if (!CLEAN && !JOIN && !SHORT) await featureGraphic();
 } finally {

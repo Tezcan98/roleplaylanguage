@@ -1,5 +1,5 @@
 /**
- * "Paylaş, kazan": the game shared with friends — its Google Play page and, for iPhones, turkishfamily.com.tr/ios. In the app: Android's share
+ * "Paylaş, kazan": the game shared with friends — its Google Play page and, for iPhones, anadoluailesi.com.tr/ios. In the app: Android's share
  * sheet (@capacitor/share, apps from 1.0.29 on; it answers whether something was shared). In a
  * browser: the browser's own sheet where there is one. Otherwise (an older app, a desktop browser):
  * a WhatsApp message — counted as shared when the game goes to the background for it.
@@ -7,8 +7,8 @@
  */
 const TEXT = 'Türkçeyi bir Türk ailesiyle köyde yaşayarak öğren: Türk Ailem 🇹🇷';
 const LINK = 'https://play.google.com/store/apps/details?id=com.anadolu';
-/** iPhone: no App Store app yet — the page that opens the game and shows how to put it on the home screen (the new domain). */
-const IOS = 'https://turkishfamily.com.tr/ios';
+/** iPhone: no App Store app yet — our site's page that opens the game and shows how to put it on the home screen (site/ios/). */
+const IOS = 'https://anadoluailesi.com.tr/ios';
 /** The whole message, both links in it (some apps put a separate `url` before the text, some drop it). */
 const MESSAGE = `${TEXT}\n\n📱 Android: ${LINK}\n🍎 iPhone: ${IOS}`;
 

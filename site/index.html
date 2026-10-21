@@ -454,6 +454,8 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('[data-ios-install]')) document.getElementById('ios-install').showModal();
   else if (e.target.closest('#ios-install .close') || e.target.id === 'ios-install') document.getElementById('ios-install').close();
 });
+// /ios (the link in the game's share message: site/ios/ comes here with ?ios): the guide open at once
+if (new URLSearchParams(location.search).has('ios')) document.getElementById('ios-install').showModal();
 
 function phrase(animate = true) {
   const p = PHRASES[idx], meaning = p.m[lang === 'tr' ? 'en' : lang];
