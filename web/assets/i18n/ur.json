@@ -2690,12 +2690,12 @@
  "You already reported this player; it is being checked.": "آپ نے ابھی اس کھلاڑی کی شکایت کی ہے؛ جائزہ جاری ہے۔",
  "You cannot join the square after a report.": "ایک شکایت کی وجہ سے آپ چوک میں داخل نہیں ہو سکتے۔",
  "Everyone in here hears each other. Hold the talk button to speak.": "یہاں سب ایک دوسرے کو سنتے ہیں۔ بولنے کے لیے بٹن دبا کر رکھیں۔",
- "Everyone inside hears each other, and they hear you while you hold the talk button. For safety your voice is recorded while you talk and kept for 48 hours. Go in?": "اندر سب ایک دوسرے کو سنتے ہیں، اور جب آپ بولنے کا بٹن دبا کر رکھیں تو وہ آپ کو سنتے ہیں۔ حفاظت کے لیے بولتے وقت آپ کی آواز ریکارڈ ہوتی ہے اور 48 گھنٹے محفوظ رہتی ہے۔ اندر جائیں؟",
- "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written conversations are kept encrypted for 90 days and voice conversations for 48 hours. If someone bothers you, report them with the 🚩 at the top. Be kind!": "یہاں اصلی کھلاڑی ہیں۔ آپ جو کہتے ہیں وہ آپ کے سر کے اوپر لکھا نظر آتا ہے («Bas, konuş» یا T)۔ صوتی گفتگو صرف دو لوگوں کے درمیان ہوتی ہے، دوسرے کی رضامندی کے بعد۔ آپ کی حفاظت کے لیے تحریری گفتگو 90 دن اور صوتی گفتگو 48 گھنٹے خفیہ طور پر محفوظ رہتی ہے۔ اگر کوئی آپ کو تنگ کرے تو اوپر 🚩 سے شکایت کریں۔ مہربان رہیں!",
  "Before you go in": "اندر جانے سے پہلے",
  "If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.": "اگر کوئی آپ کی شکایت کرے تو آپ کی پچھلے 10 منٹ کی باتیں مصنوعی ذہانت (Google Gemini) سے لکھی اور جانچی جاتی ہیں؛ پھر ایک نگران دیکھتا ہے اور آپ کو چوک سے روک سکتا ہے۔",
  "These records are used only to keep players safe, and given to the authorities if the law asks for them.": "یہ ریکارڈ صرف کھلاڑیوں کی حفاظت کے لیے استعمال ہوتے ہیں، اور قانون مانگے تو حکام کو دیے جاتے ہیں۔",
  "What you write in the square is kept encrypted for 90 days.": "چوک میں آپ جو لکھتے ہیں وہ 90 دن تک خفیہ طور پر محفوظ رہتا ہے۔",
  "You go on offline in the square": "آپ چوک میں آف لائن جاری رکھتے ہیں",
- "Your voice in voice chats is kept encrypted for 48 hours.": "صوتی گفتگو میں آپ کی آواز 48 گھنٹے تک خفیہ طور پر محفوظ رہتی ہے۔"
+ "Your voice in voice chats is kept encrypted for 48 hours.": "صوتی گفتگو میں آپ کی آواز 48 گھنٹے تک خفیہ طور پر محفوظ رہتی ہے۔",
+ "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "یہاں اصلی کھلاڑی ہیں۔ آپ جو کہتے ہیں وہ آپ کے سر کے اوپر لکھا نظر آتا ہے («Bas, konuş» یا T)۔ صوتی گفتگو صرف دو لوگوں کے درمیان ہوتی ہے، دوسرے کی رضامندی کے بعد۔ اگر کوئی آپ کو تنگ کرے تو اوپر 🚩 سے شکایت کریں۔ مہربان رہیں!",
+ "This is a talking area: everyone inside hears you.": "یہ اجتماعی گفتگو کی جگہ ہے: اندر سب آپ کو سنتے ہیں۔"
 }

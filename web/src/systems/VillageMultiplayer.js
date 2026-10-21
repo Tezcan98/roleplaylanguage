@@ -481,9 +481,9 @@ export class VillageMultiplayer {
   }
 
   /**
-   * Walking into a talking zone: the player stops at the door and is asked first — in there the
-   * others hear them, and their voice is recorded (kept 48 hours). Yes: in (not asked again until
-   * they leave the square); no: they stay outside.
+   * Walking into a talking zone: the player stops at the door — "sure?" (the recording itself was
+   * agreed to once, before going online: ConsentDialog). Yes: in (not asked again until they leave
+   * the square); no: they stay outside.
    */
   async #door(zone) {
     if (this.#atDoor) return;
@@ -493,9 +493,9 @@ export class VillageMultiplayer {
     if (this.#outside) this.player.place(this.#outside);
     const name = this.zones[zone].name;
     const go = await this.choice.ask({
-      title: `${name}: toplu konuşma alanı`,
-      text: 'İçeridekiler birbirini duyar; konuş düğmesine basılı tuttuğunda seni de duyarlar. Güvenlik için konuşurken sesin kaydedilir ve 48 saat saklanır. Girmek istiyor musun?',
-      en: 'Everyone inside hears each other, and they hear you while you hold the talk button. For safety your voice is recorded while you talk and kept for 48 hours. Go in?',
+      title: `${name}: emin misin?`,
+      text: 'Burası toplu konuşma alanı: içeridekiler seni duyar.',
+      en: 'This is a talking area: everyone inside hears you.',
       yes: 'Gir', no: 'Girme',
     });
     this.#atDoor = false;

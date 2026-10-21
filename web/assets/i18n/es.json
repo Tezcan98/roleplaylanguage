@@ -2690,12 +2690,12 @@
  "You already reported this player; it is being checked.": "Ya denunciaste a este jugador; se está revisando.",
  "You cannot join the square after a report.": "No puedes entrar en la plaza tras una denuncia.",
  "Everyone in here hears each other. Hold the talk button to speak.": "Aquí todos se oyen. Mantén pulsado el botón para hablar.",
- "Everyone inside hears each other, and they hear you while you hold the talk button. For safety your voice is recorded while you talk and kept for 48 hours. Go in?": "Dentro todos se oyen, y te oyen a ti mientras mantienes pulsado el botón. Por seguridad, tu voz se graba mientras hablas y se guarda 48 horas. ¿Entrar?",
- "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written conversations are kept encrypted for 90 days and voice conversations for 48 hours. If someone bothers you, report them with the 🚩 at the top. Be kind!": "Aquí hay jugadores reales. Lo que dices aparece como texto sobre tu cabeza («Bas, konuş» o T). El chat de voz es solo entre dos personas, después de que la otra acepte. Por tu seguridad, las conversaciones escritas se guardan cifradas 90 días y las de voz 48 horas. Si alguien te molesta, denúncialo con la 🚩 de arriba. ¡Sé amable!",
  "Before you go in": "Antes de entrar",
  "If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.": "Si alguien te denuncia, lo que dijiste en los últimos 10 minutos se transcribe y lo revisa una IA (Google Gemini); un moderador lo mira y puede expulsarte de la plaza.",
  "These records are used only to keep players safe, and given to the authorities if the law asks for them.": "Estos registros solo se usan para proteger a los jugadores, y se entregan a las autoridades si la ley lo pide.",
  "What you write in the square is kept encrypted for 90 days.": "Lo que escribes en la plaza se guarda cifrado durante 90 días.",
  "You go on offline in the square": "Sigues sin conexión en la plaza",
- "Your voice in voice chats is kept encrypted for 48 hours.": "Tu voz en los chats de voz se guarda cifrada durante 48 horas."
+ "Your voice in voice chats is kept encrypted for 48 hours.": "Tu voz en los chats de voz se guarda cifrada durante 48 horas.",
+ "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "Aquí hay jugadores reales. Lo que dices aparece como texto sobre tu cabeza («Bas, konuş» o T). El chat de voz es solo entre dos personas, después de que la otra acepte. Si alguien te molesta, denúncialo con la 🚩 de arriba. ¡Sé amable!",
+ "This is a talking area: everyone inside hears you.": "Es una zona de conversación: todos los de dentro te oyen."
 }

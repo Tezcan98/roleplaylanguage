@@ -13,7 +13,7 @@ Uygulama mikrofonu iki özellik için kullanabilir:
 
 Konuşma tanımada söylenenler kaydedilmez. Android'de konuşma tanıma için cihazın yerel konuşma tanıma servisi kullanılır. İsteğe bağlı bir uzak STT sunucusu yapılandırılırsa ses verisi tanıma amacıyla bu sunucuya geçici olarak gönderilebilir; bu sunucunun işletmecisi veriyi saklamayacak şekilde yapılandırılmalıdır.
 
-Sesli sohbet WebRTC ile oyuncular arasında kurulur. **Güvenlik için, oyuncunun mikrofonu sesli sohbette açıkken kendi sesi kısa parçalar hâlinde oyunun sunucusuna da gönderilir ve güvenlik kaydında saklanır** (bkz. 2c). Sessiz anlar gönderilmez. Oyun içinde sesli sohbet isteğinde, toplu konuşma alanının kapısında (girmeden önce sorulur) ve meydana ilk girişte bu bilgi verilir.
+Sesli sohbet WebRTC ile oyuncular arasında kurulur. **Güvenlik için, oyuncunun mikrofonu sesli sohbette açıkken kendi sesi kısa parçalar hâlinde oyunun sunucusuna da gönderilir ve güvenlik kaydında saklanır** (bkz. 2c). Sessiz anlar gönderilmez. Bu bilgi meydana ilk girişteki onay kartında verilir ve onay alınır (bkz. 2c).
 
 ## 2. Kullanıcı adı ve cihaz kimliği
 

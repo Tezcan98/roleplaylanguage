@@ -155,7 +155,7 @@ try {
   const K = await A.evaluate(() => window.__game.village.zones.kahve);
   await at(A, K.x + 4, K.z + 3); await at(B, K.x + 5, K.z + 3);
   const asked = await waitFor(() => A.$('.overlay.open button:text-is("Gir")'), 4000);
-  check('…but first stopped at the door and asked (voice recorded, 48 hours)', !!asked && (await A.evaluate(() => window.__game.village.group.zone)) === null && (await A.textContent('.overlay.open')).includes('48 saat'));
+  check('…but first stopped at the door: "emin misin?"', !!asked && (await A.evaluate(() => window.__game.village.group.zone)) === null && (await A.textContent('.overlay.open')).includes('emin misin'));
   await door(A); await door(B);
   const inZone = await waitFor(async () => (await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.group.zone)))).every((z) => z === 'kahve'), 8000);
   check('kahvehane: walking in joins its talking zone, and the screen says so', !!inZone && await A.evaluate(() => !document.querySelector('.pill.zone-note').hidden && document.querySelector('.ptt span').textContent.includes('Basılı tut')),

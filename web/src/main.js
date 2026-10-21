@@ -434,8 +434,8 @@ const village = new VillageMultiplayer({
   // first time in the square: how talking works here (Arabic, with Turkish)
   onFirstVisit: () => cards.show({
     num: 'Köy meydanı', title: 'Burada gerçek oyuncular var',
-    text: 'Söylediğin cümle başının üstünde yazı olarak görünür. Sesli sohbet sadece iki kişi arasında ve karşı taraf kabul ederse açılır. Güvenliğin için yazılı konuşmalar 90 gün, sesli konuşmalar 48 saat şifreli olarak saklanır. Seni rahatsız eden olursa üstteki 🚩 ile şikayet et.',
-    en: 'There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. For your safety, written conversations are kept encrypted for 90 days and voice conversations for 48 hours. If someone bothers you, report them with the 🚩 at the top. Be kind!',
+    text: 'Söylediğin cümle başının üstünde yazı olarak görünür. Sesli sohbet sadece iki kişi arasında ve karşı taraf kabul ederse açılır. Seni rahatsız eden olursa üstteki 🚩 ile şikayet et.',
+    en: 'There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!',
     button: 'Tamam',
   }),
   recognizer: chatRecognizer,
