@@ -2,7 +2,7 @@
  * Fatma Nine (grandma) sits on the sedir at home. She doesn't announce lessons — she just
  * talks to you like a grandmother: did you pray, which surahs do you know, how was school,
  * stories from the old days, a cookie she baked, now and then a short word on the prayer from an
- * ayah, a hadith or the Risale-i Nur. Every visit is a different little chat
+ * ayah, a hadith or a saying from the Risale-i Nur (quoted as written, never simplified). Every visit is a different little chat
  * (some end with a short question); after all of them she starts again from a different
  * one each game hour.
  */
@@ -121,7 +121,7 @@ const CHATS = [
     end: { say: 'Her gün biraz oku kuzum. Damlaya damlaya göl olur.', en: 'Read a little every day, my dear. Drop by drop a lake is formed.',
       words: [['damla', 'drop'], ['göl', 'lake']], options: [ok('İnşallah nine.', 'God willing, grandma.')] },
   } },
-  // short nasihat on the prayer: one ayah, hadith or Risale-i Nur passage each, told the way a grandmother would
+  // short nasihat on the prayer: an ayah or a hadith, or a Risale-i Nur saying word for word, told the way a grandmother would
   { id: 'nehir', nodes: {
     start: { say: 'Kuzum, sana Peygamberimizin güzel bir sözünü anlatayım mı?', en: 'My dear, shall I tell you a beautiful saying of our Prophet?',
       words: [['Peygamber', 'Prophet'], ['söz', 'word, saying']],
@@ -134,18 +134,18 @@ const CHATS = [
       options: [ok('Ne güzel bir benzetme!', 'What a beautiful comparison!')] },
   } },
   { id: 'yirmidort', nodes: {
-    start: { say: 'Bediüzzaman Hazretleri Risale-i Nur’da güzel bir hesap yapar. Allah bize her gün yirmi dört saat veriyor. Namaz için ne kadarını istiyor, biliyor musun?', en: 'Bediüzzaman does a beautiful sum in the Risale-i Nur. Allah gives us twenty-four hours every day. How much of it does He ask for the prayer, do you know? (The Fourth Word)',
+    start: { say: 'Gel bir hesap yapalım kuzum. Allah bize her gün yirmi dört saat veriyor. Namaz için ne kadarını istiyor, biliyor musun?', en: 'Come, let’s do a sum, my dear. Allah gives us twenty-four hours every day. How much of it does He ask for the prayer, do you know?',
       words: [['saat', 'hour'], ['hesap', 'calculation, sum']], hint: 'bir saat',
       options: [ok('On saat.', 'Ten hours.', { wrong: true }), ok('Bir saat kadar.', 'About one hour.', { next: 'end' }), ok('Bütün günü.', 'The whole day.', { wrong: true })] },
-    end: { say: 'Aferin! Yirmi dört saatin sadece bir saati. Az bir emek, ama ahirette çok büyük bir kazanç. Sen olsan bu ticareti yapmaz mısın?', en: 'Well done! Just one hour of the twenty-four. A little effort, but a very great gain in the hereafter. Wouldn’t you make that trade?',
+    end: { say: 'Aferin! Yirmi dört saatin sadece bir saati. Az bir emek, ama ahirette çok büyük bir kazanç. Bediüzzaman Hazretleri bu hesabı Dördüncü Söz’de anlatır; büyüyünce mutlaka oku.', en: 'Well done! Just one hour of the twenty-four. A little effort, but a very great gain in the hereafter. Bediüzzaman tells of this sum in the Fourth Word; read it when you are older.',
       words: [['emek', 'effort'], ['kazanç', 'gain, profit'], ['ahiret', 'the hereafter']],
-      options: [ok('Yaparım nine!', 'I would, grandma!')] },
+      options: [ok('Okurum nine!', 'I will read it, grandma!')] },
   } },
   { id: 'gida', nodes: {
     start: { say: 'Bazen namaz kılmak sana zor geliyor mu kuzum? Doğru söyle.', en: 'Does praying sometimes feel hard to you, my dear? Tell the truth.',
       words: [['zor gelmek', 'to feel hard (to someone)']],
       options: [ok('Bazen geliyor nine.', 'Sometimes it does, grandma.', { next: 'ekmek' }), ok('Hayır, seviyorum.', 'No, I love it.', { next: 'ekmek' })] },
-    ekmek: { say: 'Risale-i Nur’da der ki: Her gün ekmek yeriz, su içeriz, hava alırız. Hiç “usandım” der miyiz?', en: 'The Risale-i Nur says: every day we eat bread, drink water and breathe air. Do we ever say “I’m tired of it”? (The Twenty-First Word)',
+    ekmek: { say: 'Bak kuzum: her gün ekmek yeriz, su içeriz, hava alırız. Hiç “usandım” der miyiz?', en: 'Look, my dear: every day we eat bread, drink water and breathe air. Do we ever say “I’m tired of it”?',
       words: [['ekmek', 'bread'], ['usanmak', 'to grow weary of']],
       options: [ok('Demeyiz nine.', "We don't, grandma.", { next: 'end' })] },
     end: { say: 'İşte namaz da kalbin ekmeği, ruhun suyu ve havası gibidir. Beden yemeksiz olmadığı gibi, ruh da namazsız olmaz.', en: 'The prayer, too, is like bread for the heart, water and air for the soul. As the body cannot do without food, the soul cannot do without prayer.',
@@ -162,6 +162,14 @@ const CHATS = [
     end: { say: 'Kur’an’da da şöyle buyrulur: “Kalpler ancak Allah’ı anmakla huzur bulur.” Sen de üzülünce seccadeye koş, olur mu?', en: 'And the Quran says: “Hearts find peace only in the remembrance of Allah.” (Ar-Ra‘d 13:28) When you are sad, run to your prayer rug too, all right?',
       words: [['huzur', 'peace (of mind)'], ['anmak', 'to remember, to mention']],
       options: [ok('Olur nine, söz.', 'All right grandma, I promise.')] },
+  } },
+  { id: 'iman', nodes: {
+    start: { say: 'Bediüzzaman Hazretleri ne güzel söyler: “İman hem nurdur, hem kuvvettir.” Sence nur ne demek?', en: 'Bediüzzaman says it so beautifully: “Faith is both light and strength.” (The Twenty-Third Word) What do you think “nur” means?',
+      words: [['iman', 'faith'], ['nur', 'light (divine)'], ['kuvvet', 'strength']], optionsAreMeanings: true,
+      options: [ok('light', '', { next: 'end' }), ok('water', '', { wrong: true }), ok('bread', '', { wrong: true })] },
+    end: { say: 'Doğru, ışık! İmanı olan karanlıkta kalmaz, korkmaz. Namaz da o nuru her gün tazeler kuzum.', en: 'Right, light! One who has faith is not left in the dark and is not afraid. And the prayer renews that light every day, my dear.',
+      words: [['ışık', 'light'], ['karanlık', 'darkness'], ['tazelemek', 'to renew']],
+      options: [ok('Ne güzel nine.', 'How lovely, grandma.')] },
   } },
   { id: 'sevilen', nodes: {
     start: { say: 'Bir gün Peygamberimize sormuşlar: “Allah’ın en çok sevdiği amel hangisidir?” Sence ne demiş?', en: 'One day they asked our Prophet: “Which deed does Allah love most?” What do you think he said?',

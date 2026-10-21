@@ -5,7 +5,7 @@ import { man, M2 } from '../characters.js';
  * and what he says depends on the time of day — morning, noon, afternoon, evening, night, and
  * Friday (cuma). He teaches the names of the five prayer times, how wudu goes, and polite words;
  * asked for "a beautiful word" he shares something to think about (tefekkür) from an ayah, a hadith
- * or the Risale-i Nur, a different one each time.
+ * or a Risale-i Nur saying (word for word), a different one each time.
  */
 const ROUTE = [
   { x: 56, z: 4, wait: 0 }, { x: 58, z: 14, wait: 0 },
@@ -93,20 +93,22 @@ export default {
         tefekkur: { say: 'Kur’an’da şöyle buyrulur: “Göklerin ve yerin yaratılışında, gece ile gündüzün birbiri ardınca gelişinde akıl sahipleri için deliller vardır.” Bu akşam gökyüzüne bir bak ve düşün evlat.', en: 'The Quran says: “In the creation of the heavens and the earth, and in the alternation of night and day, there are signs for those with understanding.” (Al ‘Imran 3:190) Look at the sky this evening and think, child.',
           words: [['gökyüzü', 'the sky'], ['yaratılış', 'creation'], ['düşünmek', 'to think']],
           variants: [
-            { say: 'Risale-i Nur’da der ki: Bir harf yazansız olmaz, bir iğne ustasız olmaz, bir köy muhtarsız olmaz. Peki bu koca kâinat kitabı yazansız olur mu?', en: 'The Risale-i Nur says: a letter is not without a writer, a needle is not without a maker, a village is not without a headman. So can this great book of the universe be without a Writer?',
-              words: [['harf', 'letter (of the alphabet)'], ['usta', 'craftsman, maker'], ['kâinat', 'the universe']] },
+            { say: 'Bediüzzaman Hazretleri der ki: “Bir harf kâtipsiz olmaz.” Peki bu koca kâinat kitabı kâtipsiz olabilir mi? Bir düşün evlat.', en: 'Bediüzzaman says: “A letter is not without a scribe.” So can this great book of the universe be without a Scribe? Think about it, child.',
+              words: [['harf', 'letter (of the alphabet)'], ['kâtip', 'scribe, writer'], ['kâinat', 'the universe']] },
             { say: 'Rahman suresinde Allah tekrar tekrar sorar: “Rabbinizin hangi nimetlerini yalanlayabilirsiniz?” Bugün içtiğin suyu, yediğin elmayı bir düşün.', en: 'In Surah ar-Rahman Allah asks again and again: “Which of your Lord’s blessings would you deny?” (55:13) Think of the water you drank and the apple you ate today.',
               words: [['nimet', 'blessing'], ['elma', 'apple'], ['su', 'water']] },
-            { say: 'Kur’an der ki: “Allah’ın rahmetinin eserlerine bak; yeryüzünü ölümünden sonra nasıl diriltiyor!” Kışın kuruyan ağaçlar baharda yeniden yeşerir. Risale-i Nur der ki: her bahar, büyük bir dirilişin küçük bir örneğidir.', en: 'The Quran says: “Look at the marks of Allah’s mercy — how He brings the earth to life after its death!” (Ar-Rum 30:50) Trees that dry up in winter turn green again in spring. The Risale-i Nur says every spring is a small sample of the great Resurrection. (The Tenth Word)',
+            { say: 'Kur’an der ki: “Allah’ın rahmetinin eserlerine bak; yeryüzünü ölümünden sonra nasıl diriltiyor!” Kışın kuruyan ağaçlar baharda yeniden yeşerir. Bu ne büyük bir kudret!', en: 'The Quran says: “Look at the marks of Allah’s mercy — how He brings the earth to life after its death!” (Ar-Rum 30:50) Trees that dry up in winter turn green again in spring. What great power!',
               words: [['bahar', 'spring'], ['ağaç', 'tree'], ['diriltmek', 'to bring to life'], ['yeşermek', 'to turn green']] },
-            { say: 'Şu küçücük çekirdeğe bak. Risale-i Nur der ki: içinde koca bir ağacın bütün planı yazılıdır. Bu planı ona kim yazdı acaba?', en: 'Look at this tiny seed. The Risale-i Nur says the whole plan of a great tree is written inside it. Who, then, wrote that plan into it?',
-              words: [['çekirdek', 'seed, pip'], ['plan', 'plan'], ['küçücük', 'tiny']] },
+            { say: 'Bediüzzaman Hazretleri der ki: “Güzel gören güzel düşünür. Güzel düşünen, hayatından lezzet alır.” Sen de her şeye güzel bakmaya çalış evlat.', en: 'Bediüzzaman says: “Whoever sees the good thinks well. Whoever thinks well enjoys his life.” Try to look at everything kindly too, child.',
+              words: [['güzel', 'beautiful, good'], ['düşünmek', 'to think'], ['lezzet almak', 'to take pleasure in']] },
             { say: 'Kur’an’da Allah bal arısından bahseder: “Onların karınlarından renk renk bir içecek çıkar; onda insanlar için şifa vardır.” Minicik bir arı, bize bal yapıyor. Ne büyük bir ikram!', en: 'In the Quran Allah speaks of the honeybee: “From their bellies comes a drink of many colours, in which there is healing for people.” (An-Nahl 16:69) A tiny bee makes honey for us. What a great gift!',
               words: [['arı', 'bee'], ['bal', 'honey'], ['şifa', 'healing'], ['ikram', 'gift, kindness']] },
             { say: 'Peygamberimiz buyurmuş: “İki nimet vardır ki insanların çoğu onların kıymetini bilmez: sağlık ve boş vakit.” Sen gençsin, sağlıklısın. Vaktini güzel şeylerle doldur evlat.', en: 'Our Prophet said: “There are two blessings whose worth most people do not know: health and free time.” (Bukhari) You are young and healthy. Fill your time with good things, child.',
               words: [['sağlık', 'health'], ['boş vakit', 'free time'], ['kıymet', 'worth, value']] },
             { say: 'Peygamberimiz buyurmuş: “Dünyada bir garip ya da bir yolcu gibi ol.” Yolcu yolda oyalanmaz, gideceği yeri düşünür. Biz de öyle olalım.', en: 'Our Prophet said: “Be in this world like a stranger or a traveller.” (Bukhari) A traveller doesn’t dawdle on the road; he thinks of where he is going. Let us be like that too.',
               words: [['yolcu', 'traveller'], ['garip', 'stranger'], ['oyalanmak', 'to dawdle']] },
+            { say: 'Bediüzzaman Hazretleri der ki: “Biz muhabbet fedaileriyiz; husumete vaktimiz yoktur.” Yani biz sevgiye adanmışız, düşmanlığa vaktimiz yok. Kimseye küsme evlat.', en: 'Bediüzzaman says: “We are devotees of love; we have no time for enmity.” So we are devoted to love and have no time for hostility. Don’t sulk at anyone, child.',
+              words: [['muhabbet', 'love, affection'], ['husumet', 'enmity'], ['küsmek', 'to sulk, to stop speaking to']] },
           ],
           options: [
             { tr: 'Bir tane daha söyler misin Hocam?', en: 'Will you tell me one more, Hoca?', next: 'tefekkur' },
