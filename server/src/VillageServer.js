@@ -31,7 +31,6 @@ const HEARTBEAT = 30000;                    // ms; silent connections are droppe
 const VOICE_MIME = /^audio\/(webm|ogg|mp4|aac|mpeg|wav)(;\s*codecs=[\w.]+)?$/;
 const VOICE_MAX = 60000;                    // base64 characters in one piece of voice (~10 s at 16 kbit/s is ~27 000)
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
-const SOLO = '~';                           // rooms of one: a banned player's square (never listed)
 const LAST_PIECE = 15000;                   // ms after a call / a zone during which its last piece of voice is still taken
 const IDLE = 45000;                         // ms without any message from a page that promised a keep-alive (`ka`): its game is frozen (phone locked) — drop it
 
@@ -80,7 +79,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'join', peer } | { type: 'leave', id } | { type: 'states', players }
  *   { type: 'say-blocked', reason, until? }  your bubble was held back (not Turkish / harmful; `until` = muted till)
  *   { type: 'report-ok' } | { type: 'report-failed', reason, until? }  ('limit' | 'again' | 'gone' | 'off' | 'self' | 'paused')
- *   (a player the operator banned after a report is not told: the square lets them in, alone — a room of their own)
+ *   { type: 'error', code: 'offline' }    a player the operator banned after a report: the game quietly plays offline (no message)
  *   { type: 'talk', id, on } | { type: 'say', id, text } | { type: 'ball', id, n, x, z, vx, vz }
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
  *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
@@ -159,7 +158,7 @@ export class VillageServer {
 
   /** Numbers for the /health endpoint. */
   stats() {
-    const rooms = Object.fromEntries([...this.#rooms].filter(([r, m]) => m.size && !r.startsWith(SOLO)).map(([r, m]) => [r, m.size])); // (the banned players' rooms of one don't show)
+    const rooms = Object.fromEntries([...this.#rooms].filter(([, m]) => m.size).map(([r, m]) => [r, m.size]));
     return { connections: this.wss.clients.size, players: Object.values(rooms).reduce((a, b) => a + b, 0), rooms };
   }
 
@@ -337,7 +336,7 @@ export class VillageServer {
     const clean = String(name ?? '').trim();
     if (!NAME.test(clean)) return this.#send(c, { type: 'error', message: 'Kullanıcı adı 2-16 harf/rakam olmalı.' });
     if (ChatFilter.blocks(clean)) return this.#send(c, { type: 'error', message: 'Bu kullanıcı adı kullanılamaz.' });
-    let members = this.#room(room);
+    const members = this.#room(room);
     // the same device again (its old connection not closed yet, e.g. a phone that lost its signal):
     // the new connection takes over — same name, so the chess seat is found again
     if (typeof gid === 'string' && /^[A-Za-z0-9_.:-]{4,64}$/.test(gid)) c.gid = gid; // Play Games player id (safety log)
@@ -345,8 +344,8 @@ export class VillageServer {
       c.pid = pid;
       for (const old of members.values()) if (old.pid === pid) { this.#leave(old); old.id = null; old.ws.terminate(); }
     }
-    // banned after a report: let in without a word, but alone — the square looks empty to them, they to it
-    if (this.reports?.banned({ pid: c.pid, gid: c.gid, name: clean })) { room = `${SOLO}${this.#seq + 1}`; members = this.#room(room); c.solo = true; }
+    // banned after a report: not told — the game just plays offline (on the phone, no server)
+    if (this.reports?.banned({ pid: c.pid, gid: c.gid, name: clean })) { this.#send(c, { type: 'error', code: 'offline', message: '' }); c.ws.close(1000); return; }
     if (this.names?.claim(clean, c.pid) === 'taken') return this.#send(c, { type: 'error', code: 'name-taken', message: 'Bu kullanıcı adı alınmış, başka bir ad seç.' }); // (unique names: NameRegistry)
     if (members.size >= MAX_PER_ROOM) return this.#send(c, { type: 'error', message: 'Meydan dolu, biraz sonra tekrar dene.' });
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
@@ -424,20 +423,19 @@ export class VillageServer {
     this.#zone(c, null);
     const members = this.#room(c.room);
     if (!members.delete(c.id)) return;
-    if (c.room.startsWith(SOLO)) { [this.#rooms, this.#chess, this.#dama, this.#balls].forEach((m) => m.delete(c.room)); return; } // a room of one: gone with them
     this.#toRoom(c, { type: 'leave', id: c.id });
     this.log(`[village] ${c.name} left ${c.room} (${members.size})`);
   }
 
   /**
    * A ban decided after a report: whoever it names loses the connection now, as if the network
-   * dropped; the game connects again by itself and ends up alone (#hello).
+   * dropped; when the game tries again it is told to stay offline (#hello).
    */
   kick(ban) {
     for (const members of this.#rooms.values()) {
       for (const c of [...members.values()]) {
         const named = (ban.pid && c.pid === ban.pid) || (ban.gid && c.gid === ban.gid) || ban.name === c.name.toLocaleLowerCase('tr');
-        if (!named || c.solo) continue;
+        if (!named) continue;
         this.#leave(c);
         c.ws.terminate();
       }

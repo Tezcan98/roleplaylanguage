@@ -55,6 +55,7 @@ export class VillageMultiplayer {
    */
   constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null, consent = null }) {
     Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog, consent });
+    this.stayOffline = false; // the server said so (a ban after a report): offline this game, without a word
     this.consentDeclined = false; // said no this time: offline in the square until the next game (or the menu)
     ptt.onReport = () => this.report();
     this.locationId = 'village'; // the main square (chess, menu entry)
@@ -212,7 +213,7 @@ export class VillageMultiplayer {
   #count() { this.ptt.setOnline(this.remotes.count + 1, this.net.name, this.#roomLabel()); }
 
   async join() {
-    if (this.net.connected || this.joining) return;
+    if (this.net.connected || this.joining || this.stayOffline) return;
     this.joining = true;
     try {
       // before the first time online: agree that what is said here is recorded and may be processed
@@ -247,6 +248,7 @@ export class VillageMultiplayer {
       this.#retryDelay = 0;
       this.#suggestBusierRoom();
     } catch (e) {
+      if (e.code === 'offline') { this.stayOffline = true; return; } // banned: the square just stays single-player (no message, no retries)
       if (e.code === 'name-taken') { // the name is another device's (names are unique): pick another
         this.settings.set('username', null);
         this.nameNote = 'Bu kullanıcı adı alınmış, başka bir ad seç.';

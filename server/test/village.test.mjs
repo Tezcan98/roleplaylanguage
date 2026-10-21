@@ -404,7 +404,7 @@ test('usernames are unique: a name belongs to the device that took it first', as
   [a, b, a2, g1, g2, renamed, b2].forEach((c) => c.ws.close()); v.close(); h.close();
 });
 
-test('reports: own voice kept only in a call, a report reaches Reports, a banned player is quietly left alone', async () => {
+test('reports: own voice kept only in a call, a report reaches Reports, a banned player quietly plays offline', async () => {
   const { Reports } = await import('../src/Reports.js');
   const written = [];
   const srv = createServer();
@@ -444,14 +444,18 @@ test('reports: own voice kept only in a call, a report reaches Reports, a banned
     assert.equal(b.inbox.some((m) => m.type === 'banned' || m.type === 'error'), false, 'not told');
     await a.next('leave');
     a.inbox.length = 0;
-    // back in: let in without a word, but alone — sees nobody, nobody sees them
-    const again = await join('BaşkaAd', 'rep', { pid: 'bbbbbbbb22' });
-    assert.deepEqual(again.welcome.peers, []);
-    again.send({ type: 'say', text: 'merhaba' });
-    await silence(300);
-    assert.equal(a.inbox.some((m) => m.type === 'join' || m.type === 'say'), false);
-    assert.deepEqual(v.stats().rooms, { rep: 1 }, 'the room of one is not listed');
-    await Promise.all([a.close(), again.close()]);
+    // trying again: told only to stay offline (no message for the player), and nobody sees them
+    const again = client();
+    await again.open();
+    again.send({ type: 'hello', name: 'BaşkaAd', room: 'rep', pid: 'bbbbbbbb22' });
+    const err = await again.next('error');
+    assert.equal(err.code, 'offline');
+    assert.equal(err.message, '');
+    await new Promise((r) => (again.ws.readyState === WebSocket.CLOSED ? r() : again.ws.once('close', r))); // (it may be closed already)
+    await silence(200);
+    assert.equal(a.inbox.some((m) => m.type === 'join'), false);
+    assert.deepEqual(v.stats().rooms, { rep: 1 });
+    await a.close();
   } finally {
     url = saved;
     v.close(); srv.close();

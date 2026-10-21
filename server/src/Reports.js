@@ -16,7 +16,7 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
  *   4. clean, but three different players reported the same one within a day: the operator gets
  *      a mail anyway, with the voice pieces attached (the AI may have missed something).
  * A ban holds the player's device id, Play Games id and username (DIR/bans.json). A banned player
- * is not told: the square lets them in, but alone (VillageServer puts them in a room of their own).
+ * is not told: the server just doesn't take them, and the game plays offline (VillageServer #hello).
  * A reporter whose reports came back clean five times can't report for three days
  * (DIR/reporters.json).
  *

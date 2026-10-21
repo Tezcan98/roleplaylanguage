@@ -46,8 +46,8 @@ oyuncunun **son 10 dakikasını** (yazılar + ses; yalnızca bellekte tutulur) G
   (`<REPORTS_DIR>/reporters.json`; 3 kişilik şikayetler sayılmaz).
 - Hepsi: `https://<sunucu>/api/reports?key=<REPORT_KEY>` (engeli buradan kaldırmak da mümkün).
 - Engel cihaz kimliği + Play Games kimliği + kullanıcı adıyla tutulur (`<REPORTS_DIR>/bans.json`). Oyuncuya
-  **söylenmez**: meydana girer ama **tek başınadır** (kendine ait boş bir oda; kimseyi görmez, kimse onu görmez,
-  oda sayılarında görünmez). O an meydandaysa bağlantısı kopmuş gibi düşer, oyun kendiliğinden geri bağlanır.
+  **söylenmez**: sunucu onu almaz, oyun hiçbir mesaj göstermeden **çevrimdışı** (telefonda, tek kişilik) oynar ve o
+  oyun boyunca tekrar bağlanmayı denemez. O an meydandaysa bağlantısı kopmuş gibi düşer, sonra çevrimdışı kalır.
 - Mail: `MAIL_API_URL`, `MAIL_API_KEY`, `REPORT_MAIL_TO` (SMTP başka sunucuda; ayrıntı `docs/TODO.md`).
   Ayarlı değilken mail yalnızca sunucu loguna yazılır, şikayetler yine listede.
 
