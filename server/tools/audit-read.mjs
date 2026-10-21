@@ -51,6 +51,7 @@ for (const f of files) {
       continue;
     }
     if (has('--json')) { console.log(JSON.stringify(r)); continue; }
+    if (r.kind === 'consent') { console.log(`${r.t}  onay v${r.v} (${r.at})  ${r.name ?? '?'}  [cihaz ${r.pid ?? '-'} · PlayGames ${r.gid ?? '-'} · ${r.ip ?? '-'}]`); continue; }
     const where = r.kind === 'npc' ? `sohbet:${r.npc}` : `meydan:${r.room}`;
     console.log(`${r.t}  ${where}  ${r.name ?? '?'}  [cihaz ${r.pid ?? '-'} · PlayGames ${r.gid ?? '-'} · ${r.ip ?? '-'}]${r.flag ? `  ⚠ ${r.flag}` : ''}${r.shown === false ? ' (gösterilmedi)' : ''}\n    “${r.text}”${r.reply ? `\n    → ${r.reply}` : ''}`);
   }

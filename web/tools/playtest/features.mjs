@@ -24,7 +24,7 @@ try {
   const ev = (fn, a) => page.evaluate(fn, a);
 
   // --- first launch: character setup -------------------------------------------------
-  await page.goto(`${server.url}/?debug&fakemic&fastclass&quality=low`);
+  await page.goto(`${server.url}/?debug&consented&fakemic&fastclass&quality=low`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   check('first launch shows character setup', !!(await page.$('.overlay.open.setup')));
   await page.click('.setup button[data-lang="es"]');
@@ -47,7 +47,7 @@ try {
   check('girl: Spanish meanings, "hija" for her', await ev(() => window.__game.glossProbe('Dear! Do your homework first!')).then((t) => t.includes('Hija') && !t.includes('Do your')), await ev(() => window.__game.glossProbe('Dear! Do your homework first!')));
 
   // --- new game: credits, story --------------------------------------------------------
-  await page.goto(`${server.url}/?debug&fakemic&fastclass&nointro&fresh&kidout&quality=low`);
+  await page.goto(`${server.url}/?debug&consented&fakemic&fastclass&nointro&fresh&kidout&quality=low`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   await page.click('.main-menu.open .menu-main'); await sleep(1200);
   // the welcome, mom calling you home, then the square's own card once connected: all of them
@@ -539,7 +539,7 @@ try {
     const p2 = await (await browser.newContext({ viewport: { width: 1000, height: 620 } })).newPage();
     errors.push(...watchErrors(p2, 'shop '));
     const e2 = (fn, a) => p2.evaluate(fn, a);
-    await p2.goto(`${server.url}/?debug&fakemic&nointro&fresh&daily&mockads&fastads&nobilling&quality=low`);
+    await p2.goto(`${server.url}/?debug&consented&fakemic&nointro&fresh&daily&mockads&fastads&nobilling&quality=low`);
     await p2.waitForFunction(() => window.__game, null, { timeout: 90000 });
     const daily = await waitFor(() => p2.$('.overlay.open.daily'), 8000);
     check('daily reward on opening the game (day 1: +3)', !!daily && (await p2.textContent('.daily .btn')).includes('+3'));
@@ -608,7 +608,7 @@ try {
     const p3 = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage();
     errors.push(...watchErrors(p3));
     const e3 = (fn, a) => p3.evaluate(fn, a);
-    await p3.goto(`${server.url}/?debug&fakemic&nointro&fresh&gloss=tr&quality=low`);
+    await p3.goto(`${server.url}/?debug&consented&fakemic&nointro&fresh&gloss=tr&quality=low`);
     await p3.waitForFunction(() => window.__game, null, { timeout: 90000 });
     // English on the screen: common English words in any visible text
     const english = () => e3(() => {
@@ -660,7 +660,7 @@ try {
     const p4 = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage();
     errors.push(...watchErrors(p4));
     const e4 = (fn, a) => p4.evaluate(fn, a);
-    await p4.goto(`${server.url}/?debug&fakemic&nointro&fresh&quality=low&feedbackin=3`);
+    await p4.goto(`${server.url}/?debug&consented&fakemic&nointro&fresh&quality=low&feedbackin=3`);
     await p4.waitForFunction(() => window.__game, null, { timeout: 90000 });
     await p4.click('.main-menu.open .menu-main'); await sleep(1500);
     const cards = [];

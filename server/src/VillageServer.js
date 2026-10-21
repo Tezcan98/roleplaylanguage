@@ -46,7 +46,8 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   in the same zone; the newcomer calls everyone already there.
  *
  * client → server
- *   { type: 'hello', name, room?, gender?, style? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open')
+ *   { type: 'hello', name, room?, gender?, style?, consent? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open';
+ *                                         consent: { v, at } — the player agreed to the recording, version v at time at: into the safety log once)
  *   { type: 'state', x, z, rot, moving, sit?, ride? }  own position (~10/s); sit = on a chair or bench, ride = 'horse' | 'scooter' | 'bike' (true / 1: horse, older games)
  *   { type: 'talk', on }                  push-to-talk pressed / released (🎙️ marker)
  *   { type: 'say', text }                 recognised speech (public text bubble)
@@ -94,6 +95,7 @@ export class VillageServer {
   #ticks = 0; // state broadcasts so far (far players every FAR_EVERY)
 
   #perIp = new Map();
+  #consents = new Set(); // consents already in the safety log (since this start)
   #chess = new Map(); // room → ChessTable
   #dama = new Map(); // room → DamaTables (the kahvehane's dama tables)
   #balls = new Map(); // room → [last state of each ball] (the kicker also reports where it stops)
@@ -328,7 +330,7 @@ export class VillageServer {
     }
   }
 
-  #hello(c, { name, room = 'village', gender, style, pid, gid, outfit }) {
+  #hello(c, { name, room = 'village', gender, style, pid, gid, outfit, consent }) {
     if (c.id) return;
     if (typeof room !== 'string' || !ROOM.test(room)) return this.#send(c, { type: 'error', message: 'Geçersiz oda.' });
     const clean = String(name ?? '').trim();
@@ -355,6 +357,15 @@ export class VillageServer {
     members.set(c.id, c);
     if (this.#table(room).rejoin(c)) this.#toAll(room, this.#table(room).state()); // back at the board after a dropped connection
     this.log(`[village] ${c.name} joined ${room} (${members.size})`);
+    // the proof that this player agreed to the recording (ConsentDialog): once per device and agreement
+    if (Number.isInteger(consent?.v) && Number.isFinite(consent?.at)) {
+      const k = `${c.pid ?? c.name}:${consent.v}:${consent.at}`;
+      if (!this.#consents.has(k)) {
+        this.#consents.add(k);
+        if (this.#consents.size > 50000) this.#consents.clear();
+        this.audit?.write({ kind: 'consent', room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, v: consent.v, at: new Date(consent.at).toISOString() });
+      }
+    }
   }
 
   /**

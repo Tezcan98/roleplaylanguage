@@ -33,15 +33,21 @@ async function player(tag, name, { room = null } = {}) {
   if (name) await page.evaluate((n) => window.__game.settings.set('username', n), name); // set in the profile
   await page.click('.main-menu.open .menu-main'); await sleep(1200);
   await closeCards(page); // the welcome, mom calling: the game starts, in the square
+  // first time online: agree to the recording (the button only after the tick)
+  const card = await waitFor(() => page.$('.card.consent'), 20000, 300);
+  consentAsked.push(!!card && await page.evaluate(() => document.querySelector('.card.consent .btn').disabled));
+  if (card) { await page.check('.card.consent input[type=checkbox]'); await page.click('.card.consent .btn:has-text("Kabul et")'); }
   await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 20000, 300); await sleep(800);
   await closeCards(page); // the square's first-visit card
   return page;
 }
+const consentAsked = []; // per player: the consent card came, its button off until the tick
 const closeCards = async (page) => { for (let i = 0; i < 5 && await page.evaluate(() => !!document.querySelector('.overlay.story-card.open')); i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(400); } };
 
 let failed = false;
 try {
   const A = await player('A', 'Ayşe');
+  check('before going online: the recording consent is asked, "Kabul et" only after the tick', consentAsked[0] === true && (await A.evaluate(() => window.__game.settings.get('dataConsent')?.v)) >= 1);
   check('"▶ Hikayeye başla": a new game starts in the village square, online', (await A.evaluate(() => window.__game.world.current.id)) === 'village' && (await A.evaluate(() => window.__game.village.net.connected)));
   const B = await player('B', 'Ayşe'); // same name on purpose
   /** At a talking zone's door: "Gir" (go in) when the card asks (it doesn't once said yes, until leaving the square). */

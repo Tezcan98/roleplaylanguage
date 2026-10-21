@@ -451,3 +451,28 @@ test('reports: own voice kept only in a call, a report reaches Reports, the oper
     v.close(); srv.close();
   }
 });
+
+test('consent: the agreement sent with hello goes into the safety log once', async () => {
+  const written = [];
+  const srv = createServer();
+  const v = new VillageServer({ server: srv, log: () => {}, audit: { write: (r) => written.push(r) } });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  const saved = url;
+  url = `ws://127.0.0.1:${srv.address().port}/ws/village`;
+  try {
+    const consent = { v: 1, at: 1_760_000_000_000 };
+    const a = await join('Onay1', 'cons', { pid: 'cccccccc33', consent });
+    await a.close();
+    const b = await join('Onay1', 'cons', { pid: 'cccccccc33', consent }); // the same device again
+    await b.close();
+    const c = await join('Onaysız', 'cons', { pid: 'dddddddd44' });
+    await c.close();
+    const got = written.filter((r) => r.kind === 'consent');
+    assert.equal(got.length, 1);
+    assert.equal(got[0].pid, 'cccccccc33');
+    assert.equal(got[0].v, 1);
+  } finally {
+    url = saved;
+    v.close(); srv.close();
+  }
+});

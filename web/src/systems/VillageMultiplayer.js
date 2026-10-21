@@ -1,5 +1,6 @@
 import { EV } from '../core/events.js';
 import { CONFIG } from '../config/remote.js';
+import { CONSENT_VERSION } from '../ui/ConsentDialog.js';
 
 const SEND_EVERY = 0.1; // seconds
 const KEEPALIVE = 10;   // seconds: my state goes out at least this often, even standing still (the server drops frozen pages)
@@ -52,8 +53,9 @@ export class VillageMultiplayer {
    * @param {Object<string, { suffix: string, balls?: object[], label: string }>} o.places
    *   public places: location id → room suffix (the city server + suffix is the room), its shared balls
    */
-  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null }) {
-    Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog });
+  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null, consent = null }) {
+    Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog, consent });
+    this.consentDeclined = false; // said no this time: offline in the square until the next game (or the menu)
     this.bannedUntil = null; // the operator banned this player after a report (0: for good)
     ptt.onReport = () => this.report();
     this.locationId = 'village'; // the main square (chess, menu entry)
@@ -216,6 +218,8 @@ export class VillageMultiplayer {
     if (this.#banned()) { this.toasts.show(BANNED_TEXT[0], BANNED_TEXT[1]); return; }
     this.joining = true;
     try {
+      // before the first time online: agree that what is said here is recorded and may be processed
+      if (!await this.#agreed()) return;
       if (!this.settings.get('deviceId')) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (a username belongs to this device)
       let name = this.settings.get('username', null);
       if (!name && !this.chosenRoom && this.autoName) { // story mode: in straight away, under the character's name
@@ -233,7 +237,7 @@ export class VillageMultiplayer {
       await this.#joinFriends(this.places[here].suffix); // (where the people are — or not into a full room)
       if (this.world.current.id !== here) return;
       const room = `${this.settings.get('serverRegion', 'ankara')}${this.places[here].suffix}`;
-      const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''), this.settings.get('deviceId'), this.outfit?.() ?? {}, this.settings.get('playGamesId', ''));
+      const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''), this.settings.get('deviceId'), this.outfit?.() ?? {}, this.settings.get('playGamesId', ''), this.settings.get('dataConsent', null));
       this.joinedAt = here;
       this.#last = null; // tell the others where I am right away (not the spawn point)
       welcome.peers.forEach((p) => this.remotes.add(this.#loc(), p));
@@ -257,6 +261,23 @@ export class VillageMultiplayer {
       this.toasts.show('Çok oyunculu sunucuya bağlanılamadı', `Playing offline (${e.message})`);
       if ((e.message === 'unreachable' || e.message === 'timeout') && this.#inSquare()) this.#retryLater(); // network trouble, not a refusal
     } finally { this.joining = false; }
+  }
+
+  /**
+   * Has the player agreed to the recording (this version of it)? Asks once (ConsentDialog); the
+   * answer "yes" is kept on the device and sent with every join (the server logs it as proof).
+   * No: from the menu back to it; from the story the square stays offline this game.
+   */
+  async #agreed() {
+    const c = this.settings.get('dataConsent', null);
+    if (!this.consent || c?.v >= CONSENT_VERSION) return true;
+    if (this.consentDeclined && !this.chosenRoom) return false;
+    const yes = await this.consent.ask();
+    if (yes) { this.settings.set('dataConsent', { v: CONSENT_VERSION, at: Date.now() }); this.consentDeclined = false; return true; }
+    this.consentDeclined = true;
+    if (this.chosenRoom) this.onNameCancel?.(); // picked the square on the menu: back to it
+    else this.toasts.show('Meydanda çevrimdışı devam ediyorsun', 'You go on offline in the square');
+    return false;
   }
 
   /** Is this username free (or this device's own)? Asks the village server; unreachable: let the join decide. */

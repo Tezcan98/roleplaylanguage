@@ -19,7 +19,7 @@ await page.route('**/*', (route) => {
 const checks = [];
 const check = (name, ok, detail = '') => { checks.push(ok); log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`); };
 try {
-  await page.goto(`${server.url}/?debug&nointro&fakemic&fresh&quality=low`);
+  await page.goto(`${server.url}/?debug&consented&nointro&fakemic&fresh&quality=low`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   check('game loads without internet', true);
   await page.click('.main-menu.open .menu-main'); await sleep(1500);

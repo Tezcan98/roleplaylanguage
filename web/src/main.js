@@ -82,6 +82,7 @@ import { UsernameDialog } from './ui/UsernameDialog.js';
 import { PushToTalk } from './ui/PushToTalk.js';
 import { CallUI } from './ui/CallUI.js';
 import { ReportDialog } from './ui/ReportDialog.js';
+import { ConsentDialog, CONSENT_VERSION } from './ui/ConsentDialog.js';
 import { CaptionView } from './ui/CaptionView.js';
 import { HelpPanel } from './ui/HelpPanel.js';
 import { IntroSlides } from './ui/IntroSlides.js';
@@ -428,6 +429,7 @@ const village = new VillageMultiplayer({
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
   calls: new CallUI(host, modes),
   reportDialog: new ReportDialog(host, modes), // "Şikayet et" (🚩 in the top bar and in the call bar)
+  consent: new ConsentDialog(host, modes), // before the first time online: agree to the recording
   usernames: new UsernameDialog(host, modes),
   // first time in the square: how talking works here (Arabic, with Turkish)
   onFirstVisit: () => cards.show({
@@ -760,6 +762,7 @@ const saves = new LocalSaveRepository();
 // a new game now starts in the park in the square: every old story save starts over once (credits, purchases,
 // outfits and settings stay — they are the wallet's, not the save's)
 if (!settings.get('parkStart', false)) { saves.clear(); settings.set('parkStart', true); }
+if (params.has('consented') && params.has('debug')) settings.set('dataConsent', { v: CONSENT_VERSION, at: 0 }); // tests: the recording consent already given
 let saved = params.has('fresh') ? null : saves.load();
 let autosaveOn = false;
 new AutoSave({ bus, state, repo: saves, enabled: () => autosaveOn });
