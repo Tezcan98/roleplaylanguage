@@ -5,7 +5,7 @@ const fsElement = () => document.fullscreenElement ?? document.webkitFullscreenE
 const inApp = () => window.Capacitor?.isNativePlatform?.() === true; // the Android app is full screen by itself
 const fsEnabled = () => !inApp() && !!(document.fullscreenEnabled ?? document.webkitFullscreenEnabled);
 /** iPhone / iPad in the browser: no full-screen API for pages — only "Add to Home Screen" opens the game full screen. */
-const iosBrowser = () => /iPhone|iPad|iPod/.test(navigator.userAgent) && !matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches && !navigator.standalone;
+export const iosBrowser = () => /iPhone|iPad|iPod/.test(navigator.userAgent) && !matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches && !navigator.standalone;
 const ICON = {
   enter: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>',
   exit: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>',
@@ -16,12 +16,15 @@ export const fullscreenPossible = () => (fsEnabled() || iosBrowser()) && !fsElem
 export const fullscreenIcon = () => ICON.enter;
 
 let guide = null;
-/** iPhone: how to put the game on the home screen (it then opens without the browser bars). */
-function showIosGuide() {
+/**
+ * iPhone: how to put the game on the home screen (it then opens without the browser bars). Also
+ * opened at once when the game comes from the share message's iPhone link (anadoluailesi.com.tr/ios → ?ios).
+ */
+export function showIosGuide() {
   if (!guide) {
     const step = (tr, en) => el('li', {}, [el('b', { text: tr }), el('small', { class: 'en-t', text: ` · ${en}` })]);
     guide = el('div', { class: 'overlay dim ios-guide' }, [el('div', { class: 'card' }, [
-      el('h2', { class: 'ctitle', text: 'iPhone’da tam ekran' }),
+      el('h2', { class: 'ctitle', text: 'Türk Ailem’i ana ekrana ekle' }),
       el('p', { class: 'cen en-t', text: gloss('On iPhone, a web page cannot go full screen. Put the game on your home screen: it then opens full screen, like an app.') }),
       el('ol', { class: 'ios-steps' }, [
         step('Safari’de alttaki Paylaş ⬆️ düğmesine bas.', gloss('In Safari, tap the Share ⬆️ button at the bottom.')),

@@ -317,12 +317,13 @@ async function kidsAudio(video, clips, fade) {
   const music = new URL('../../assets/audio/bahce.mp3', import.meta.url).pathname;
   const bed = `[1:a]atrim=0:${total.toFixed(2)},afade=t=in:d=0.4,afade=t=out:st=${(total - 1.2).toFixed(2)}:d=1.2,volume=0.28[m]`;
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, '-stream_loop', '-1', '-i', music, '-filter_complex', bed, '-map', '0:v', '-map', '[m]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-t', total.toFixed(2), '-movflags', '+faststart', video.replace(/\.mp4$/, '-muzik.mp4')]);
+  writeFileSync(video.replace(/\.mp4$/, '-seslendirme.txt'), `${lines.map((l, i) => `${i + 1}. ${starts[i].toFixed(1)} sn – ${(i < lines.length - 1 ? starts[i + 1] : total).toFixed(1)} sn: ${l}`).join('\n')}\n\nElevenLabs: her satırı ayrı dosya yap (1.mp3 … ${lines.length}.mp3), sonra: node tools/promo/record.mjs <klasör> --kids --lang=${lang} --join --vo=<mp3 klasörü>\n`);
   const voDir = opt('vo'), files = [];
   for (let i = 0; i < lines.length; i++) {
     const given = voDir && ['mp3', 'wav', 'm4a'].map((x) => join(voDir, `${i + 1}.${x}`)).find((f) => { try { return readFileSync(f).length > 0; } catch { return false; } });
     if (given) { files.push(given); continue; }
     const wav = join(dir, `${i + 1}.wav`), res = await fetch(`https://sehem2.com.tr/api/tts?v=kadin&t=${encodeURIComponent(lines[i])}`, { headers: { Origin: 'https://sehem2.com.tr' } });
-    if (!res.ok) throw new Error(`tts ${res.status} for "${lines[i]}"`);
+    if (!res.ok) { console.warn(`voice: no line ${i + 1} from the server (${res.status}) — music-only video and the script are ready; try again later`); return; }
     writeFileSync(wav, Buffer.from(await res.arrayBuffer())); files.push(wav);
   }
   const len = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
@@ -330,7 +331,6 @@ async function kidsAudio(video, clips, fade) {
   const vo = parts.map((p, i) => `[${i + 2}:a]atempo=${p.tempo.toFixed(3)},adelay=${Math.round(p.at * 1000)}|${Math.round(p.at * 1000)},volume=1.5[v${i}]`).join(';');
   const mix = `${bed.replace('volume=0.28', 'volume=0.16')};${vo};[m]${parts.map((_, i) => `[v${i}]`).join('')}amix=inputs=${parts.length + 1}:normalize=0,alimiter=limit=0.95[a]`;
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, '-stream_loop', '-1', '-i', music, ...parts.flatMap((p) => ['-i', p.f]), '-filter_complex', mix, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-t', total.toFixed(2), '-movflags', '+faststart', video.replace(/\.mp4$/, voDir ? '-elevenlabs.mp4' : '-ses.mp4')]);
-  writeFileSync(video.replace(/\.mp4$/, '-seslendirme.txt'), `${lines.map((l, i) => `${i + 1}. ${starts[i].toFixed(1)} sn – ${(i < lines.length - 1 ? starts[i + 1] : total).toFixed(1)} sn: ${l}`).join('\n')}\n\nElevenLabs: her satırı ayrı dosya yap (1.mp3 … ${lines.length}.mp3), sonra: node tools/promo/record.mjs <klasör> --kids --lang=${lang} --join --vo=<mp3 klasörü>\n`);
   console.log(`→ ${video.replace(/\.mp4$/, '-muzik.mp4')} · ${video.replace(/\.mp4$/, voDir ? '-elevenlabs.mp4' : '-ses.mp4')}`);
 }
 

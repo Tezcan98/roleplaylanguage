@@ -21,7 +21,7 @@ const END = {
 export const KIDS_VO = {
   tr: ['Çocuğunuz oynarken Türkçe öğrensin.', 'Konuşur, oyun onu dinler.', 'Her gün yeni kelimeler.', 'Ailesine yardım eder.', 'Türk Ailem. Google Play’de ücretsiz.'],
   en: ['Your child learns Turkish while playing.', 'They speak, and the game listens.', 'New words every day.', 'They help the family.', 'My Turkish Family. Free on Google Play.'],
-  ar: ['طفلك يتعلّم التركية وهو يلعب.', 'يتكلّم، واللعبة تستمع إليه.', 'كلمات جديدة كل يوم.', 'يساعد عائلته.', 'عائلتي التركية. مجانًا على غوغل بلاي.'],
+  ar: ['طفلك يتعلّم التركية وهو يلعب.', 'يتكلّم، واللعبة تستمع إليه.', 'كلمات جديدة كل يوم.', 'ويساعد عائلته بكل حب.', 'عائلتي التركية. مجانًا على غوغل بلاي.'],
 };
 
 /** A new game (it starts in the park), every card closed, the HD character in everyday clothes, no interface. */

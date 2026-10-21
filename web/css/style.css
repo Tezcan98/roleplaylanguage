@@ -509,6 +509,7 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .dama-foot{display:flex;justify-content:space-between;align-items:center;font:700 16px Fredoka,sans-serif}
 @media (orientation:landscape) and (max-height:520px){.dama .card{width:min(760px,100%);display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto 1fr auto;column-gap:12px}.dama-board{grid-row:1/5;grid-column:1;width:min(86vh,420px)}.dama-head,.dama-line,.dama-foot,.dama .btn{grid-column:2}}
 .overlay.dama,.overlay.shop,.overlay.daily,.overlay.ad,.overlay.ios-guide,.overlay.settings-panel{z-index:70} /* above the main menu */
+.ios-guide .card{max-height:calc(100dvh - 24px);overflow:auto} /* the home-screen guide fits a phone held sideways (its OK button too) */
 /* ⚙️ Ayarlar (ui/SettingsPanel.js): one compact card — sound sliders, picture quality, three tiles */
 .settings-panel .card{max-width:400px;width:calc(100vw - 32px);padding:14px 16px 16px;max-height:calc(100dvh - 24px);overflow:auto}
 .set-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}

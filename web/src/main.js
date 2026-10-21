@@ -131,7 +131,7 @@ import { AmbientTalk } from './systems/AmbientTalk.js';
 import { KAHVE_UNCLES, KAHVEHANE, MOSQUE, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
 import { SERVERS, DEFAULT_SERVER, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
-import { setupLandscape } from './ui/Landscape.js';
+import { setupLandscape, iosBrowser, showIosGuide } from './ui/Landscape.js';
 import { ListModal } from './ui/ListModal.js';
 import { TableAndBins } from './systems/TableAndBins.js';
 import { MarketView } from './ui/MarketView.js';
@@ -172,6 +172,8 @@ if (pathLang && !params.has('gloss')) settings.set('glossLang', pathLang);
 await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
 document.title = withGloss('Türk Ailem', 'My Turkish Family'); // the tab: the name in the player's language too
 const fullscreenBtn = setupLandscape(); // ⛶ in the HUD
+// from the share message's iPhone link (anadoluailesi.com.tr/ios → /oyun/?ios): how to put the game on the home screen, at once
+if (params.has('ios') && iosBrowser()) setTimeout(showIosGuide, 600);
 // boy (Ahmet) or girl (Sare): the content is rewritten once, before any system reads it
 setPlayerGender(params.get('gender') ?? settings.get('gender', 'boy'));
 const playerLook = lookKey(playerGender(), params.get('look') ?? settings.get('look', ''));
