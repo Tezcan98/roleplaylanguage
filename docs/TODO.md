@@ -9,6 +9,15 @@ Sıradakiler yukarıdan aşağıya. Biten bir iş buradan silinir (ayrıntısı 
 2. **Tanıtım videosu (yeniden)**:
    - Diğer oyuncuların hızlı gidip ışınlanması düzeldi (bütün sayfalar aynı sanal saatte, Shorts'ta denendi).
    - Bakkal / alışveriş tanıtılmasın; aile ve görevler ön planda olsun.
+3. **Türkiye'de günlük süre sınırı**:
+   - Günlük oyun süresi yarım saati geçince uyarı çıksın.
+   - Bir saati geçince oyun 6 saat dinlenmeye girsin; bu sürede oyuncu karakteri uyuyor görünsün (yatakta, "Zzz").
+   - Kalan dinlenme süresi ekranda görünsün.
+   - Açık kararlar:
+     - Türkiye nasıl anlaşılacak: cihaz dili/bölgesi, saat dilimi, IP ya da Play Store ülkesi.
+     - Süre nerede tutulacak: sadece cihazda (silinip yeniden kurulunca sıfırlanır) ya da sunucuda cihaz kimliğiyle.
+     - Gün ne zaman sıfırlanacak: gece yarısı ya da 6 saatlik dinlenme bitince.
+     - Meydan da kapansın mı: dinlenmedeki oyuncu çok oyunculu alana girebilecek mi.
 
 ## Bekleyen (karar / dış iş)
 
