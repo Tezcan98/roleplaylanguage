@@ -137,9 +137,9 @@ const CHATS = [
     start: { say: 'Gel bir hesap yapalım kuzum. Allah bize her gün yirmi dört saat veriyor. Namaz için ne kadarını istiyor, biliyor musun?', en: 'Come, let’s do a sum, my dear. Allah gives us twenty-four hours every day. How much of it does He ask for the prayer, do you know?',
       words: [['saat', 'hour'], ['hesap', 'calculation, sum']], hint: 'bir saat',
       options: [ok('On saat.', 'Ten hours.', { wrong: true }), ok('Bir saat kadar.', 'About one hour.', { next: 'end' }), ok('Bütün günü.', 'The whole day.', { wrong: true })] },
-    end: { say: 'Aferin! Yirmi dört saatin sadece bir saati. Az bir emek, ama ahirette çok büyük bir kazanç. Bediüzzaman Hazretleri bu hesabı Dördüncü Söz’de anlatır; büyüyünce mutlaka oku.', en: 'Well done! Just one hour of the twenty-four. A little effort, but a very great gain in the hereafter. Bediüzzaman tells of this sum in the Fourth Word; read it when you are older.',
+    end: { say: 'Aferin! Yirmi dört saatin sadece bir saati. Az bir emek, ama ahirette çok büyük bir kazanç. Sen olsan bu ticareti yapmaz mısın?', en: 'Well done! Just one hour of the twenty-four. A little effort, but a very great gain in the hereafter. Wouldn’t you make that trade?',
       words: [['emek', 'effort'], ['kazanç', 'gain, profit'], ['ahiret', 'the hereafter']],
-      options: [ok('Okurum nine!', 'I will read it, grandma!')] },
+      options: [ok('Yaparım nine!', 'I would, grandma!')] },
   } },
   { id: 'gida', nodes: {
     start: { say: 'Bazen namaz kılmak sana zor geliyor mu kuzum? Doğru söyle.', en: 'Does praying sometimes feel hard to you, my dear? Tell the truth.',
@@ -164,7 +164,7 @@ const CHATS = [
       options: [ok('Olur nine, söz.', 'All right grandma, I promise.')] },
   } },
   { id: 'iman', nodes: {
-    start: { say: 'Bediüzzaman Hazretleri ne güzel söyler: “İman hem nurdur, hem kuvvettir.” Sence nur ne demek?', en: 'Bediüzzaman says it so beautifully: “Faith is both light and strength.” (The Twenty-Third Word) What do you think “nur” means?',
+    start: { say: 'Ne güzel bir söz vardır: “İman hem nurdur, hem kuvvettir.” Sence nur ne demek?', en: 'There is such a beautiful saying: “Faith is both light and strength.” What do you think “nur” means?',
       words: [['iman', 'faith'], ['nur', 'light (divine)'], ['kuvvet', 'strength']], optionsAreMeanings: true,
       options: [ok('light', '', { next: 'end' }), ok('water', '', { wrong: true }), ok('bread', '', { wrong: true })] },
     end: { say: 'Doğru, ışık! İmanı olan karanlıkta kalmaz, korkmaz. Namaz da o nuru her gün tazeler kuzum.', en: 'Right, light! One who has faith is not left in the dark and is not afraid. And the prayer renews that light every day, my dear.',
