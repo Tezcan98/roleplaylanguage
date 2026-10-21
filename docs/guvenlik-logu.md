@@ -1,6 +1,9 @@
 # Güvenlik kaydı (90 gün, şifreli) — operatör rehberi
 
-Meydandaki yazılı konuşmalar ve karakterlerle serbest sohbet, sunucuda **şifreli** olarak 90 gün saklanır
+Meydandaki yazılı konuşmalar ve karakterlerle serbest sohbet sunucuda **şifreli** olarak 90 gün (`audit-*.log`),
+**sesli sohbetler** (birebir ve kahvehane / cami avlusu; her oyuncunun mikrofonu açıkken kendi sesi, ~10 saniyelik
+Opus parçaları, 8 kbit/s, sessiz parçalar hiç gönderilmez) **48 saat** (`voice-*.log`, saatlik dosyalar,
+`AUDIT_VOICE_HOURS`) saklanır
 (`server/src/AuditLog.js`). Sunucu yazar ama okuyamaz: her günün anahtarı **operatörün açık anahtarıyla**
 kilitlenir; açmak için **gizli anahtar** gerekir ve o sunucuda değildir.
 
@@ -23,8 +26,30 @@ node server/tools/audit-read.mjs --key ~/AnadoluAilesi-imza/guvenlik-logu/audit-
      [--flagged] [--who <kullanıcı adı | cihaz kimliği | Play Games kimliği>] [--text <kelime>] [--from 2026-10-01] [--to 2026-10-31] [--json]
 ```
 
+Ses parçalarını dosya olarak çıkarmak için `--audio ./sesler` ekle (her parça ayrı bir `.webm` / `.ogg` / `.m4a`;
+tarayıcıda ya da VLC'de açılır). `--who <ad>` ile tek bir oyuncunun sesleri.
+
 `--flagged`: kelime filtresinin / Türkçe kontrolünün geri tuttuğu balonlar (⚠ ile işaretli). Her satırda: zaman,
 yer (meydan:oda / sohbet:karakter), kullanıcı adı, cihaz kimliği, Play Games kimliği, IP ve metin.
+
+## Şikayetler (🚩 Şikayet et)
+
+Oyuncu üst çubuktaki 🚩 (ya da sesli sohbet çubuğundaki 🚩) ile birini seçip şikayet eder. Sunucu, şikayet edilen
+oyuncunun **son 10 dakikasını** (yazılar + ses; yalnızca bellekte tutulur) Gemini'ye verir: yazıya döker ve
+"ahlaksız / ticari / temiz" der (`server/src/Reports.js`).
+
+- **Ahlaksız ya da ticari** (ya da Gemini cevap vermediyse): yetkiliye mail gider — döküm, gerekçe ve üç bağlantı:
+  7 gün engelle · kalıcı engelle · şikayeti kapat. **Sen karar verene kadar kimse engellenmez.**
+- **Temiz**: mail gitmez, kayıt listede kalır. **Ama** aynı oyuncuyu 24 saat içinde **3 farklı kişi** şikayet
+  ettiyse Gemini temiz dese de mail gelir; ses parçaları **ekte** (~10 sn'lik dosyalar, kendin dinle).
+- **Asılsız şikayet**: bir oyuncunun **5 şikayeti** temiz çıkarsa **3 gün şikayet edemez**
+  (`<REPORTS_DIR>/reporters.json`; 3 kişilik şikayetler sayılmaz).
+- Hepsi: `https://<sunucu>/api/reports?key=<REPORT_KEY>` (engeli buradan kaldırmak da mümkün).
+- Engel cihaz kimliği + Play Games kimliği + kullanıcı adıyla tutulur (`<REPORTS_DIR>/bans.json`). Oyuncuya
+  **söylenmez**: sunucu onu almaz, oyun hiçbir mesaj göstermeden **çevrimdışı** (telefonda, tek kişilik) oynar ve o
+  oyun boyunca tekrar bağlanmayı denemez. O an meydandaysa bağlantısı kopmuş gibi düşer, sonra çevrimdışı kalır.
+- Mail: `MAIL_API_URL`, `MAIL_API_KEY`, `REPORT_MAIL_TO` (SMTP başka sunucuda; ayrıntı `docs/TODO.md`).
+  Ayarlı değilken mail yalnızca sunucu loguna yazılır, şikayetler yine listede.
 
 ## Kişiye ulaşmak
 

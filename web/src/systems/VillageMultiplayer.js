@@ -1,5 +1,6 @@
 import { EV } from '../core/events.js';
 import { CONFIG } from '../config/remote.js';
+import { CONSENT_VERSION } from '../ui/ConsentDialog.js';
 
 const SEND_EVERY = 0.1; // seconds
 const KEEPALIVE = 10;   // seconds: my state goes out at least this often, even standing still (the server drops frozen pages)
@@ -17,6 +18,12 @@ const BLOCKED_TEXT = {
   language: ['Meydanda Türkçe konuşalım! Mesajın gösterilmedi.', "Let's speak Turkish in the square! Your message was not shown."],
   harm: ['Bu mesaj meydana uygun değil, gösterilmedi.', 'This message is not suitable for the square, so it was not shown.'],
   muted: ['Bir süre mesaj gönderemezsin ({m} dk).', 'You cannot send messages for a little while.'],
+};
+const REPORT_FAILED = {
+  limit: ['Kısa sürede çok şikayet gönderdin, biraz sonra tekrar dene.', 'Too many reports — try again a little later.'],
+  again: ['Bu oyuncuyu az önce şikayet ettin, inceleniyor.', 'You already reported this player; it is being checked.'],
+  gone: ['Bu oyuncu meydandan ayrılmış.', 'That player has left the square.'],
+  paused: ['Son şikayetlerin asılsız çıktı. {d} gün şikayet edemezsin.', 'Your last reports were unfounded, so you cannot report for a few days.'],
 };
 const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Oyuncu engellendi, sohbet bitti.' };
 
@@ -37,14 +44,20 @@ export class VillageMultiplayer {
   #sentAt = 0; // when my state last went out (wall clock: slow phones have few frames)
   #retryDelay = 0;
   #rolling = new Set(); // balls we kicked last: report where they stop, for players who join later
+  #zoneOk = new Set();  // talking zones the player said yes to at the door (until leaving the square)
+  #atDoor = false;      // the "go in?" card is up
+  #outside = null;      // where the player last stood outside every zone (stopped there at the door)
 
   /**
    * @param {object} o
    * @param {Object<string, { suffix: string, balls?: object[], label: string }>} o.places
    *   public places: location id → room suffix (the city server + suffix is the room), its shared balls
    */
-  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null }) {
-    Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice });
+  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null, consent = null }) {
+    Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog, consent });
+    this.stayOffline = false; // the server said so (a ban after a report): offline this game, without a word
+    this.consentDeclined = false; // said no this time: offline in the square until the next game (or the menu)
+    ptt.onReport = () => this.report();
     this.locationId = 'village'; // the main square (chess, menu entry)
     this.joinedAt = null;
     this.chosenRoom = false; // true when the player picked the square on the main menu
@@ -95,6 +108,11 @@ export class VillageMultiplayer {
       this.toasts.show(`${this.remotes.get(id)?.name ?? 'Oyuncu'} ${tr}`, en);
     });
     net.on('call-start', ({ with: id, initiator }) => this.#startCall(id, initiator));
+    net.on('report-ok', ({ name }) => this.toasts.show(`Şikayetin alındı${name ? ` (${name})` : ''}. İnceleyeceğiz, teşekkürler!`, 'Thanks — your report was sent and will be checked.'));
+    net.on('report-failed', ({ reason, until }) => {
+      const [tr, en] = REPORT_FAILED[reason] ?? ['Şikayet şu an gönderilemedi.', 'The report could not be sent right now.'];
+      this.toasts.show(tr.replace('{d}', Math.max(1, Math.ceil(((until ?? 0) - Date.now()) / 86_400_000))), en);
+    });
     net.on('call-end', ({ reason }) => this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup));
     net.on('disconnected', () => {
       this.#reset({ keepChess: true }); // the server keeps the game: show it as it was until we are back
@@ -195,9 +213,11 @@ export class VillageMultiplayer {
   #count() { this.ptt.setOnline(this.remotes.count + 1, this.net.name, this.#roomLabel()); }
 
   async join() {
-    if (this.net.connected || this.joining) return;
+    if (this.net.connected || this.joining || this.stayOffline) return;
     this.joining = true;
     try {
+      // before the first time online: agree that what is said here is recorded and may be processed
+      if (!await this.#agreed()) return;
       if (!this.settings.get('deviceId')) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (a username belongs to this device)
       let name = this.settings.get('username', null);
       if (!name && !this.chosenRoom && this.autoName) { // story mode: in straight away, under the character's name
@@ -215,7 +235,7 @@ export class VillageMultiplayer {
       await this.#joinFriends(this.places[here].suffix); // (where the people are — or not into a full room)
       if (this.world.current.id !== here) return;
       const room = `${this.settings.get('serverRegion', 'ankara')}${this.places[here].suffix}`;
-      const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''), this.settings.get('deviceId'), this.outfit?.() ?? {}, this.settings.get('playGamesId', ''));
+      const welcome = await this.net.connect(name, room, this.settings.get('gender', 'boy'), this.settings.get('look', ''), this.settings.get('deviceId'), this.outfit?.() ?? {}, this.settings.get('playGamesId', ''), this.settings.get('dataConsent', null));
       this.joinedAt = here;
       this.#last = null; // tell the others where I am right away (not the spawn point)
       welcome.peers.forEach((p) => this.remotes.add(this.#loc(), p));
@@ -228,6 +248,7 @@ export class VillageMultiplayer {
       this.#retryDelay = 0;
       this.#suggestBusierRoom();
     } catch (e) {
+      if (e.code === 'offline') { this.stayOffline = true; return; } // banned: the square just stays single-player (no message, no retries)
       if (e.code === 'name-taken') { // the name is another device's (names are unique): pick another
         this.settings.set('username', null);
         this.nameNote = 'Bu kullanıcı adı alınmış, başka bir ad seç.';
@@ -238,6 +259,23 @@ export class VillageMultiplayer {
       this.toasts.show('Çok oyunculu sunucuya bağlanılamadı', `Playing offline (${e.message})`);
       if ((e.message === 'unreachable' || e.message === 'timeout') && this.#inSquare()) this.#retryLater(); // network trouble, not a refusal
     } finally { this.joining = false; }
+  }
+
+  /**
+   * Has the player agreed to the recording (this version of it)? Asks once (ConsentDialog); the
+   * answer "yes" is kept on the device and sent with every join (the server logs it as proof).
+   * No: from the menu back to it; from the story the square stays offline this game.
+   */
+  async #agreed() {
+    const c = this.settings.get('dataConsent', null);
+    if (!this.consent || c?.v >= CONSENT_VERSION) return true;
+    if (this.consentDeclined && !this.chosenRoom) return false;
+    const yes = await this.consent.ask();
+    if (yes) { this.settings.set('dataConsent', { v: CONSENT_VERSION, at: Date.now() }); this.consentDeclined = false; return true; }
+    this.consentDeclined = true;
+    if (this.chosenRoom) this.onNameCancel?.(); // picked the square on the menu: back to it
+    else this.toasts.show('Meydanda çevrimdışı devam ediyorsun', 'You go on offline in the square');
+    return false;
   }
 
   /** Is this username free (or this device's own)? Asks the village server; unreachable: let the join decide. */
@@ -274,6 +312,7 @@ export class VillageMultiplayer {
 
   #reset({ keepChess = false } = {}) {
     if (!keepChess) this.chess?.goOffline();
+    this.#zoneOk.clear();
     this.#setZone(null, { tell: false });
     this.#endCall(null);
     this.remotes.clear();
@@ -371,7 +410,7 @@ export class VillageMultiplayer {
     const c = this.remotes.get(id);
     const name = c?.name ?? 'Oyuncu';
     if (c) c.call = true;
-    this.calls.showCall(name, { onMute: (m) => this.voice.setMuted(m), onEnd: () => this.net.send({ type: 'call-end' }) });
+    this.calls.showCall(name, { onMute: (m) => this.voice.setMuted(m), onEnd: () => this.net.send({ type: 'call-end' }), onReport: () => this.report(id) });
     const micOk = await this.voice.start(id, initiator);
     this.toasts.show(`${name} ile sesli sohbet başladı`, micOk ? 'Voice chat started' : 'Mikrofon yok: sadece dinleyebilirsin · listen only');
   }
@@ -391,6 +430,27 @@ export class VillageMultiplayer {
     this.voice.end();
     this.calls.hideCall();
     if (message) this.toasts.show(message, 'Voice chat ended');
+  }
+
+  // --- reports ("Şikayet et") ----------------------------------------------------------
+
+  /**
+   * Pick a player here (the call partner, or the nearest first) and why; the server checks what
+   * they said in the last ten minutes, text and voice, and the operator decides on a ban.
+   */
+  async report(only = null) {
+    if (!this.net.connected) { this.toasts.show('Meydana bağlı değilsin', 'Not connected to the square'); return; }
+    const here = this.player.position;
+    const players = this.remotes.ids()
+      .filter((id) => !only || id === only)
+      .map((id) => { const c = this.remotes.get(id); return { id, name: c.name, dist: Math.hypot(c.position.x - here.x, c.position.z - here.z) }; })
+      .sort((a, b) => (b.id === this.voice.partner) - (a.id === this.voice.partner) || a.dist - b.dist)
+      .slice(0, 12)
+      .map((p) => ({ ...p, note: p.id === this.voice.partner ? 'sesli sohbet' : this.group?.ids().includes(p.id) ? 'yanında konuşuyor' : `${Math.round(p.dist)} m` }));
+    if (!players.length) { this.toasts.show('Şikayet edilecek kimse yok', 'Nobody here to report'); return; }
+    const pick = await this.reportDialog?.ask(players);
+    if (!pick || !this.net.connected) return;
+    this.net.send({ type: 'report', to: pick.id, reason: pick.reason });
   }
 
   // --- talking zones (the kahvehane) ----------------------------------------------------
@@ -418,6 +478,30 @@ export class VillageMultiplayer {
     }
   }
 
+  /**
+   * Walking into a talking zone: the player stops at the door — "sure?" (the recording itself was
+   * agreed to once, before going online: ConsentDialog). Yes: in (not asked again until they leave
+   * the square); no: they stay outside.
+   */
+  async #door(zone) {
+    if (this.#atDoor) return;
+    if (!this.choice) { this.#zoneOk.add(zone); return; }
+    this.#atDoor = true;
+    const inside = { x: this.player.position.x, z: this.player.position.z, rot: this.player.group.rotation.y };
+    if (this.#outside) this.player.place(this.#outside);
+    const name = this.zones[zone].name;
+    const go = await this.choice.ask({
+      title: `${name}: emin misin?`,
+      text: 'Burası toplu konuşma alanı: içeridekiler seni duyar.',
+      en: 'This is a talking area: everyone inside hears you.',
+      yes: 'Gir', no: 'Girme',
+    });
+    this.#atDoor = false;
+    if (!go || !this.net.connected) return;
+    this.#zoneOk.add(zone);
+    this.player.place(inside);
+  }
+
   /** How the zone's voices are doing (from GroupVoice). */
   zoneState(st) {
     if (st === 'full') { this.ptt.setZone(null); this.toasts.show('Burası şu an çok kalabalık, sesler kapalı', 'Too many people in here for voices right now'); }
@@ -428,7 +512,10 @@ export class VillageMultiplayer {
   update(dt, t) {
     if (!this.net.connected) return;
     if (this.group) {
-      this.#setZone(this.#zoneAt(this.player.position));
+      const P = this.player.position, zone = this.#zoneAt(P);
+      if (!zone) this.#outside = { x: P.x, z: P.z, rot: this.player.group.rotation.y };
+      if (zone && zone !== this.group.zone && !this.#zoneOk.has(zone)) this.#door(zone); // not in yet: stop at the door and ask
+      else this.#setZone(zone);
       for (const id of this.group.ids()) {
         const c = this.remotes.get(id);
         const d = c ? Math.hypot(c.position.x - this.player.position.x, c.position.z - this.player.position.z) : 99;

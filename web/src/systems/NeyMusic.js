@@ -1,7 +1,7 @@
 /**
  * Soft oriental music in the background of Aslan Bey's open library (assets/audio/kutuphane.mp3,
  * slow strings, CC0; a ney recording would fit even better), looped, louder the closer you are,
- * silent elsewhere. Without the file nothing plays.
+ * silent elsewhere. Without the file nothing plays. Silent at once when the game goes to the background.
  */
 const HEAR = 14;     // metres from the library's middle
 const VOLUME = 0.55; // at the very middle
@@ -9,6 +9,7 @@ const VOLUME = 0.55; // at the very middle
 export class NeyMusic {
   #audio = null;
   #missing = false;
+  #away = false; // the Android app in the background (its 'pause' event)
 
   /** @param {{ place: { location: string, x: number, z: number }, src?: string }} o */
   constructor({ world, player, place, src = 'assets/audio/kutuphane.mp3', muted = () => false, volume = () => 1 }) {
@@ -17,12 +18,16 @@ export class NeyMusic {
     const unlock = () => { if (this.level > 0 && !this.muted()) this.#play(); };
     addEventListener('pointerdown', unlock, { passive: true });
     addEventListener('keydown', unlock);
+    const silence = () => { if (this.#audio) { this.#audio.volume = 0; this.#audio.pause(); } }; // (no frame loop in the background to fade it)
+    document.addEventListener('visibilitychange', () => { if (document.hidden) silence(); });
+    document.addEventListener('pause', () => { this.#away = true; silence(); });
+    document.addEventListener('resume', () => { this.#away = false; });
   }
 
   /** 0..1: how loud it is meant to be right now (also for tests). */
   get level() {
     const { place } = this, p = this.player.position;
-    if (this.world.current?.id !== place.location || document.hidden) return 0;
+    if (this.world.current?.id !== place.location || document.hidden || this.#away) return 0;
     const d = Math.hypot(place.x - p.x, place.z - p.z);
     return d > HEAR ? 0 : Math.min(1, (1 - d / HEAR) ** 2 * 1.6);
   }

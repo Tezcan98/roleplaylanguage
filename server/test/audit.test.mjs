@@ -58,3 +58,21 @@ test('day files older than 90 days are deleted', () => {
   log.close();
   assert.deepEqual(readdirSync(dir).sort(), ['audit-2026-07-12.log', 'audit-2026-07-13.log', 'audit-2026-10-09.log']);
 });
+
+test('voice: its own hourly files, kept 48 hours; the audio is sealed apart as raw bytes', () => {
+  const { publicKey, privateKey } = keys(), dir = mkdtempSync(join(tmpdir(), 'audit-')), pem = publicKey.export({ type: 'spki', format: 'pem' });
+  for (const f of ['voice-2026-10-08T11.log', 'voice-2026-10-08T12.log', 'voice-2026-10-10T11.log', 'audit-2026-10-01.log']) writeFileSync(join(dir, f), '');
+  const now = () => new Date('2026-10-10T12:30:00Z');
+  const voice = new AuditLog({ dir, publicKey: pem, hours: 48, prefix: 'voice', now, log: () => {} });
+  const sound = Buffer.from([1, 2, 3, 250, 251]);
+  voice.write({ kind: 'voice', name: 'Ali', ctx: 'call', with: 'Veli', mime: 'audio/webm', audio: sound.toString('base64') });
+  voice.close();
+  assert.deepEqual(readdirSync(dir).sort(), ['audit-2026-10-01.log', 'voice-2026-10-08T12.log', 'voice-2026-10-10T11.log', 'voice-2026-10-10T12.log'], 'older than 48 h gone; the text log untouched');
+  const lines = readFileSync(join(dir, 'voice-2026-10-10T12.log'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  const [meta] = read(join(dir, 'voice-2026-10-10T12.log'), privateKey);
+  assert.equal(meta.with, 'Veli');
+  assert.equal(meta.audio, undefined, 'not inside the JSON');
+  const key = privateDecrypt({ key: privateKey, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: 'sha256' }, Buffer.from(lines[0].key, 'base64'));
+  const a = lines[1].a, d = createDecipheriv('aes-256-gcm', key, Buffer.from(a.iv, 'base64')); d.setAuthTag(Buffer.from(a.tag, 'base64'));
+  assert.deepEqual(Buffer.concat([d.update(Buffer.from(a.data, 'base64')), d.final()]), sound);
+});

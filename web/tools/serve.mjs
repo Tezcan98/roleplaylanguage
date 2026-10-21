@@ -9,6 +9,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VillageServer } from '../../server/src/VillageServer.js';
+import { Reports } from '../../server/src/Reports.js';
 import { NpcChat } from '../../server/src/NpcChat.js';
 import { npcChatRoute } from '../../server/src/npcChatRoute.js';
 import { Tts } from '../../server/src/Tts.js';
@@ -61,5 +62,7 @@ const http = createServer(async (req, res) => {
     res.end('Not found');
   }
 });
-const village = new VillageServer({ server: http }); // multiplayer village square on ws://…/ws/village
+// player reports in memory (Gemini only with GEMINI_API_KEY; no mails here)
+const reports = new Reports({ apiKey: process.env.GEMINI_API_KEY ?? '', onBan: (b) => village.kick(b) });
+const village = new VillageServer({ server: http, reports }); // multiplayer village square on ws://…/ws/village
 http.listen(port, () => console.log(`Türk Ailem → http://localhost:${port}`));

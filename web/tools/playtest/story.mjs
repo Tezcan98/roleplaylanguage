@@ -27,7 +27,7 @@ const t0 = Date.now();
 
 try {
   // test mode: debug handle, scripted microphone, fast classmates, no intro, empty save, light graphics
-  await page.goto(`${server.url}/?debug&fakemic&fastclass&nointro&fresh&quality=low`);
+  await page.goto(`${server.url}/?debug&consented&fakemic&fastclass&nointro&fresh&quality=low`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   await page.click('.main-menu.open .menu-main');
   await sleep(1200);

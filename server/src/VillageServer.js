@@ -28,6 +28,10 @@ const MAX_BALLS = 4;                        // shared balls per room (the square
 const SAY_GAP = 1200;                       // ms between two public speech bubbles
 const STRIKES = 3, STRIKE_WINDOW = 10 * 60_000, MUTE = 5 * 60_000; // held-back bubbles → a short silence
 const HEARTBEAT = 30000;                    // ms; silent connections are dropped
+const VOICE_MIME = /^audio\/(webm|ogg|mp4|aac|mpeg|wav)(;\s*codecs=[\w.]+)?$/;
+const VOICE_MAX = 60000;                    // base64 characters in one piece of voice (~10 s at 16 kbit/s is ~27 000)
+const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
+const LAST_PIECE = 15000;                   // ms after a call / a zone during which its last piece of voice is still taken
 const IDLE = 45000;                         // ms without any message from a page that promised a keep-alive (`ka`): its game is frozen (phone locked) — drop it
 
 
@@ -42,7 +46,8 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   in the same zone; the newcomer calls everyone already there.
  *
  * client → server
- *   { type: 'hello', name, room?, gender?, style? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open')
+ *   { type: 'hello', name, room?, gender?, style?, consent? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open';
+ *                                         consent: { v, at } — the player agreed to the recording, version v at time at: into the safety log once)
  *   { type: 'state', x, z, rot, moving, sit?, ride? }  own position (~10/s); sit = on a chair or bench, ride = 'horse' | 'scooter' | 'bike' (true / 1: horse, older games)
  *   { type: 'talk', on }                  push-to-talk pressed / released (🎙️ marker)
  *   { type: 'say', text }                 recognised speech (public text bubble)
@@ -55,6 +60,10 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'zone', zone }                walked into a talking zone ('kahve' | 'avlu') or out of it (null)
  *   { type: 'zone-rtc', to, data }        WebRTC offer / answer (with its candidates) to someone in the same zone
  *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
+ *   { type: 'voice', ctx, mime, data }    a piece (≤ ~10 s, base64) of my own voice while my mic is open in a call
+ *                                         (ctx 'call') or a talking zone ('zone'): into the encrypted voice log (48 h) and,
+ *                                         for ten minutes, into memory for reports (Reports.js); never relayed
+ *   { type: 'report', to, reason? }       report a player in this room ("Şikayet et"; Reports.js)
  *   { type: 'jump' }                      my horse jumped (relayed: { type: 'jump', id })
  *   { type: 'chess-ask', color } | { type: 'chess-dede', color? } | { type: 'chess-leave' } | { type: 'chess-resign' }
  *   | { type: 'chess-move', from, to, promotion? }
@@ -69,6 +78,8 @@ const IDLE = 45000;                         // ms without any message from a pag
  *     ice: WebRTC ICE servers for voice calls (STUN + TURN with short-lived credentials)
  *   { type: 'join', peer } | { type: 'leave', id } | { type: 'states', players }
  *   { type: 'say-blocked', reason, until? }  your bubble was held back (not Turkish / harmful; `until` = muted till)
+ *   { type: 'report-ok' } | { type: 'report-failed', reason, until? }  ('limit' | 'again' | 'gone' | 'off' | 'self' | 'paused')
+ *   { type: 'error', code: 'offline' }    a player the operator banned after a report: the game quietly plays offline (no message)
  *   { type: 'talk', id, on } | { type: 'say', id, text } | { type: 'ball', id, n, x, z, vx, vz }
  *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
  *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
@@ -84,6 +95,7 @@ export class VillageServer {
   #ticks = 0; // state broadcasts so far (far players every FAR_EVERY)
 
   #perIp = new Map();
+  #consents = new Set(); // consents already in the safety log (since this start)
   #chess = new Map(); // room → ChessTable
   #dama = new Map(); // room → DamaTables (the kahvehane's dama tables)
   #balls = new Map(); // room → [last state of each ball] (the kicker also reports where it stops)
@@ -100,16 +112,18 @@ export class VillageServer {
    *   (username "<expiry>:<id>", password HMAC-SHA1(secret, username)), valid for a day
    * @param {Map} [o.chessScores]  chess score board to start from; `onChessScore()` after every game (to save it)
    */
-  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null, names = null } = {}) {
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null, voiceAudit = null, names = null, reports = null } = {}) {
+    this.reports = reports; // player reports, what each said lately and the bans (Reports.js), or null
     this.names = names; // unique usernames (NameRegistry), or null: any name, numbered in a room
     this.moderator = moderator; // decides which public bubbles may be shown (word list, language, Jev / Laya)
     this.audit = audit; // the encrypted 90-day safety log (AuditLog.js), or null
+    this.voiceAudit = voiceAudit; // …and its 48-hour voice log
     this.log = log;
     this.chessScores = chessScores; // İsmail Dede's score board, shared by every square (name → games, wins…)
     this.onChessScore = onChessScore;
     this.turn = turn?.issue || (turn?.secret && turn.urls?.length) ? turn : null;
     this.wss = new WebSocketServer({
-      server, path, maxPayload: 32 * 1024,
+      server, path, maxPayload: 96 * 1024, // (a piece of voice is up to ~40 KB)
       verifyClient: ({ origin, req }, done) => {
         if (!allowOrigin(origin)) { this.log(`[village] refused origin ${origin}`); return done(false, 403, 'Origin not allowed'); }
         if ((this.#perIp.get(clientIp(req)) ?? 0) >= maxPerIp) return done(false, 429, 'Too many connections');
@@ -124,6 +138,7 @@ export class VillageServer {
       ws.alive = false;
       ws.ping();
     }), HEARTBEAT);
+    this.pruner = setInterval(() => this.reports?.prune(), HEARTBEAT); // what players said more than ten minutes ago
   }
 
   /**
@@ -273,6 +288,24 @@ export class VillageServer {
       case 'goal': // a match in the schoolyard: the scorer's screen tells the others
         if (msg.side === 'a' || msg.side === 'b') this.#toRoom(c, { type: 'goal', id: c.id, side: msg.side });
         break;
+      case 'voice': { // my own voice in a call or a talking zone: kept for safety, never relayed
+        const ctx = msg.ctx === 'call' ? 'call' : msg.ctx === 'zone' ? 'zone' : null;
+        if (typeof msg.mime !== 'string' || !VOICE_MIME.test(msg.mime) || typeof msg.data !== 'string' || msg.data.length > VOICE_MAX || !BASE64.test(msg.data)) return;
+        const recent = (last) => (last && Date.now() < last.until ? last.with : null); // the last piece arrives just after hanging up / walking out
+        const peer = ctx === 'call' ? members.get(c.partner)?.name ?? recent(c.lastCall) : ctx === 'zone' ? c.zone ?? recent(c.lastZone) : null;
+        if (!peer) return;
+        this.voiceAudit?.write({ kind: 'voice', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, ctx, with: peer, mime: msg.mime, audio: msg.data });
+        this.reports?.spoke(c, { mime: msg.mime, data: msg.data, ctx });
+        break;
+      }
+      case 'report': {
+        const target = members.get(msg.to);
+        if (!this.reports) return this.#send(c, { type: 'report-failed', reason: 'off' });
+        if (!target) return this.#send(c, { type: 'report-failed', reason: 'gone' });
+        const r = this.reports.report(c, target, typeof msg.reason === 'string' ? msg.reason : '');
+        this.#send(c, r.ok ? { type: 'report-ok', name: target.name } : { type: 'report-failed', reason: r.reason, ...(r.until ? { until: r.until } : {}) });
+        break;
+      }
       case 'call-diag': // the client reports how a voice connection went
         if (typeof msg.state === 'string') this.log(`[village] voice ${c.name}: ${msg.state.slice(0, 20)}${typeof msg.detail === 'string' ? ` (${msg.detail.slice(0, 120)})` : ''}`);
         break;
@@ -297,7 +330,7 @@ export class VillageServer {
     }
   }
 
-  #hello(c, { name, room = 'village', gender, style, pid, gid, outfit }) {
+  #hello(c, { name, room = 'village', gender, style, pid, gid, outfit, consent }) {
     if (c.id) return;
     if (typeof room !== 'string' || !ROOM.test(room)) return this.#send(c, { type: 'error', message: 'Geçersiz oda.' });
     const clean = String(name ?? '').trim();
@@ -311,6 +344,8 @@ export class VillageServer {
       c.pid = pid;
       for (const old of members.values()) if (old.pid === pid) { this.#leave(old); old.id = null; old.ws.terminate(); }
     }
+    // banned after a report: not told — the game just plays offline (on the phone, no server)
+    if (this.reports?.banned({ pid: c.pid, gid: c.gid, name: clean })) { this.#send(c, { type: 'error', code: 'offline', message: '' }); c.ws.close(1000); return; }
     if (this.names?.claim(clean, c.pid) === 'taken') return this.#send(c, { type: 'error', code: 'name-taken', message: 'Bu kullanıcı adı alınmış, başka bir ad seç.' }); // (unique names: NameRegistry)
     if (members.size >= MAX_PER_ROOM) return this.#send(c, { type: 'error', message: 'Meydan dolu, biraz sonra tekrar dene.' });
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
@@ -322,6 +357,15 @@ export class VillageServer {
     members.set(c.id, c);
     if (this.#table(room).rejoin(c)) this.#toAll(room, this.#table(room).state()); // back at the board after a dropped connection
     this.log(`[village] ${c.name} joined ${room} (${members.size})`);
+    // the proof that this player agreed to the recording (ConsentDialog): once per device and agreement
+    if (Number.isInteger(consent?.v) && Number.isFinite(consent?.at)) {
+      const k = `${c.pid ?? c.name}:${consent.v}:${consent.at}`;
+      if (!this.#consents.has(k)) {
+        this.#consents.add(k);
+        if (this.#consents.size > 50000) this.#consents.clear();
+        this.audit?.write({ kind: 'consent', room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, v: consent.v, at: new Date(consent.at).toISOString() });
+      }
+    }
   }
 
   /**
@@ -332,6 +376,7 @@ export class VillageServer {
   async #say(c, text) {
     const now = Date.now();
     const who = { kind: 'say', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, text };
+    this.reports?.said(c, text); // (held back or not: a report sees it)
     if (c.mutedUntil > now) { this.audit?.write({ ...who, shown: false, flag: 'muted' }); return this.#send(c, { type: 'say-blocked', reason: 'muted', until: c.mutedUntil }); }
     const v = await this.moderator.check(text);
     this.audit?.write({ ...who, shown: !!v.ok && !!c.id, ...(v.ok ? {} : { flag: v.reason }) }); // the safety log (AuditLog.js)
@@ -348,6 +393,7 @@ export class VillageServer {
     if (c.zone === zone) return;
     const members = [...this.#room(c.room).values()];
     if (c.zone) members.forEach((m) => { if (m !== c && m.zone === c.zone) this.#send(m, { type: 'zone-leave', id: c.id }); });
+    if (c.zone) c.lastZone = { with: c.zone, until: Date.now() + LAST_PIECE };
     c.zone = null;
     if (!zone) return;
     const there = members.filter((m) => m !== c && m.zone === zone);
@@ -361,6 +407,7 @@ export class VillageServer {
     if (!c.partner) return;
     const peer = this.#room(c.room).get(c.partner);
     c.partner = null;
+    if (peer) { c.lastCall = { with: peer.name, until: Date.now() + LAST_PIECE }; peer.lastCall = { with: c.name, until: Date.now() + LAST_PIECE }; }
     this.#send(c, { type: 'call-end', with: peer?.id, reason });
     if (peer && peer.partner === c.id) { peer.partner = null; this.#send(peer, { type: 'call-end', with: c.id, reason }); }
   }
@@ -378,6 +425,21 @@ export class VillageServer {
     if (!members.delete(c.id)) return;
     this.#toRoom(c, { type: 'leave', id: c.id });
     this.log(`[village] ${c.name} left ${c.room} (${members.size})`);
+  }
+
+  /**
+   * A ban decided after a report: whoever it names loses the connection now, as if the network
+   * dropped; when the game tries again it is told to stay offline (#hello).
+   */
+  kick(ban) {
+    for (const members of this.#rooms.values()) {
+      for (const c of [...members.values()]) {
+        const named = (ban.pid && c.pid === ban.pid) || (ban.gid && c.gid === ban.gid) || ban.name === c.name.toLocaleLowerCase('tr');
+        if (!named) continue;
+        this.#leave(c);
+        c.ws.terminate();
+      }
+    }
   }
 
   #dropFarCalls() {
@@ -438,6 +500,7 @@ export class VillageServer {
   close() {
     clearInterval(this.timer);
     clearInterval(this.heartbeat);
+    clearInterval(this.pruner);
     this.wss.clients.forEach((ws) => ws.close(1001, 'Server shutting down'));
     this.wss.close();
   }

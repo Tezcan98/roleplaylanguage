@@ -15,6 +15,9 @@ export class PushToTalk {
     this.on = false;
     this.btn = el('button', { class: 'ptt', html: `${MIC}<span>Bas, konuş (yazı)</span>`, attrs: { type: 'button', 'aria-label': 'Basılı tut ve konuş (T)' } });
     this.status = el('div', { class: 'pill online' });
+    // "Şikayet et", next to who is online in the top bar (main.js puts both there)
+    this.reportBtn = el('button', { class: 'pill report', text: '🚩', attrs: { type: 'button', title: 'Bir oyuncuyu şikayet et', 'aria-label': 'Şikayet et' }, on: { click: () => this.onReport?.() } });
+    this.reportBtn.hidden = true;
     this.zone = el('div', { class: 'pill zone-note' });
     this.zone.hidden = true;
     this.root = el('div', { class: 'ptt-wrap' }, [this.zone, this.status, this.btn]);
@@ -60,7 +63,7 @@ export class PushToTalk {
   show(visible) {
     if (!visible) { this.set(false); this.typeBox.hidden = true; }
     const appearing = visible && this.root.hidden;
-    this.root.hidden = !visible; this.status.hidden = !visible;
+    this.root.hidden = !visible; this.status.hidden = !visible; this.reportBtn.hidden = !visible;
     // a small round mic button; its words ("Bas, konuş") only the first few times, for a few seconds
     if (appearing) {
       let n = 0; try { n = Number(localStorage.getItem('pttHints') ?? 0); localStorage.setItem('pttHints', String(n + 1)); } catch { /* private mode */ }

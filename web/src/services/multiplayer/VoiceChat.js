@@ -1,7 +1,10 @@
+import { VoiceRecorder } from './VoiceRecorder.js';
+
 /**
  * One-to-one voice call over WebRTC, only between two players who both agreed
  * (the village server relays signalling for that pair only). The mic is open for the
- * whole call; `setMuted` mutes it.
+ * whole call; `setMuted` mutes it. While it is open my voice also goes to the server, in
+ * pieces, for the safety log and reports (VoiceRecorder).
  */
 export class VoiceChat {
   #pc = null;
@@ -19,6 +22,7 @@ export class VoiceChat {
     this.iceServers = iceServers;
     this.onState = onState;
     this.partner = null;
+    this.recorder = new VoiceRecorder(net);
     net.on('rtc', ({ from, data }) => { if (from === this.partner) this.#signal(data); });
   }
 
@@ -55,6 +59,7 @@ export class VoiceChat {
       if (this.#pc !== pc) { stream.getTracks().forEach((t) => t.stop()); return false; }
       this.#mic = stream.getAudioTracks()[0];
       pc.addTrack(this.#mic, stream);
+      this.recorder.start(this.#mic, 'call');
     } catch {
       micOk = false;
       pc.addTransceiver('audio', { direction: 'recvonly' }); // can still hear the other side
@@ -83,7 +88,11 @@ export class VoiceChat {
     } catch (e) { console.warn('[voice] signalling error', e); }
   }
 
-  setMuted(muted) { if (this.#mic) this.#mic.enabled = !muted; }
+  setMuted(muted) {
+    if (!this.#mic) return;
+    this.#mic.enabled = !muted;
+    if (muted) this.recorder.stop(); else this.recorder.start(this.#mic, 'call');
+  }
 
   /** After the browser blocked autoplay: play on a tap. */
   resumeAudio() { return this.#audio?.play().then(() => true).catch(() => false); }
@@ -94,6 +103,7 @@ export class VoiceChat {
   }
 
   end() {
+    this.recorder.stop();
     this.#pc?.close();
     this.#pc = null;
     this.#mic?.stop();

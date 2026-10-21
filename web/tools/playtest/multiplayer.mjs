@@ -33,17 +33,25 @@ async function player(tag, name, { room = null } = {}) {
   if (name) await page.evaluate((n) => window.__game.settings.set('username', n), name); // set in the profile
   await page.click('.main-menu.open .menu-main'); await sleep(1200);
   await closeCards(page); // the welcome, mom calling: the game starts, in the square
+  // first time online: agree to the recording (the button only after the tick)
+  const card = await waitFor(() => page.$('.card.consent'), 20000, 300);
+  consentAsked.push(!!card && await page.evaluate(() => document.querySelector('.card.consent .btn').disabled));
+  if (card) { await page.check('.card.consent input[type=checkbox]'); await page.click('.card.consent .btn:has-text("Kabul et")'); }
   await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 20000, 300); await sleep(800);
   await closeCards(page); // the square's first-visit card
   return page;
 }
+const consentAsked = []; // per player: the consent card came, its button off until the tick
 const closeCards = async (page) => { for (let i = 0; i < 5 && await page.evaluate(() => !!document.querySelector('.overlay.story-card.open')); i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(400); } };
 
 let failed = false;
 try {
   const A = await player('A', 'Ayşe');
+  check('before going online: the recording consent is asked, "Kabul et" only after the tick', consentAsked[0] === true && (await A.evaluate(() => window.__game.settings.get('dataConsent')?.v)) >= 1);
   check('"▶ Hikayeye başla": a new game starts in the village square, online', (await A.evaluate(() => window.__game.world.current.id)) === 'village' && (await A.evaluate(() => window.__game.village.net.connected)));
   const B = await player('B', 'Ayşe'); // same name on purpose
+  /** At a talking zone's door: "Gir" (go in) when the card asks (it doesn't once said yes, until leaving the square). */
+  const door = async (p) => { const b = await waitFor(() => p.$('.overlay.open button:text-is("Gir")'), 3000); if (b) await b.click(); };
   const at = (p, x, z) => p.evaluate(([x, z]) => window.__game.player.position.set(x, 0, z), [x, z]);
   const label = (p) => p.evaluate(() => (document.getElementById('act').hidden ? null : document.getElementById('act').textContent));
   const peers = (p) => p.evaluate(() => window.__game.village.voice._debugPeers().length);
@@ -112,6 +120,7 @@ try {
   await at(A, 2, 4); await at(B, 3.5, 4);
   const l = await waitFor(async () => { const x = await label(A); return x?.includes('sesli sohbet') ? x : null; }) ?? await label(A);
   check('"voice chat" offered next to a player', !!l && l.includes('sesli sohbet'), l);
+  await A.evaluate(() => { const net = window.__game.village.net, send = net.send.bind(net); window.__voiceOut = 0; net.send = (m) => { if (m.type === 'voice') window.__voiceOut++; return send(m); }; }); // count my voice pieces to the server
   await A.keyboard.press('e'); await sleep(800);
   check('the other player is asked first', !!(await waitFor(() => B.$('text=Kabul et'))));
   await B.click('text=Kabul et');
@@ -121,8 +130,16 @@ try {
   const inbound = () => B.evaluate(async () => { let n = 0; for (const pc of window.__game.village.voice._debugPeers()) (await pc.getStats()).forEach((r) => { if (r.type === 'inbound-rtp' && r.kind === 'audio') n += r.bytesReceived; }); return n; });
   const bytes = await waitFor(async () => { const n = await inbound(); return n > 1000 ? n : 0; }, 8000) || await inbound();
   check('audio flows', bytes > 0, `${bytes} bytes`);
+  check('…the call bar has the 🚩 report button', await A.evaluate(() => !!document.querySelector('.callbar button[aria-label="Şikayet et"]')));
   await A.click('.callbar .danger');
   check('hang up ends the call on both sides', !!(await waitFor(async () => !(await inCall(A)) && !(await inCall(B)))));
+  check('…my voice in the call went to the server in pieces (safety log, reports)', !!(await waitFor(() => A.evaluate(() => window.__voiceOut > 0), 5000)), String(await A.evaluate(() => window.__voiceOut)));
+  await A.click('.hud .pill.report');
+  await waitFor(() => A.$('.card.report'));
+  const bName = await B.evaluate(() => window.__game.village.net.name);
+  await A.click(`.card.report .btn:has-text("${bName}")`);
+  await A.click('.card.report .btn:has-text("Küfür")');
+  check('🚩 in the top bar: pick the player and why — the server takes the report', !!(await waitFor(() => A.evaluate(() => document.body.innerText.includes('Şikayetin alındı')), 5000)));
 
   await A.keyboard.press('e'); await waitFor(() => B.$('text=Reddet')); await B.click('text=Reddet'); await sleep(800);
   check('declining is reported and no call starts', !(await inCall(A)) && !(await inCall(B)));
@@ -137,6 +154,9 @@ try {
   // the kahvehane: a talking zone — walk in and everyone there hears each other, the nearer the louder
   const K = await A.evaluate(() => window.__game.village.zones.kahve);
   await at(A, K.x + 4, K.z + 3); await at(B, K.x + 5, K.z + 3);
+  const asked = await waitFor(() => A.$('.overlay.open button:text-is("Gir")'), 4000);
+  check('…but first stopped at the door: "emin misin?"', !!asked && (await A.evaluate(() => window.__game.village.group.zone)) === null && (await A.textContent('.overlay.open')).includes('emin misin'));
+  await door(A); await door(B);
   const inZone = await waitFor(async () => (await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.group.zone)))).every((z) => z === 'kahve'), 8000);
   check('kahvehane: walking in joins its talking zone, and the screen says so', !!inZone && await A.evaluate(() => !document.querySelector('.pill.zone-note').hidden && document.querySelector('.ptt span').textContent.includes('Basılı tut')),
     await A.evaluate(() => document.querySelector('.pill.zone-note')?.textContent));
@@ -159,6 +179,7 @@ try {
   // the mosque's courtyard is a talking zone too
   const Av = await A.evaluate(() => window.__game.village.zones.avlu);
   await at(A, Av.x - Av.w / 2 + 4, Av.z + 6);
+  await door(A);
   check('the mosque\'s courtyard is a talking zone too', !!(await waitFor(() => A.evaluate(() => window.__game.village.group.zone === 'avlu' && document.querySelector('.pill.zone-note').textContent.includes('Cami avlusu')), 6000)));
   await at(A, 0, 3); await waitFor(() => A.evaluate(() => window.__game.village.group.zone === null), 4000);
   await at(B, 0, 6);
@@ -218,6 +239,7 @@ try {
   // a talking zone (the kahvehane): everyone inside hears each other while the button is held
   await A.evaluate(() => { const g = window.__game, z = g.village.zones.kahve; g.player.position.set(z.x - 1, 0, z.z); }); await sleep(1500);
   await B.evaluate(() => { const g = window.__game, z = g.village.zones.kahve; g.player.position.set(z.x + 1, 0, z.z); });
+  await door(A); await door(B);
   check('kahvehane: both in the talking zone, connected to each other', !!(await waitFor(async () => (await A.evaluate(() => Object.values(window.__game.village.group.states())[0])) === 'connected' && (await B.evaluate(() => Object.values(window.__game.village.group.states())[0])) === 'connected', 20000)));
   check('…the talk button says to hold it there', (await A.textContent('.ptt')).includes('Basılı tut'));
   await A.evaluate(() => window.__game.village.talk(true));

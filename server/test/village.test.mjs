@@ -403,3 +403,86 @@ test('usernames are unique: a name belongs to the device that took it first', as
   assert.equal(b2.reply.type, 'welcome');
   [a, b, a2, g1, g2, renamed, b2].forEach((c) => c.ws.close()); v.close(); h.close();
 });
+
+test('reports: own voice kept only in a call, a report reaches Reports, a banned player quietly plays offline', async () => {
+  const { Reports } = await import('../src/Reports.js');
+  const written = [];
+  const srv = createServer();
+  let v;
+  const reports = new Reports({ log: () => {}, onBan: (b) => v.kick(b) });
+  v = new VillageServer({ server: srv, log: () => {}, reports, voiceAudit: { write: (r) => written.push(r) } });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  const saved = url;
+  url = `ws://127.0.0.1:${srv.address().port}/ws/village`;
+  try {
+    const a = await join('Rapor1', 'rep', { pid: 'aaaaaaaa11' });
+    const b = await join('Rapor2', 'rep', { pid: 'bbbbbbbb22' });
+    b.send({ type: 'voice', ctx: 'call', mime: 'audio/webm;codecs=opus', data: 'AAAA' }); // not in a call: ignored
+    b.send({ type: 'state', x: 0, z: 0, rot: 0 }); a.send({ type: 'state', x: 1, z: 0, rot: 0 });
+    await silence();
+    a.send({ type: 'call-request', to: b.welcome.id });
+    await b.next('call-request');
+    b.send({ type: 'call-answer', to: a.welcome.id, accept: true });
+    await b.next('call-start');
+    b.send({ type: 'voice', ctx: 'call', mime: 'audio/webm;codecs=opus', data: 'BBBB' });
+    b.send({ type: 'voice', ctx: 'call', mime: 'text/html', data: 'CCCC' }); // not audio: ignored
+    await silence();
+    assert.deepEqual(written.filter((r) => r.kind === 'voice').map((r) => [r.name, r.with, r.audio]), [['Rapor2', 'Rapor1', 'BBBB']]);
+    assert.equal(a.inbox.some((m) => m.type === 'voice'), false, 'voice is never relayed');
+
+    a.send({ type: 'report', to: b.welcome.id, reason: 'ahlaksiz' });
+    assert.equal((await a.next('report-ok')).name, 'Rapor2');
+    await reports.done;
+    const item = reports.items.at(-1);
+    assert.equal(item.target.name, 'Rapor2');
+    assert.equal(item.status, 'unchecked'); // (no Gemini key here)
+    a.send({ type: 'report', to: b.welcome.id });
+    assert.equal((await a.next('report-failed')).reason, 'again');
+
+    reports.decide(item.id, 'ban');
+    await new Promise((r) => b.ws.once('close', r)); // dropped, as if the network went
+    assert.equal(b.inbox.some((m) => m.type === 'banned' || m.type === 'error'), false, 'not told');
+    await a.next('leave');
+    a.inbox.length = 0;
+    // trying again: told only to stay offline (no message for the player), and nobody sees them
+    const again = client();
+    await again.open();
+    again.send({ type: 'hello', name: 'BaşkaAd', room: 'rep', pid: 'bbbbbbbb22' });
+    const err = await again.next('error');
+    assert.equal(err.code, 'offline');
+    assert.equal(err.message, '');
+    await new Promise((r) => (again.ws.readyState === WebSocket.CLOSED ? r() : again.ws.once('close', r))); // (it may be closed already)
+    await silence(200);
+    assert.equal(a.inbox.some((m) => m.type === 'join'), false);
+    assert.deepEqual(v.stats().rooms, { rep: 1 });
+    await a.close();
+  } finally {
+    url = saved;
+    v.close(); srv.close();
+  }
+});
+
+test('consent: the agreement sent with hello goes into the safety log once', async () => {
+  const written = [];
+  const srv = createServer();
+  const v = new VillageServer({ server: srv, log: () => {}, audit: { write: (r) => written.push(r) } });
+  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
+  const saved = url;
+  url = `ws://127.0.0.1:${srv.address().port}/ws/village`;
+  try {
+    const consent = { v: 1, at: 1_760_000_000_000 };
+    const a = await join('Onay1', 'cons', { pid: 'cccccccc33', consent });
+    await a.close();
+    const b = await join('Onay1', 'cons', { pid: 'cccccccc33', consent }); // the same device again
+    await b.close();
+    const c = await join('Onaysız', 'cons', { pid: 'dddddddd44' });
+    await c.close();
+    const got = written.filter((r) => r.kind === 'consent');
+    assert.equal(got.length, 1);
+    assert.equal(got[0].pid, 'cccccccc33');
+    assert.equal(got[0].v, 1);
+  } finally {
+    url = saved;
+    v.close(); srv.close();
+  }
+});

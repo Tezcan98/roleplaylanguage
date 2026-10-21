@@ -25,7 +25,7 @@ async function player(tag, name) {
   const page = await ctx.newPage();
   page.tag = tag;
   errors.push(...watchErrors(page, `${tag} `));
-  await page.goto(`${server.url}/?debug&nointro&fresh&quality=low&mp=${encodeURIComponent(villageUrl)}`);
+  await page.goto(`${server.url}/?debug&consented&nointro&fresh&quality=low&mp=${encodeURIComponent(villageUrl)}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   await page.evaluate(([r, n]) => { const s = window.__game.settings; s.set('serverRegion', r); s.set('serverPicked', true); s.set('username', n); window.__game.village.chosenRoom = true; }, [room, name]); // stay in our own test room (not the busiest one)
   await page.click('.main-menu.open .menu-main'); await sleep(1200); // "▶ Hikayeye başla": a new game starts in the park in the square
