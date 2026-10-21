@@ -4,6 +4,8 @@
  * stays low under talk — a conversation, a voice chat, a book read aloud (`duck()`: 0–1, how much
  * of it is left). Indoors (the house, the classroom) it is quiet. Off with "Müzik" in the settings.
  * The volume goes through Web Audio where there is one (iPhones ignore an audio element's volume).
+ * The game in the background (another app, the screen off): silent at once — the fades run in the
+ * frame loop, which the browser stops there, so they would never get to zero.
  */
 const TRACKS = { yard: 'assets/audio/bahce.mp3', schoolyard: 'assets/audio/okul.mp3', village: 'assets/audio/meydan.mp3' };
 const VOLUME = 0.32;
@@ -11,6 +13,7 @@ const VOLUME = 0.32;
 export class BackgroundMusic {
   #tracks = new Map(); // src → { audio, gain, level }
   #ctx = null;
+  #away = false; // the Android app went to the background (its 'pause' event; a page has document.hidden)
 
   /** `volume()`: 0–1 from the settings ("Müzik" × "Ses"). */
   constructor({ world, muted = () => false, duck = () => 1, tracks = TRACKS, volume = () => 1 }) {
@@ -19,10 +22,25 @@ export class BackgroundMusic {
     const unlock = () => { this.#ctx?.resume?.().catch(() => {}); this.#want(); };
     addEventListener('pointerdown', unlock, { passive: true });
     addEventListener('keydown', unlock);
+    document.addEventListener('visibilitychange', () => (document.hidden ? this.#silence() : this.#back()));
+    document.addEventListener('pause', () => { this.#away = true; this.#silence(); }); // (Capacitor: the app in the background)
+    document.addEventListener('resume', () => { this.#away = false; this.#back(); });
   }
 
+  /** In the background: every track stops now (back in front, `update` fades the right one in again). */
+  #silence() {
+    for (const t of this.#tracks.values()) {
+      t.level = 0;
+      if (t.gain) t.gain.gain.value = 0; else t.audio.volume = 0;
+      if (!t.audio.paused) t.audio.pause();
+    }
+    this.#ctx?.suspend?.().catch(() => {});
+  }
+
+  #back() { if (!document.hidden && !this.#away) this.#ctx?.resume?.().catch(() => {}); }
+
   /** The track meant to play here now (or null). */
-  get current() { return document.hidden || this.muted() ? null : this.tracks[this.world.current?.id] ?? null; }
+  get current() { return document.hidden || this.#away || this.muted() ? null : this.tracks[this.world.current?.id] ?? null; }
 
   /** 0..1 per track (tests). */
   levels() { return Object.fromEntries([...this.#tracks].map(([src, t]) => [src, t.level])); }
