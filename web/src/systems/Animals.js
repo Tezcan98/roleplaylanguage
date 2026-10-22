@@ -80,18 +80,13 @@ export class Animals {
     const group = new THREE.Group(); group.add(scene);
     let current = 'idle';
     const pace = KINDS[kind].pace ?? {};
-    const play = (name, speed) => { // `speed` (m/s): the legs keep up with it
-      if (clips[name] && pace[name] && speed != null) clips[name].timeScale = Math.min(1.35, Math.max(0.6, speed / pace[name])); // (at 2.4× — a gallop at 10 m/s — the stride and the body bob came 4 times a second and looked like shaking)
+    const play = (name, speed) => { // `speed` (m/s): a walk keeps up with it a little; a gallop plays at its own speed (sped up 2.4× at 10 m/s it shook; the first version had no scaling at all)
+      if (clips[name] && name === 'walk' && pace[name] && speed != null) clips[name].timeScale = Math.min(1.3, Math.max(0.7, speed / pace[name]));
+      else if (clips[name]) clips[name].timeScale = 1;
       if (!clips[name] || name === current) return;
       clips[current]?.fadeOut(0.25); clips[name].reset().fadeIn(0.25).play(); current = name;
     };
-    // how far the animal's back is above (below) where it is at rest: a rider moves with it (a horse's back rises and falls about 6 cm with each stride; a rider held still on it looked like shaking)
-    let back = null; scene.traverse((o) => { if (!back && o.isBone && /^Back$/.test(o.name)) back = o; });
-    const tmp = new THREE.Vector3();
-    scene.updateMatrixWorld(true);
-    const rest = back ? back.getWorldPosition(tmp).y - group.position.y : 0;
-    const seatDelta = back ? () => back.getWorldPosition(tmp).y - group.position.y - rest : null;
-    return { kind, group, play, update: (dt) => mixer.update(dt), seat: KINDS[kind].seat ?? 0, seatDelta, hands: KINDS[kind].hands };
+    return { kind, group, play, update: (dt) => mixer.update(dt), seat: KINDS[kind].seat ?? 0, hands: KINDS[kind].hands };
   }
 
   /** A horse for another player who rides in the square (RemotePlayers). */

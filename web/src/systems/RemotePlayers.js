@@ -60,6 +60,11 @@ export class RemotePlayers {
     players.forEach(({ id, x, z, rot, moving, sit = false, ride = false }) => {
       const p = this.#players.get(id);
       if (!p) return;
+      // the velocity of the last two reports: between reports the figure keeps going that way (reports come ~10 times a second;
+      // at a gallop each one is a metre further, and chasing a staircase made the other player's horse lurch and shake)
+      const now = performance.now(), dtNet = p.at ? (now - p.at) / 1000 : 0;
+      p.vel = moving && p.target && dtNet > 0.02 && dtNet < 0.6 ? { x: (x - p.target.x) / dtNet, z: (z - p.target.z) / dtNet } : { x: 0, z: 0 };
+      p.at = now;
       p.target = { x, z, rot }; p.moving = moving;
       if (p.char.seated !== sit) p.char.sit(sit); // at a tea table or on a bench
       const kind = rideKind(ride);
@@ -74,23 +79,24 @@ export class RemotePlayers {
    * animated — a square of a hundred would cost a phone its frame rate; the others still move (cheaply).
    */
   update(dt, t, near = null) {
-    const k = Math.min(1, dt * 10);
     let shown = null;
     if (near) {
       shown = new Set([...this.#players.values()]
         .map((p) => [p, Math.hypot(p.target.x - near.x, p.target.z - near.z)])
         .filter(([, d]) => d < SHOW_DIST).sort((a, b) => a[1] - b[1]).slice(0, MAX_SHOWN).map(([p]) => p));
     }
+    const now = performance.now(), kPos = 1 - Math.exp(-dt * 12);
     this.#players.forEach((p) => {
       const { char, target, moving } = p, pos = char.position;
-      pos.x += (target.x - pos.x) * k;
-      pos.z += (target.z - pos.z) * k;
+      const age = p.at ? Math.min(0.25, (now - p.at) / 1000) : 0, vel = p.vel ?? { x: 0, z: 0 };
+      pos.x += (target.x + vel.x * age - pos.x) * kPos;
+      pos.z += (target.z + vel.z * age - pos.z) * kPos;
       const visible = !shown || shown.has(p) || (near && Math.hypot(pos.x - near.x, pos.z - near.z) < 8); // (someone right next to you always)
       char.group.visible = visible;
       if (char.mount) char.mount.group.visible = visible;
       if (!visible) return;
       if (p.hd) { p.hd(); p.hd = null; }
-      char.turnTo(target.rot, 0.2);
+      char.turnTo(target.rot, 1 - Math.exp(-dt * 12));
       char.moving = moving; char.walk(t, moving && !char.mount?.glide ? 1 : 0); // (on a scooter they stand still on the deck, as on their own screen)
       char.update(dt);
     });
