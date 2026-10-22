@@ -30,6 +30,8 @@ const TEFEKKUR_MORE = [
   { tr: 'Bir tane daha söyler misin Hocam?', en: 'Will you tell me one more, Hoca?', next: 'tefekkur' },
   { tr: 'Teşekkürler Hocam!', en: 'Thank you, Hoca!', next: 'thanks' },
 ];
+/** After his opening line: another one, the prayer times, wudu, or goodbye. */
+const TEFEKKUR_OPEN = [...TEFEKKUR_MORE.slice(0, 1), ...ASK.slice(0, 2), { tr: 'Görüşürüz Hocam!', en: 'See you, Hoca!' }];
 const AGAIN = [{ tr: 'Teşekkürler Hocam!', en: 'Thank you, Hoca!', next: 'thanks' }, ...ASK.slice(0, 3)];
 
 export default {
@@ -46,7 +48,7 @@ export default {
   castAll: { imam: ['village', 'imam', 'roam'] },
   dialogues: {
     imam: {
-      start: (ctx) => (ctx.dayName === 'Cuma' && ctx.hour >= 10 && ctx.hour < 15 ? 'cuma' : part(ctx.hour)),
+      start: () => 'tefekkur', // Yusuf Hoca begins with something to think about (an ayah, a hadith, a saying), without being asked
       nodes: {
         sabah: { say: 'Hayırlı sabahlar evlat! Ben Yusuf Hoca, bu caminin imamıyım. Sabah namazından sonra avlu ne kadar huzurlu, değil mi?', en: 'Good morning, child! I am Yusuf Hoca, the imam of this mosque. After the morning prayer the courtyard is so peaceful, isn\'t it?',
           words: [['imam', 'prayer leader'], ['avlu', 'courtyard'], ['huzurlu', 'peaceful']],
@@ -98,14 +100,14 @@ export default {
         tefekkur: { say: 'Kur’an’da şöyle buyrulur: “Göklerin ve yerin yaratılışında, gece ile gündüzün birbiri ardınca gelişinde akıl sahipleri için deliller vardır.” Bu akşam gökyüzüne bir bak ve düşün evlat.', en: 'The Quran says: “In the creation of the heavens and the earth, and in the alternation of night and day, there are signs for those with understanding.” (Al ‘Imran 3:190) Look at the sky this evening and think, child.',
           words: [['gökyüzü', 'the sky'], ['yaratılış', 'creation'], ['düşünmek', 'to think']],
           variants: [
-            { say: 'Ne güzel bir söz var: “Bir harf kâtipsiz olmaz.” Kâtip ne demek, biliyor musun?', en: 'There is a beautiful saying: “A letter is not without a kâtip.” Do you know what “kâtip” means?', optionsAreMeanings: true,
+            { say: '“Bir harf kâtipsiz olmaz.” Kâtip ne demek, biliyor musun?', en: '“A letter is not without a kâtip.” Do you know what “kâtip” means?', optionsAreMeanings: true,
               words: [['harf', 'letter (of the alphabet)']],
               options: [{ tr: 'teacher', en: '', wrong: true }, { tr: 'scribe, writer', en: '', next: 'katip' }, { tr: 'book', en: '', wrong: true }] },
             { say: 'Rahman suresinde Allah tekrar tekrar sorar: “Rabbinizin hangi nimetlerini yalanlayabilirsiniz?” Bugün içtiğin suyu, yediğin elmayı bir düşün.', en: 'In Surah ar-Rahman Allah asks again and again: “Which of your Lord’s blessings would you deny?” (55:13) Think of the water you drank and the apple you ate today.',
               words: [['nimet', 'blessing'], ['elma', 'apple'], ['su', 'water']] },
             { say: 'Kur’an der ki: “Allah’ın rahmetinin eserlerine bak; yeryüzünü ölümünden sonra nasıl diriltiyor!” Kışın kuruyan ağaçlar baharda yeniden yeşerir. Bu ne büyük bir kudret!', en: 'The Quran says: “Look at the marks of Allah’s mercy — how He brings the earth to life after its death!” (Ar-Rum 30:50) Trees that dry up in winter turn green again in spring. What great power!',
               words: [['bahar', 'spring'], ['ağaç', 'tree'], ['diriltmek', 'to bring to life'], ['yeşermek', 'to turn green']] },
-            { say: 'Ne güzel bir söz var: “Güzel gören güzel düşünür. Güzel düşünen, hayatından lezzet alır.” Sen de her şeye güzel bakmaya çalış evlat.', en: 'There is a beautiful saying: “Whoever sees the good thinks well. Whoever thinks well enjoys his life.” Try to look at everything kindly too, child.',
+            { say: '“Güzel gören güzel düşünür. Güzel düşünen, hayatından lezzet alır.” Sen de her şeye güzel bakmaya çalış evlat.', en: '“Whoever sees the good thinks well. Whoever thinks well enjoys his life.” Try to look at everything kindly too, child.',
               words: [['güzel', 'beautiful, good'], ['düşünmek', 'to think'], ['lezzet almak', 'to take pleasure in']] },
             { say: 'Kur’an’da Allah bal arısından bahseder: “Onların karınlarından renk renk bir içecek çıkar; onda insanlar için şifa vardır.” Minicik bir arı, bize bal yapıyor. Ne büyük bir ikram!', en: 'In the Quran Allah speaks of the honeybee: “From their bellies comes a drink of many colours, in which there is healing for people.” (An-Nahl 16:69) A tiny bee makes honey for us. What a great gift!',
               words: [['arı', 'bee'], ['bal', 'honey'], ['şifa', 'healing'], ['ikram', 'gift, kindness']] },
@@ -113,10 +115,8 @@ export default {
               words: [['sağlık', 'health'], ['boş vakit', 'free time'], ['kıymet', 'worth, value']] },
             { say: 'Peygamberimiz buyurmuş: “Dünyada bir garip ya da bir yolcu gibi ol.” Yolcu yolda oyalanmaz, gideceği yeri düşünür. Biz de öyle olalım.', en: 'Our Prophet said: “Be in this world like a stranger or a traveller.” (Bukhari) A traveller doesn’t dawdle on the road; he thinks of where he is going. Let us be like that too.',
               words: [['yolcu', 'traveller'], ['garip', 'stranger'], ['oyalanmak', 'to dawdle']] },
-            { say: 'Güzel bir söz var: “Biz muhabbet fedaileriyiz; husumete vaktimiz yoktur.” Yani biz sevgiye adanmışız, düşmanlığa vaktimiz yok. Kimseye küsme evlat.', en: 'There is a beautiful saying: “We are devotees of love; we have no time for enmity.” So we are devoted to love and have no time for hostility. Don’t sulk at anyone, child.',
-              words: [['muhabbet', 'love, affection'], ['husumet', 'enmity'], ['küsmek', 'to sulk, to stop speaking to']] },
           ],
-          options: TEFEKKUR_MORE },
+          options: TEFEKKUR_OPEN },
         katip: { say: 'Evet, yazan kişi! Bir harf bile kendi kendine yazılmaz. Peki bu koca kâinat kitabı kâtipsiz olabilir mi? Bir düşün evlat.', en: 'Yes, the one who writes! Not even one letter writes itself. So can this great book of the universe be without a Scribe? Think about it, child.',
           words: [['kâtip', 'scribe, writer'], ['kâinat', 'the universe'], ['kendi kendine', 'by itself']],
           options: TEFEKKUR_MORE },
