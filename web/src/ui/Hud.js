@@ -19,7 +19,6 @@ export class Hud {
         el('button', { class: 'pill money', attrs: { type: 'button', title: 'Paran · game money' }, on: { click: onBag } }, ['💰 ', this.money, ' ₺']), // game money: lira in the bag
       ]),
       el('div', { class: 'grp' }, [
-        this.clock,
         el('button', { class: 'pill', attrs: { type: 'button' }, on: { click: onBag } }, ['Çanta ', this.bag]),
         ...extra,
       ]),

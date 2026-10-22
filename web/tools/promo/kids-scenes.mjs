@@ -25,7 +25,7 @@ export const KIDS_VO = {
 };
 
 /** A new game (it starts in the park), every card closed, the HD character in everyday clothes, no interface. */
-async function start(kit) {
+export async function start(kit) {
   const page = await kit.open();
   await page.evaluate(() => { const s = window.__game.settings; s.set('dataConsent', { v: 99, at: Date.now() }); s.set('villageIntroSeen', true); }); // (no consent card on camera)
   await page.evaluate(() => document.querySelector('.menu-main')?.click());
@@ -41,9 +41,9 @@ async function start(kit) {
   await page.addStyleTag({ content: '#labels,.hud,#quest,.ptt-wrap,.net-status{visibility:hidden!important}' });
   return page;
 }
-const showLabels = (page) => page.evaluate(() => document.getElementById('labels')?.style.setProperty('visibility', 'visible', 'important'));
-const showToasts = (page) => page.evaluate(() => document.getElementById('toasts')?.style.setProperty('visibility', 'visible', 'important'));
-const fixed = (page, [x, y, z], [lx, ly, lz]) => page.evaluate(([x, y, z, lx, ly, lz]) => { const g = window.__game, V = g.player.position.constructor; g.camera.setFixed(new V(x, y, z), new V(lx, ly, lz)); }, [x, y, z, lx, ly, lz]);
+export const showLabels = (page) => page.evaluate(() => document.getElementById('labels')?.style.setProperty('visibility', 'visible', 'important'));
+export const showToasts = (page) => page.evaluate(() => document.getElementById('toasts')?.style.setProperty('visibility', 'visible', 'important'));
+export const fixed = (page, [x, y, z], [lx, ly, lz]) => page.evaluate(([x, y, z, lx, ly, lz]) => { const g = window.__game, V = g.player.position.constructor; g.camera.setFixed(new V(x, y, z), new V(lx, ly, lz)); }, [x, y, z, lx, ly, lz]);
 
 export const KIDS_SCENES = [
   {

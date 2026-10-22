@@ -399,6 +399,7 @@ export class VillageMultiplayer {
       label: blocked ? `${best.name} engelini kaldır` : `${best.name} ile sesli sohbet et`,
       dist: best.dist,
       priority: blocked ? 0.9 : 1,
+      left: true, // its own button, on the left
       run: () => {
         if (blocked) this.unblockPlayer(best.id, best.name);
         else this.net.send({ type: 'call-request', to: best.id });

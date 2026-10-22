@@ -312,7 +312,8 @@ export class Character {
         jy = 4 * JUMP.height * u * (1 - u); pitch = -JUMP.pitch * Math.cos(Math.PI * u);
         if (u >= 1) { this.#jump = null; pitch = 0; }
       }
-      p.y = (m.stand ? m.seat : m.seat - hip.up + 0.08) + jy; // standing (a scooter): the feet on the deck
+      const bob = m.seatDelta && !this.#jump ? m.seatDelta() : 0; // the horse's back rises and falls with its stride: the rider with it
+      p.y = (m.stand ? m.seat : m.seat - hip.up + 0.08) + jy + bob; // standing (a scooter): the feet on the deck
       const f = hip.fwd - (m.saddle ?? 0); // the seat (a horse's back, a bike's saddle) under the hips
       m.group.position.set(p.x + Math.sin(rot) * f, jy, p.z + Math.cos(rot) * f); m.group.rotation.y = rot; m.group.rotation.x = pitch;
       const v = this.#rideSpeed;

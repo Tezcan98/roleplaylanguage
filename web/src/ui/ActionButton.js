@@ -11,7 +11,17 @@ export class ActionButton {
     this.root = el('button', { attrs: { id: 'act', type: 'button' }, on: { click: onPress } });
     this.root.hidden = true;
     this.more = el('div', { attrs: { id: 'act-more' } });
-    host.append(this.more, this.root);
+    this.leftBtn = el('button', { attrs: { id: 'act-left', type: 'button' }, on: { click: () => this.#leftRun?.() } }); // the voice-chat offer: on the left, away from the others
+    this.leftBtn.hidden = true;
+    host.append(this.more, this.root, this.leftBtn);
+  }
+  #leftRun = null;
+
+  /** The left-hand button (`a`: { label, run } or null). */
+  showLeft(a) {
+    this.#leftRun = a?.run ?? null;
+    this.leftBtn.hidden = !a;
+    if (a && this.leftBtn.textContent !== a.label) this.leftBtn.textContent = a.label;
   }
 
   /** @param action the main one  @param others [{ label, run }] */

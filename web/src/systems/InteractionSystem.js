@@ -71,16 +71,19 @@ export class HotspotInteractions {
  * New kinds of interaction = new provider; nothing else changes.
  */
 export class InteractionSystem {
-  constructor(providers, modes) { this.providers = providers; this.modes = modes; this.current = null; this.others = []; }
+  constructor(providers, modes) { this.providers = providers; this.modes = modes; this.current = null; this.others = []; this.left = null; }
 
   update(playerPos) {
     this.current = null;
     this.others = [];
     if (!this.modes.is('play')) return null;
     const all = [];
+    this.left = null;
     for (const p of this.providers) {
       const a = p.find(playerPos);
-      if (a) all.push(a);
+      if (!a) continue;
+      if (a.left) { if (!this.left || a.dist < this.left.dist) this.left = a; } // "… ile sesli sohbet et": its own button on the left, above the joystick
+      else all.push(a);
     }
     all.sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0) || a.dist - b.dist);
     this.current = all[0] ?? null;

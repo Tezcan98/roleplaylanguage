@@ -28,6 +28,7 @@ export class Game {
     world.current.update(dt, t);
 
     actionButton.show(interactions.update(player.position), interactions.others);
+    actionButton.showLeft(interactions.left);
     shotButton?.show(modes.is('play') && !player.seated && !player.mount && (!!toys.shotBall() || !!village.onPitch?.(player.position))); // on a pitch: always there
     joystick.visible = modes.is('play');
     help.visible = modes.is('play');

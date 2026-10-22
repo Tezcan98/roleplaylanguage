@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { startServer, startVillageServer, sleep } from '../playtest/lib.mjs';
 import { SCENES as LONG_SCENES, CUT as LONG_CUT, SHORT_SCENES, SHORT_CUT } from './scenes.mjs'; // SCENES: recording order; CUT: the order in the video
 import { KIDS_SCENES, KIDS_CUT, KIDS_VO } from './kids-scenes.mjs';
+import { EPISODES } from './series.mjs';
 
 const out = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'promo-out';
 const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
@@ -23,10 +24,13 @@ const JOIN = process.argv.includes('--join'); // --join: only join the scene cli
 const CLEAN = process.argv.includes('--clean'); // --clean: no interface, no captions (a background loop for the website)
 const opt = (k) => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
 const LANG = opt('lang') ?? null; // en | ar: captions, meanings and voice-over in that language
-const KIDS = process.argv.includes('--kids'); // --kids: the 15-second Shorts for parents (kids-scenes.mjs), --lang=tr|en|ar
+const EPISODE = process.argv.find((a) => a.startsWith('--episode='))?.slice(10) ?? null; // --episode=park|speak…: one Short of the series (series.mjs), --lang=tr|en|ar
+if (EPISODE && !EPISODES[EPISODE]) throw new Error(`no episode ${EPISODE}: ${Object.keys(EPISODES).join(', ')}`);
+const KIDS = process.argv.includes('--kids') || !!EPISODE; // --kids: the 15-second Shorts for parents (kids-scenes.mjs), --lang=tr|en|ar
 const SHORT = process.argv.includes('--short') || KIDS; // --short: the vertical YouTube Short (9:16, 1080×1920)
 const FPS = 30, W = SHORT ? 540 : 1280, H = SHORT ? 960 : 720, SCALE = SHORT ? 2 : 1.5; // 1920×1080 frames (a Short: 1080×1920), UI the size of a tablet's / a phone's
-const SCENES = KIDS ? KIDS_SCENES : SHORT ? SHORT_SCENES : LONG_SCENES, CUT = KIDS ? KIDS_CUT : SHORT ? SHORT_CUT : LONG_CUT;
+const SCENES = EPISODE ? EPISODES[EPISODE].scenes : KIDS ? KIDS_SCENES : SHORT ? SHORT_SCENES : LONG_SCENES;
+const CUT = EPISODE ? SCENES.map((s) => s.name) : KIDS ? KIDS_CUT : SHORT ? SHORT_CUT : LONG_CUT;
 mkdirSync(out, { recursive: true });
 
 const server = await startServer();
@@ -311,13 +315,13 @@ function voiceOver(video, clips, fade) {
  * <name>-ses.mp4 (music + voice) and <name>-seslendirme.txt (the lines and when each starts).
  */
 async function kidsAudio(video, clips, fade) {
-  const lang = LANG ?? 'tr', lines = KIDS_VO[lang], dir = join(out, `vo-${lang}`); mkdirSync(dir, { recursive: true });
+  const lang = LANG ?? 'tr', lines = (EPISODE ? EPISODES[EPISODE].vo : KIDS_VO)[lang], dir = join(out, `vo-${lang}`); mkdirSync(dir, { recursive: true });
   const total = clips.reduce((n, c) => n + c.seconds, 0) - fade * (clips.length - 1);
   const starts = []; let t = 0; clips.forEach((c) => { starts.push(t); t += c.seconds - fade; });
   const music = new URL('../../assets/audio/bahce.mp3', import.meta.url).pathname;
   const bed = `[1:a]atrim=0:${total.toFixed(2)},afade=t=in:d=0.4,afade=t=out:st=${(total - 1.2).toFixed(2)}:d=1.2,volume=0.28[m]`;
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, '-stream_loop', '-1', '-i', music, '-filter_complex', bed, '-map', '0:v', '-map', '[m]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-t', total.toFixed(2), '-movflags', '+faststart', video.replace(/\.mp4$/, '-muzik.mp4')]);
-  writeFileSync(video.replace(/\.mp4$/, '-seslendirme.txt'), `${lines.map((l, i) => `${i + 1}. ${starts[i].toFixed(1)} sn – ${(i < lines.length - 1 ? starts[i + 1] : total).toFixed(1)} sn: ${l}`).join('\n')}\n\nElevenLabs: her satırı ayrı dosya yap (1.mp3 … ${lines.length}.mp3), sonra: node tools/promo/record.mjs <klasör> --kids --lang=${lang} --join --vo=<mp3 klasörü>\n`);
+  writeFileSync(video.replace(/\.mp4$/, '-seslendirme.txt'), `${lines.map((l, i) => `${i + 1}. ${starts[i].toFixed(1)} sn – ${(i < lines.length - 1 ? starts[i + 1] : total).toFixed(1)} sn: ${l}`).join('\n')}\n\nElevenLabs: her satırı ayrı dosya yap (1.mp3 … ${lines.length}.mp3), sonra: node tools/promo/record.mjs <klasör> ${EPISODE ? `--episode=${EPISODE}` : '--kids'} --lang=${lang} --join --vo=<mp3 klasörü>\n`);
   const voDir = opt('vo'), files = [];
   for (let i = 0; i < lines.length; i++) {
     const given = voDir && ['mp3', 'wav', 'm4a'].map((x) => join(voDir, `${i + 1}.${x}`)).find((f) => { try { return readFileSync(f).length > 0; } catch { return false; } });
@@ -358,7 +362,7 @@ try {
       chain += `${last}[${i + 1}:v]xfade=transition=fade:duration=${F}:offset=${offset.toFixed(2)}${label};`;
       last = label;
     });
-    const final = join(out, KIDS ? `turk-ailem-15sn-${LANG ?? 'tr'}.mp4` : SHORT ? 'anadolu-ailesi-short.mp4' : 'anadolu-ailesi-promo.mp4');
+    const final = join(out, EPISODE ? `turk-ailem-${EPISODE}-${LANG ?? 'tr'}.mp4` : KIDS ? `turk-ailem-15sn-${LANG ?? 'tr'}.mp4` : SHORT ? 'anadolu-ailesi-short.mp4' : 'anadolu-ailesi-promo.mp4');
     execFileSync('ffmpeg', ['-y', '-loglevel', 'error', ...inputs, '-filter_complex', chain.replace(/;$/, ''), '-map', '[v]', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', final]);
     console.log(`→ ${final}`);
     if (KIDS) await kidsAudio(final, clips, F); else if (LANG) voiceOver(final, clips, F);

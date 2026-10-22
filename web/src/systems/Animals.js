@@ -85,7 +85,13 @@ export class Animals {
       if (!clips[name] || name === current) return;
       clips[current]?.fadeOut(0.25); clips[name].reset().fadeIn(0.25).play(); current = name;
     };
-    return { kind, group, play, update: (dt) => mixer.update(dt), seat: KINDS[kind].seat ?? 0, hands: KINDS[kind].hands };
+    // how far the animal's back is above (below) where it is at rest: a rider moves with it (a horse's back rises and falls about 6 cm with each stride; a rider held still on it looked like shaking)
+    let back = null; scene.traverse((o) => { if (!back && o.isBone && /^Back$/.test(o.name)) back = o; });
+    const tmp = new THREE.Vector3();
+    scene.updateMatrixWorld(true);
+    const rest = back ? back.getWorldPosition(tmp).y - group.position.y : 0;
+    const seatDelta = back ? () => back.getWorldPosition(tmp).y - group.position.y - rest : null;
+    return { kind, group, play, update: (dt) => mixer.update(dt), seat: KINDS[kind].seat ?? 0, seatDelta, hands: KINDS[kind].hands };
   }
 
   /** A horse for another player who rides in the square (RemotePlayers). */

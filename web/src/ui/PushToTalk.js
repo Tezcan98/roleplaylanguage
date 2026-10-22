@@ -10,13 +10,14 @@ const MIC = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke=
  */
 export class PushToTalk {
   #placed = '';
+  #cap = 0;
   constructor(host, { onChange }) {
     this.onChange = onChange;
     this.on = false;
     this.btn = el('button', { class: 'ptt', html: `${MIC}<span>Bas, konuş (yazı)</span>`, attrs: { type: 'button', 'aria-label': 'Basılı tut ve konuş (T)' } });
     this.status = el('div', { class: 'pill online' });
     // "Şikayet et", next to who is online in the top bar (main.js puts both there)
-    this.reportBtn = el('button', { class: 'pill report', text: '🚩', attrs: { type: 'button', title: 'Bir oyuncuyu şikayet et', 'aria-label': 'Şikayet et' }, on: { click: () => this.onReport?.() } });
+    this.reportBtn = el('button', { class: 'pill report', text: '🚩 Şikayet et', attrs: { type: 'button', title: 'Bir oyuncuyu şikayet et', 'aria-label': 'Şikayet et' }, on: { click: () => this.onReport?.() } });
     this.reportBtn.hidden = true;
     this.zone = el('div', { class: 'pill zone-note' });
     this.zone.hidden = true;
@@ -45,7 +46,7 @@ export class PushToTalk {
       if (held || wasOn) this.set(false); // held: let go = stop · tapped while on: stop
     };
     this.btn.addEventListener('pointerup', up);
-    this.btn.addEventListener('pointercancel', up);
+    this.btn.addEventListener('pointercancel', () => { if (performance.now() - downAt > 350 && !wasOn) { downAt = 0; return; } up(); }); // (a cancel while held isn't a let-go: it stays on until the next tap or release)
     this.btn.addEventListener('contextmenu', (e) => e.preventDefault());
     addEventListener('keydown', (e) => {
       if ((e.key === 't' || e.key === 'T') && !e.repeat && document.activeElement?.tagName !== 'INPUT') this.set(true);
@@ -56,6 +57,8 @@ export class PushToTalk {
   set(on) {
     if (this.on === on || (on && this.root.hidden)) return;
     this.on = on;
+    clearTimeout(this.#cap);
+    if (on) this.#cap = setTimeout(() => this.set(false), 60000); // left on by a cancelled press: off by itself after a minute
     this.btn.classList.toggle('rec', on);
     this.onChange(on);
   }
@@ -91,7 +94,8 @@ export class PushToTalk {
   setZone(name) {
     this.zone.hidden = !name;
     this.btn.classList.toggle('zone', !!name); // in a talking zone its words stay: hold it to speak
-    if (name) this.zone.replaceChildren(`🎙️ ${name} · toplu konuşma alanı`, el('small', { text: 'Buradakiler seni duyar' }), el('small', { class: 'en-t', text: gloss('Everyone in here hears you') }));
+    if (name) this.zone.replaceChildren(`🎙️ ${name}`); // short: the longer words were on the screen all the time and took too much room
+    this.zone.title = name ? 'Toplu konuşma alanı: buradakiler seni duyar' : '';
     this.btn.querySelector('span').textContent = name ? 'Basılı tut, konuş' : 'Bas, konuş (yazı)';
   }
 

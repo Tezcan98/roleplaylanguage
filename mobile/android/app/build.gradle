@@ -32,6 +32,10 @@ android {
         }
     }
     buildTypes {
+        debug {
+            applicationIdSuffix ".debug" // installs beside the Play app (com.anadolu): for testing on a phone over USB (WebView debugging is on)
+            versionNameSuffix "-debug"
+        }
         release {
             if (keystoreFile.exists()) signingConfig signingConfigs.release
             minifyEnabled true // R8 (Google Play: less memory, faster); the plugins are kept whole (proguard-rules.pro)
