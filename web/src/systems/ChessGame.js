@@ -18,6 +18,7 @@ const CLOCK = 10 * 60_000; // per player, as on the server
 const POINTS = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 const pointsOf = (g) => { const o = { w: 0, b: 0 }; for (const p of g.board().flat()) if (p) o[p.color] += POINTS[p.type]; return o; };
 const PAUSE = 6000;       // offline: the result stays on the board this long
+const SLOW = 0.32;        // walking speed on the board with a piece in hand (or on my turn): ~1.7 m/s, a square and a half a second
 const DEDE = { id: 'dede', name: 'İsmail Dede', ai: true };
 const COLOR = { w: 'beyaz', b: 'siyah' };
 
@@ -61,7 +62,7 @@ export class ChessGame {
     this.online = false;
     this.state = null;
     this.#resetLocal();
-    square.animated.push((dt) => { this.#animate(dt); this.#follow(); this.#keepOut(); });
+    square.animated.push((dt) => { this.#animate(dt); this.#follow(dt); this.#keepOut(); });
     this.#apply(this.#localState(), true);
   }
 
@@ -362,15 +363,31 @@ export class ChessGame {
     });
   }
 
+  /**
+   * How fast to walk here (PlayerController `slow`): a square is 1.1 m and a walk crosses five a
+   * second — with a piece in hand, or on the board on my turn, a third of that, to stop where meant.
+   */
+  get slowFactor() {
+    const p = this.player?.position;
+    if (!p || this.world?.current?.id !== 'village' || !this.squareAt(p)) return 1;
+    if (this.#carry) return SLOW;
+    return this.myColor && this.state?.phase === 'playing' && this.game.turn() === this.myColor ? SLOW : 1;
+  }
+
   /** The piece in my hands follows me; off the board it goes back to its square (the seat stays mine). */
-  #follow() {
+  #follow(dt = 0) {
     const c = this.#carry;
     if (!c || !this.player) return;
     const p = this.player.position;
     if (this.world?.current?.id !== 'village' || !this.squareAt(p) || this.state?.phase !== 'playing') { this.#dropCarry(); return; }
+    // standing still: slide to the middle of the square underfoot (no stopping on a line between two)
+    const sq = this.squareAt(p);
+    if (!this.player.moving && dt > 0) {
+      const mid = chessSquare(sq), k = Math.min(1, dt * 8);
+      p.x += (mid.x - p.x) * k; p.z += (mid.z - p.z) * k;
+    }
     c.mesh.position.set(p.x + 0.5, 0.35, p.z);
     // the square you stand on lights up: bright yellow if the piece can go there, red if not
-    const sq = this.squareAt(p);
     if (!this.#cursor) {
       this.#cursor = new THREE.Mesh(new THREE.BoxGeometry(CHESS.size * 0.96, 0.03, CHESS.size * 0.96), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.75 }));
       this.square.chessPieces.add(this.#cursor);

@@ -464,6 +464,7 @@ const chess = new ChessGame({
   onAskDede: () => dialogue.open('ismail'), // touching a piece when not playing: Dede decides who plays
 });
 gameCtx.chess = chess; // İsmail Dede's dialogue asks the board who plays (content/addons/satranc.js)
+controller.slow = () => chess.slowFactor; // careful steps on the board: a piece in hand, or my turn
 // the first time you come near the board: a card says how it works
 world.get('village').animated.push(() => {
   if (settings.get('chessCardSeen', false) || (params.has('nointro') && !params.has('cards')) || !modes.is('play') || world.current.id !== 'village') return; // (tests: ?nointro, unless &cards)

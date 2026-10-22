@@ -9,8 +9,11 @@ export class PlayerController {
   #air = null; // a horse's jump: the speed it took off with — in the air it goes on that way, whatever the stick says
   #last = null;
 
-  /** `boost`: how many times faster the player goes now (Urfa biberi from the shop: 1.5 for half an hour). */
-  constructor({ player, input, world, modes, cast, camera, boost = () => 1 }) { Object.assign(this, { player, input, world, modes, cast, camera, boost }); }
+  /**
+   * `boost`: how many times faster the player goes now (Urfa biberi from the shop: 1.5 for half an hour).
+   * `slow`: the same, for places that need careful steps (the giant chess board: ChessGame.slowFactor).
+   */
+  constructor({ player, input, world, modes, cast, camera, boost = () => 1, slow = () => 1 }) { Object.assign(this, { player, input, world, modes, cast, camera, boost, slow }); }
 
   update(dt, t) {
     const { player } = this;
@@ -32,7 +35,7 @@ export class PlayerController {
       if (yaw) { const c = Math.cos(yaw), s = Math.sin(yaw); [x, z] = [x * c - z * s, x * s + z * c]; }
       const loc = this.world.current, n = Math.hypot(x, z);
       const run = 1; // running is off for now: `this.input.running ? RUN : 1` (Shift / 🏃 by the joystick)
-      const speed = (loc.indoor ? 3.6 : 5.2) * (player.mount ? player.mount.speed ?? RIDE_SPEED : 1) * run * this.boost() * mag * dt;
+      const speed = (loc.indoor ? 3.6 : 5.2) * (player.mount ? player.mount.speed ?? RIDE_SPEED : 1) * run * this.boost() * this.slow() * mag * dt;
       const P = player.position;
       P.x += x / n * speed;
       P.z += z / n * speed;
