@@ -1,5 +1,5 @@
 /** On horseback: this many times faster than walking (systems/Animals.js). */
-const RIDE_SPEED = 1.9;
+const RIDE_SPEED = 1.0; // a horse: 5.2 m/s flat out (its gallop was made for 4.2; it went 9.9 m/s and the legs couldn't keep up); a gentle push of the stick walks, step by step
 /** Running: this many times faster than walking. */
 const RUN = 1.7;
 

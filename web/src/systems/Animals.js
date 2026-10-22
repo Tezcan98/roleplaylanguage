@@ -34,7 +34,7 @@ const TASKS = {
   cow: { quest: 'cow-milk', label: 'İneği sağ', do: ['give:sut', 'flag:cow-milked'], words: [['sağmak', 'to milk'], ['kova', 'bucket']], think: 'Kova sütle doldu!', en: 'The bucket is full of milk!' },
   sheep: { quest: 'sheep-feed', label: 'Koyunlara saman ver', do: ['flag:sheep-fed'], words: [['saman', 'hay'], ['yem', 'feed']], think: 'Koyunlar samanı çok sevdi!', en: 'The sheep love the hay!' },
 };
-const RIDE_SPEED = 1.9; // × walking speed on horseback
+const RIDE_SPEED = 1.0; // × walking speed on horseback (same as PlayerController)
 export { RIDE_PRICE }; // (content/rides.js: credits for a ride of RIDE_SECONDS)
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
@@ -81,7 +81,8 @@ export class Animals {
     let current = 'idle';
     const pace = KINDS[kind].pace ?? {};
     const play = (name, speed) => { // `speed` (m/s): a walk keeps up with it a little; a gallop plays at its own speed (sped up 2.4× at 10 m/s it shook; the first version had no scaling at all)
-      if (clips[name] && name === 'walk' && pace[name] && speed != null) clips[name].timeScale = Math.min(1.3, Math.max(0.7, speed / pace[name]));
+      if (clips[name] && name === 'walk' && pace[name] && speed != null) clips[name].timeScale = Math.min(2, Math.max(0.7, speed / pace[name]));
+      else if (clips[name] && pace[name] && speed != null) clips[name].timeScale = Math.min(1.25, Math.max(0.8, speed / pace[name])); // a gallop: at most a quarter faster than it was made
       else if (clips[name]) clips[name].timeScale = 1;
       if (!clips[name] || name === current) return;
       clips[current]?.fadeOut(0.25); clips[name].reset().fadeIn(0.25).play(); current = name;
