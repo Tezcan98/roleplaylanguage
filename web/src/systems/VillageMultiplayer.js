@@ -386,6 +386,7 @@ export class VillageMultiplayer {
   find(pos) {
     if (!this.net.connected || this.voice.inCall || this.world.current.id !== this.joinedAt) return null;
     if (this.chess?.myColor || this.chess?.squareAt(pos)) return null; // at the chess board the action key is for the pieces
+    if (this.group?.zone || this.#zoneAt(pos)) return null; // in a talking zone everyone hears everyone (hold the talk button): no one-to-one call there
     let best = null;
     for (const id of this.remotes.ids()) {
       const c = this.remotes.get(id);
