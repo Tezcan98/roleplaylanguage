@@ -131,6 +131,8 @@ import { AmbientTalk } from './systems/AmbientTalk.js';
 import { KAHVE_UNCLES, KAHVEHANE, MOSQUE, LIBRARY, CHESS } from './world/locations/VillageSquare.js';
 import { SERVERS, DEFAULT_SERVER, healthUrl } from './ui/ServerPicker.js';
 import { ChoiceCard } from './ui/ChoiceCard.js';
+import { CodeCard } from './ui/CodeCard.js';
+import { DevCodes } from './services/DevCodes.js';
 import { setupLandscape, iosBrowser, showIosGuide } from './ui/Landscape.js';
 import { ListModal } from './ui/ListModal.js';
 import { TableAndBins } from './systems/TableAndBins.js';
@@ -722,11 +724,37 @@ const feedbackAsk = {
 
 // ⚙️ in the HUD: voices and music, picture quality, how to play, back to the main menu
 const qualityCard = new ChoiceCard(host, modes);
+// the developer's codes (hold the ⚙️ title down): credits, money, a jump to a chapter or a day, and test switches — only their hashes are in the game
+const devCodes = new DevCodes({
+  d1087b7694aa476f20ba4ad2: (n) => { const k = Math.min(n ?? 100, 100000); wallet.add(k, 'dev'); hud.setCredits(wallet.balance); return `+${k} kredi`; },
+  '7eb59f633e8327b00662272c': (n) => { const k = Math.min(n ?? 100, 100000); inventory.add('para', k); hud.setMoney(inventory.count('para')); return `+${k} lira`; },
+  '07914527dd63b41a0579f46f': (n) => { // the chapter whose cards say "Bölüm n" (the numbers the player sees; some are scenes inside a chapter)
+    const i = n ? STORY.chapters.findIndex((ch) => new RegExp(`Bölüm ${n}(?!\\d)`).test(JSON.stringify(ch))) : -1;
+    if (i < 0) return `Bölüm 1–${Math.max(...JSON.stringify(STORY.chapters).match(/Bölüm \d+/g).map((b) => Number(b.slice(6))))} arası`;
+    menu.hide(); settingsPanel.close(); startNew(null, i);
+    return { said: `${n}. bölüm`, close: true };
+  },
+  a45812b197b934308e83d087: (n) => { // the first chapter of a day
+    const i = STORY.chapters.findIndex((ch) => ch.day === n);
+    if (i < 0) return `Gün 1–${Math.max(...STORY.chapters.map((ch) => ch.day))} arası`;
+    menu.hide(); settingsPanel.close(); startNew(null, i);
+    return { said: `${n}. gün`, close: true };
+  },
+  '0cb56d83c2c63420062ce7e0': () => { wallet.data.adFree = !wallet.data.adFree; wallet.add(0, 'dev'); if (wallet.adFree) ads.hideBanner(); return wallet.adFree ? 'Reklamsız mod açık' : 'Reklamsız mod kapalı'; },
+  a273b6915049da0ffe314221: () => { wallet.data.dailyDay = ''; wallet.add(0, 'dev'); return 'Günlük ödül yeniden alınabilir (menüde ya da dükkânda)'; },
+  f680e8482c7cf019ee09694b: () => { wallet.data.adAt = 0; wallet.add(0, 'dev'); return 'Video beklemesi sıfırlandı'; },
+  f0a153b73b100174e4d421dc: () => { // every outfit, the HD character, ad-free stays as it is
+    for (const i of SHOP) if (i.id !== 'adFree' && !wallet.data.owned.includes(i.id)) wallet.data.owned.push(i.id);
+    wallet.add(0, 'dev'); playerHd(); return 'Bütün kıyafetler senin';
+  },
+});
+const codeCard = new CodeCard(host, modes, devCodes);
 const settingsPanel = new SettingsPanel(host, {
   modes, settings,
   confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onFeedback: () => feedback.open(),
   onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
+  onCode: () => codeCard.open(), // (the title held down)
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onHelp: () => intro.show(),
   onSound: () => { if (voicesLevel() <= 0) tts.cancel(); },
@@ -843,6 +871,7 @@ const menu = new MainMenu(host, {
   onHelp: () => intro.show(),
   onStart: async () => { await introFirst(); startNew(); },
   onStartAt: (i) => startNew(null, i), // test mode: a new game from any chapter
+  onCode: () => codeCard.open(), // (the settings title held down)
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onContinue: () => continueGame(),
   onProfile: () => { menu.hide(); editProfile(); },

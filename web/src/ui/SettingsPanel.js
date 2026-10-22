@@ -1,5 +1,6 @@
 import { el, ICONS } from './dom.js';
 import { gloss } from '../i18n/Gloss.js';
+import { onHold } from './CodeCard.js';
 
 /** Line icons (the same stroke as the close and speaker ones). */
 const icon = (paths) => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
@@ -18,16 +19,17 @@ const QUALITY = [['low', 'Düşük'], ['medium', 'Orta'], ['high', 'Yüksek']];
  * In-game settings (⚙️ in the HUD), one compact card: the three sound levels, the picture quality,
  * and three small tiles — how to play, write your opinion (credits), back to the main menu (the game
  * is saved first; "Devam et" goes on from there). ✕ or a tap outside closes it.
- * Testers: five taps on the title show "Bölüm seç" (a new game from any chapter).
+ * Testers: five taps on the title show "Bölüm seç" (a new game from any chapter); holding it down opens the code card (`onCode`).
  */
 export class SettingsPanel {
   #pop = null;
   #taps = [];
 
-  constructor(host, { modes, settings, confirmQuality = async () => true, onHelp, onMenu, onSound, onFeedback = null, onStartAt = null, chapters = [] }) {
-    Object.assign(this, { modes, settings, confirmQuality, onHelp, onMenu, onSound, onFeedback, onStartAt, chapters });
+  constructor(host, { modes, settings, confirmQuality = async () => true, onHelp, onMenu, onSound, onFeedback = null, onStartAt = null, chapters = [], onCode = null }) {
+    Object.assign(this, { modes, settings, confirmQuality, onHelp, onMenu, onSound, onFeedback, onStartAt, chapters, onCode });
     this.body = el('div', { class: 'settings-body' });
     const title = el('h2', { class: 'set-title', text: 'Ayarlar', on: { click: () => this.#tap() } });
+    if (onCode) onHold(title, () => { this.close(); onCode(); });
     this.root = el('div', { class: 'overlay dim settings-panel' }, [el('div', { class: 'card' }, [
       el('div', { class: 'set-head' }, [
         el('div', {}, [title, el('small', { class: 'en-t', text: gloss('Settings') })]),
