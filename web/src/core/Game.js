@@ -1,21 +1,17 @@
-import * as THREE from 'three';
-
 /** Frame loop. Only decides the order systems run in; each system owns its own logic. */
 export class Game {
-  #clock = new THREE.Clock();
-  #dts = [];
+  #last = null;
   t = 0;
 
   constructor(parts) { Object.assign(this, parts); }
 
-  start() { const tick = () => { this.tick(); requestAnimationFrame(tick); }; tick(); }
+  start() { const tick = (now) => { this.tick(now); requestAnimationFrame(tick); }; tick(performance.now()); }
 
-  tick() {
-    // the frame time smoothed over the last few frames: with uneven frame times (8 ms, 25 ms, 12 ms… on a phone) a thing moving at a steady speed
-    // advanced by a different amount every frame and looked like it shook — more the faster it went (a galloping horse)
-    const raw = Math.min(this.#clock.getDelta(), 0.05);
-    this.#dts.push(raw); if (this.#dts.length > 5) this.#dts.shift();
-    const dt = raw > 0.04 ? raw : this.#dts.reduce((a, b) => a + b, 0) / this.#dts.length; // (a real stall is let through)
+  tick(now = performance.now()) {
+    // the real time since the last frame, from the frame's own timestamp (when it is shown), not smoothed: an averaged frame time
+    // moved a steady thing by 30 ms in a 17 ms frame and 30 in the 33 ms ones after it (9 m/s, then 4.5) — a galloping horse shook
+    const dt = this.#last == null ? 0.016 : Math.min(Math.max(0, (now - this.#last) / 1000), 0.05);
+    this.#last = now;
     const t = (this.t += dt);
     const { ambient = [], shotButton, help, prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
     const playing = modes.base === 'play';
