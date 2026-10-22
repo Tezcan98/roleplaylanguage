@@ -20,8 +20,8 @@ export class MainMenu {
   #view = 'home'; // home | settings
   #homeAd = false; // this time the main menu carries a banner (HOME_BANNER of the times it opens)
 
-  constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [] }) {
-    Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters });
+  constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [], onCode = null }) {
+    Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters, onCode });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => { settings.set('serverRegion', id); settings.set('serverPicked', true); } }); // (picked by hand: kept even when busy)
     this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
     this.root = el('div', { class: 'overlay main-menu' });
@@ -99,7 +99,8 @@ export class MainMenu {
           fullscreenPossible() && el('button', { class: 'iconbtn light', html: fullscreenIcon(), attrs: { type: 'button', 'aria-label': 'Tam ekran', title: 'Tam ekran' }, on: { click: () => goFullscreen().finally(() => this.show()) } }), // iPhone: the home-screen guide
           el('button', { class: 'iconbtn light', html: COIN_HTML, attrs: { type: 'button', 'aria-label': 'Dükkan', title: 'Dükkan · krediler' }, on: { click: () => this.onShop?.() } }),
           btn('⚙️', 'iconbtn light', () => this.show('settings'), { 'aria-label': 'Ayarlar', title: 'Ayarlar' }),
-        ]),
+          this.onCode && s.get('devCodes', false) && btn('🔑', 'iconbtn light', () => this.onCode(), { 'aria-label': 'Kod', title: 'Kod' }), // the developer's (five taps on the shop's "Altın" tab)
+        ].filter(Boolean)),
         el('h1', { class: 'big', text: 'Türk Ailem' }),
         el('p', { class: 'brand-meaning en-t', text: gloss('My Turkish Family') }), // the name in the player's own language (Türk + aile + -m)
         el('p', { class: 'sub', text: 'Köyde yaşa, konuş, arkadaş edin.' }),

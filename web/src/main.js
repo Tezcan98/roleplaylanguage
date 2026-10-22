@@ -613,7 +613,7 @@ const shop = new ShopView(host, {
   modes, wallet, ads, billing, toasts, gender: playerGender(), look: settings.get('look', ''), share: shareGame,
   feedback: { due: () => feedback.due, open: () => feedback.open() }, // "Yorum yaz, kazan" in the gold tab
   onDaily: () => takeDaily(),
-  onCode: () => { shop.close(); codeCard.open(); }, // five quick taps on "Altın": the developer's code card
+  onCode: () => { settings.set('devCodes', true); shop.close(); if (menu.isOpen) menu.show(); codeCard.open(); }, // five quick taps on "Altın": the code card, and a 🔑 on the main menu from now on
   onEat: (food) => {
     if (food.glow) { // Altın baklava: the golden light on, seen by the others after a quick reconnect
       labels.bubble(player, 'Çok tatlı! Parlıyorum!', null, 3, "So sweet! I'm shining!");
@@ -725,29 +725,30 @@ const feedbackAsk = {
 
 // ⚙️ in the HUD: voices and music, picture quality, how to play, back to the main menu
 const qualityCard = new ChoiceCard(host, modes);
-// the developer's codes (five quick taps on the shop's "Altın" tab): credits, money, a jump to a chapter or a day, and test switches — only their hashes are in the game
+// the developer's codes (five quick taps on the shop's "Altın" tab, then the 🔑 on the main menu): credits, money, a jump to a chapter or a day, and test switches — only their hashes are in the game
 const devCodes = new DevCodes({
-  d1087b7694aa476f20ba4ad2: (n) => { const k = Math.min(n ?? 100, 100000); wallet.add(k, 'dev'); hud.setCredits(wallet.balance); return `+${k} kredi`; },
-  '7eb59f633e8327b00662272c': (n) => { const k = Math.min(n ?? 100, 100000); inventory.add('para', k); hud.setMoney(inventory.count('para')); return `+${k} lira`; },
-  '07914527dd63b41a0579f46f': (n) => { // the chapter whose cards say "Bölüm n" (the numbers the player sees; some are scenes inside a chapter)
+  f5721f61994ee960374955e0: (n) => { const k = Math.min(n ?? 100, 100000); wallet.add(k, 'dev'); hud.setCredits(wallet.balance); return `+${k} kredi`; },
+  bd438dfadd116abb88c617fc: (n) => { const k = Math.min(n ?? 100, 100000); inventory.add('para', k); hud.setMoney(inventory.count('para')); return `+${k} lira`; },
+  e848557d207a5642350f73bd: (n) => { // the chapter whose cards say "Bölüm n" (the numbers the player sees; some are scenes inside a chapter)
     const i = n ? STORY.chapters.findIndex((ch) => new RegExp(`Bölüm ${n}(?!\\d)`).test(JSON.stringify(ch))) : -1;
     if (i < 0) return `Bölüm 1–${Math.max(...JSON.stringify(STORY.chapters).match(/Bölüm \d+/g).map((b) => Number(b.slice(6))))} arası`;
     menu.hide(); settingsPanel.close(); startNew(null, i);
     return { said: `${n}. bölüm`, close: true };
   },
-  a45812b197b934308e83d087: (n) => { // the first chapter of a day
+  e4081a5cb4325ed0d6635ce6: (n) => { // the first chapter of a day
     const i = STORY.chapters.findIndex((ch) => ch.day === n);
     if (i < 0) return `Gün 1–${Math.max(...STORY.chapters.map((ch) => ch.day))} arası`;
     menu.hide(); settingsPanel.close(); startNew(null, i);
     return { said: `${n}. gün`, close: true };
   },
-  '0cb56d83c2c63420062ce7e0': () => { wallet.data.adFree = !wallet.data.adFree; wallet.add(0, 'dev'); if (wallet.adFree) ads.hideBanner(); return wallet.adFree ? 'Reklamsız mod açık' : 'Reklamsız mod kapalı'; },
-  a273b6915049da0ffe314221: () => { wallet.data.dailyDay = ''; wallet.add(0, 'dev'); return 'Günlük ödül yeniden alınabilir (menüde ya da dükkânda)'; },
-  f680e8482c7cf019ee09694b: () => { wallet.data.adAt = 0; wallet.add(0, 'dev'); return 'Video beklemesi sıfırlandı'; },
-  f0a153b73b100174e4d421dc: () => { // every outfit, the HD character, ad-free stays as it is
+  f9cd3ee253df6c9319a4dc2c: () => { wallet.data.adFree = !wallet.data.adFree; wallet.add(0, 'dev'); if (wallet.adFree) ads.hideBanner(); return wallet.adFree ? 'Reklamsız mod açık' : 'Reklamsız mod kapalı'; },
+  '151132daddc667a7d0195e1a': () => { wallet.data.dailyDay = ''; wallet.add(0, 'dev'); return 'Günlük ödül yeniden alınabilir (menüde ya da dükkânda)'; },
+  cc9a63734c4d9afc3f5d5e9a: () => { wallet.data.adAt = 0; wallet.add(0, 'dev'); return 'Video beklemesi sıfırlandı'; },
+  adaece02ed1be30ddf005c58: () => { // every outfit, the HD character, ad-free stays as it is
     for (const i of SHOP) if (i.id !== 'adFree' && !wallet.data.owned.includes(i.id)) wallet.data.owned.push(i.id);
     wallet.add(0, 'dev'); playerHd(); return 'Bütün kıyafetler senin';
   },
+  '622faae8a47799225cd638ed': () => { settings.set('devCodes', false); if (menu.isOpen) menu.show(); return { said: 'Kod düğmesi gizlendi', close: true }; }, // (five taps on "Altın" bring it back)
 });
 const codeCard = new CodeCard(host, modes, devCodes);
 const settingsPanel = new SettingsPanel(host, {
@@ -875,6 +876,7 @@ const menu = new MainMenu(host, {
   onContinue: () => continueGame(),
   onProfile: () => { menu.hide(); editProfile(); },
   onShop: () => shop.open(),
+  onCode: () => codeCard.open(), // the 🔑 (once five taps on the shop's "Altın" tab turned it on)
 });
 /** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
 async function editProfile({ cancellable = true } = {}) {
