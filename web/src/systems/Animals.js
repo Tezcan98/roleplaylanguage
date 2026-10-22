@@ -81,7 +81,7 @@ export class Animals {
     let current = 'idle';
     const pace = KINDS[kind].pace ?? {};
     const play = (name, speed) => { // `speed` (m/s): the legs keep up with it
-      if (clips[name] && pace[name] && speed != null) clips[name].timeScale = Math.min(2.6, Math.max(0.6, speed / pace[name]));
+      if (clips[name] && pace[name] && speed != null) clips[name].timeScale = Math.min(1.35, Math.max(0.6, speed / pace[name])); // (at 2.4× — a gallop at 10 m/s — the stride and the body bob came 4 times a second and looked like shaking)
       if (!clips[name] || name === current) return;
       clips[current]?.fadeOut(0.25); clips[name].reset().fadeIn(0.25).play(); current = name;
     };
