@@ -180,6 +180,8 @@ export class CameraController {
       return;
     }
 
+    // smoothing by time, not by frame: a fixed fraction per frame made the view lurch when the frame times varied (a galloping horse looked like it shook)
+    const kPos = 1 - Math.exp(-dt * 6), kLook = 1 - Math.exp(-dt * 8);
     const P = player.position;
     const portrait = this.ctx.portrait;
     const rig = location.cameraRig;
@@ -211,11 +213,11 @@ export class CameraController {
       else this.#pos.set(P.x, 8 * k, P.z + 10 * k);
       this.#follow(player, dt, !view.top);
       const ahead = 2.2 * this.#lead, r = player.group.rotation.y; // (the view looks a little way ahead of a walking player)
-      this.#look.lerp(this.#tmp.set(P.x + Math.sin(r) * ahead, 1, P.z + Math.cos(r) * ahead), 0.12);
+      this.#look.lerp(this.#tmp.set(P.x + Math.sin(r) * ahead, 1, P.z + Math.cos(r) * ahead), kLook);
     }
 
     this.#orbit(this.#look);
-    cam.position.lerp(this.#pos, 0.09);
+    cam.position.lerp(this.#pos, kPos);
     cam.lookAt(this.#look);
   }
 }
