@@ -599,6 +599,7 @@ body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.op
 .shop-btn:active:not(:disabled){transform:translateY(2px);box-shadow:inset 0 2px 0 rgba(255,255,255,.5)}
 .shop-btn.buy{background:linear-gradient(#A6EB8E,#45A852)}
 .shop-btn.go{background:linear-gradient(#FFE27A,#F5A623);border-color:#7A4A0E;box-shadow:inset 0 2px 0 rgba(255,255,255,.6),0 3px 0 #7A4A0E}
+.shop-btns{margin-top:auto;display:flex;flex-direction:column;gap:5px;width:100%}.shop-btns .shop-btn{margin-top:0}
 .shop-btn.worn{background:linear-gradient(#F2F2F2,#BFC6CF);color:#33404F;text-shadow:none;border-color:#56606C;box-shadow:0 3px 0 #56606C}
 .shop-btn:disabled{background:linear-gradient(#C9CED6,#98A1AD);border-color:#56606C;box-shadow:0 3px 0 #56606C;opacity:.85;cursor:default}
 .shop-pic{width:88px;height:110px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))}

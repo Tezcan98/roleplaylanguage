@@ -13,7 +13,7 @@
     "startCredits": 100,
     "startMoney": 200,
     "video": 3,
-    "videoEveryHours": 3,
+    "videoEveryHours": 1,
     "daily": [
       3,
       4,
@@ -37,7 +37,7 @@
     "idleBannerSeconds": 90,
     "menuBannerChance": 1,
     "betweenDays": true,
-    "travelChance": 0.25,
+    "travelChance": 0.35,
     "travelGapMinutes": 3
   },
   "sellPacks": false,

@@ -34,6 +34,8 @@ const TASKS = {
   cow: { quest: 'cow-milk', label: 'İneği sağ', do: ['give:sut', 'flag:cow-milked'], words: [['sağmak', 'to milk'], ['kova', 'bucket']], think: 'Kova sütle doldu!', en: 'The bucket is full of milk!' },
   sheep: { quest: 'sheep-feed', label: 'Koyunlara saman ver', do: ['flag:sheep-fed'], words: [['saman', 'hay'], ['yem', 'feed']], think: 'Koyunlar samanı çok sevdi!', en: 'The sheep love the hay!' },
 };
+/** A rewarded video when the ride is up: this much longer (s). */
+const MORE_SECONDS = 5 * 60;
 const RIDE_SPEED = 1.9; // × walking speed on horseback (same as PlayerController)
 export { RIDE_PRICE }; // (content/rides.js: credits for a ride of RIDE_SECONDS)
 
@@ -43,8 +45,11 @@ export class Animals {
   #list = [];
   #rent = null; // { horse, until }: the horse is yours till then (get off and on as you like; it waits)
 
-  constructor({ world, models, player, labels, toasts, vocab, clock, wallet, onShop, story = null, effects = null }) {
-    Object.assign(this, { world, models, player, labels, toasts, vocab, clock, wallet, onShop, story, effects });
+  #asking = false; // "5 dakika daha?" is on the screen
+
+  /** `offerMore()` (optional): the ride is up while on the horse — a rewarded video for MORE_SECONDS more; true when watched. */
+  constructor({ world, models, player, labels, toasts, vocab, clock, wallet, onShop, story = null, effects = null, offerMore = null }) {
+    Object.assign(this, { world, models, player, labels, toasts, vocab, clock, wallet, onShop, story, effects, offerMore });
   }
 
   /** Loads and places every animal (the game runs on while they load). */
@@ -160,8 +165,22 @@ export class Animals {
     return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   }
 
-  /** The ride is over: off the horse (if on it), and it walks back to its post. */
+  /** Time is up: on the horse, a video for some more minutes first (offerMore); else the ride is over. */
   #timeUp() {
+    if (this.#asking) return;
+    if (!this.offerMore || this.#rent.horse.rider !== this.player) { this.#end(); return; }
+    this.#asking = true;
+    Promise.resolve(this.offerMore()).catch(() => false).then((more) => {
+      this.#asking = false;
+      if (!this.#rent) return;
+      if (!more) { this.#end(); return; }
+      this.#rent.until = this.clock() + MORE_SECONDS;
+      this.toasts.show(`Ata binmeye devam! ${MORE_SECONDS / 60} dakika daha senin.`, gloss('Ride on! A few more minutes are yours.'));
+    });
+  }
+
+  /** The ride is over: off the horse (if on it), and it walks back to its post. */
+  #end() {
     const a = this.#rent.horse;
     this.#rent = null;
     if (a.rider === this.player) this.dismount();

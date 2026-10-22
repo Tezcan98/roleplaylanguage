@@ -561,7 +561,12 @@ effects.register('my-garden', () => {
 // --- interaction ---
 // farm animals: a cow, sheep and a dog in the yard; horses to ride on the square
 setTimeout(() => world.warmUp(ctx.renderer, ctx.camera), 1200); // every place ready on the GPU before you walk in (no stutter on first entry)
-const animals = new Animals({ world, models, player, labels, toasts, vocab, clock: () => game.t, wallet, onShop: () => shop.open(), story, effects });
+const rideMore = new ChoiceCard(host, modes);
+const animals = new Animals({
+  world, models, player, labels, toasts, vocab, clock: () => game.t, wallet, onShop: () => shop.open(), story, effects,
+  // the ride is up while on the horse: a video for 5 more minutes (the app only: the website has no ads)
+  offerMore: ads.hasRewarded ? async () => (await rideMore.ask({ title: '🐴 Süren doldu', text: 'Kısa bir video izle, 5 dakika daha ata bin!', en: 'Watch a short video and ride 5 more minutes!', yes: '📺 Video izle', no: 'Attan in' })) && ads.showRewarded() : null,
+});
 animals.build();
 bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') animals.leftPlace(); }); // the horse stays on the square
 // scooters on the square (free)
@@ -628,8 +633,9 @@ function takeDaily() {
 async function offerDaily() {
   const d = wallet.daily();
   if (!d || (params.has('nointro') && !params.has('daily'))) return; // tests: only with ?daily
-  await dailyView.show(d);
+  const double = await dailyView.show(d, { double: ads.hasRewarded ? () => ads.showRewarded() : null }); // a video: twice as many
   takeDaily();
+  if (double) { wallet.add(d.amount, 'daily-video'); toasts.show(`📺 +${d.amount} kredi daha`, 'Twice the daily reward'); }
 }
 effects.register('shop', () => shop.open());
 // dama in the kahvehane: a board from the shelf, a table, someone opposite — or Rıfat Amca (systems/DamaClub.js)
@@ -660,8 +666,22 @@ models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animation
   world.get('village').group.add(scene);
   world.get('village').animated.push((dt) => mixer.update(dt)); // breathes a little
 }).catch(() => {});
+/**
+ * A full-screen ad; after the third one (and every tenth after it, at most once a day) a kind word
+ * about ad-free mode: "Reklamsız oyna" opens the shop where it is sold.
+ */
+const fullAdOffer = new ChoiceCard(host, modes);
+async function fullAd() {
+  await ads.showInterstitial();
+  if (!native && !params.has('mockads')) return; // (the website has no ads)
+  const n = Number(settings.get('fullAds', 0)) + 1; settings.set('fullAds', n);
+  if (wallet.adFree || (n !== 3 && (n < 3 || (n - 3) % 10 !== 0)) || Date.now() - Number(settings.get('adFreeAskedAt', 0)) < 86_400_000) return;
+  settings.set('adFreeAskedAt', Date.now());
+  const item = SHOP.find((i) => i.id === 'adFree');
+  if (await fullAdOffer.ask({ title: '🚫 Reklamsız oyna', text: `Reklamlar seni rahatsız ediyor mu? ${item.price} krediyle reklamsız moda geç, hikâye kesintisiz devam etsin.`, en: 'Do the ads bother you? Go ad-free with credits and play on without breaks.', yes: 'Mağazaya bak', no: 'Şimdi değil' })) shop.open('wear');
+}
 // story mode: a full-screen ad between two days (not with ad-free mode)
-story.beforeNewDay = () => (wallet.adFree || !CONFIG.ads.betweenDays ? Promise.resolve() : ads.showInterstitial());
+story.beforeNewDay = () => (wallet.adFree || !CONFIG.ads.betweenDays ? Promise.resolve() : fullAd());
 // going through a door or a gate (home, yard, square, school): now and then a full-screen ad, as you
 // leave — said first, never out of the blue in the middle of a place (config.json ads.travelChance),
 // never in the first minute, at most one every travelGapMinutes, never in a voice chat
@@ -672,7 +692,7 @@ travel.beforeGo = async () => {
   travelAd.last = performance.now();
   toasts.show('📺 Kısa bir reklam…', gloss('A short ad…'));
   await new Promise((r) => setTimeout(r, 1200));
-  await ads.showInterstitial();
+  await fullAd();
 };
 
 // "Oyunu nasıl buldun?": once a day, credits for a real opinion (server/src/Feedback.js grades it with Gemini)

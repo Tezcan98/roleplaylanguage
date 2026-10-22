@@ -8,10 +8,10 @@
  */
 export const DEFAULTS = {
   prices: { horseRide: 1, bikeLearn: 3, hd: 40, outfit: 20, aura: 25, adFree: 100, pepper: 5 },
-  rewards: { startCredits: 100, startMoney: 200, video: 3, videoEveryHours: 3, daily: [3, 4, 5, 6, 7, 8, 10], share: 5 },
+  rewards: { startCredits: 100, startMoney: 200, video: 3, videoEveryHours: 1, daily: [3, 4, 5, 6, 7, 8, 10], share: 5 },
   rides: { minutes: 10 },
   boosts: { pepperMinutes: 30, pepperSpeed: 1.5, glowDays: 3 }, // Urfa biberi: this much faster for this long; Altın baklava: shining this many days
-  ads: { idleBannerSeconds: 90, menuBannerChance: 1, betweenDays: true, travelChance: 0.25, travelGapMinutes: 3 },
+  ads: { idleBannerSeconds: 90, menuBannerChance: 1, betweenDays: true, travelChance: 0.35, travelGapMinutes: 3 },
   sellPacks: false, // credit packs for sale (Google Play): on once the Play Console products are live
   roomFull: 30, // a room this busy: newcomers who didn't pick a city go to a quieter one
   cities: [['ankara', 'Ankara'], ['istanbul', 'İstanbul'], ['izmir', 'İzmir'], ['manisa', 'Manisa']],

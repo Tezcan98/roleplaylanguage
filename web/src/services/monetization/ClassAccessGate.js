@@ -3,7 +3,7 @@ import { gloss } from '../../i18n/Gloss.js';
 import { AD_REWARD } from './CreditWallet.js';
 
 /**
- * Pay-to-enter for lessons: spend credits, or watch a rewarded video (+3, every 3 hours).
+ * Pay-to-enter for lessons: spend credits, or watch a rewarded video (+3, every hour).
  * `request(lesson)` resolves true when the player may enter.
  */
 export class ClassAccessGate {
