@@ -40,7 +40,11 @@ export class PlayerController {
       P.x += x / n * speed;
       P.z += z / n * speed;
       loc.collision.resolve(P, 0.35, this.cast.obstacles(loc.id));
-      player.turnTo(Math.atan2(x, z), 0.25);
+      const want = Math.atan2(x, z);
+      if (player.mount) { // riding: a thumb on the joystick drifts a little every frame, and the whole horse swayed with it — small changes of direction are ignored, the rest turns by time
+        const d = Math.atan2(Math.sin(want - player.group.rotation.y), Math.cos(want - player.group.rotation.y));
+        if (Math.abs(d) > 0.14) player.turnTo(want, 1 - Math.exp(-dt * 5));
+      } else player.turnTo(want, 0.25);
       player.walk(run > 1 ? t * 1.6 : t, mag); // the legs swing faster when running
     } else {
       player.walk(t, 0);
