@@ -9,6 +9,7 @@ button{font-family:inherit}
 button:focus-visible{outline:3px solid #2F6FDB;outline-offset:2px}
 body.hide-en .en-t{display:none!important}
 /* "Sadece Türkçe": no meaning lines in another language; a word's Turkish explanation (.def) stays */
+body.tr-only .blist .en2{white-space:pre-line;line-height:1.35}
 body.tr-only .en-t:not(.def),body.tr-only #dlg .en-btn,.def:empty{display:none!important}
 
 #ui{position:fixed;inset:0;pointer-events:none}
@@ -545,7 +546,11 @@ html[data-gloss-scale] .set-head small{font-size:12px}
 @media (max-height:430px){.settings-panel .card{padding:10px 14px 12px}.settings-body{gap:8px;margin-top:6px}.settings-body .vol{min-height:38px}.set-row{min-height:44px}.set-tile{min-height:46px}}
 /* "Oyunu nasıl buldun?" (ui/FeedbackView.js) */
 .overlay.feedback{z-index:70}
-.feedback .card{max-width:460px}
+.feedback .card{max-width:460px;max-height:calc(100dvh - 16px);overflow:auto}
+/* the on-screen keyboard shrinks the page: the card sits at the top and scrolls, the box stays in view */
+.overlay.feedback{align-items:flex-start;padding-top:8px;overflow:auto}
+.feedback textarea{min-height:90px;scroll-margin-top:12px}
+@media (max-height:520px){.feedback .ctext,.feedback .cen{display:none}.feedback textarea{min-height:70px}.feedback .ctitle{font-size:18px;margin:0}}
 .feedback textarea{display:block;width:100%;box-sizing:border-box;min-height:120px;margin-top:10px;padding:10px 12px;border:2px solid #C9A86A;border-radius:12px;background:#FFFDF6;color:#2B2118;font:16px/1.4 Nunito,var(--gloss-font,sans-serif);resize:vertical}
 .feedback textarea:focus{outline:none;border-color:#E0A526}
 .feedback .fb-count{display:block;text-align:right;opacity:.65;margin-top:4px}

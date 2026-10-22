@@ -181,7 +181,9 @@ export class Character {
    * (null). The horse goes where the character goes; the rider sits on its back (`mount.seat`: the
    * height of the horse's back), legs astride down its sides, hands forward on the reins.
    */
+  #hipSm = null; #gait = 'idle';
   setMount(mount) {
+    this.#hipSm = null; this.#gait = 'idle';
     this.mount = mount; this.#rideSpeed = 0; this.#shins = null; this.#jump = null;
     const r = this.rig;
     if (mount) {
@@ -299,7 +301,11 @@ export class Character {
       const m = this.mount, p = this.group.position, rot = this.group.rotation.y;
       const speed = this.#lastPos && dt > 0 ? Math.hypot(p.x - this.#lastPos.x, p.z - this.#lastPos.z) / dt : 0;
       this.#rideSpeed += (speed - this.#rideSpeed) * Math.min(1, dt * 6);
-      const hip = m.stand ? { up: 0, fwd: 0 } : this.#hips(); // (the sitting pose puts them a little behind the feet)
+      const raw = m.stand ? { up: 0, fwd: 0 } : this.#hips(); // (the sitting pose puts them a little behind the feet)
+      // smoothed: the bones' positions wobble a little with the clips and the heading, and the horse and rider shook with them
+      const k = this.#hipSm ? Math.min(1, dt * 10) : 1;
+      this.#hipSm = { up: (this.#hipSm?.up ?? raw.up) + (raw.up - (this.#hipSm?.up ?? raw.up)) * k, fwd: (this.#hipSm?.fwd ?? raw.fwd) + (raw.fwd - (this.#hipSm?.fwd ?? raw.fwd)) * k };
+      const hip = this.#hipSm;
       let jy = 0, pitch = 0; // a leap: up 0.9 m and down in 0.75 s
       if (this.#jump) {
         const u = Math.min(1, (this.#jump.t += dt) / JUMP.time);
@@ -310,7 +316,10 @@ export class Character {
       const f = hip.fwd - (m.saddle ?? 0); // the seat (a horse's back, a bike's saddle) under the hips
       m.group.position.set(p.x + Math.sin(rot) * f, jy, p.z + Math.cos(rot) * f); m.group.rotation.y = rot; m.group.rotation.x = pitch;
       const v = this.#rideSpeed;
-      m.play(this.#jump || v > 2.6 ? 'run' : v > 0.3 ? 'walk' : 'idle', v);
+      // the gait with a margin (it flipped between walk and run at the edge of a speed, which looked like shaking)
+      const gait = this.#jump ? 'run' : this.#gait === 'run' ? (v > 2.0 ? 'run' : v > 0.3 ? 'walk' : 'idle') : this.#gait === 'walk' ? (v > 3.2 ? 'run' : v > 0.15 ? 'walk' : 'idle') : (v > 3.2 ? 'run' : v > 0.45 ? 'walk' : 'idle');
+      this.#gait = gait;
+      m.play(gait, v);
       m.update(dt);
       if (m.legs === 'pedal') { const a = Math.sin(m.pedal) * 0.45; this.rig.legL.rotation.x = -1.1 + a; this.rig.legR.rotation.x = -1.1 - a; }
     }

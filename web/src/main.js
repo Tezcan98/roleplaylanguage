@@ -53,7 +53,7 @@ import { LessonController } from './systems/LessonController.js';
 import { TextbookController } from './systems/TextbookController.js';
 import { CreditWallet } from './services/monetization/CreditWallet.js';
 import { MockAdProvider } from './services/monetization/AdProvider.js';
-import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder, liveUpdate } from './platform/native.js';
+import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder, updateGate } from './platform/native.js';
 import { shareGame } from './platform/share.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
@@ -138,7 +138,7 @@ import { MarketView } from './ui/MarketView.js';
 import { CHORE_PAY } from './content/goods.js';
 import { DialogueView } from './ui/DialogueView.js';
 
-import { gloss, wordNote, loadGlossLang, glossLang, meaning, withGloss } from './i18n/Gloss.js';
+import { gloss, wordNote, loadGlossLang, glossLang, meaning, example, withGloss } from './i18n/Gloss.js';
 import { man } from './content/characters.js';
 import { schoolDay } from './content/hotspots.js';
 import { setPlayerGender, setPlayerLook, playerGender, playerName, personalizeContent, setTeacher, teacherInfo } from './i18n/Persona.js';
@@ -165,6 +165,7 @@ const voicesLevel = () => soundSetting('sound') * soundSetting('voices'), musicL
 if (!SERVERS.some(([id]) => id === settings.get('serverRegion', DEFAULT_SERVER))) settings.set('serverRegion', DEFAULT_SERVER); // a city taken off the list (config.json)
 const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
+if (native) await updateGate(nativeKit.App); // a newer build: downloaded and started now, before the game is built (never while playing)
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
 // on our own site the address carries the language: anadoluailesi.com.tr/oyun/en/ → meanings in English (kept as the player's choice)
 const pathLang = location.pathname.match(/\/oyun\/(ar|ur|en|es|fr|tr)(?:\/|$)/)?.[1]; // tr: "Sadece Türkçe" (no other language)
@@ -596,7 +597,7 @@ const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, pl
 
 // word notebook with "practice" (a quick quiz over the learned words)
 const drill = new WordDrill(host, { modes, vocab, activities, tts, state, effects, toasts });
-const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, meaning(tr, en)]), 'Henüz kelime yok. Biriyle konuş!',
+const openWords = () => list.open('Kelime defteri', vocab.entries().map(([tr, en]) => [tr, [meaning(tr, en), example(tr) && `Örnek: ${example(tr)}`].filter(Boolean).join('\n')]), 'Henüz kelime yok. Biriyle konuş!',
   drill.available ? { label: '🧠 Kelime pratiği yap', run: () => drill.open() } : null);
 // --- shop, daily reward, ads between story days ---
 const shop = new ShopView(host, {
@@ -966,7 +967,6 @@ setInterval(() => {
 }, 1000);
 
 // the app: everything above started, so this build works — then look for a newer one (live updates)
-if (native) liveUpdate(nativeKit.App);
 /** A newer app on Google Play than this one (config.json "update.latestApp", for changes live updates can't bring): a card at start. */
 async function offerAppUpdate() {
   const info = await nativeKit.App.getInfo().catch(() => null);

@@ -51,7 +51,10 @@ export class FeedbackView {
       text, count, status,
       el('div', { class: 'row' }, [el('button', { class: 'btn alt', text: 'Sonra', attrs: { type: 'button' }, on: { click: () => this.close() } }), send]),
     );
-    setTimeout(() => text.focus(), 50);
+    // with the keyboard up the page gets short: keep the box in view (and the buttons below it reachable)
+    const into = () => setTimeout(() => text.scrollIntoView({ block: 'center', behavior: 'smooth' }), 250);
+    text.addEventListener('focus', into);
+    window.visualViewport?.addEventListener('resize', () => { if (document.activeElement === text) into(); });
   }
 
   async #send(text, btn, status) {
