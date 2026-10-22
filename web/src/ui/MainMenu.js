@@ -60,7 +60,6 @@ export class MainMenu {
     if (!this.isOpen) { // decided as the menu opens: always the very first time (a new player shows up in AdMob), then now and then
       const first = view === 'home' && !this.settings.get('firstBannerSeen', false);
       this.#homeAd = first || Math.random() < HOME_BANNER;
-      if (first && this.settings.get('profileDone', false)) this.settings.set('firstBannerSeen', true); // (after the character setup: the menu is really seen)
     }
     this.onBanner?.(view === 'home' && this.#homeAd); // the main menu carries a banner ad now and then
     const s = this.settings;
@@ -104,7 +103,7 @@ export class MainMenu {
         el('h1', { class: 'big', text: 'Türk Ailem' }),
         el('p', { class: 'brand-meaning en-t', text: gloss('My Turkish Family') }), // the name in the player's own language (Türk + aile + -m)
         el('p', { class: 'sub', text: 'Köyde yaşa, konuş, arkadaş edin.' }),
-        btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(save ? this.onContinue : this.onStart)),
+        btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(() => { this.settings.set('firstBannerSeen', true); (save ? this.onContinue : this.onStart)(); })), // (every menu before the first game carries the banner)
         el('p', { class: 'menu-where' }, [this.#where]),
         canInstall() && el('button', { class: 'btn alt menu-install', text: '📲 Uygulama olarak yükle (hep tam ekran)', attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),
         el('div', { class: 'profile-line' }, [

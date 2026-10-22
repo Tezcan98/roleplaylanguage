@@ -72,7 +72,7 @@ export class AdMobAdProvider extends AdProvider {
   /** The banner at the bottom of the screen (menus, a player standing still); `hideBanner()` takes it away. */
   async showBanner() {
     if (this.bannerOn) return;
-    this.bannerOn = true;
+    this.bannerOn = true; this.#wanted = true;
     document.body.classList.add('banner-on'); // the menus leave room for it at the bottom (style.css --banner-h)
     try {
       await this.#init();
@@ -80,10 +80,15 @@ export class AdMobAdProvider extends AdProvider {
       if (!this.bannerOn) return; // left the menu meanwhile
       await AdMob.showBanner({ adId: this.ids.banner, adSize: BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0, isTesting: this.testing.banner });
       if (!this.bannerOn) await AdMob.removeBanner(); // taken away while it was coming up
-    } catch (e) { console.warn('[admob] banner failed', e); }
+    } catch (e) {
+      console.warn('[admob] banner failed', e);
+      if (this.bannerOn) { this.bannerOn = false; document.body.classList.remove('banner-on'); setTimeout(() => { if (this.#wanted) this.showBanner(); }, 20000); } // not ready yet / no ad now: again in a while, while the menu is still there
+    }
   }
 
+  #wanted = false; // a banner is asked for (the menu is still up): a failed one tries again
   async hideBanner() {
+    this.#wanted = false;
     if (!this.bannerOn) return;
     this.bannerOn = false;
     document.body.classList.remove('banner-on');

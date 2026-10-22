@@ -54,6 +54,7 @@ export class CameraController {
       const dy = e.clientY - this.#touch.y;
       this.#touch.x = e.clientX;
       this.#touch.y = e.clientY;
+      this.#lastDrag = performance.now(); // the player is turning it by hand: it doesn't follow for a moment
       this.#yaw -= dx * 0.009;
       this.#pitch = THREE.MathUtils.clamp(this.#pitch + dy * 0.004, -0.45, 0.45);
     };
@@ -89,6 +90,24 @@ export class CameraController {
     this.#yaw = 0;
     this.#pitch = 0;
     this.#touch.active = false;
+  }
+
+  #lastDrag = -Infinity;
+  #lead = 0; // 0–1: how far the view looks ahead of a walking player
+
+  /**
+   * Outdoors, a walking player pulls the view round behind them (slowly, so the stick doesn't
+   * chase its own tail), and the camera looks a little ahead. Turning it by hand pauses that for 2 s;
+   * standing still, in a conversation, or from above, it stays where it is.
+   */
+  #follow(player, dt, active) {
+    const walking = active && player.moving && !player.seated && performance.now() - this.#lastDrag > 2000;
+    this.#lead += ((walking ? 1 : 0) - this.#lead) * Math.min(1, dt * 2.5);
+    if (!walking) return;
+    let diff = (Math.PI - player.group.rotation.y) - this.#yaw; // the yaw that puts the camera right behind them
+    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+    if (Math.abs(diff) > 1.2) return; // walking sideways or back towards the camera: it stays (it would only spin)
+    this.#yaw += diff * Math.min(1, dt * 0.6);
   }
 
   #orbit(target) {
@@ -142,7 +161,10 @@ export class CameraController {
     return this.#talk.view;
   }
 
+  #t = null;
   update(t, { menu, player, partner, location }) {
+    const dt = this.#t == null ? 0.016 : Math.min(0.1, Math.max(0, t - this.#t));
+    this.#t = t;
     if (!partner) this.#talk.key = null;
     const cam = this.camera;
     if (this.fixed) {
@@ -187,7 +209,9 @@ export class CameraController {
       const view = VIEWS[this.#view], k = (portrait ? 1.45 : 1) * view.k * this.#zoom;
       if (view.top) this.#pos.set(P.x, 17 * k, P.z + 1.2 * k);
       else this.#pos.set(P.x, 8 * k, P.z + 10 * k);
-      this.#look.lerp(this.#tmp.set(P.x, 1, P.z), 0.12);
+      this.#follow(player, dt, !view.top);
+      const ahead = 2.2 * this.#lead, r = player.group.rotation.y; // (the view looks a little way ahead of a walking player)
+      this.#look.lerp(this.#tmp.set(P.x + Math.sin(r) * ahead, 1, P.z + Math.cos(r) * ahead), 0.12);
     }
 
     this.#orbit(this.#look);
