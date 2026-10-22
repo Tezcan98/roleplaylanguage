@@ -103,7 +103,7 @@ export class MainMenu {
         ]),
         el('h1', { class: 'big', text: 'Türk Ailem' }),
         el('p', { class: 'brand-meaning en-t', text: gloss('My Turkish Family') }), // the name in the player's own language (Türk + aile + -m)
-        el('p', { class: 'sub', text: 'Köyde yaşa, Türkçe öğren.' }),
+        el('p', { class: 'sub', text: 'Köyde yaşa, konuş, arkadaş edin.' }),
         btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(save ? this.onContinue : this.onStart)),
         el('p', { class: 'menu-where' }, [this.#where]),
         canInstall() && el('button', { class: 'btn alt menu-install', text: '📲 Uygulama olarak yükle (hep tam ekran)', attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),

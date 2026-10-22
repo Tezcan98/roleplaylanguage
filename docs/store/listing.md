@@ -11,7 +11,7 @@ Ekran görüntüleri `web/tools/promo/shots.mjs` ile oyunun kendisinden çekilir
 
 | Dil | Mağaza başlığı | Telefonda |
 |---|---|---|
-| Türkçe | Türk Ailem: Türkçe Öğren | Türk Ailem |
+| Türkçe | Türk Ailem: Dil ve Sosyalleşme | Türk Ailem |
 | İngilizce | Turkish Family: Learn Turkish | My Turkish Family |
 | Arapça | عائلتي التركية: تعلم التركية | عائلتي التركية |
 | Urduca | میرا ترک خاندان: ترکی سیکھیں | میرا ترک خاندان |
@@ -19,13 +19,13 @@ Ekran görüntüleri `web/tools/promo/shots.mjs` ile oyunun kendisinden çekilir
 | Fransızca | Ma famille turque | Ma famille turque |
 | Rusça | Турецкая семья: учим турецкий | Моя турецкая семья |
 
-**Uygulama adı:** Türk Ailem: Türkçe Öğren
+**Uygulama adı:** Türk Ailem: Dil ve Sosyalleşme
 
-**Kısa açıklama:** Bir Türk ailesiyle 3D köyde yaşa; konuşarak ve oynayarak Türkçe öğren.
+**Kısa açıklama:** Çocuklar için dil gelişim ve sosyalleşme oyunu: köyde yaşa, konuş, arkadaş edin.
 
 **Tam açıklama:**
 
-Türk Ailem, Türkçeyi ders kitabından değil, günlük hayatın içinden öğrenmen için yapılmış hikâyeli bir 3D köy oyunu. Bir Türk ailesinin evinde yaşarsın: annen kahvaltıyı hazırlar, deden masal anlatır, kardeşin seninle oynamak ister — ve hepsi seninle Türkçe konuşur.
+Türk Ailem, çocukların dil gelişimini ve sosyalleşmesini destekleyen hikâyeli bir 3D köy oyunu. Bir Türk ailesinin evinde yaşarsın: annen kahvaltıyı hazırlar, deden masal anlatır, kardeşin seninle oynamak ister. Konuştukça kelimelerin çoğalır; parkta ve köy meydanında yeni arkadaşlar edinirsin.
 
 🏡 Bir aileyle yaşa
 Kahvaltıda sofraya otur, bakkaldan ekmek al, bahçeyi sula, ineği sağ, koyunlara saman ver, ödevini yap. Her gün yeni görevler, yeni kelimeler.
@@ -48,7 +48,7 @@ Köy meydanında ata bin, bahçede bisiklet sürmeyi öğren, okul kantininde to
 🌍 Anlamlar senin dilinde
 Türkçe cümlelerin anlamı İngilizce, Arapça, Urduca, İspanyolca veya Fransızca olarak altında yazar.
 
-👥 Dünyadan Türkçe öğrenenlerle buluş
+👥 Meydanda yeni arkadaşlarla buluş
 Köy meydanında başka oyuncularla yazılı konuşursun; birebir sesli sohbet yalnızca iki taraf da kabul ederse açılır. Güvenliğin için yazılı konuşmalar şifreli olarak 90 gün saklanır.
 
 Oyun ücretsizdir; reklam ve isteğe bağlı uygulama içi satın alımlar (kredi, 3D karakter, kıyafetler) içerir. Çok oyunculu bölüm, karakter sesleri ve serbest sohbet için internet bağlantısı gerekir.

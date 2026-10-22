@@ -1,7 +1,7 @@
 {
-  "name": "Türk Ailem — Türkçe öğren",
+  "name": "Türk Ailem — Dil gelişim ve sosyalleşme oyunu",
   "short_name": "Türk Ailem",
-  "description": "Köyde yaşa, Türkçe öğren.",
+  "description": "Köyde yaşa, konuş, arkadaş edin.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

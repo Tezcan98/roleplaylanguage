@@ -2,7 +2,7 @@
 
 **Son güncelleme:** 21 Ekim 2026
 
-Türk Ailem, Türkçe öğrenmeyi hikâye ve 3D köy yaşamı üzerinden sunan bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
+Türk Ailem, çocukların dil gelişimini ve sosyalleşmesini hikâye ve 3D köy yaşamı üzerinden destekleyen bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
 
 ## 1. Mikrofon ve konuşma
 

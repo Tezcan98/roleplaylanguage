@@ -7,19 +7,19 @@
  * read by Gemini for a draft, or by ElevenLabs (--vo=<dir> with 1.mp3 … 5.mp3).
  */
 const T = {
-  kHook: { tr: 'Çocuğunuz oynarken Türkçe konuşmayı öğreniyor', en: 'Your child plays… and learns to speak Turkish', ar: 'طفلك يلعب… ويتعلّم التحدّث بالتركية' },
+  kHook: { tr: 'Çocuğunuz oynarken konuşur, dili gelişir', en: 'Your child plays… and learns to speak Turkish', ar: 'طفلك يلعب… ويتعلّم التحدّث بالتركية' },
   kSpeak: { tr: 'Sesli konuşur, oyun onu dinler', en: 'Speaks out loud — the game listens', ar: 'يتكلّم بصوت عالٍ… واللعبة تسمعه' },
   kWords: { tr: 'Her gün yeni kelimeler', en: 'New words every day', ar: 'كلمات جديدة كل يوم' },
   kHelp: { tr: 'Ailesine yardım eder, sorumluluk öğrenir', en: 'Helps the family, learns responsibility', ar: 'يساعد عائلته ويتعلّم المسؤولية' },
 };
 const END = {
-  tr: { name: 'Türk Ailem', line: 'Oyna, konuş, Türkçe öğren', free: 'Ücretsiz' },
+  tr: { name: 'Türk Ailem', line: 'Dil gelişim ve sosyalleşme oyunu', free: 'Ücretsiz' },
   en: { name: 'My Turkish Family', line: 'Play, speak, learn Turkish', free: 'Free' },
   ar: { name: 'عائلتي التركية', line: 'العب، تكلّم، تعلّم التركية', free: 'مجانًا' },
 };
 /** The voice-over, one line per shot (short: each has about three seconds). */
 export const KIDS_VO = {
-  tr: ['Çocuğunuz oynarken Türkçe öğrensin.', 'Konuşur, oyun onu dinler.', 'Her gün yeni kelimeler.', 'Ailesine yardım eder.', 'Türk Ailem. Google Play’de ücretsiz.'],
+  tr: ['Çocuğunuz oynarken konuşsun, dili gelişsin.', 'Konuşur, oyun onu dinler.', 'Her gün yeni kelimeler.', 'Ailesine yardım eder.', 'Türk Ailem. Google Play’de ücretsiz.'],
   en: ['Your child learns Turkish while playing.', 'They speak, and the game listens.', 'New words every day.', 'They help the family.', 'My Turkish Family. Free on Google Play.'],
   ar: ['طفلك يتعلّم التركية وهو يلعب.', 'يتكلّم، واللعبة تستمع إليه.', 'كلمات جديدة كل يوم.', 'ويساعد عائلته بكل حب.', 'عائلتي التركية. مجانًا على غوغل بلاي.'],
 };

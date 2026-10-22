@@ -5,7 +5,7 @@
  * a WhatsApp message — counted as shared when the game goes to the background for it.
  * Resolves true when it was (or very likely was) shared.
  */
-const TEXT = 'Türkçeyi bir Türk ailesiyle köyde yaşayarak öğren: Türk Ailem 🇹🇷';
+const TEXT = 'Çocuklar için dil gelişim ve sosyalleşme oyunu: Türk Ailem 🇹🇷';
 const LINK = 'https://play.google.com/store/apps/details?id=com.anadolu';
 /** iPhone: no App Store app yet — our site's page that opens the game and shows how to put it on the home screen (site/ios/). */
 const IOS = 'https://anadoluailesi.com.tr/ios';

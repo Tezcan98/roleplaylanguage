@@ -12,7 +12,7 @@ import { startServer, openBrowser, sleep } from '../playtest/lib.mjs';
 
 const out = process.argv[2] ?? join(homedir(), 'Desktop/AnadoluAilesi-release/store');
 const LANGS = {
-  tr: ['Türk Ailem', 'Türkçe Öğren', 'Bir Türk ailesiyle köyde yaşayarak'],
+  tr: ['Türk Ailem', 'Dil Gelişim ve Sosyalleşme', 'Köyde yaşa, konuş, arkadaş edin'],
   en: ['My Turkish Family', 'Learn Turkish', 'by living it with a family in an Anatolian village'],
   ar: ['عائلتي التركية', 'تعلّم التركية', 'بالعيش مع عائلة في قرية أناضولية'],
   ur: ['میرا ترک خاندان', 'ترکی سیکھیں', 'اناطولیہ کے گاؤں میں ایک خاندان کے ساتھ رہ کر'],
