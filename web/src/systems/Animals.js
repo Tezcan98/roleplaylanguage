@@ -34,7 +34,7 @@ const TASKS = {
   cow: { quest: 'cow-milk', label: 'İneği sağ', do: ['give:sut', 'flag:cow-milked'], words: [['sağmak', 'to milk'], ['kova', 'bucket']], think: 'Kova sütle doldu!', en: 'The bucket is full of milk!' },
   sheep: { quest: 'sheep-feed', label: 'Koyunlara saman ver', do: ['flag:sheep-fed'], words: [['saman', 'hay'], ['yem', 'feed']], think: 'Koyunlar samanı çok sevdi!', en: 'The sheep love the hay!' },
 };
-const RIDE_SPEED = 1.0; // × walking speed on horseback (same as PlayerController)
+const RIDE_SPEED = 1.9; // × walking speed on horseback (same as PlayerController)
 export { RIDE_PRICE }; // (content/rides.js: credits for a ride of RIDE_SECONDS)
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);

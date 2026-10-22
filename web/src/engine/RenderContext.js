@@ -55,10 +55,24 @@ export class RenderContext {
   /** Optional post-processing (set by main for the high quality setting). */
   setPostFX(fx) { this.postfx = fx; }
 
+  /**
+   * A horse is being ridden in view (set every frame by core/Game.js): on low quality its shadow is drawn as on medium —
+   * every frame and at the medium size (drawn every fourth frame it lagged behind a gallop and jumped after it: the horse looked like it shook)
+   */
+  riding = false;
+  #riding = false;
+
   render() {
     // low quality: the sun's shadows are drawn every fourth frame (the trees and houses don't move;
     // characters have a spot under their feet instead) — a whole second pass saved on three frames out of four
-    if (this.quality === 'low') this.renderer.shadowMap.needsUpdate = (this.#frame = (this.#frame + 1) % 4) === 0;
+    if (this.quality === 'low') {
+      if (this.riding !== this.#riding) {
+        this.#riding = this.riding;
+        const sm = this.riding ? 2048 : 1024, shadow = this.sun.shadow;
+        shadow.mapSize.set(sm, sm); shadow.map?.dispose(); shadow.map = null; // (made again at the new size)
+      }
+      this.renderer.shadowMap.needsUpdate = this.#riding || (this.#frame = (this.#frame + 1) % 4) === 0;
+    }
     if (this.postfx) this.postfx.render();
     else this.renderer.render(this.scene, this.camera);
   }
