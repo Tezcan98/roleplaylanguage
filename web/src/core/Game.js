@@ -3,6 +3,7 @@ import * as THREE from 'three';
 /** Frame loop. Only decides the order systems run in; each system owns its own logic. */
 export class Game {
   #clock = new THREE.Clock();
+  #dts = [];
   t = 0;
 
   constructor(parts) { Object.assign(this, parts); }
@@ -10,7 +11,11 @@ export class Game {
   start() { const tick = () => { this.tick(); requestAnimationFrame(tick); }; tick(); }
 
   tick() {
-    const dt = Math.min(this.#clock.getDelta(), 0.05);
+    // the frame time smoothed over the last few frames: with uneven frame times (8 ms, 25 ms, 12 ms… on a phone) a thing moving at a steady speed
+    // advanced by a different amount every frame and looked like it shook — more the faster it went (a galloping horse)
+    const raw = Math.min(this.#clock.getDelta(), 0.05);
+    this.#dts.push(raw); if (this.#dts.length > 5) this.#dts.shift();
+    const dt = raw > 0.04 ? raw : this.#dts.reduce((a, b) => a + b, 0) / this.#dts.length; // (a real stall is let through)
     const t = (this.t += dt);
     const { ambient = [], shotButton, help, prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx } = this;
     const playing = modes.base === 'play';
