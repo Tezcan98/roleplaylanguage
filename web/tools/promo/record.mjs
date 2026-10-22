@@ -322,7 +322,7 @@ async function kidsAudio(video, clips, fade) {
   for (let i = 0; i < lines.length; i++) {
     const given = voDir && ['mp3', 'wav', 'm4a'].map((x) => join(voDir, `${i + 1}.${x}`)).find((f) => { try { return readFileSync(f).length > 0; } catch { return false; } });
     if (given) { files.push(given); continue; }
-    const wav = join(dir, `${i + 1}.wav`), res = await fetch(`https://sehem2.com.tr/api/tts?v=kadin&t=${encodeURIComponent(lines[i])}`, { headers: { Origin: 'https://sehem2.com.tr' } });
+    const wav = join(dir, `${i + 1}.wav`), res = await fetch(`https://anadoluailesi.com.tr/api/tts?v=kadin&t=${encodeURIComponent(lines[i])}`, { headers: { Origin: 'https://anadoluailesi.com.tr' } });
     if (!res.ok) { console.warn(`voice: no line ${i + 1} from the server (${res.status}) — music-only video and the script are ready; try again later`); return; }
     writeFileSync(wav, Buffer.from(await res.arrayBuffer())); files.push(wav);
   }

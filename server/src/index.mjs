@@ -36,7 +36,7 @@
  *   FEEDBACK_DIR, FEEDBACK_KEY (default AD_STATS_KEY), FEEDBACK_MODEL  the players' feedback, graded by Gemini for credits (Feedback.js)
  *   REPORTS_DIR, REPORT_KEY (default AD_STATS_KEY), REPORT_MODEL  player reports ("Şikayet et"): the reported player's last
  *                     ten minutes (bubbles + voice) go to Gemini; the operator decides on a ban from the mail (Reports.js)
- *   PUBLIC_URL        this server's https address for the links in those mails, e.g. https://sehem2.com.tr
+ *   PUBLIC_URL        this server's https address for the links in those mails, e.g. https://anadoluailesi.com.tr
  *   MAIL_API_URL, MAIL_API_KEY, REPORT_MAIL_TO  the mail API on the SMTP machine and the operator's address (Mailer.js; TODO)
  *
  * Endpoints: ws(s)://host/ws/village · GET /health · GET /health?name=&pid= (is the username free) · POST /api/npc-chat

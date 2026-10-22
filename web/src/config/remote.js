@@ -1,5 +1,5 @@
 /**
- * Remote settings: sehem2.com.tr/config.json (site/config.json in the repository, docs/remote-config.md)
+ * Remote settings: anadoluailesi.com.tr/config.json (site/config.json in the repository, docs/remote-config.md)
  * — prices, rewards, ad timing, the city rooms and the "please update" card, changed on the server
  * without a new build. Read once at start, before the content (prices are in the dialogues' texts:
  * content modules import CONFIG, so they wait for it). The last copy is kept for an offline start;
@@ -18,14 +18,14 @@ export const DEFAULTS = {
   update: { latestApp: 0, store: 'https://play.google.com/store/apps/details?id=com.anadolu', text: '', en: '' },
 };
 
-const URL_ = 'https://sehem2.com.tr/config.json';
+const URL_ = 'https://anadoluailesi.com.tr/config.json';
 const KEY = 'remoteConfig';
 const WAIT = 2000; // ms at most at start (a slow network: the last copy instead)
 
 async function load() {
   if (typeof window === 'undefined') return null; // node tools
   const native = !!window.Capacitor?.isNativePlatform?.();
-  if (!native && location.hostname !== 'sehem2.com.tr') return null; // local test pages: the defaults
+  if (!native && !['anadoluailesi.com.tr', 'www.anadoluailesi.com.tr', 'sehem2.com.tr'].includes(location.hostname)) return null; // local test pages: the defaults
   let cached = null;
   try { cached = JSON.parse(localStorage.getItem(KEY) ?? 'null'); } catch { /* none */ }
   try {

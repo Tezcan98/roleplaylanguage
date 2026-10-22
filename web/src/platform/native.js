@@ -21,13 +21,13 @@ export async function loadNativeAdapters() {
 
 /**
  * Live updates (OTA): the game's web part — code, texts, quests, voices, music — updated from
- * sehem2.com.tr without the Play Store. The app reads ota.json there (tools/ota-stamp.mjs); when
+ * anadoluailesi.com.tr without the Play Store. The app reads ota.json there (tools/ota-stamp.mjs); when
  * that build is newer than the one running and fits this app (its `native` versionCode), only the
  * files not here yet are downloaded and the new build starts the next time the app is opened
  * (or comes back from the background). A build that doesn't start is rolled back by the plugin:
  * `notifyAppReady()` says this one did. Native changes (plugins, permissions) still need the Play Store.
  */
-const OTA = 'https://sehem2.com.tr/oyun/ota.json';
+const OTA = 'https://anadoluailesi.com.tr/oyun/ota.json';
 export async function liveUpdate(App) {
   try {
     const { CapacitorUpdater } = await import('@capgo/capacitor-updater');

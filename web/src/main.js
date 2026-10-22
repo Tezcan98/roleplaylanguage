@@ -166,7 +166,7 @@ if (!SERVERS.some(([id]) => id === settings.get('serverRegion', DEFAULT_SERVER))
 const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
 const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
-// on our own site the address carries the language: sehem2.com.tr/oyun/en/ → meanings in English (kept as the player's choice)
+// on our own site the address carries the language: anadoluailesi.com.tr/oyun/en/ → meanings in English (kept as the player's choice)
 const pathLang = location.pathname.match(/\/oyun\/(ar|ur|en|es|fr|tr)(?:\/|$)/)?.[1]; // tr: "Sadece Türkçe" (no other language)
 if (pathLang && !params.has('gloss')) settings.set('glossLang', pathLang);
 await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
@@ -272,7 +272,7 @@ const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(
 const adEvent = (e, f, d) => {
   if (!settings.get('deviceId')) settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (as the square makes it: one per device)
   const body = { e, f, v: appVersion, pid: settings.get('deviceId'), ...(d.valueMicros != null ? { micros: Number(d.valueMicros), cur: d.currencyCode } : {}) };
-  import('@capacitor/core').then(({ CapacitorHttp }) => CapacitorHttp.post({ url: 'https://sehem2.com.tr/api/ad-event', headers: { 'Content-Type': 'application/json' }, data: body })).catch(() => {});
+  import('@capacitor/core').then(({ CapacitorHttp }) => CapacitorHttp.post({ url: 'https://anadoluailesi.com.tr/api/ad-event', headers: { 'Content-Type': 'application/json' }, data: body })).catch(() => {});
 };
 let appVersion = '';
 if (native) nativeKit.App.getInfo().then((i) => { appVersion = `${i.version}`; }).catch(() => {});

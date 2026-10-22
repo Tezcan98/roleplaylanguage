@@ -1,6 +1,6 @@
 # Uzaktan ayarlar
 
-`site/config.json` → https://sehem2.com.tr/config.json. Değiştir, `tools/deploy-sehem2.sh` ile yayınla:
+`site/config.json` → https://anadoluailesi.com.tr/config.json. Değiştir, `tools/deploy.sh` ile yayınla:
 web'de ve uygulamada bir sonraki açılışta geçerli olur (yeni sürüm gerekmez). Eksik ya da yanlış
 türde bir değer (sayı yerine yazı, eksi sayı) yok sayılır, koddaki varsayılan kullanılır
 (`web/src/config/remote.js` → `DEFAULTS`). İnternet yoksa son okunan ayarlar kullanılır.

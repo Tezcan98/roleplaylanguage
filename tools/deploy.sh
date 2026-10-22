@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Publishes the promo site (site/) and the game (web/ built into dist/) on sehem2.com.tr:
-#   https://sehem2.com.tr/            the promo site
-#   https://sehem2.com.tr/oyun/<dil>/ the game (tr, en, ar, ur, es, fr: the language of the meanings)
-# Server: tezcan@31.77.63.14 (nginx file /etc/nginx/sites-available/sehem2.com.tr). Usage: tools/deploy-sehem2.sh
+# Publishes the promo site (site/) and the game (web/ built into dist/) on anadoluailesi.com.tr:
+#   https://anadoluailesi.com.tr/            the promo site
+#   https://anadoluailesi.com.tr/oyun/<dil>/ the game (tr, en, ar, ur, es, fr: the language of the meanings)
+# Server: tezcan@31.77.63.14. The folder and the nginx file there keep the old name (/var/www/sehem2.com.tr,
+# /etc/nginx/sites-available/sehem2.com.tr); sehem2.com.tr still points there for the apps already out. Usage: tools/deploy.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 HOST=tezcan@31.77.63.14

@@ -2,9 +2,9 @@
  * Live updates (OTA) of the Android app's web part, run after every `vite build` (npm run build):
  * writes into dist/
  *   version.json  { version, built }            — which web build this is (shipped inside the app too)
- *   ota.json      { version, built, native, manifest } — read by the app from sehem2.com.tr/oyun/ota.json
+ *   ota.json      { version, built, native, manifest } — read by the app from anadoluailesi.com.tr/oyun/ota.json
  * `manifest`: every file with its SHA-256 and where to download it (the game itself, deployed at
- * /oyun/ by tools/deploy-sehem2.sh). The app downloads only the files it doesn't have yet
+ * /oyun/ by tools/deploy.sh). The app downloads only the files it doesn't have yet
  * (platform/native.js liveUpdate, @capgo/capacitor-updater). `version` is a hash of the content:
  * the same files, the same version (no update).
  *
@@ -18,7 +18,7 @@ import { dirname, join, relative, sep } from 'node:path';
 
 const NATIVE = 29; // Android 1.0.28: the first app with live updates
 const DIST = new URL('../dist/', import.meta.url).pathname;
-const BASE = 'https://sehem2.com.tr/oyun/';
+const BASE = 'https://anadoluailesi.com.tr/oyun/';
 const SKIP = new Set(['ota.json', 'version.json']);
 /** HTML is downloaded from a plain-text copy: Cloudflare adds its analytics script to HTML pages (a different file, a wrong hash). */
 const RAW = 'ota-raw/';

@@ -76,7 +76,7 @@
     }
   },
   "iceServers": [],
-  "villageServer": "wss://sehem2.com.tr/ws/village",
+  "villageServer": "wss://anadoluailesi.com.tr/ws/village",
   "admob": {
     "rewardedId": "ca-app-pub-8546179762858286/4402361503",
     "interstitialId": "ca-app-pub-8546179762858286/7938281832",
