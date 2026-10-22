@@ -76,6 +76,8 @@ export class PushToTalk {
    * when they change.
    */
   keepAbove(...els) {
+    return; // the button is on the left now, above the joystick: the action buttons (right) are never in its way
+    // eslint-disable-next-line no-unreachable
     // the buttons themselves (a container only through its children: the empty #act-more box pushed it up for nothing)
     const shown = els.flatMap((e) => (!e || e.hidden ? [] : e.children.length && e.tagName !== 'BUTTON' ? [...e.children] : [e])).filter((e) => e.offsetParent && e.getBoundingClientRect().height > 0);
     const key = `${shown.map((e) => e.textContent).join('|')}|${innerWidth}x${innerHeight}|${this.root.hidden}`;
