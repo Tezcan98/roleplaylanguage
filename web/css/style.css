@@ -49,11 +49,11 @@ body.tr-only .en-t:not(.def),body.tr-only #dlg .en-btn,.def:empty{display:none!i
 /* ---------- controls ---------- */
 #joy{position:absolute;left:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);width:160px;height:160px;border-radius:50%;background:rgba(42,30,21,.35);border:2px solid rgba(244,230,200,.6);pointer-events:auto;touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:68px;height:68px;margin:-34px 0 0 -34px;border-radius:50%;background:var(--parch);border:3px solid var(--wood)}
-#act{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 50px);pointer-events:auto;background:var(--gold);color:var(--ink);border:3px solid var(--wood);border-radius:18px;padding:0 20px;min-height:60px;font:700 18px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
+#act{position:absolute;left:24px;max-width:calc(100vw - 150px);bottom:calc(env(safe-area-inset-bottom,0px) + 28px + 160px + 12px);pointer-events:auto;background:var(--gold);color:var(--ink);border:3px solid var(--wood);border-radius:18px;padding:0 20px;min-height:60px;font:700 18px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
 #act:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
 #act[hidden],#joy[hidden],#run[hidden]{display:none}
 /* other things within reach: smaller buttons stacked above the action button */
-#act-more{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 122px);display:flex;flex-direction:column-reverse;align-items:flex-end;gap:8px;pointer-events:none}
+#act-more{position:absolute;left:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 28px + 160px + 84px);display:flex;flex-direction:column-reverse;align-items:flex-start;gap:8px;pointer-events:none}
 .act-alt{pointer-events:auto;background:var(--parch);color:var(--ink);border:3px solid var(--wood);border-radius:16px;padding:0 16px;min-height:48px;font:700 16px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 3px 0 var(--wood2)}
 .act-alt:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wood2)}
 #shot,#jump{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 54px);pointer-events:auto;background:#E4574A;color:#fff;border:3px solid var(--wood);border-radius:18px;padding:0 16px;min-height:52px;font:700 17px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
@@ -203,8 +203,7 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #act-mor
 .mncard .p{font-weight:700;font-size:14px}
 
 /* ---------- multiplayer village ---------- */
-/* the talk button: on the left, above the joystick (the right-hand thumb kept hitting it by mistake next to the action buttons) */
-.ptt-wrap{position:absolute;left:24px;bottom:calc(env(safe-area-inset-bottom,0px) + 28px + 160px + 14px);display:flex;flex-direction:column;align-items:flex-start;gap:8px;pointer-events:none}
+.ptt-wrap{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 50px);display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:none}
 .ptt-wrap[hidden]{display:none}
 .ptt{pointer-events:auto;display:flex;align-items:center;justify-content:center;gap:8px;min-width:56px;min-height:56px;padding:0 13px;border-radius:999px;border:3px solid var(--wood);background:#fff;color:var(--ink);font:700 15px Fredoka,sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2);touch-action:none;-webkit-user-select:none;user-select:none}
 .ptt span{display:none} /* just the mic; the words only as a short hint the first few times (PushToTalk.show) and while recording */
@@ -335,11 +334,11 @@ body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
   .main-menu .sub,.main-menu .menu-square .cen{display:none}
   .btn{min-height:46px}
   #joy{width:140px;height:140px;left:max(16px,env(safe-area-inset-left));bottom:14px}
-  #act{bottom:18px;right:max(14px,env(safe-area-inset-right));min-height:52px}
-  #act-more{bottom:136px;right:max(14px,env(safe-area-inset-right))} /* (above the help button, which moves here on small screens) */
+  #act{bottom:calc(14px + 140px + 10px);left:max(16px,env(safe-area-inset-left));min-height:52px}
+  #act-more{bottom:calc(14px + 140px + 10px + 60px);left:max(16px,env(safe-area-inset-left))}
   .help-btn{left:auto;right:max(14px,env(safe-area-inset-right));bottom:84px;min-height:42px;font-size:18px}
   #shot{right:max(14px,env(safe-area-inset-right));bottom:18px;min-height:44px}
-  .ptt-wrap{left:max(16px,env(safe-area-inset-left));bottom:calc(14px + 140px + 10px)}
+  .ptt-wrap{right:max(14px,env(safe-area-inset-right));bottom:18px}
 }
 .menu-cols{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
 .menu-col{display:flex;flex-direction:column;gap:10px}
