@@ -5,7 +5,6 @@ import { ServerPicker, SERVERS } from './ServerPicker.js';
 import { characterPicture } from './CharacterSetup.js';
 import { fullscreenPossible, goFullscreen, fullscreenIcon, canInstall, installApp } from './Landscape.js';
 import { COIN_HTML } from './coin.js';
-import { onHold } from './CodeCard.js';
 
 
 /**
@@ -21,8 +20,8 @@ export class MainMenu {
   #view = 'home'; // home | settings
   #homeAd = false; // this time the main menu carries a banner (HOME_BANNER of the times it opens)
 
-  constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [], onCode = null }) {
-    Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters, onCode });
+  constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [] }) {
+    Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => { settings.set('serverRegion', id); settings.set('serverPicked', true); } }); // (picked by hand: kept even when busy)
     this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
     this.root = el('div', { class: 'overlay main-menu' });
@@ -44,12 +43,6 @@ export class MainMenu {
     const now = performance.now();
     this.#taps = [...this.#taps.filter((t) => now - t < 2500), now];
     if (this.#taps.length >= 5 && this.onStartAt) { this.#taps = []; this.settings.set('testerMode', !this.settings.get('testerMode', false)); this.show('settings'); }
-  }
-
-  /** "⚙️ Ayarlar": five quick taps, test mode; held down, the code card (`onCode`). */
-  #settingsTitle() {
-    const t = el('h2', { class: 'ctitle', text: '⚙️ Ayarlar', on: { click: () => this.#testerTap() } });
-    return this.onCode ? onHold(t, () => this.onCode()) : t;
   }
 
   /** Test mode: a new game from the chosen chapter (day, time and title of each). */
@@ -90,7 +83,7 @@ export class MainMenu {
       quality.addEventListener('change', async () => { if (quality.value !== 'low' && !(await this.confirmQuality?.())) { quality.value = s.get('quality', 'low'); return; } s.set('quality', quality.value); location.reload(); });
       body = [
         back,
-        this.#settingsTitle(),
+        el('h2', { class: 'ctitle', text: '⚙️ Ayarlar', on: { click: () => this.#testerTap() } }),
         // start the story from any day (testers only: five taps on the title, as in the game's ⚙️)
         this.onStartAt && s.get('testerMode', false) && this.#chapterPicker(go),
         btn('Nasıl oynanır?', 'btn alt', () => this.onHelp?.()),

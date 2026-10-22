@@ -1,5 +1,5 @@
 /**
- * Developer codes (the hidden "Kod" card: hold the settings title down). A code is a word and an
+ * Developer codes (the hidden "Kod" card: five quick taps on the shop's "Altın" tab). A code is a word and an
  * optional number ("Elma ağacı 5"): spaces, case and Turkish letters don't matter.
  * Only a salted hash of each word is here, so the codes can't be read out of the game's files.
  */

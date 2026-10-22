@@ -613,6 +613,7 @@ const shop = new ShopView(host, {
   modes, wallet, ads, billing, toasts, gender: playerGender(), look: settings.get('look', ''), share: shareGame,
   feedback: { due: () => feedback.due, open: () => feedback.open() }, // "Yorum yaz, kazan" in the gold tab
   onDaily: () => takeDaily(),
+  onCode: () => { shop.close(); codeCard.open(); }, // five quick taps on "Altın": the developer's code card
   onEat: (food) => {
     if (food.glow) { // Altın baklava: the golden light on, seen by the others after a quick reconnect
       labels.bubble(player, 'Çok tatlı! Parlıyorum!', null, 3, "So sweet! I'm shining!");
@@ -724,7 +725,7 @@ const feedbackAsk = {
 
 // ⚙️ in the HUD: voices and music, picture quality, how to play, back to the main menu
 const qualityCard = new ChoiceCard(host, modes);
-// the developer's codes (hold the ⚙️ title down): credits, money, a jump to a chapter or a day, and test switches — only their hashes are in the game
+// the developer's codes (five quick taps on the shop's "Altın" tab): credits, money, a jump to a chapter or a day, and test switches — only their hashes are in the game
 const devCodes = new DevCodes({
   d1087b7694aa476f20ba4ad2: (n) => { const k = Math.min(n ?? 100, 100000); wallet.add(k, 'dev'); hud.setCredits(wallet.balance); return `+${k} kredi`; },
   '7eb59f633e8327b00662272c': (n) => { const k = Math.min(n ?? 100, 100000); inventory.add('para', k); hud.setMoney(inventory.count('para')); return `+${k} lira`; },
@@ -754,7 +755,6 @@ const settingsPanel = new SettingsPanel(host, {
   confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onFeedback: () => feedback.open(),
   onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
-  onCode: () => codeCard.open(), // (the title held down)
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onHelp: () => intro.show(),
   onSound: () => { if (voicesLevel() <= 0) tts.cancel(); },
@@ -871,7 +871,6 @@ const menu = new MainMenu(host, {
   onHelp: () => intro.show(),
   onStart: async () => { await introFirst(); startNew(); },
   onStartAt: (i) => startNew(null, i), // test mode: a new game from any chapter
-  onCode: () => codeCard.open(), // (the settings title held down)
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onContinue: () => continueGame(),
   onProfile: () => { menu.hide(); editProfile(); },

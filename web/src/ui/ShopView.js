@@ -25,7 +25,10 @@ export class ShopView {
   #prices = {};
   #tab = 'gold';
 
-  constructor(host, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts, share = null, feedback = null, onEat = () => {} }) {
+  #taps = [];
+
+  constructor(host, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts, share = null, feedback = null, onEat = () => {}, onCode = null }) {
+    this.onCode = onCode; // five quick taps on the "Altın" tab: the developer's code card
     this.share = share; // "Paylaş, kazan": () => Promise<shared?> (platform/share.js)
     this.feedback = feedback; // "Yorum yaz, kazan": { due(), open() } (ui/FeedbackView.js: once a day, up to 20 credits)
     Object.assign(this, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts, onEat });
@@ -72,7 +75,7 @@ export class ShopView {
 
     this.tabs.replaceChildren(...TABS.map(([id, icon, tr, en]) => el('button', {
       class: `shop-tab${id === this.#tab ? ' on' : ''}`, attrs: { type: 'button', role: 'tab', 'aria-selected': String(id === this.#tab) },
-      on: { click: () => { this.#tab = id; this.render(); } },
+      on: { click: () => { this.#tab = id; this.render(); if (id === 'gold') this.#goldTap(); } },
     }, [el('span', { class: 'shop-tab-icon', text: icon }), el('span', {}, [tr, el('small', { class: 'en-t', text: gloss(en) })])])));
 
     let cards;
@@ -146,6 +149,13 @@ export class ShopView {
       });
     }
     this.body.replaceChildren(el('div', { class: `shop-grid tab-${this.#tab}` }, cards.filter(Boolean)));
+  }
+
+  /** Five quick taps on the "Altın" tab (2.5 s): the code card. */
+  #goldTap() {
+    const now = performance.now();
+    this.#taps = [...this.#taps.filter((t) => now - t < 2500), now];
+    if (this.#taps.length >= 5 && this.onCode) { this.#taps = []; this.onCode(); }
   }
 
   /** "Emin misin?" over the shop: resolves true for "Evet, al". */

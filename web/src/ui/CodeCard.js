@@ -1,6 +1,6 @@
 import { el } from './dom.js';
 
-/** The hidden "Kod" card (testers, the developer): a box for a code; what it did, or "Geçersiz kod". */
+/** The hidden "Kod" card (testers, the developer: five quick taps on the shop's "Altın" tab): a box for a code; what it did, or "Geçersiz kod". */
 export class CodeCard {
   constructor(host, modes, codes) { Object.assign(this, { host, modes, codes }); }
 
@@ -32,12 +32,3 @@ export class CodeCard {
   }
 }
 
-/** Hold `node` down for `ms`: `fn()` (the hidden way to the code card; a quick tap still does what it did). */
-export function onHold(node, fn, ms = 1500) {
-  let timer = null;
-  const stop = () => { clearTimeout(timer); timer = null; };
-  node.addEventListener('pointerdown', () => { stop(); timer = setTimeout(() => { timer = null; fn(); }, ms); });
-  for (const e of ['pointerup', 'pointerleave', 'pointercancel']) node.addEventListener(e, stop);
-  node.addEventListener('contextmenu', (e) => e.preventDefault()); // (a long press on a phone)
-  return node;
-}
