@@ -20,8 +20,8 @@ export class MainMenu {
   #view = 'home'; // home | settings
   #homeAd = false; // this time the main menu carries a banner (HOME_BANNER of the times it opens)
 
-  constructor(host, { settings, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [] }) {
-    Object.assign(this, { host, settings, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters });
+  constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [] }) {
+    Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => { settings.set('serverRegion', id); settings.set('serverPicked', true); } }); // (picked by hand: kept even when busy)
     this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
     this.root = el('div', { class: 'overlay main-menu' });
@@ -79,8 +79,8 @@ export class MainMenu {
         el('option', { text: 'Orta (bilgisayar)', attrs: { value: 'medium' } }),
         el('option', { text: 'Düşük (telefon)', attrs: { value: 'low' } }),
       ]);
-      quality.value = s.get('quality', 'medium');
-      quality.addEventListener('change', () => { s.set('quality', quality.value); location.reload(); });
+      quality.value = s.get('quality', 'low');
+      quality.addEventListener('change', async () => { if (quality.value !== 'low' && !(await this.confirmQuality?.())) { quality.value = s.get('quality', 'low'); return; } s.set('quality', quality.value); location.reload(); });
       body = [
         back,
         el('h2', { class: 'ctitle', text: '⚙️ Ayarlar', on: { click: () => this.#testerTap() } }),

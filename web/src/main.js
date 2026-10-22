@@ -166,7 +166,9 @@ if (!SERVERS.some(([id]) => id === settings.get('serverRegion', DEFAULT_SERVER))
 const native = isNativeApp(); // inside the Android app
 const nativeKit = native ? await loadNativeAdapters() : null;
 if (native) await updateGate(nativeKit.App); // a newer build: downloaded and started now, before the game is built (never while playing)
-const quality = params.get('quality') ?? settings.get('quality', native ? 'low' : 'medium');
+// everyone starts on low (phones get hot, battery drains); once for those who had another value saved; medium / high is a choice, asked about (SettingsPanel)
+if (!settings.get('qualityLow', false)) { settings.set('quality', 'low'); settings.set('qualityLow', true); }
+const quality = params.get('quality') ?? settings.get('quality', 'low');
 // on our own site the address carries the language: anadoluailesi.com.tr/oyun/en/ → meanings in English (kept as the player's choice)
 const pathLang = location.pathname.match(/\/oyun\/(ar|ur|en|es|fr|tr)(?:\/|$)/)?.[1]; // tr: "Sadece Türkçe" (no other language)
 if (pathLang && !params.has('gloss')) settings.set('glossLang', pathLang);
@@ -699,8 +701,10 @@ const feedbackAsk = {
 };
 
 // ⚙️ in the HUD: voices and music, picture quality, how to play, back to the main menu
+const qualityCard = new ChoiceCard(host, modes);
 const settingsPanel = new SettingsPanel(host, {
   modes, settings,
+  confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onFeedback: () => feedback.open(),
   onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
@@ -812,7 +816,7 @@ const idleAd = {
   },
 };
 const menu = new MainMenu(host, {
-  settings,
+  settings, confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onBanner: (on) => { if (on && !wallet.adFree) ads.showBanner(); else ads.hideBanner(); }, // a banner on the square's menu (none with ad-free)
   villageServer,
   hasSave: () => !!saved,
@@ -832,7 +836,7 @@ async function editProfile({ cancellable = true } = {}) {
   menu.show();
 }
 // first launch: create the character before anything else (tests skip it with ?nointro)
-if (!setup.done && !params.has('nointro')) { menu.hide(); editProfile({ cancellable: false }); } // (no 3D offer: it is in the shop)
+if (!setup.done && !params.has('nointro')) { menu.hide(); if (!wallet.adFree) ads.showBanner(); editProfile({ cancellable: false }); } // (the very first screen carries the banner too) // (no 3D offer: it is in the shop)
 else {
   // back from changing the outfit: straight on where you were
   let again = false;

@@ -24,8 +24,8 @@ export class SettingsPanel {
   #pop = null;
   #taps = [];
 
-  constructor(host, { modes, settings, onHelp, onMenu, onSound, onFeedback = null, onStartAt = null, chapters = [] }) {
-    Object.assign(this, { modes, settings, onHelp, onMenu, onSound, onFeedback, onStartAt, chapters });
+  constructor(host, { modes, settings, confirmQuality = async () => true, onHelp, onMenu, onSound, onFeedback = null, onStartAt = null, chapters = [] }) {
+    Object.assign(this, { modes, settings, confirmQuality, onHelp, onMenu, onSound, onFeedback, onStartAt, chapters });
     this.body = el('div', { class: 'settings-body' });
     const title = el('h2', { class: 'set-title', text: 'Ayarlar', on: { click: () => this.#tap() } });
     this.root = el('div', { class: 'overlay dim settings-panel' }, [el('div', { class: 'card' }, [
@@ -83,7 +83,7 @@ export class SettingsPanel {
     const q = s.get('quality', 'medium');
     const quality = el('div', { class: 'seg', attrs: { role: 'radiogroup', 'aria-label': 'Görüntü kalitesi' } }, QUALITY.map(([id, name]) => el('button', {
       class: `seg-btn${id === q ? ' on' : ''}`, text: name, attrs: { type: 'button', role: 'radio', 'aria-checked': String(id === q), 'data-quality': id },
-      on: { click: () => { if (id !== q) { s.set('quality', id); this.onMenu({ resume: true }); } } },
+      on: { click: async () => { if (id === q) return; if (id !== 'low' && !(await this.confirmQuality())) return; s.set('quality', id); this.onMenu({ resume: true }); } }, // medium / high: "Emin misin?" first
     })));
     const tile = (ico, text, sub, fn) => el('button', { class: 'set-tile', attrs: { type: 'button' }, on: { click: () => { this.close(); fn(); } } }, [
       el('span', { class: 'set-ico', html: ico }), el('b', { text }), sub ? el('small', { text: sub }) : null,

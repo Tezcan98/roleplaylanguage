@@ -35,7 +35,7 @@
   },
   "ads": {
     "idleBannerSeconds": 90,
-    "menuBannerChance": 0.2,
+    "menuBannerChance": 1,
     "betweenDays": true,
     "travelChance": 0.25,
     "travelGapMinutes": 3
