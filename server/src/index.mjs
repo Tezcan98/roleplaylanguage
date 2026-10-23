@@ -33,6 +33,7 @@
  *   GEMINI_MODEL      default gemini-flash-latest
  *   NPC_CHAT_PER_MINUTE / NPC_CHAT_PER_DAY (per IP, default 8 / 150), NPC_CHAT_GLOBAL_PER_DAY (default 1200)
  *   AD_STATS_KEY, AD_STATS_DIR  the live ad numbers page (GET /api/ad-stats?key=…) and where its day files go (AdStats.js)
+ *   PLAY_STATS_DIR  where the anonymous play numbers go (PlayStats.js; GET /api/stats?key=… with the same AD_STATS_KEY)
  *   FEEDBACK_DIR, FEEDBACK_KEY (default AD_STATS_KEY), FEEDBACK_MODEL  the players' feedback, graded by Gemini for credits (Feedback.js)
  *   REPORTS_DIR, REPORT_KEY (default AD_STATS_KEY), REPORT_MODEL  player reports ("Şikayet et"): the reported player's last
  *                     ten minutes (bubbles + voice) go to Gemini; the operator decides on a ban from the mail (Reports.js)
@@ -56,6 +57,7 @@ import { AuditLog } from './AuditLog.js';
 import { ChessScoreFile } from './ChessScoreFile.js';
 import { Moderator } from './Moderator.js';
 import { AdStats } from './AdStats.js';
+import { PlayStats } from './PlayStats.js';
 import { Feedback } from './Feedback.js';
 import { Reports } from './Reports.js';
 import { Mailer } from './Mailer.js';
@@ -81,6 +83,7 @@ const chat = new NpcChat({
 
 // live ad numbers from the app (AdMob's own come a day or two late)
 const adStats = new AdStats({ dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '' });
+const playStats = new PlayStats({ dir: env.PLAY_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'play') : null), key: env.AD_STATS_KEY ?? '' }); // how the game is played, anonymously: POST /api/play-event · GET /api/stats?key= (same key)
 
 // what the players think of the game: once a day, credits for a real opinion
 const feedback = new Feedback({
@@ -97,6 +100,7 @@ const reports = new Reports({
 
 const http = createServer((req, res) => {
   if (adStats.route(req, res, { clientIp })) return;
+  if (playStats.route(req, res, { clientIp })) return;
   if (reports.route(req, res)) return;
   if (feedback.route(req, res, { allowOrigin: (o) => originAllowed(o, origins), clientIp })) return;
   if (req.url === '/health') {

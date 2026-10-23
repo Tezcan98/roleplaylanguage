@@ -17,6 +17,7 @@ Bu dosya Play Console'daki Data safety formunu doldurmak için başlangıç tasl
 | Satın alma geçmişi | Google Play Faturalandırma | Uygulama işlevselliği | Evet | Ödemeyi Google işler; uygulama yalnızca satın almanın başarılı olduğunu öğrenir. "Financial info → Purchase history" Google Play üzerinden. |
 | Play Games oyuncu kimliği | Evet (Android, giriş yapılırsa) | Güvenlik/dolandırıcılık önleme | Evet | Güvenlik kaydında konuşmalarla birlikte saklanır. "Personal info → User IDs". |
 | IP adresi | Evet (güvenlik kaydında) | Güvenlik/dolandırıcılık önleme | Hayır | Şifreli, 90 gün. "Device or other IDs" / "Approximate location" değil: yalnızca kayıt için. |
+| Oyun istatistikleri (anonim sayılar) | Evet | Analitik | Hayır | Hangi bölüme gidildiği, süre, kaç kez konuşulduğu/etkinlik yapıldığı: yalnızca sayılar, metin ya da ses yok; cihaz kimliğinin kısa özeti ile; paylaşılmaz. |
 | Oyun skorları (satranç) | Evet | Uygulama işlevselliği | Evet | Kullanıcı adı + oyun sayıları sunucuda saklanır, meydanda gösterilir. |
 
 ## Güvenlik

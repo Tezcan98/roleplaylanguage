@@ -50,6 +50,10 @@ Android sürümünde oyun, Google Play Games'e otomatik olarak giriş yapmayı d
 
 Oyun ilerlemesi, kelime bilgisi, kredi bakiyesi ve bazı ayarlar cihazdaki **localStorage** alanında tutulur. Bunlar oyunun kendi sunucusuna ilerleme kaydı olarak gönderilmez.
 
+## 3a. Anonim oyun istatistikleri
+
+Oyunu geliştirmek için oyunun sunucusu **anonim kullanım sayıları** toplar: oyunun kaç cihazda açıldığı, hangi bölüme kadar gidildiği, ne kadar süre oynandığı ve hangi yerlerin, karakterlerin ve etkinliklerin kaç kez kullanıldığı (ör. "annenle konuşma: 3", "köy meydanında yazılan cümle sayısı: 5"). Bu sayılar **yalnızca sayıdır**: kimin ne yazdığı ya da söylediği, kullanıcı adı, ad, konum, rehber ya da reklam kimliği bu kayda **girmez**. Cihazlar, oyunun kendi ürettiği rastgele cihaz kimliğinin kısaltılmış bir özetiyle ayırt edilir (reklam kimliği değildir, kişiyi tanımlamaz). Günlük sayılar sunucuda 30 gün ayrıntılı tutulur; cihaz başına küçük bir özet (ilk ve son gün, en ileri bölüm, toplam süre) süresiz saklanır ve istek üzerine silinir (bkz. 9. İletişim). Reklam sayıları ayrıca ve yine anonim olarak aynı şekilde sayılır. Bu veriler kimseyle paylaşılmaz ve reklam amacıyla kullanılmaz.
+
 ## 4. Reklamlar, satın almalar ve bildirimler
 
 - **Reklamlar:** Kredi kazanmak için isteğe bağlı **ödüllü video** izlenebilir; hikâye modunda günler arasında **tam ekran reklam** gösterilir (reklamsız mod satın alınınca gösterilmez). Android sürümünde reklamlar Google AdMob üzerinden gösterilir. AdMob, kendi hizmeti kapsamında cihaz ve reklamla ilgili verileri (ör. reklam kimliği) işleyebilir; uygulama ilk açılışta gerekli yerlerde reklam izni (rıza) ister. Google'ın güncel reklam ve gizlilik politikaları ayrıca geçerlidir.

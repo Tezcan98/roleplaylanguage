@@ -279,6 +279,17 @@ export class VillageMultiplayer {
   }
 
   /** Is this username free (or this device's own)? Asks the village server; unreachable: let the join decide. */
+  /** The menu: a new username (the first one was made for the player: "Oyuncu37"). Taking effect when the square is joined again. */
+  async rename() {
+    const name = await this.usernames.ask(this.settings.get('username', '') ?? '', (n) => this.#nameFree(n), '', { title: 'Yeni adın ne?', ok: 'Kaydet', chap: 'Kullanıcı adı' });
+    if (!name) return null;
+    this.settings.set('username', name);
+    if (!this.deviceIdSet()) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join(''));
+    if (this.net.connected) this.leave(); // (it joins again under the new name when the game goes on)
+    return name;
+  }
+  deviceIdSet() { return !!this.settings.get('deviceId'); }
+
   async #nameFree(name) {
     if (!this.healthUrl) return true;
     try {
@@ -377,6 +388,7 @@ export class VillageMultiplayer {
   say(text) {
     if (!this.net.connected || !text) return;
     this.net.send({ type: 'say', text });
+    this.onStat?.('chat'); // (a count for the play numbers: never the words)
     this.labels.bubble(this.player, text, null, 6);
   }
 
@@ -409,6 +421,7 @@ export class VillageMultiplayer {
   }
 
   async #startCall(id, initiator) {
+    this.onStat?.('voice');
     const c = this.remotes.get(id);
     const name = c?.name ?? 'Oyuncu';
     if (c) c.call = true;

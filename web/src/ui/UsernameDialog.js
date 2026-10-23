@@ -10,17 +10,18 @@ const VALID = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 export class UsernameDialog {
   constructor(host, modes) { this.host = host; this.modes = modes; }
 
-  ask(current = '', check = null, note = '') {
+  /** `opts`: { title, ok } — another heading / button (changing the name from the menu). */
+  ask(current = '', check = null, note = '', { title = 'Adın ne?', ok: okText = 'Meydana gir', chap = 'Çok oyunculu köy meydanı' } = {}) {
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const input = el('input', { attrs: { type: 'text', maxlength: '16', placeholder: 'Kullanıcı adın', autocomplete: 'off', 'aria-label': 'Kullanıcı adı' } });
       input.value = current;
       const err = el('p', { class: 'fb bad', text: note });
-      const ok = el('button', { class: 'btn', text: 'Meydana gir', attrs: { type: 'submit' } });
+      const ok = el('button', { class: 'btn', text: okText, attrs: { type: 'submit' } });
       const skip = el('button', { class: 'btn alt', text: 'Vazgeç', attrs: { type: 'button' } });
       const form = el('form', { class: 'card' }, [
-        el('p', { class: 'chap', text: 'Çok oyunculu köy meydanı' }),
-        el('h2', { class: 'ctitle', text: 'Adın ne?' }),
+        el('p', { class: 'chap', text: chap }),
+        el('h2', { class: 'ctitle', text: title }),
         el('p', { class: 'cen en-t', text: gloss('Choose a username. Other players will see it.') }),
         el('div', { class: 'free' }, [input]), err, ok, skip,
       ]);

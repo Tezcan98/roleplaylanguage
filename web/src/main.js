@@ -110,6 +110,8 @@ import { SpeechEvaluator } from './services/speech/SpeechEvaluator.js';
 
 import { Hud } from './ui/Hud.js';
 import { QuestPanel } from './ui/QuestPanel.js';
+import { DirectionsCard } from './ui/DirectionsCard.js';
+import { Stats } from './services/Stats.js';
 import { Toasts } from './ui/Toasts.js';
 import { LabelLayer } from './ui/LabelLayer.js';
 import { Joystick } from './ui/Joystick.js';
@@ -222,7 +224,7 @@ world.setLinks(LINKS);
 
 // --- ui ---
 const toasts = new Toasts(host);
-const questPanel = new QuestPanel(host, { settings }); // (folds down to its title: remembered)
+const questPanel = new QuestPanel(host, { settings, onTap: (q) => directions.open(q) }); // (folds down to its title: remembered)
 const labels = new LabelLayer(host, ctx);
 const joystick = new Joystick(host);
 const cards = new CardOverlay(host, modes);
@@ -603,6 +605,7 @@ input.onKey((e) => {
   else if (['i', 'I'].includes(e.key) && (modes.is('play') || inventoryView.isOpen) && !e.target?.closest?.('input,textarea')) { e.preventDefault(); inventoryView.toggle(); } // the inventory
 });
 const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, player });
+const directions = new DirectionsCard(host, modes, { where: () => marker.describe(camera.yaw) }); // a tap on the task: where to go
 
 // word notebook with "practice" (a quick quiz over the learned words)
 const drill = new WordDrill(host, { modes, vocab, activities, tts, state, effects, toasts });
@@ -876,6 +879,7 @@ const menu = new MainMenu(host, {
   onContinue: () => continueGame(),
   onProfile: () => { menu.hide(); editProfile(); },
   onShop: () => shop.open(),
+  onRename: () => village.rename(), // ✏️ next to the name in the profile line
   onCode: () => codeCard.open(), // the 🔑 (once five taps on the shop's "Altın" tab turned it on)
 });
 /** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
@@ -885,6 +889,19 @@ async function editProfile({ cancellable = true } = {}) {
   if (p && (p.lang !== before.lang || p.gender !== before.gender || p.look !== before.look)) { location.reload(); return; }
   menu.show();
 }
+// how the game is played, anonymously: counts only (server/src/PlayStats.js; the privacy policy says so)
+const stats = new Stats({
+  bus, settings, modes, chapters: STORY.chapters.map((c) => c.id), native, lang: () => glossLang(), version: () => appVersion,
+  enabled: !params.has('debug') && !params.has('nointro') && !params.has('fakemic') && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname),
+  post: async (url, body) => {
+    if (native) { const { CapacitorHttp } = await import('@capacitor/core'); const r = await CapacitorHttp.post({ url, headers: { 'Content-Type': 'application/json' }, data: body }); return r.status === 204; }
+    const r = await fetch(url, { method: 'POST', body: JSON.stringify(body), keepalive: true, headers: { 'Content-Type': 'text/plain' } }); // (text/plain: no preflight)
+    return r.status === 204;
+  },
+});
+village.onStat = (key) => stats.count(key);
+{ const open = shop.open.bind(shop); shop.open = (...a) => { stats.count('shop'); return open(...a); }; }
+{ const ride = animals.ride.bind(animals); animals.ride = (h) => { stats.count('ride'); return ride(h); }; }
 // first launch: create the character before anything else (tests skip it with ?nointro)
 if (!setup.done && !params.has('nointro')) { menu.hide(); if (!wallet.adFree) ads.showBanner(); editProfile({ cancellable: false }); } // (the very first screen carries the banner too) // (no 3D offer: it is in the shop)
 else {
