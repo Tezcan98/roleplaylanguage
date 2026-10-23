@@ -55,3 +55,20 @@ test('the page needs the key', async () => {
   assert.equal(page.code, 200); assert.match(page.body, /Oyun istatistikleri/); assert.match(page.body, /d1-afternoon/);
   assert.equal(JSON.parse((await run('/api/stats?key=sirr&format=json')).body).total.devices, 1);
 });
+
+test('downloads: a device\'s first game opened, by app / web, today and the days before; the ad page shows them, countries by name', async () => {
+  const s = new PlayStats();
+  s.record(batch());
+  s.record(batch({ opens: 0 })); // the same device again: no new download
+  s.record(batch({ pid: 'zzzzzzzz9999', plat: 'web' }));
+  const i = s.installs(3);
+  assert.deepEqual([i.total, i.app, i.web, i.days.length], [2, 1, 1, 3]);
+  assert.deepEqual(i.days[0], { day: i.since, app: 1, web: 1 });
+  const { AdStats } = await import('../src/AdStats.js');
+  const ads = new AdStats({ key: 'k', installs: () => s.installs() });
+  ads.record({ e: 'show', f: 'banner' }, '1.2.3.4', 'TR');
+  let html = '';
+  ads.route({ url: '/api/ad-stats?key=k', method: 'GET' }, { writeHead() {}, end(b) { html = b; } });
+  assert.match(html, /İndirmeler/);
+  assert.match(html, /<td>Türkiye<\/td>/, 'the country by name, not "TR"');
+});

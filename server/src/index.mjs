@@ -82,8 +82,8 @@ const chat = new NpcChat({
 });
 
 // live ad numbers from the app (AdMob's own come a day or two late)
-const adStats = new AdStats({ dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '' });
 const playStats = new PlayStats({ dir: env.PLAY_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'play') : null), key: env.AD_STATS_KEY ?? '' }); // how the game is played, anonymously: POST /api/play-event · GET /api/stats?key= (same key)
+const adStats = new AdStats({ dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '', installs: () => playStats.installs() }); // (its page shows the downloads too)
 
 // what the players think of the game: once a day, credits for a real opinion
 const feedback = new Feedback({

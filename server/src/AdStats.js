@@ -24,8 +24,9 @@ export class AdStats {
   #days = new Map(); // day → events
   #hits = new Map(); // ip → { n, at }
 
-  constructor({ dir = null, key = '' } = {}) {
-    this.dir = dir; this.key = key;
+  /** `installs()`: the download counter shown on the page (PlayStats.js `installs()`), or null. */
+  constructor({ dir = null, key = '', installs = null } = {}) {
+    this.dir = dir; this.key = key; this.installs = installs;
     if (dir) { mkdirSync(dir, { recursive: true }); this.#load(); }
   }
 
@@ -94,7 +95,7 @@ export class AdStats {
     if (req.url.startsWith('/api/ad-stats')) {
       const u = new URL(req.url, 'http://x');
       if (!this.key || u.searchParams.get('key') !== this.key) { res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('yetkisiz\n'); return true; }
-      const s = this.summary();
+      const s = { ...this.summary(), installs: this.installs?.() ?? null };
       if (u.searchParams.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(s)); return true; }
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' });
       res.end(page(s));
@@ -107,7 +108,19 @@ export class AdStats {
 const NAMES = { interstitial: 'Geçiş reklamı', rewarded: 'Ödüllü video', banner: 'Banner' };
 const EV = { show: 'gösterildi', impression: 'gösterim', paid: 'gelirli gösterim', reward: 'ödül verildi', click: 'tıklandı', dismiss: 'kapatıldı', fail: 'hata' };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const REGIONS = new Intl.DisplayNames(['tr'], { type: 'region' });
+/** "TR" → "Türkiye" (the name in Turkish; the code itself when it is not a country). */
+const country = (c) => { if (!c) return ''; try { return REGIONS.of(c) ?? c; } catch { return c; } };
 const money = (r) => Object.entries(r).map(([c, v]) => `${v.toFixed(4)} ${c}`).join(' + ') || '—';
+
+/** The download counter: every device's first game opened (PlayStats.js), today and the last days. */
+function installsBlock(i) {
+  if (!i) return '';
+  const today = i.days[0] ?? { app: 0, web: 0 };
+  return `<h2>İndirmeler <small>bir cihazın oyunu ilk açışı · ${i.since ? `${esc(i.since)} tarihinden beri` : 'henüz kayıt yok'}</small></h2>
+<div class="big"><div><b>${i.total}</b>toplam</div><div><b>${i.app}</b>uygulama (Android)</div><div><b>${i.web}</b>web</div><div><b>${today.app + today.web}</b>bugün</div></div>
+<table><tr><th>Gün</th><th>uygulama</th><th>web</th><th>toplam</th></tr>${i.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.app || ''}</td><td>${d.web || ''}</td><td>${d.app + d.web || ''}</td></tr>`).join('')}</table>`;
+}
 
 /** The stats page: refreshes itself every 15 seconds. */
 function page(s) {
@@ -124,9 +137,10 @@ table{border-collapse:collapse;width:100%;max-width:900px;background:#1d2b3c;bor
 <div class="big"><div><b>${today?.events ?? 0}</b>olay</div><div><b>${today?.devices ?? 0}</b>cihaz</div><div><b>${esc(money(today?.revenue ?? {}))}</b>tahmini gelir</div>
 <div><b>${[...FORMATS].reduce((n, f) => n + cell(today, f, 'click'), 0)}</b>tıklama (banner)</div></div>
 ${table(today)}
+${installsBlock(s.installs)}
 <h2>Son günler</h2><table><tr><th>Gün</th><th>olay</th><th>cihaz</th><th>gösterim</th><th>ödül</th><th>tıklama</th><th>tahmini gelir</th></tr>
 ${s.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.events}</td><td>${d.devices}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'show') + cell(d, f, 'impression'), 0)}</td><td>${cell(d, 'rewarded', 'reward')}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'click'), 0)}</td><td>${esc(money(d.revenue))}</td></tr>`).join('')}</table>
 <h2>Son olaylar</h2><table><tr><th>Saat</th><th>Reklam</th><th>Olay</th><th>Gelir</th><th>Ülke</th><th>Sürüm</th><th>Cihaz</th></tr>
-${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>${EV[e.e]}</td><td>${e.micros != null ? `${(e.micros / 1e6).toFixed(5)} ${esc(e.cur ?? '')}` : ''}</td><td>${esc(e.c ?? '')}</td><td>${esc(e.v ?? '')}</td><td>${esc(e.d ?? '')}</td></tr>`).join('')}</table>
+${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>${EV[e.e]}</td><td>${e.micros != null ? `${(e.micros / 1e6).toFixed(5)} ${esc(e.cur ?? '')}` : ''}</td><td>${esc(country(e.c))}</td><td>${esc(e.v ?? '')}</td><td>${esc(e.d ?? '')}</td></tr>`).join('')}</table>
 </body></html>`;
 }

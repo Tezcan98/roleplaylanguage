@@ -98,6 +98,20 @@ export class PlayStats {
     try { const f = join(this.dir, 'devices.json'); writeFileSync(`${f}.tmp`, JSON.stringify(Object.fromEntries(this.#devices))); renameSync(`${f}.tmp`, f); } catch { this.#dirty = true; }
   }
 
+  /**
+   * Downloads, as far as the server can tell: a device's first game opened is its download (the app's or the
+   * web game's), counted from the day these numbers began. { since, total, app, web, days: [{ day, app, web }] }
+   */
+  installs(days = 14) {
+    const devs = [...this.#devices.values()], plat = (v) => (v.plat === 'web' ? 'web' : 'app'); // (no platform yet: the app's)
+    const list = Array.from({ length: days }, (_, k) => day(Date.now() - k * 86400000)).map((d) => {
+      const fresh = devs.filter((v) => v.first === d);
+      return { day: d, app: fresh.filter((v) => plat(v) === 'app').length, web: fresh.filter((v) => plat(v) === 'web').length };
+    });
+    const since = devs.reduce((m, v) => (!m || v.first < m ? v.first : m), '');
+    return { since, total: devs.length, app: devs.filter((v) => plat(v) === 'app').length, web: devs.filter((v) => plat(v) === 'web').length, days: list };
+  }
+
   summary() {
     const today = day();
     const devs = [...this.#devices.values()];
