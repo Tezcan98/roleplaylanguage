@@ -19,8 +19,20 @@ const endCard = (name) => ({
     await kit.card(page, `<img src="assets/icons/icon-512.png" alt=""><h1 dir="auto">${e.name}</h1><p dir="auto">${e.line}</p><div class="promo-badges"><span>▶ Google Play</span><span class="free">${e.free}</span></div>`);
   },
 });
+
+/** A plain card on the blurred menu background (the Play Store logo, the follow call). */
+const card = (name, seconds, html) => ({
+  name, seconds,
+  setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2000); return page; },
+  act: async (kit, page) => { await kit.card(page, html(END[kit.lang] ?? END.tr, kit.lang)); },
+});
+const FOLLOW = {
+  tr: ['Takip et', 'Yeni videoları kaçırma'],
+  en: ['Follow us', 'Don’t miss the next videos'],
+  ar: ['تابعنا', 'لا تفوّت الفيديوهات القادمة'],
+};
 /** The park's corners (world/locations/VillageSquare.js PARK: x −46…−32, z 13…25). */
-const SWING = [-42.3, 15.6], SLIDE = [-34.2, 14.6];
+const SWING = [-42.3, 15.6];
 
 export const EPISODES = {
   // 1 · the park: the slide, the swings, the children to make friends with
@@ -38,20 +50,6 @@ export const EPISODES = {
         act: async (kit, page) => {
           await kit.big(page, { tr: 'Köy meydanında çocuklar için bir park var', en: 'There’s a park in the village square', ar: 'في ساحة القرية حديقة للأطفال' });
           await fixed(page, [-31, 6, 28.5], [-39, 0.6, 18.5]); // the camera glides in
-        },
-      },
-      {
-        name: 'pSlide', seconds: 4.2,
-        setup: async (kit) => {
-          const page = await start(kit);
-          await page.evaluate(() => { const g = window.__game; g.cast.move('emre', 'village', 'zehra', 'stand'); g.cast.move('mert', 'village', 'benchWest', 'stand'); }); // the runners away: nobody in front of the camera
-          await fixed(page, [SLIDE[0] + 1.6, 1.9, SLIDE[1] + 8.4], [SLIDE[0], 0.9, SLIDE[1] + 2.4]); // in front of the slide: down it, towards the camera
-          await kit.sleep(1000);
-          return page;
-        },
-        act: async (kit, page) => {
-          await kit.big(page, { tr: 'Kaydıraktan kay', en: 'Go down the slide', ar: 'انزلق على الزحليقة' });
-          await page.evaluate(() => window.__game.parkPlay.slide());
         },
       },
       {
@@ -81,9 +79,9 @@ export const EPISODES = {
       endCard('pEnd'),
     ],
     vo: {
-      tr: ['Köy meydanında çocuklar için bir park var.', 'Kaydıraktan kay,', 'salıncakta sallan,', 've yeni arkadaşlar edin.', 'Türk Ailem. Google Play’de ücretsiz.'],
-      en: ['There’s a park in the village square.', 'Go down the slide,', 'swing on the swings,', 'and make new friends.', 'My Turkish Family. Free on Google Play.'],
-      ar: ['في ساحة القرية حديقة للأطفال.', 'انزلق على الزحليقة،', 'وتأرجح على الأرجوحة،', 'وكوّن أصدقاء جددًا.', 'عائلتي التركية. مجانًا على غوغل بلاي.'],
+      tr: ['Köy meydanında çocuklar için bir park var.', 'Salıncakta sallan,', 've yeni arkadaşlar edin.', 'Türk Ailem. Google Play’de ücretsiz.'],
+      en: ['There’s a park in the village square.', 'Swing on the swings,', 'and make new friends.', 'My Turkish Family. Free on Google Play.'],
+      ar: ['في ساحة القرية حديقة للأطفال.', 'وتأرجح على الأرجوحة،', 'وكوّن أصدقاء جددًا.', 'عائلتي التركية. مجانًا على غوغل بلاي.'],
     },
   },
 
@@ -169,5 +167,98 @@ export const EPISODES = {
       en: ['They speak out loud, and the game understands.', 'Say it right, and the story goes on.', 'Get it wrong, and a hint helps.', 'And they talk with their friends.', 'My Turkish Family. Free on Google Play.'],
       ar: ['يتكلّم بصوت عالٍ، واللعبة تفهمه.', 'إذا قالها صحيحة تستمر القصة.', 'وإذا أخطأ يأتيه تلميح.', 'ويتحدّث مع أصدقائه.', 'عائلتي التركية. مجانًا على غوغل بلاي.'],
     },
+  },
+};
+
+/** Real players on the village square (each its own browser, joined through "Meydana gir"): covered, everyday clothes. */
+const FRIENDS = [
+  { name: 'Leyla', params: '&gender=girl&look=covered', outfit: 'dress' },
+  { name: 'Omar', params: '&look=modest', outfit: 'casual' },
+  { name: 'Mariam', params: '&gender=girl&look=covered', outfit: 'casual' },
+  { name: 'Yusuf', params: '&look=modest', outfit: 'casual' },
+  { name: 'Zainab', params: '&gender=girl&look=covered', outfit: 'dress' },
+];
+const crowd = { pages: {}, me: null };
+const join = async (kit, name, { params = '', outfit = null, extra = false } = {}) => {
+  const page = await kit.open(params, { extra });
+  await page.evaluate(([q, outfit, name]) => {
+    const g = window.__game, u = new URLSearchParams(q);
+    for (const k of ['gender', 'look']) if (u.get(k)) g.settings.set(k, u.get(k));
+    g.settings.set('dataConsent', { v: 99, at: Date.now() }); g.settings.set('villageIntroSeen', true);
+    const w = g.wallet; w.add(500, 'promo');
+    for (const it of [{ id: 'hd', slot: 'hd' }, { id: `hd-${outfit}`, slot: 'body' }]) { w.buy({ ...it, price: 0 }); w.equip(it); }
+    g.shop.onOutfit?.(); g.settings.set('username', name);
+  }, [params, outfit, name]);
+  await page.evaluate(() => document.querySelector('.menu-main')?.click()); // the new game starts on the square: the village connects by itself
+  await kit.sleep(2000);
+  for (let i = 0; i < 6; i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn, .overlay.open .card .btn')?.click()); await kit.sleep(400); }
+  await page.waitForFunction(() => window.__game.village.net.connected, null, { timeout: 60000 });
+  await kit.sleep(1500); await kit.closeCards(page); await kit.hideHud(page);
+  return page;
+};
+const who = (n) => (n === 'Ben' ? crowd.me : crowd.pages[n]);
+const stand = (n, x, z, fx, fz) => who(n).evaluate(([x, z, fx, fz]) => window.__game.player.place({ x, z, rot: Math.atan2(fx - x, fz - z) }), [x, z, fx, fz]);
+const say = (n, t) => who(n).evaluate((t) => window.__game.village.say(t), t);
+
+EPISODES.tanitim = {
+  scenes: [
+    {
+      name: 'tOrder', seconds: 5.6,
+      setup: async (kit) => {
+        const page = await start(kit);
+        await page.evaluate(() => window.__game.travel.go('village', 'yardRoad'));
+        await kit.sleep(3000);
+        await page.evaluate(() => { const g = window.__game, n = g.cast.get('manav'); g.player.position.set(n.position.x - 1.3, 0, n.position.z + 3.4); g.camera.snap(g.player.position, false); });
+        await kit.sleep(1200);
+        return page;
+      },
+      act: async (kit, page) => {
+        await kit.big(page, { tr: 'Cümleleri kurarak Türkçe öğrenir', en: 'Learns Turkish by building sentences', ar: 'يتعلّم التركية ببناء الجمل' });
+        await page.evaluate(() => window.__game.dialogue.open('manav', 'mv1')); // "Buyur evlat, ne istersin?" → the sentence in tiles
+        await kit.sleep(2000);
+        for (const t of ['Bir kilo elma', 've iki kilo', 'patates lütfen.']) { await page.evaluate((t) => [...document.querySelectorAll('#dlg .tile')].find((b) => b.textContent === t && !b.disabled)?.click(), t); await kit.sleep(800); }
+      },
+    },
+    {
+      name: 'tSchool', seconds: 4.4,
+      setup: async (kit) => {
+        const page = await start({ ...kit, open: (p = '', o) => kit.open(`${p}&fastclass`, o) });
+        page.evaluate(() => window.__game.lessons.enter('l1'));
+        await kit.sleep(800);
+        await page.click('.overlay.open button:has-text("Krediyle gir")').catch(() => {});
+        await kit.sleep(3500); await kit.closeCards(page);
+        return page;
+      },
+      act: async (kit, page) => {
+        await kit.big(page, { tr: 'Okulda öğretmeni ve arkadaşlarıyla konuşur', en: 'Talks with the teacher and classmates at school', ar: 'يتحدّث مع المعلّمة وزملائه في المدرسة' });
+        for (let i = 0; i < 3; i++) { await kit.sleep(1000); await page.evaluate(() => [...document.querySelectorAll('.overlay.open button')].find((b) => b.textContent.includes('devam'))?.click()); }
+      },
+    },
+    {
+      name: 'tSquare', seconds: 5.2,
+      setup: async (kit) => {
+        for (const f of FRIENDS) crowd.pages[f.name] = await join(kit, f.name, { ...f, extra: true });
+        crowd.me = await join(kit, 'Ben', { params: '&look=modest', outfit: 'casual' });
+        const all = [...FRIENDS.map((f) => f.name), 'Ben'], r = 1.7, cx = 0.6, cz = 6.4;
+        for (const [i, n] of all.entries()) { const a = Math.PI * (0.92 - (0.84 * i) / (all.length - 1)); await stand(n, cx + Math.cos(a) * r, cz - Math.sin(a) * r, cx, cz); }
+        await crowd.me.evaluate(([x, y, z, lx, ly, lz]) => { const g = window.__game, V = g.player.position.constructor; g.camera.setFixed(new V(x, y, z), new V(lx, ly, lz)); }, [0.6, 2.1, 11.6, 0.6, 1.5, 6.4]);
+        await crowd.me.addStyleTag({ content: '#act,#act-left,#act-more{visibility:hidden!important}' });
+        await kit.sleep(2500);
+        return crowd.me;
+      },
+      act: async (kit, page) => {
+        await kit.big(page, { tr: 'Meydanda arkadaşlarla oynar, Türkçe konuşur', en: 'Plays with friends in the square, speaking Turkish', ar: 'يلعب مع أصدقائه في الساحة ويتحدّث بالتركية' });
+        await kit.sleep(500);
+        for (const [n, t, w] of [['Mariam', 'Merhaba! Hadi oynayalım!', 1400], ['Yusuf', 'Evet, hadi!', 1100], ['Ben', 'Olur! Ben de geliyorum!', 0]]) { await say(n, t); await kit.sleep(w); }
+      },
+      cleanup: async () => { for (const p of [crowd.me, ...Object.values(crowd.pages)]) await p.context().close(); },
+    },
+    card('tLogo', 3.6, (e) => `<img src="assets/icons/icon-512.png" alt=""><h1 dir="auto">${e.name}</h1><p dir="auto">${e.line}</p><div class="promo-badges"><span>▶ Google Play</span><span class="free">${e.free}</span></div>`),
+    card('tFollow', 3.2, (e, lang) => `<img src="assets/icons/icon-512.png" alt=""><h1 dir="auto">${(FOLLOW[lang] ?? FOLLOW.tr)[0]}</h1><p dir="auto">${(FOLLOW[lang] ?? FOLLOW.tr)[1]}</p><div class="promo-badges"><span class="free">🔔 ${e.name}</span></div>`),
+  ],
+  vo: {
+    tr: ['Çocuğunuz cümleler kurarak öğrenir,', 'okulda konuşur,', 'Meydanda arkadaşlarıyla oynar, Türkçe konuşur.', 'Türk Ailem. Google Play’de ücretsiz.', 'Takip et, yeni videoları kaçırma.'],
+    en: ['Your child builds sentences,', 'talks at school,', 'They play with friends in the square, speaking Turkish.', 'My Turkish Family. Free on Google Play.', 'Follow us, and don’t miss the next videos.'],
+    ar: ['طفلك يبني الجمل،', 'ويتحدّث في المدرسة،', 'ويلعب مع أصدقائه في الساحة ويتحدّث بالتركية.', 'عائلتي التركية. مجانًا على غوغل بلاي.', 'تابعنا ولا تفوّت الفيديوهات القادمة.'],
   },
 };
