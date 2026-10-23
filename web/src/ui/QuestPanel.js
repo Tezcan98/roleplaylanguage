@@ -17,6 +17,8 @@ export class QuestPanel {
     this.root = el('div', { attrs: { id: 'quest' } }, [this.toggle, this.t, this.o, this.e]);
     this.root.addEventListener('click', () => { if (this.collapsed) this.setCollapsed(false); else this.onTap?.(this.quest); });
     host.append(this.root);
+    // what sits under it on the left (the "alone in the square" note) moves with its height
+    new ResizeObserver(() => document.documentElement.style.setProperty('--quest-h', `${this.root.hidden ? 0 : this.root.offsetHeight}px`)).observe(this.root);
     this.setCollapsed(!!settings?.get('questCollapsed', false));
   }
 

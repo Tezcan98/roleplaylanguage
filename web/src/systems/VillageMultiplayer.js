@@ -60,6 +60,7 @@ export class VillageMultiplayer {
     this.stayOffline = false; // the server said so (a ban after a report): offline this game, without a word
     this.consentDeclined = false; // said no this time: offline in the square until the next game (or the menu)
     ptt.onReport = () => this.report();
+    ptt.onRetry = () => { this.consentDeclined = false; this.join(); }; // "📴 Çevrimdışı" tapped: the recording question again
     this.locationId = 'village'; // the main square (chess, menu entry)
     this.joinedAt = null;
     this.chosenRoom = false; // true when the player picked the square on the main menu
@@ -281,12 +282,12 @@ export class VillageMultiplayer {
   async #agreed() {
     const c = this.settings.get('dataConsent', null);
     if (!this.consent || c?.v >= CONSENT_VERSION) return true;
-    if (this.consentDeclined && !this.chosenRoom) return false;
+    if (this.consentDeclined && !this.chosenRoom) { this.ptt.setOffline(); return false; }
     const yes = await this.consent.ask();
     if (yes) { this.settings.set('dataConsent', { v: CONSENT_VERSION, at: Date.now() }); this.consentDeclined = false; return true; }
     this.consentDeclined = true;
     if (this.chosenRoom) this.onNameCancel?.(); // picked the square on the menu: back to it
-    else this.toasts.show('Meydanda çevrimdışı devam ediyorsun', 'You go on offline in the square');
+    else { this.toasts.show('Meydanda çevrimdışı devam ediyorsun · bağlanmak için üstteki 📴', 'You go on offline in the square — tap 📴 at the top to connect'); this.ptt.setOffline(); }
     return false;
   }
 

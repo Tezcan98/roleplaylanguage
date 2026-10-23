@@ -15,7 +15,7 @@ export class PushToTalk {
     this.onChange = onChange;
     this.on = false;
     this.btn = el('button', { class: 'ptt', html: `${MIC}<span>Bas, konuş (yazı)</span>`, attrs: { type: 'button', 'aria-label': 'Basılı tut ve konuş (T)' } });
-    this.status = el('button', { class: 'pill online', attrs: { type: 'button' }, on: { click: () => this.onRooms?.() } }); // a tap: "Meydan seç" (another city's square)
+    this.status = el('button', { class: 'pill online', attrs: { type: 'button' }, on: { click: () => (this.offline ? this.onRetry?.() : this.onRooms?.()) } }); // a tap: "Meydan seç" (another city's square) — offline: try again
     // "Şikayet et", next to who is online in the top bar (main.js puts both there)
     this.reportBtn = el('button', { class: 'pill report', text: '🚩 Şikayet et', attrs: { type: 'button', title: 'Bir oyuncuyu şikayet et', 'aria-label': 'Şikayet et' }, on: { click: () => this.onReport?.() } });
     this.reportBtn.hidden = true;
@@ -24,6 +24,9 @@ export class PushToTalk {
     this.root = el('div', { class: 'ptt-wrap' }, [this.zone, this.status, this.btn]);
     this.root.hidden = true;
     host.append(this.root);
+    // on the left, under the task: alone in the square (offline: a tap connects; online: a tap picks another city)
+    this.alone = el('button', { class: 'alone-note', attrs: { type: 'button', hidden: '' }, on: { click: () => (this.offline ? this.onRetry?.() : this.onRooms?.()) } });
+    host.append(this.alone);
     this.input = el('input', { class: 'ptt-input', attrs: { type: 'text', maxlength: '140', placeholder: 'Türkçe yaz…', enterkeyhint: 'send', 'aria-label': 'Mesaj' } });
     this.typeBox = el('form', { class: 'ptt-type' }, [this.input, el('button', { class: 'chipbtn primary', text: 'Gönder', attrs: { type: 'submit' } })]);
     this.typeBox.hidden = true;
@@ -67,6 +70,7 @@ export class PushToTalk {
     if (!visible) { this.set(false); this.typeBox.hidden = true; }
     const appearing = visible && this.root.hidden;
     this.root.hidden = !visible; this.status.hidden = !visible; this.reportBtn.hidden = !visible;
+    if (!visible) this.#alone(null);
     // a small round mic button; its words ("Bas, konuş") only the first few times, for a few seconds
     if (appearing) {
       let n = 0; try { n = Number(localStorage.getItem('pttHints') ?? 0); localStorage.setItem('pttHints', String(n + 1)); } catch { /* private mode */ }
@@ -102,5 +106,18 @@ export class PushToTalk {
   /** No speech-to-text here: type the sentence instead. */
   typeInstead() { this.typeBox.hidden = false; this.input.focus(); }
   /** Who is here, short (it sits in the top bar): "👥 3 · Ankara"; the details on a long press / hover. */
-  setOnline(n, name, room = '') { this.status.textContent = `👥 ${n}${room ? ` · ${room.split(' · ')[0]}` : ''}`; this.status.title = `${name} · ${room ? `${room} · ` : ''}meydanda ${n} kişi`; }
+  setOnline(n, name, room = '') { this.offline = false; this.#alone(n <= 1 ? 'alone' : null); this.status.textContent = `👥 ${n}${room ? ` · ${room.split(' · ')[0]}` : ''}`; this.status.title = `${name} · ${room ? `${room} · ` : ''}meydanda ${n} kişi`; }
+  /** Not in the square's crowd (the recording wasn't agreed to): the top bar says so, a tap asks again (`onRetry`). */
+  setOffline() { this.offline = true; this.status.hidden = false; this.status.textContent = '📴 Çevrimdışı'; this.status.title = 'Meydana bağlan · connect to the square'; this.#alone('offline'); }
+
+  /** The note on the left: null | 'offline' | 'alone' (Turkish, its meaning in the player's language under it). */
+  #alone(kind) {
+    this.alone.hidden = !kind;
+    if (!kind) return;
+    const [tr, en] = kind === 'offline'
+      ? ['📴 Çevrimdışısın: meydanda yalnızsın. Bağlanmak için dokun.', "You're offline: alone in the square. Tap to connect."]
+      : ['👤 Bu meydanda şu an yalnızsın. Başka şehre geçmek için dokun.', "You're alone in this square right now. Tap to pick another city."];
+    const g = gloss(en);
+    this.alone.replaceChildren(tr, ...(g ? [el('small', { class: 'en-t', text: g })] : []));
+  }
 }
