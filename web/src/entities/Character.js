@@ -86,13 +86,13 @@ export class Character {
   }
 
   /**
-   * The jacket on the HD body too: its top (shirt and sleeves) in the jacket's colour, a gold zip down
-   * the front. Not on the suit: it is a jacket already — painting it made a red suit with a zip.
+   * The jacket on the HD body too: its top (shirt and sleeves) in the jacket's colour. Not on the suit: it is a
+   * jacket already — painting it made a red suit. (No zip here: a gold box placed on the chest from the body's
+   * bounds came out as a stray bar in front when the jacket went on with the player turned.)
    */
   #hdJacket() {
     const hd = this.#hd;
-    if (!hd || hd === 'loading') return;
-    if (/\.suit\./.test(this.#hdKey ?? '')) { if (hd.zip) hd.zip.visible = false; return; }
+    if (!hd || hd === 'loading' || /\.suit\./.test(this.#hdKey ?? '')) return;
     hd.scene.traverse((o) => {
       if (!o.isMesh) return;
       for (const m of [o.material].flat()) {
@@ -101,22 +101,6 @@ export class Character {
         m.color.setHex(this.jacketOn ? JACKET : m.userData.own);
       }
     });
-    if (this.jacketOn && !hd.zip) { // a thin gold line on the chest, fixed to the upper body
-      const chest = hd.scene.getObjectByName('Chest') ?? hd.scene.getObjectByName('Torso') ?? hd.scene.getObjectByName('Abdomen');
-      if (chest) {
-        const box = new THREE.Box3(); hd.scene.traverse((o) => { if (o.isMesh && [o.material].flat().some((m) => m.name === 'Shirt')) box.expandByObject(o, true); });
-        if (!box.isEmpty()) {
-          const ws = this.group.getWorldScale(new THREE.Vector3()).x, h = (box.max.y - box.min.y) * 0.55;
-          const zip = new THREE.Mesh(new THREE.BoxGeometry(0.035 / ws, h / ws, 0.02 / ws), new THREE.MeshStandardMaterial({ color: 0xE0B04A, roughness: 0.5 }));
-          const facing = this.group.rotation.y; this.group.rotation.y = 0; this.group.updateMatrixWorld(true);
-          zip.position.copy(this.group.worldToLocal(new THREE.Vector3((box.min.x + box.max.x) / 2, box.max.y - h * 0.55, box.max.z + 0.005)));
-          this.group.add(zip); chest.attach(zip);
-          this.group.rotation.y = facing;
-          hd.zip = zip;
-        }
-      }
-    }
-    if (hd.zip) hd.zip.visible = !!this.jacketOn;
   }
 
   turnTo(angle, k) { this.group.rotation.y += wrapAngle(angle - this.group.rotation.y) * k; }
