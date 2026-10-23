@@ -111,6 +111,7 @@ import { SpeechEvaluator } from './services/speech/SpeechEvaluator.js';
 import { Hud } from './ui/Hud.js';
 import { QuestPanel } from './ui/QuestPanel.js';
 import { DirectionsCard } from './ui/DirectionsCard.js';
+import { Minimap } from './ui/Minimap.js';
 import { Stats } from './services/Stats.js';
 import { Toasts } from './ui/Toasts.js';
 import { LabelLayer } from './ui/LabelLayer.js';
@@ -449,7 +450,8 @@ const village = new VillageMultiplayer({
   }),
   recognizer: chatRecognizer,
 });
-village.autoName = () => `Oyuncu${Math.floor(10 + Math.random() * 90)}`; // story mode: no username question (the characters have no names)
+village.autoName = () => `Oyuncu${Math.floor(10 + Math.random() * 90)}`; // a name made up for the player, filled into the username question
+village.autoNamed = (n) => /^Oyuncu\d{2}$/.test(n); // (still a made-up one: the question comes once more)
 village.onNameCancel = () => menu.show(); // no username after all: back to the menu
 village.outfit = () => ({ outfit: outfitOn(wallet), aura: auraOn(wallet) }); // others see them too
 // the HD character from the shop: everywhere once bought — home too (prayer poses use the blocky body for a moment)
@@ -606,6 +608,8 @@ input.onKey((e) => {
 });
 const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, player });
 const directions = new DirectionsCard(host, modes, { where: () => marker.describe(camera.yaw) }); // a tap on the task: where to go
+// the round map, top right: people here, the one the task is about blinking (others online in blue); a tap: where to go
+const minimap = new Minimap(host, { world, cast, player, camera, marker, story, settings, others: () => (world.current.id === village.locationId ? village.remotes.visible() : []), onTap: () => directions.open(questPanel.quest) });
 
 // word notebook with "practice" (a quick quiz over the learned words)
 const drill = new WordDrill(host, { modes, vocab, activities, tts, state, effects, toasts });
@@ -822,7 +826,7 @@ const saves = new LocalSaveRepository();
 // a new game now starts in the park in the square: every old story save starts over once (credits, purchases,
 // outfits and settings stay — they are the wallet's, not the save's)
 if (!settings.get('parkStart', false)) { saves.clear(); settings.set('parkStart', true); }
-if (params.has('consented') && params.has('debug')) settings.set('dataConsent', { v: CONSENT_VERSION, at: 0 }); // tests: the recording consent already given
+if (params.has('consented') && params.has('debug')) { settings.set('dataConsent', { v: CONSENT_VERSION, at: 0 }); settings.set('usernameAsked', true); } // tests: the recording consent already given (and no username question)
 let saved = params.has('fresh') ? null : saves.load();
 let autosaveOn = false;
 new AutoSave({ bus, state, repo: saves, enabled: () => autosaveOn });
@@ -981,7 +985,7 @@ function continueGame(then) {
 
 
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
-const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });

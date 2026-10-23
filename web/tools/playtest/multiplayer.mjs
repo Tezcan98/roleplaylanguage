@@ -23,7 +23,7 @@ const checks = [];
 const check = (name, ok, detail = '') => { checks.push([name, ok]); log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`); };
 
 /** A player: "▶ Hikayeye başla" — a new game starts in the park in the square, among the others (one world, no separate online mode). */
-async function player(tag, name, { room = null } = {}) {
+async function player(tag, name, { room = null, pick = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1000, height: 620 }, permissions: ['microphone'] });
   const page = await ctx.newPage();
   errors.push(...watchErrors(page, `${tag} `));
@@ -37,6 +37,11 @@ async function player(tag, name, { room = null } = {}) {
   const card = await waitFor(() => page.$('.card.consent'), 20000, 300);
   consentAsked.push(!!card && await page.evaluate(() => document.querySelector('.card.consent .btn').disabled));
   if (card) { await page.check('.card.consent input[type=checkbox]'); await page.click('.card.consent .btn:has-text("Kabul et")'); }
+  if (pick) { // no username yet: the question comes once, the made-up name filled in
+    const box = await waitFor(() => page.$('.overlay.open form.card input'), 20000, 300);
+    page.madeUp = box && await box.inputValue();
+    if (box) { await box.fill(pick); await page.click('.overlay.open form.card button[type=submit]'); }
+  }
   await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 20000, 300); await sleep(800);
   await closeCards(page); // the square's first-visit card
   return page;
@@ -60,10 +65,10 @@ try {
   const names = [await A.evaluate(() => window.__game.village.net.name), await B.evaluate(() => window.__game.village.net.name)];
   check('unique usernames', names[0] !== names[1], names.join(' / '));
   {
-    // story mode with no username yet: straight into the square under the character's name, no question
-    const S = await player('S', '');
+    // no username yet: asked once on the way into the square, a made-up one ("Oyuncu37") already in the box
+    const S = await player('S', '', { pick: 'Selim' });
     const sName = await S.evaluate(() => window.__game.village.net.connected && window.__game.village.net.name);
-    check('story mode: in the square straight away, no username question', !!sName && !(await S.$('.overlay.open input')), String(sName));
+    check('no username yet: asked once, a made-up name filled in', /^Oyuncu\d{2}$/.test(S.madeUp ?? '') && sName === 'Selim', `${S.madeUp} → ${sName}`);
     check('…talk button there as online', await S.evaluate(() => !document.querySelector('.ptt-wrap').hidden));
     await S.context().close();
     await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 1, 8000);

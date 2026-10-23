@@ -9,18 +9,45 @@ const DIRECTIONS = [
   [181, ['tam arkanda (ekranda aşağı)', 'straight behind you (down the screen)']],
 ];
 
+/** A flat arrow, its tip up (+y). */
+function arrowShape() {
+  const s = new THREE.Shape();
+  s.moveTo(-0.16, 0.25); s.lineTo(-0.16, -0.45); s.lineTo(0.16, -0.45); s.lineTo(0.16, 0.25);
+  s.lineTo(0.42, 0.25); s.lineTo(0, 0.8); s.lineTo(-0.42, 0.25); s.closePath();
+  return s;
+}
+
+const holo = (color, opacity) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
+
 /**
- * Golden spinning arrow over the current quest target. If the target is in another
- * location it points at the door that leads there.
+ * Golden spinning arrow over the current quest target. If the target is in another location, a big
+ * hologram arrow over the way out that leads there instead (seen from far away), with a ring of light on
+ * the ground. `point` is that spot (or null); `atDoor`: it is the way out.
  */
 export class QuestMarker {
   #tmp = new THREE.Vector3();
+  point = null;
+  atDoor = false;
 
   constructor({ scene, story, world, cast, items, player }) {
     Object.assign(this, { story, world, cast, items, player });
     this.mesh = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.5, 4), new THREE.MeshLambertMaterial({ color: 0xE0B04A, emissive: 0x8A5A12 }));
     this.mesh.rotation.x = Math.PI;
     scene.add(this.mesh);
+    // the way out: two crossed arrows pointing down (seen from every side), a brighter edge round each
+    const flat = new THREE.ShapeGeometry(arrowShape()).rotateZ(Math.PI), edgePts = arrowShape().getPoints().map((v) => new THREE.Vector3(-v.x, -v.y, 0));
+    this.exitFill = holo(0x5FE0FF, 0.5);
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0xB8F4FF, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, toneMapped: false });
+    this.exit = new THREE.Group();
+    for (const ry of [0, Math.PI / 2]) {
+      const g = new THREE.Group();
+      g.add(new THREE.Mesh(flat, this.exitFill), new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(edgePts), edgeMat));
+      g.rotation.y = ry;
+      this.exit.add(g);
+    }
+    this.exit.scale.setScalar(1.8);
+    this.ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.15, 40).rotateX(-Math.PI / 2), holo(0x5FE0FF, 0.6));
+    scene.add(this.exit, this.ring);
   }
 
   /** @returns {THREE.Vector3|null} */
@@ -44,6 +71,7 @@ export class QuestMarker {
       loc = h?.location;
       if (h && loc === here) pos = this.#tmp.copy(h.pos).setY(h.markerY);
     }
+    this.atDoor = !pos && !!loc;
     if (pos || !loc) return pos;
     const door = this.world.exitTowards(loc);
     return door ? this.#tmp.copy(door.pos).setY(door.markerY) : null;
@@ -88,8 +116,20 @@ export class QuestMarker {
 
   update(dt, t, active) {
     const p = active ? this.resolve() : null;
-    this.mesh.visible = !!p;
+    this.point = p && (this.point ?? new THREE.Vector3()).copy(p);
+    const door = !!p && this.atDoor;
+    this.mesh.visible = !!p && !door;
+    this.exit.visible = this.ring.visible = door;
     if (!p) return;
+    if (door) {
+      this.exit.position.set(p.x, p.y + 1.1 + Math.sin(t * 3) * 0.18, p.z);
+      this.exit.rotation.y += dt * 0.8;
+      this.exitFill.opacity = 0.45 + Math.sin(t * 6) * 0.1 + (Math.random() < 0.04 ? 0.2 : 0); // (a hologram's flicker)
+      this.ring.position.set(p.x, 0.06, p.z);
+      this.ring.scale.setScalar(1 + ((t * 0.8) % 1) * 0.5);
+      this.ring.material.opacity = 0.7 * (1 - ((t * 0.8) % 1));
+      return;
+    }
     this.mesh.position.copy(p);
     this.mesh.position.y += Math.sin(t * 4) * 0.12;
     this.mesh.rotation.y += dt * 2;

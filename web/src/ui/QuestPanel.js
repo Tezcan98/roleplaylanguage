@@ -13,7 +13,7 @@ export class QuestPanel {
     this.t = el('div', { class: 'qt' });
     this.o = el('div', { class: 'qo' });
     this.e = el('div', { class: 'qe en-t' });
-    this.toggle = el('button', { class: 'q-toggle', attrs: { type: 'button' }, on: { click: (e) => { e.stopPropagation(); this.setCollapsed(!this.collapsed); } } });
+    this.toggle = el('button', { class: 'q-toggle fold-btn', attrs: { type: 'button' }, on: { click: (e) => { e.stopPropagation(); this.setCollapsed(!this.collapsed); } } });
     this.root = el('div', { attrs: { id: 'quest' } }, [this.toggle, this.t, this.o, this.e]);
     this.root.addEventListener('click', () => { if (this.collapsed) this.setCollapsed(false); else this.onTap?.(this.quest); });
     host.append(this.root);
@@ -23,7 +23,6 @@ export class QuestPanel {
   setCollapsed(on) {
     this.collapsed = on;
     this.root.classList.toggle('collapsed', on);
-    this.toggle.textContent = on ? '+' : '–';
     this.toggle.setAttribute('aria-label', on ? 'Görevi göster' : 'Görevi küçült');
     this.settings?.set('questCollapsed', on);
   }

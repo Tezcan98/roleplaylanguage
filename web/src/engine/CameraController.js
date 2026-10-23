@@ -55,7 +55,7 @@ export class CameraController {
       this.#touch.x = e.clientX;
       this.#touch.y = e.clientY;
       this.#lastDrag = performance.now(); // the player is turning it by hand: it doesn't follow for a moment
-      this.#yaw -= dx * 0.009;
+      this.#yaw += dx * 0.009; // the view turns the way the finger goes (a swipe to the right looks to the right), as in other games
       this.#pitch = THREE.MathUtils.clamp(this.#pitch + dy * 0.004, -0.45, 0.45);
     };
     const end = (e) => {

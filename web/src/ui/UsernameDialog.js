@@ -10,15 +10,15 @@ const VALID = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 export class UsernameDialog {
   constructor(host, modes) { this.host = host; this.modes = modes; }
 
-  /** `opts`: { title, ok } — another heading / button (changing the name from the menu). */
-  ask(current = '', check = null, note = '', { title = 'Adın ne?', ok: okText = 'Meydana gir', chap = 'Çok oyunculu köy meydanı' } = {}) {
+  /** `opts`: { title, ok, skip } — another heading / buttons (changing the name from the menu; keeping the made-up name). */
+  ask(current = '', check = null, note = '', { title = 'Adın ne?', ok: okText = 'Meydana gir', skip: skipText = 'Vazgeç', chap = 'Çok oyunculu köy meydanı' } = {}) {
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const input = el('input', { attrs: { type: 'text', maxlength: '16', placeholder: 'Kullanıcı adın', autocomplete: 'off', 'aria-label': 'Kullanıcı adı' } });
       input.value = current;
       const err = el('p', { class: 'fb bad', text: note });
       const ok = el('button', { class: 'btn', text: okText, attrs: { type: 'submit' } });
-      const skip = el('button', { class: 'btn alt', text: 'Vazgeç', attrs: { type: 'button' } });
+      const skip = el('button', { class: 'btn alt', text: skipText, attrs: { type: 'button' } });
       const form = el('form', { class: 'card' }, [
         el('p', { class: 'chap', text: chap }),
         el('h2', { class: 'ctitle', text: title }),

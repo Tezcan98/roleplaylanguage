@@ -220,6 +220,15 @@ export class VillageMultiplayer {
       if (!await this.#agreed()) return;
       if (!this.settings.get('deviceId')) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (a username belongs to this device)
       let name = this.settings.get('username', null);
+      if (!this.settings.get('usernameAsked', false) && (!name || this.autoNamed?.(name))) { // never chosen by the player (a new game starts in the square): asked once, the made-up name filled in
+        const made = name || this.autoName?.() || '';
+        const picked = await this.usernames.ask(made, (n) => this.#nameFree(n), this.nameNote ?? '', { skip: made ? 'Bu adla devam et' : 'Vazgeç' });
+        this.nameNote = '';
+        this.settings.set('usernameAsked', true);
+        name = picked || made || null;
+        if (name) this.settings.set('username', name);
+        if (!this.#inSquare()) return;
+      }
       if (!name && !this.chosenRoom && this.autoName) { // story mode: in straight away, under the character's name
         name = this.autoName();
         this.settings.set('username', name);
@@ -284,6 +293,7 @@ export class VillageMultiplayer {
     const name = await this.usernames.ask(this.settings.get('username', '') ?? '', (n) => this.#nameFree(n), '', { title: 'Yeni adın ne?', ok: 'Kaydet', chap: 'Kullanıcı adı' });
     if (!name) return null;
     this.settings.set('username', name);
+    this.settings.set('usernameAsked', true);
     if (!this.deviceIdSet()) this.settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join(''));
     if (this.net.connected) this.leave(); // (it joins again under the new name when the game goes on)
     return name;
