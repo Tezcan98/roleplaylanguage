@@ -111,9 +111,10 @@ const http = createServer((req, res) => {
     const u = new URL(req.url, 'http://x'), origin = req.headers.origin;
     const cors = origin && originAllowed(origin, origins) ? { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' } : {};
     const n = String(u.searchParams.get('name') ?? '').trim();
-    const ok = /^[\p{L}\p{N}_ .-]{2,16}$/u.test(n) && names.check(n, u.searchParams.get('pid') ?? '') === 'ok';
-    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...cors });
-    return res.end(JSON.stringify({ ok }));
+    const taken = !/^[\p{L}\p{N}_ .-]{2,16}$/u.test(n) || names.check(n, u.searchParams.get('pid') ?? '') !== 'ok';
+    const answer = (reason) => { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...cors }); res.end(JSON.stringify({ ok: !reason, ...(reason ? { reason } : {}) })); };
+    if (taken) return answer('taken');
+    return void moderator.checkName(n).then((v) => answer(v.ok ? null : 'bad'), () => answer(null)); // (bad: the word list or the moderation model won't have it)
   }
   if (npcChatRoute(req, res, { chat, allowOrigin: (o) => originAllowed(o, origins), clientIp, audit })) return;
   if (req.url.startsWith('/api/tts')) {

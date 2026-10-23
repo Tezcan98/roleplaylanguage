@@ -76,7 +76,8 @@ const IDLE = 45000;                         // ms without any message from a pag
  *                                         ask him for a colour, play against him, leave the line, resign
  *                                         (older clients: chess-sit = ask, chess-stand = leave, chess-new is ignored)
  * server → client
- *   { type: 'welcome', id, name, look, peers, ball?, ice } | { type: 'error', message, code? }  (code 'name-taken': the name is another device's)
+ *   { type: 'welcome', id, name, look, peers, ball?, ice } | { type: 'error', message, code? }  (code 'name-taken': the name is another device's;
+ *                                         'name-bad': the moderator won't have it)
  *     ice: WebRTC ICE servers for voice calls (STUN + TURN with short-lived credentials)
  *   { type: 'join', peer } | { type: 'leave', id } | { type: 'states', players }
  *   { type: 'say-blocked', reason, until? }  your bubble was held back (not Turkish / harmful; `until` = muted till)
@@ -205,7 +206,7 @@ export class VillageServer {
   }
 
   #handle(c, msg) {
-    if (msg.type === 'hello') return this.#hello(c, msg);
+    if (msg.type === 'hello') return this.#nameThenHello(c, msg);
     if (!c.id) return;
     const members = this.#room(c.room);
     switch (msg.type) {
@@ -331,6 +332,19 @@ export class VillageServer {
       }
       default: break;
     }
+  }
+
+  /** A username the moderator lets through first (the word list, and the model when there is one); then the join. */
+  async #nameThenHello(c, msg) {
+    if (c.id || c.helloing) return;
+    const clean = String(msg.name ?? '').trim();
+    if (NAME.test(clean) && !/^Oyuncu\d+$/i.test(clean)) { // (the made-up names are fine)
+      c.helloing = true;
+      const v = await this.moderator.checkName(clean);
+      c.helloing = false;
+      if (!v.ok) return this.#send(c, { type: 'error', code: 'name-bad', message: 'Bu kullanıcı adı kullanılamaz, başka bir ad seç.' });
+    }
+    this.#hello(c, msg);
   }
 
   #hello(c, { name, room = 'village', gender, style, pid, gid, outfit, consent }) {

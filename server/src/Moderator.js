@@ -42,6 +42,14 @@ const QUESTIONS = {
     criteria: { none: 'nothing: everyday talk, greetings, the game, school, family', ...CATEGORIES },
   },
 };
+/** …and for a username (any language: names like "Omar" are fine). */
+const NAME_QUESTIONS = {
+  harm: {
+    type: 'choice',
+    instructions: 'A child chose this as their username in a game for children. Other children will see it. What is wrong with it, if anything?',
+    criteria: { none: 'nothing: a first name, a nickname, a word or a playful name', ...CATEGORIES },
+  },
+};
 const HARM_MIN = 0.6;      // a category must be at least this likely to hold a bubble back
 const NOT_TURKISH = 0.2;   // …and "Turkish" at most this likely for the language
 
@@ -126,6 +134,29 @@ export class Moderator {
     return verdict;
   }
 
+  /**
+   * A username others will see: the word list, then the model's harm question (no language rule).
+   * @returns {Promise<{ ok: boolean, reason?: string, by?: 'words' | 'model' | 'error' }>}
+   */
+  async checkName(name) {
+    const t = String(name).trim();
+    if (ChatFilter.blocks(t)) return { ok: false, reason: 'profanity', by: 'words' };
+    if (!this.usesModel) return { ok: true };
+    const key = `name:${t.toLocaleLowerCase('tr')}`;
+    if (this.#cache.has(key)) return this.#cache.get(key);
+    let verdict;
+    try {
+      const v = await (this.provider === 'gemini' ? this.#gemini(`Username: ${t}`) : this.#systemOne(t, NAME_QUESTIONS, 'username'));
+      verdict = v.category !== 'none' ? { ok: false, reason: v.category, by: 'model' } : { ok: true };
+    } catch (e) {
+      this.log(`[moderation] ${this.provider} failed: ${e.message}`);
+      return this.failClosed ? { ok: false, reason: 'unchecked', by: 'error' } : { ok: true };
+    }
+    this.#cache.set(key, verdict);
+    if (this.#cache.size > 1000) this.#cache.delete(this.#cache.keys().next().value);
+    return verdict;
+  }
+
   /** One held-back message, for whoever looks after the square. */
   async record(entry) {
     const line = JSON.stringify({ at: new Date().toISOString(), ...entry });
@@ -133,12 +164,12 @@ export class Moderator {
     if (this.logFile) await appendFile(this.logFile, `${line}\n`).catch((e) => this.log(`[moderation] log file: ${e.message}`));
   }
 
-  /** Jev / Laya: one forward pass answers both questions → { turkish, category }. */
-  async #systemOne(text) {
+  /** Jev / Laya: one forward pass answers both questions → { turkish, category } (`questions` / `field`: another set, e.g. a username's). */
+  async #systemOne(text, questions = QUESTIONS, field = 'message') {
     const res = await this.fetchImpl(`${this.url}/v1/systemone`, {
       method: 'POST', signal: AbortSignal.timeout(this.timeoutMs),
       headers: { 'Content-Type': 'application/json', ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}) },
-      body: JSON.stringify({ ...(this.model ? { model: this.model } : {}), state: { message: text }, questions: QUESTIONS }),
+      body: JSON.stringify({ ...(this.model ? { model: this.model } : {}), state: { [field]: text }, questions }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { answers = {} } = await res.json();

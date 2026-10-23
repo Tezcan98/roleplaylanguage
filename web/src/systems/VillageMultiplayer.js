@@ -260,9 +260,10 @@ export class VillageMultiplayer {
       this.#suggestBusierRoom();
     } catch (e) {
       if (e.code === 'offline') { this.stayOffline = true; return; } // banned: the square just stays single-player (no message, no retries)
-      if (e.code === 'name-taken') { // the name is another device's (names are unique): pick another
+      if (e.code === 'name-taken' || e.code === 'name-bad') { // the name is another device's (names are unique), or not allowed: pick another
         this.settings.set('username', null);
-        this.nameNote = 'Bu kullanıcı adı alınmış, başka bir ad seç.';
+        this.settings.set('usernameAsked', false); // (the question comes again, with why)
+        this.nameNote = e.code === 'name-bad' ? 'Bu kullanıcı adı kullanılamaz, başka bir ad seç.' : 'Bu kullanıcı adı alınmış, başka bir ad seç.';
         this.joining = false;
         if (this.#inSquare()) this.join();
         return;
@@ -289,7 +290,6 @@ export class VillageMultiplayer {
     return false;
   }
 
-  /** Is this username free (or this device's own)? Asks the village server; unreachable: let the join decide. */
   /** The menu: a new username (the first one was made for the player: "Oyuncu37"). Taking effect when the square is joined again. */
   async rename() {
     const name = await this.usernames.ask(this.settings.get('username', '') ?? '', (n) => this.#nameFree(n), '', { title: 'Yeni adın ne?', ok: 'Kaydet', chap: 'Kullanıcı adı' });
@@ -302,11 +302,13 @@ export class VillageMultiplayer {
   }
   deviceIdSet() { return !!this.settings.get('deviceId'); }
 
+  /** true, or why not: 'taken' (another device's) | 'bad' (the word list or the moderation model won't have it). */
   async #nameFree(name) {
     if (!this.healthUrl) return true;
     try {
       const url = `${this.healthUrl}?name=${encodeURIComponent(name)}&pid=${encodeURIComponent(this.settings.get('deviceId', ''))}`;
-      return (await (await fetch(url, { cache: 'no-store' })).json()).ok !== false;
+      const r = await (await fetch(url, { cache: 'no-store' })).json();
+      return r.ok !== false || (r.reason === 'bad' ? 'bad' : 'taken');
     } catch { return true; }
   }
 

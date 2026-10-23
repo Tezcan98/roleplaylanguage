@@ -5,7 +5,7 @@ const VALID = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 
 /**
  * Asks for a username (2–16 letters/digits), unique on the server: `check(name)` resolves true when it
- * is free (or this device's own). Resolves with the name, or null when cancelled (back to the menu).
+ * is free (or this device's own), 'bad' when it is not allowed, anything else when it is taken. Resolves with the name, or null when cancelled (back to the menu).
  */
 export class UsernameDialog {
   constructor(host, modes) { this.host = host; this.modes = modes; }
@@ -34,7 +34,8 @@ export class UsernameDialog {
         ok.disabled = true;
         const free = check ? await check(v) : true;
         ok.disabled = false;
-        if (!free) { err.textContent = withGloss(`“${v}” alınmış, başka bir ad dene.`, 'That name is taken, try another one.'); input.focus(); return; }
+        if (free === 'bad') { err.textContent = withGloss(`“${v}” kullanılamaz, başka bir ad dene.`, 'That name is not allowed, try another one.'); input.focus(); return; }
+        if (free !== true) { err.textContent = withGloss(`“${v}” alınmış, başka bir ad dene.`, 'That name is taken, try another one.'); input.focus(); return; }
         done(v);
       });
       input.addEventListener('keydown', (e) => e.stopPropagation());

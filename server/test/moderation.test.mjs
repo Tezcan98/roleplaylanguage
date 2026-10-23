@@ -28,7 +28,7 @@ function fakeSystemOne(table) {
   const fetchImpl = async (url, init) => {
     const body = JSON.parse(init.body);
     calls.push({ url, auth: init.headers.Authorization, body });
-    const [turkish, harm, p = 0.9] = table[body.state.message] ?? [0.95, 'none'];
+    const [turkish, harm, p = 0.9] = table[body.state.message ?? body.state.username] ?? [0.95, 'none'];
     return { ok: true, json: async () => ({ answers: { turkish: { noul: turkish }, harm: { choice: harm, probabilities: { [harm]: p } } }, usage: { input_tokens: 1, output_tokens: 1 } }) };
   };
   return { calls, fetchImpl };
@@ -65,4 +65,17 @@ test('model down: the word list still works; fail-closed holds everything back',
   assert.equal((await open.check('amk')).reason, 'profanity');
   const closed = new Moderator({ provider: 'systemone', url: 'http://x', fetchImpl: down, failClosed: true, log: () => {} });
   assert.equal((await closed.check('Merhaba')).ok, false);
+});
+
+test('usernames: the word list, then the model\'s harm question (any language is fine)', async () => {
+  assert.equal((await new Moderator().checkName('siktir')).ok, false, 'the word list, with no model');
+  assert.deepEqual(await new Moderator().checkName('Omar'), { ok: true });
+  const f = fakeSystemOne({ Sigaraci: [0.9, 'drugs'], Omar: [0.01, 'none'] });
+  const m = new Moderator({ provider: 'systemone', url: 'https://api.typesafe.ai', apiKey: 'k', fetchImpl: f.fetchImpl });
+  assert.deepEqual(await m.checkName('Omar'), { ok: true }, 'not Turkish, but a name');
+  assert.deepEqual(await m.checkName('Sigaraci'), { ok: false, reason: 'drugs', by: 'model' });
+  assert.equal(f.calls[0].body.state.username, 'Omar');
+  assert.deepEqual(Object.keys(f.calls[0].body.questions), ['harm'], 'no language question for a name');
+  await m.checkName('Omar');
+  assert.equal(f.calls.length, 2, 'remembered');
 });
