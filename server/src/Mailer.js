@@ -1,14 +1,13 @@
 /**
- * Mails to the operator (reports for now). The SMTP server is on another machine; this side calls
- * its HTTP API:
+ * Mails to the operator (reports for now). The SMTP server is on another machine (the mail machine,
+ * sending as bildirim@sorexdigital.com); this side calls its HTTP API (server/mail-api/):
  *
  *   POST MAIL_API_URL   Authorization: Bearer MAIL_API_KEY
  *        { to, subject, text, attachments? }  → 2xx when it was taken
  *        attachments: [{ filename, contentType, content }]  (content base64; the voice pieces of a report)
  *
- * TODO (docs/TODO.md): the API's real address, its request shape and auth are not settled yet —
- * adjust `send()` when access to that server is given. Until MAIL_API_URL is set, mails are only
- * logged (the report itself is kept and listed on /api/reports either way).
+ * Until MAIL_API_URL is set, mails are only logged (the report itself is kept and listed on
+ * /api/reports either way).
  */
 export class Mailer {
   constructor({ url = '', key = '', to = '', fetchImpl = fetch, log = console.log } = {}) {
