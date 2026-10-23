@@ -20,8 +20,8 @@ export class MainMenu {
   #view = 'home'; // home | settings
   #homeAd = false; // this time the main menu carries a banner (HOME_BANNER of the times it opens)
 
-  constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [], onCode = null, onRename = null }) {
-    Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters, onCode, onRename });
+  constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [], onCode = null }) {
+    Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters, onCode });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => { settings.set('serverRegion', id); settings.set('serverPicked', true); } }); // (picked by hand: kept even when busy)
     this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
     this.root = el('div', { class: 'overlay main-menu' });
@@ -109,7 +109,6 @@ export class MainMenu {
         canInstall() && el('button', { class: 'btn alt menu-install', text: '📲 Uygulama olarak yükle (hep tam ekran)', attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),
         el('div', { class: 'profile-line' }, [
           el('span', { class: 'profile-who' }, [el('img', { class: 'profile-pic', attrs: { src: pic, alt: '' } }), glossInfo().name]),
-          this.onRename && btn(`@${s.get('username') || 'ad seç'} ✏️`, 'chipbtn', async () => { if (await this.onRename()) this.show(); }, { title: 'Kullanıcı adını değiştir', 'aria-label': 'Kullanıcı adını değiştir' }), // the name others see in the square
           btn('Değiştir', 'chipbtn', () => this.onProfile()),
         ]),
       ];

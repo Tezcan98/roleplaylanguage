@@ -224,7 +224,7 @@ export class VillageMultiplayer {
       let name = this.settings.get('username', null);
       if (!this.settings.get('usernameAsked', false) && (!name || this.autoNamed?.(name))) { // never chosen by the player (a new game starts in the square): asked once, the made-up name filled in
         const made = name || this.autoName?.() || '';
-        const picked = await this.usernames.ask(made, (n) => this.#nameFree(n), this.nameNote ?? '', { skip: made ? 'Bu adla devam et' : 'Vazgeç' });
+        const picked = await this.usernames.ask(made, (n) => this.#nameFree(n), this.nameNote ?? '', { skip: made ? ['Bu adla devam et', 'Keep this name'] : ['Vazgeç', 'Cancel'] });
         this.nameNote = '';
         this.settings.set('usernameAsked', true);
         name = picked || made || null;
@@ -263,7 +263,7 @@ export class VillageMultiplayer {
       if (e.code === 'name-taken' || e.code === 'name-bad') { // the name is another device's (names are unique), or not allowed: pick another
         this.settings.set('username', null);
         this.settings.set('usernameAsked', false); // (the question comes again, with why)
-        this.nameNote = e.code === 'name-bad' ? 'Bu kullanıcı adı kullanılamaz, başka bir ad seç.' : 'Bu kullanıcı adı alınmış, başka bir ad seç.';
+        this.nameNote = e.code === 'name-bad' ? ['Bu kullanıcı adı kullanılamaz, başka bir ad seç.', 'This username is not allowed, choose another one.'] : ['Bu kullanıcı adı alınmış, başka bir ad seç.', 'This username is taken, choose another one.'];
         this.joining = false;
         if (this.#inSquare()) this.join();
         return;
@@ -292,7 +292,7 @@ export class VillageMultiplayer {
 
   /** The menu: a new username (the first one was made for the player: "Oyuncu37"). Taking effect when the square is joined again. */
   async rename() {
-    const name = await this.usernames.ask(this.settings.get('username', '') ?? '', (n) => this.#nameFree(n), '', { title: 'Yeni adın ne?', ok: 'Kaydet', chap: 'Kullanıcı adı' });
+    const name = await this.usernames.ask(this.settings.get('username', '') ?? '', (n) => this.#nameFree(n), '', { title: ['Yeni adın ne?', 'Your new name?'], ok: ['Kaydet', 'Save'], chap: ['Kullanıcı adı', 'Username'] });
     if (!name) return null;
     this.settings.set('username', name);
     this.settings.set('usernameAsked', true);

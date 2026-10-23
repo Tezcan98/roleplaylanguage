@@ -762,6 +762,7 @@ const settingsPanel = new SettingsPanel(host, {
   modes, settings,
   confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onFeedback: () => feedback.open(),
+  onRename: () => village.rename(), // the name others see in the square (asked the first time there)
   onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onHelp: () => intro.show(),
@@ -883,7 +884,6 @@ const menu = new MainMenu(host, {
   onContinue: () => continueGame(),
   onProfile: () => { menu.hide(); editProfile(); },
   onShop: () => shop.open(),
-  onRename: () => village.rename(), // ✏️ next to the name in the profile line
   onCode: () => codeCard.open(), // the 🔑 (once five taps on the shop's "Altın" tab turned it on)
 });
 /** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
