@@ -36,22 +36,35 @@ export class VoiceRecorder {
     this.#piece();
   }
 
-  /** Counts the frames with speech in them (no Web Audio here: nothing is sent). */
+  /**
+   * Counts the 100 ms frames with speech in them (no Web Audio here: nothing is sent). Every tick
+   * looks at all the audio since the last one (by the audio clock, up to the analyser's ~0.7 s),
+   * so a busy page whose timer comes late still counts every frame.
+   */
   #listen(track) {
     try {
       const ctx = new AudioContext();
       ctx.resume?.().catch(() => {});
       const an = ctx.createAnalyser();
-      an.fftSize = 1024;
+      an.fftSize = 32768;
       ctx.createMediaStreamSource(new MediaStream([track])).connect(an);
-      const buf = new Float32Array(an.fftSize);
+      const buf = new Float32Array(an.fftSize), frame = Math.round(ctx.sampleRate / 10);
       const m = this.#meter = { ctx, timer: null, piece: { loud: 0 } };
+      let last = -1, pending = 0; // audio time of the last tick; samples not yet looked at
       m.timer = setInterval(() => {
-        if (ctx.state !== 'running') { ctx.resume?.().catch(() => {}); return; } // (a meter the browser keeps suspended hears nothing: those pieces stay here)
+        if (ctx.state !== 'running') { ctx.resume?.().catch(() => {}); last = -1; return; } // (a meter the browser keeps suspended hears nothing: those pieces stay here)
+        const now = ctx.currentTime;
+        if (last >= 0) pending += (now - last) * ctx.sampleRate;
+        last = now;
+        const n = Math.min(Math.floor(pending / frame), Math.floor(buf.length / frame));
+        pending = Math.min(pending - n * frame, frame);
+        if (!n) return;
         an.getFloatTimeDomainData(buf);
-        let sum = 0;
-        for (const v of buf) sum += v * v;
-        if (Math.sqrt(sum / buf.length) > LOUD) m.piece.loud++;
+        for (let f = 0, end = buf.length; f < n; f++, end -= frame) {
+          let sum = 0;
+          for (let i = end - frame; i < end; i++) sum += buf[i] * buf[i];
+          if (Math.sqrt(sum / frame) > LOUD) m.piece.loud++;
+        }
       }, 100);
     } catch { this.#meter = null; }
   }

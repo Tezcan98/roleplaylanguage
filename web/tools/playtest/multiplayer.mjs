@@ -17,7 +17,7 @@ const server = opt.server ? { url: opt.server, stop() {} } : await startServer()
 const standalone = opt.standalone ? await startVillageServer() : null;
 const villageUrl = opt.village ?? standalone?.url ?? null;
 if (villageUrl) log(`village server: ${villageUrl}`);
-const browser = await openBrowser(['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream']);
+const browser = await openBrowser(['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--autoplay-policy=no-user-gesture-required']); // (autoplay: the voice meter's AudioContext runs — unmeasured pieces are never sent)
 const errors = [];
 const checks = [];
 const check = (name, ok, detail = '') => { checks.push([name, ok]); log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`); };
@@ -144,7 +144,7 @@ try {
   await A.click('.hud .pill.report');
   await waitFor(() => A.$('.card.report'));
   const bName = await B.evaluate(() => window.__game.village.net.name);
-  await A.click(`.card.report .btn:has-text("${bName}")`);
+  if (await A.$(`.card.report .btn:has-text("${bName}")`)) await A.click(`.card.report .btn:has-text("${bName}")`); // (only one player near: the card goes straight to why)
   await A.click('.card.report .btn:has-text("Küfür")');
   check('🚩 in the top bar: pick the player and why — the server takes the report', !!(await waitFor(() => A.evaluate(() => document.body.innerText.includes('Şikayetin alındı')), 5000)));
 
@@ -251,12 +251,16 @@ try {
   check('…the talk button says to hold it there', (await A.textContent('.ptt')).includes('Basılı tut'));
   await A.evaluate(() => window.__game.village.talk(true));
   await B.mouse.click(450, 120); // (a tap: the browser lets the sound start)
+  const aId = await A.evaluate(() => window.__game.village.net.id);
+  check('…B blocked A earlier: A\'s voice is silent for B in the zone', !!(await waitFor(() => B.evaluate((id) => window.__game.village.group.volumes()[id] === 0, aId), 6000)));
+  await B.evaluate(([id, name]) => window.__game.village.unblockPlayer(id, name), [aId, await A.evaluate(() => window.__game.village.net.name)]);
   const heard = await waitFor(() => B.evaluate(async () => {
     const g = window.__game.village.group, el = g._debugAudio()[0];
     let bytes = 0; for (const pc of g._debugPeers()) (await pc.getStats()).forEach((r) => { if (r.type === 'inbound-rtp' && r.kind === 'audio') bytes = r.bytesReceived; });
     return el && !el.muted && !el.paused && el.volume > 0.3 && bytes > 3000 ? bytes : null;
   }), 15000, 500);
-  check("…A holds it: B's speaker plays A's voice (an unmuted audio element, the sound arriving)", !!heard, String(heard));
+  const why = heard ? '' : await B.evaluate(async () => { const g = window.__game.village.group; let inb = 0; for (const pc of g._debugPeers()) (await pc.getStats()).forEach((r) => { if (r.type === 'inbound-rtp' && r.kind === 'audio') inb = r.bytesReceived; }); return JSON.stringify({ zone: g.zone, states: g.states(), audio: g._debugAudio().map((e) => ({ muted: e.muted, paused: e.paused, volume: +e.volume.toFixed(2) })), inb, me: window.__game.player.position.toArray().map(Math.round) }); });
+  check("…A holds it: B's speaker plays A's voice (an unmuted audio element, the sound arriving)", !!heard, heard ? String(heard) : why);
   await A.evaluate(() => window.__game.village.talk(false));
   await A.evaluate(() => { const g = window.__game; g.player.position.set(0, 0, 8); }); await B.evaluate(() => { const g = window.__game; g.player.position.set(2, 0, 8); });
   check('…out of the zone: the connections close', !!(await waitFor(async () => !Object.keys(await A.evaluate(() => window.__game.village.group.states())).length && !Object.keys(await B.evaluate(() => window.__game.village.group.states())).length, 8000)));
@@ -289,6 +293,7 @@ try {
     await C.evaluate(() => window.__game.settings.set('serverRegion', 'izmir')); // another city last time: the new game still goes where the others are
     await C.click('.main-menu.open .menu-main'); await sleep(1200);
     await closeCards(C);
+    if (await waitFor(() => C.$('.card.consent'), 20000, 300)) { await C.check('.card.consent input[type=checkbox]'); await C.click('.card.consent .btn:has-text("Kabul et")'); } // (no recording consent: offline)
     await waitFor(() => C.evaluate(() => window.__game.village.net.connected), 20000, 400);
     check('a new player joins the square where the others are', !!(await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 2, 25000)), `C in ${await C.evaluate(() => window.__game.village.net.room)}, A sees ${await A.evaluate(() => window.__game.village.remotes.count)}`);
     await C.close();
