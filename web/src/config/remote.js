@@ -25,7 +25,7 @@ const WAIT = 2000; // ms at most at start (a slow network: the last copy instead
 async function load() {
   if (typeof window === 'undefined') return null; // node tools
   const native = !!window.Capacitor?.isNativePlatform?.();
-  if (!native && !['anadoluailesi.com.tr', 'www.anadoluailesi.com.tr', 'sehem2.com.tr'].includes(location.hostname)) return null; // local test pages: the defaults
+  if (!native && !['anadoluailesi.com.tr', 'www.anadoluailesi.com.tr'].includes(location.hostname)) return null; // local test pages: the defaults
   let cached = null;
   try { cached = JSON.parse(localStorage.getItem(KEY) ?? 'null'); } catch { /* none */ }
   try {
