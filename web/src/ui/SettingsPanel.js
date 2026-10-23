@@ -10,6 +10,7 @@ const I = {
   picture: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/>'),
   help: icon('<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .9-1 1.6v.4"/><path d="M12 17.2h.01"/>'),
   user: icon('<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
+  square: icon('<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>'),
   feedback: icon('<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/>'),
   home: icon('<path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10v10h11V10"/>'),
 };
@@ -17,7 +18,7 @@ const QUALITY = [['low', 'Düşük'], ['medium', 'Orta'], ['high', 'Yüksek']];
 
 /**
  * In-game settings (⚙️ in the HUD), one compact card: the three sound levels, the picture quality,
- * and small tiles — how to play, write your opinion (credits), the username, back to the main menu (the game
+ * and small tiles — how to play, write your opinion (credits), the username, the city square, back to the main menu (the game
  * is saved first; "Devam et" goes on from there). ✕ or a tap outside closes it.
  * Testers: five taps on the title show "Bölüm seç" (a new game from any chapter).
  */
@@ -25,8 +26,8 @@ export class SettingsPanel {
   #pop = null;
   #taps = [];
 
-  constructor(host, { modes, settings, confirmQuality = async () => true, onHelp, onMenu, onSound, onFeedback = null, onRename = null, onStartAt = null, chapters = [] }) {
-    Object.assign(this, { modes, settings, confirmQuality, onHelp, onMenu, onSound, onFeedback, onRename, onStartAt, chapters });
+  constructor(host, { modes, settings, confirmQuality = async () => true, onHelp, onMenu, onSound, onFeedback = null, onRename = null, onRooms = null, room = () => '', onStartAt = null, chapters = [] }) {
+    Object.assign(this, { modes, settings, confirmQuality, onHelp, onMenu, onSound, onFeedback, onRename, onRooms, room, onStartAt, chapters });
     this.body = el('div', { class: 'settings-body' });
     const title = el('h2', { class: 'set-title', text: 'Ayarlar', on: { click: () => this.#tap() } });
     this.root = el('div', { class: 'overlay dim settings-panel' }, [el('div', { class: 'card' }, [
@@ -101,6 +102,7 @@ export class SettingsPanel {
         tile(I.help, 'Nasıl oynanır', '', () => this.onHelp?.()),
         this.onFeedback && tile(I.feedback, 'Yorum yaz', '+20 kredi', () => this.onFeedback()),
         this.onRename && tile(I.user, 'Kullanıcı adı', `@${s.get('username') || '—'}`, () => this.onRename()),
+        this.onRooms && tile(I.square, 'Meydan', this.room(), () => this.onRooms()), // another city's square
         tile(I.home, 'Ana menü', '', () => this.onMenu()),
       ].filter(Boolean)),
     ].filter(Boolean));

@@ -290,6 +290,15 @@ export class VillageMultiplayer {
     return false;
   }
 
+  /** The player picked a city square ("Meydan seç"): kept for this game (not moved to a busier one), and joined at once when in a square. */
+  switchRoom(id) {
+    this.chosenRoom = true;
+    if (id === this.settings.get('serverRegion', 'ankara') && this.net.connected) return;
+    this.settings.set('serverRegion', id);
+    if (this.net.connected) this.leave();
+    if (this.#inSquare()) this.join();
+  }
+
   /** The menu: a new username (the first one was made for the player: "Oyuncu37"). Taking effect when the square is joined again. */
   async rename() {
     const name = await this.usernames.ask(this.settings.get('username', '') ?? '', (n) => this.#nameFree(n), '', { title: ['Yeni adın ne?', 'Your new name?'], ok: ['Kaydet', 'Save'], chap: ['Kullanıcı adı', 'Username'] });

@@ -15,7 +15,7 @@ export class PushToTalk {
     this.onChange = onChange;
     this.on = false;
     this.btn = el('button', { class: 'ptt', html: `${MIC}<span>Bas, konuş (yazı)</span>`, attrs: { type: 'button', 'aria-label': 'Basılı tut ve konuş (T)' } });
-    this.status = el('div', { class: 'pill online' });
+    this.status = el('button', { class: 'pill online', attrs: { type: 'button' }, on: { click: () => this.onRooms?.() } }); // a tap: "Meydan seç" (another city's square)
     // "Şikayet et", next to who is online in the top bar (main.js puts both there)
     this.reportBtn = el('button', { class: 'pill report', text: '🚩 Şikayet et', attrs: { type: 'button', title: 'Bir oyuncuyu şikayet et', 'aria-label': 'Şikayet et' }, on: { click: () => this.onReport?.() } });
     this.reportBtn.hidden = true;

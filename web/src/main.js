@@ -112,6 +112,7 @@ import { Hud } from './ui/Hud.js';
 import { QuestPanel } from './ui/QuestPanel.js';
 import { DirectionsCard } from './ui/DirectionsCard.js';
 import { Minimap } from './ui/Minimap.js';
+import { RoomCard } from './ui/RoomCard.js';
 import { Stats } from './services/Stats.js';
 import { Toasts } from './ui/Toasts.js';
 import { LabelLayer } from './ui/LabelLayer.js';
@@ -450,6 +451,10 @@ const village = new VillageMultiplayer({
   }),
   recognizer: chatRecognizer,
 });
+// "Meydan seç": another city's square — a tap on "👥 1 · Ankara" in the top bar, or the tile in the settings
+const roomCard = new RoomCard(host, modes, { villageServer });
+const pickRoom = async () => { const id = await roomCard.open(settings.get('serverRegion', DEFAULT_SERVER)); if (id) village.switchRoom(id); };
+village.ptt.onRooms = pickRoom;
 village.autoName = () => `Oyuncu${Math.floor(10 + Math.random() * 90)}`; // a name made up for the player, filled into the username question
 village.autoNamed = (n) => /^Oyuncu\d{2}$/.test(n); // (still a made-up one: the question comes once more)
 village.onNameCancel = () => menu.show(); // no username after all: back to the menu
@@ -763,6 +768,7 @@ const settingsPanel = new SettingsPanel(host, {
   confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onFeedback: () => feedback.open(),
   onRename: () => village.rename(), // the name others see in the square (asked the first time there)
+  onRooms: pickRoom, room: () => SERVERS.find(([id]) => id === settings.get('serverRegion', DEFAULT_SERVER))?.[1] ?? '',
   onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
   chapters: STORY.chapters.map((ch, i) => ({ i, text: `${ch.day}. gün · ${ch.time} · ${ch.intro?.title ?? ch.id}` })),
   onHelp: () => intro.show(),

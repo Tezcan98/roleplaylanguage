@@ -268,7 +268,7 @@ body.gloss-rtl .choice .e{text-align:left}
 .help-btn[hidden],body.menu .help-btn{display:none}
 .hud .help-btn{position:static;min-height:var(--pill-h,40px);padding:0 13px;font-size:18px;border-width:2px;box-shadow:none;background:var(--gold)}
 .hud .help-btn span{display:none}
-.hud .pill.online{pointer-events:auto;font-weight:800}
+.hud .pill.online{pointer-events:auto;font-weight:800;cursor:pointer} /* a tap: "Meydan seç" */
 .hud .pill.online:empty{display:none} /* offline: nothing to show */
 .hud .pill.online[hidden]{display:none}
 .help-panel{width:min(520px,100%);max-height:80vh}

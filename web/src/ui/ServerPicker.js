@@ -36,9 +36,11 @@ export class ServerPicker {
   #counts = Object.fromEntries(SERVERS.map(([id]) => [id, 0]));
   #value;
 
-  constructor({ villageServer, value = DEFAULT_SERVER, onChange }) {
+  /** `follow`: until the player taps a card, move to the busiest square by itself (false: never). */
+  constructor({ villageServer, value = DEFAULT_SERVER, onChange, follow = true }) {
     this.url = villageServer ? healthUrl(villageServer) : '';
     this.onChange = onChange;
+    this.follow = follow;
     this.#value = SERVERS.some(([id]) => id === value) ? value : DEFAULT_SERVER;
     this.cards = el('div', { class: 'server-cards', attrs: { role: 'radiogroup', 'aria-label': 'Sunucu' } });
     this.status = el('p', { class: 'note' });
@@ -89,7 +91,7 @@ export class ServerPicker {
       const data = await r.json();
       this.#counts = Object.fromEntries(SERVERS.map(([id]) => [id, Number(data.rooms?.[id] ?? 0)]));
       // until the player picks one: the square where people are (friends find each other)
-      if (!this.#touched) {
+      if (!this.#touched && this.follow) {
         const [best] = SERVERS.map(([id]) => id).sort((a, b) => this.#counts[b] - this.#counts[a]);
         if (this.#counts[best] > this.#counts[this.#value]) { this.#value = best; this.onChange?.(best); }
       }
