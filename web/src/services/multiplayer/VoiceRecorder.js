@@ -2,14 +2,15 @@
  * My own voice, while my mic is open in a call or a talking zone, goes to the village server in
  * short pieces (each a small file of its own, ~10 s of Opus at 8 kbit/s — enough to understand
  * speech): the server keeps it encrypted for 48 hours and, for ten minutes, for a report
- * (server/src/Reports.js). A piece with (almost) no speech in it is not sent at all: in a call
- * each side is mostly listening. The others still hear me straight over WebRTC; nothing of this
- * is relayed to them.
+ * (server/src/Reports.js). A piece with no speech in it is not sent at all (in a call each side
+ * is mostly listening), nor one whose loudness couldn't be measured; each piece says how much
+ * speech it has (`speech`, frames) and the server drops it too below that. The others still hear
+ * me straight over WebRTC; nothing of this is relayed to them.
  */
 const SEGMENT = 10000;   // ms per piece
 const BITRATE = 8000;    // bit/s: ~1 KB a second of speech
-const LOUD = 0.015;      // RMS of a 100 ms frame that counts as speech
-const SPOKEN = 3;        // frames of speech (0.3 s) a piece needs to be sent
+const LOUD = 0.02;       // RMS of a 100 ms frame that counts as speech
+export const SPOKEN = 5; // frames of speech (0.5 s) a piece needs to be sent (server/src/VillageServer.js keeps the same)
 const MAX_BYTES = 40000; // the server takes ~45 KB of base64: a phone that ignores the bit rate gets shorter pieces
 const TYPES = ['audio/ogg;codecs=opus', 'audio/webm;codecs=opus', 'audio/mp4'];
 
@@ -35,7 +36,7 @@ export class VoiceRecorder {
     this.#piece();
   }
 
-  /** Counts the frames with speech in them (no Web Audio here: every piece is sent). */
+  /** Counts the frames with speech in them (no Web Audio here: nothing is sent). */
   #listen(track) {
     try {
       const ctx = new AudioContext();
@@ -46,10 +47,11 @@ export class VoiceRecorder {
       const buf = new Float32Array(an.fftSize);
       const m = this.#meter = { ctx, timer: null, piece: { loud: 0 } };
       m.timer = setInterval(() => {
+        if (ctx.state !== 'running') { ctx.resume?.().catch(() => {}); return; } // (a meter the browser keeps suspended hears nothing: those pieces stay here)
         an.getFloatTimeDomainData(buf);
         let sum = 0;
         for (const v of buf) sum += v * v;
-        if (ctx.state !== 'running' || Math.sqrt(sum / buf.length) > LOUD) m.piece.loud++; // (a meter the browser keeps suspended hears nothing: then every piece goes)
+        if (Math.sqrt(sum / buf.length) > LOUD) m.piece.loud++;
       }, 100);
     } catch { this.#meter = null; }
   }
@@ -66,15 +68,15 @@ export class VoiceRecorder {
     if (metered) this.#meter.piece = count; // (the piece before keeps its own count: its onstop comes later)
     rec.ondataavailable = (e) => { if (e.data?.size) chunks.push(e.data); };
     rec.onstop = () => {
-      const spoke = !metered || count.loud >= SPOKEN; // silence: nothing to keep
-      if (chunks.length && spoke && Date.now() - began > 400) this.#send(new Blob(chunks, { type: rec.mimeType || chunks[0].type }), ctx);
+      const spoke = metered && count.loud >= SPOKEN; // silence (or not measured): nothing to keep
+      if (chunks.length && spoke && Date.now() - began > 400) this.#send(new Blob(chunks, { type: rec.mimeType || chunks[0].type }), ctx, count.loud);
     };
     rec.start();
     this.#rec = rec;
     this.#timer = setTimeout(() => { if (rec.state !== 'inactive') rec.stop(); this.#piece(); }, this.#segment);
   }
 
-  async #send(blob, ctx) {
+  async #send(blob, ctx, speech) {
     if (blob.size > MAX_BYTES) { this.#segment = Math.max(2000, Math.floor(this.#segment * (MAX_BYTES / blob.size) * 0.9)); return; } // too big for one message: shorter pieces from now on
     const data = await new Promise((resolve) => {
       const r = new FileReader();
@@ -82,7 +84,7 @@ export class VoiceRecorder {
       r.onerror = () => resolve('');
       r.readAsDataURL(blob);
     });
-    if (data && this.net.connected) this.net.send({ type: 'voice', ctx, mime: (blob.type || 'audio/webm').replace(/["\s]/g, ''), data });
+    if (data && this.net.connected) this.net.send({ type: 'voice', ctx, mime: (blob.type || 'audio/webm').replace(/["\s]/g, ''), data, speech });
   }
 
   /** Mic closed: the piece so far still goes out. */

@@ -1,6 +1,7 @@
 import { EV } from '../core/events.js';
 import { CONFIG } from '../config/remote.js';
 import { CONSENT_VERSION } from '../ui/ConsentDialog.js';
+import { VoiceRecorder } from '../services/multiplayer/VoiceRecorder.js';
 
 const SEND_EVERY = 0.1; // seconds
 const KEEPALIVE = 10;   // seconds: my state goes out at least this often, even standing still (the server drops frozen pages)
@@ -44,6 +45,7 @@ export class VillageMultiplayer {
   #sentAt = 0; // when my state last went out (wall clock: slow phones have few frames)
   #retryDelay = 0;
   #rolling = new Set(); // balls we kicked last: report where they stop, for players who join later
+  #pttRec = null;      // push-to-talk's voice recorder
   #zoneOk = new Set();  // talking zones the player said yes to at the door (until leaving the square)
   #atDoor = false;      // the "go in?" card is up
   #outside = null;      // where the player last stood outside every zone (stopped there at the door)
@@ -367,6 +369,7 @@ export class VillageMultiplayer {
   async #listenLoop() {
     this.#talking = true;
     this.net.send({ type: 'talk', on: true });
+    const mic = this.#recordPtt(); // the voice itself is kept too (encrypted, 48 h), not only the text
     this.player.voice = true;
     const until = Date.now() + 20000; // tapped and forgot: 20 s at most
     const parts = [];
@@ -386,6 +389,7 @@ export class VillageMultiplayer {
     this.#talking = false;
     this.player.voice = false;
     this.net.send({ type: 'talk', on: false });
+    mic.then((track) => { this.#pttRec?.stop(); track?.stop(); });
     const text = parts.join(' ').trim();
     if (text) this.say(text);
     else if (problem === 'permission') this.toasts.show('Mikrofon izni yok', 'Allow the microphone for this site in the browser settings');
@@ -393,6 +397,16 @@ export class VillageMultiplayer {
     else this.toasts.show('Seni duyamadım, bir daha dene', "Didn't catch that — try again");
   }
 
+
+  /** Push-to-talk held: my voice goes to the server's voice log in pieces (services/multiplayer/VoiceRecorder.js). Resolves with the mic track. */
+  async #recordPtt() {
+    try {
+      const track = (await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })).getAudioTracks()[0];
+      if (!this.#talking) { track?.stop(); return null; } // let go already
+      (this.#pttRec ??= new VoiceRecorder(this.net)).start(track, 'ptt'); // (its own: a call's recording goes on beside it)
+      return track;
+    } catch { return null; }
+  }
 
   /** A sentence for everyone here (spoken and turned into text, or typed). */
   say(text) {

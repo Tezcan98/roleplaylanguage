@@ -58,7 +58,8 @@ try {
   /** At a talking zone's door: "Gir" (go in) when the card asks (it doesn't once said yes, until leaving the square). */
   const door = async (p) => { const b = await waitFor(() => p.$('.overlay.open button:text-is("Gir")'), 3000); if (b) await b.click(); };
   const at = (p, x, z) => p.evaluate(([x, z]) => window.__game.player.position.set(x, 0, z), [x, z]);
-  const label = (p) => p.evaluate(() => (document.getElementById('act').hidden ? null : document.getElementById('act').textContent));
+  const label = (p) => p.evaluate(() => { const b = document.getElementById('act-left'); return !b || b.hidden ? null : b.textContent; }); // "… ile sesli sohbet et": its own button on the left
+  const ask = (p) => p.click('#act-left'); // (not the action key: that is the right-hand button's)
   const peers = (p) => p.evaluate(() => window.__game.village.voice._debugPeers().length);
   const inCall = (p) => p.evaluate(() => window.__game.village.voice.inCall);
 
@@ -126,7 +127,7 @@ try {
   const l = await waitFor(async () => { const x = await label(A); return x?.includes('sesli sohbet') ? x : null; }) ?? await label(A);
   check('"voice chat" offered next to a player', !!l && l.includes('sesli sohbet'), l);
   await A.evaluate(() => { const net = window.__game.village.net, send = net.send.bind(net); window.__voiceOut = 0; net.send = (m) => { if (m.type === 'voice') window.__voiceOut++; return send(m); }; }); // count my voice pieces to the server
-  await A.keyboard.press('e'); await sleep(800);
+  await ask(A); await sleep(800);
   check('the other player is asked first', !!(await waitFor(() => B.$('text=Kabul et'))));
   await B.click('text=Kabul et');
   const connected = () => Promise.all([A, B].map((p) => p.evaluate(() => Object.values(window.__game.village.voice.states())[0]))).then((s) => (s.every((x) => x === 'connected') ? s : null));
@@ -136,6 +137,7 @@ try {
   const bytes = await waitFor(async () => { const n = await inbound(); return n > 1000 ? n : 0; }, 8000) || await inbound();
   check('audio flows', bytes > 0, `${bytes} bytes`);
   check('…the call bar has the 🚩 report button', await A.evaluate(() => !!document.querySelector('.callbar button[aria-label="Şikayet et"]')));
+  await waitFor(() => A.evaluate(() => window.__voiceOut > 0), 14000); // (a piece is ~10 s of the call: one goes before the hang-up)
   await A.click('.callbar .danger');
   check('hang up ends the call on both sides', !!(await waitFor(async () => !(await inCall(A)) && !(await inCall(B)))));
   check('…my voice in the call went to the server in pieces (safety log, reports)', !!(await waitFor(() => A.evaluate(() => window.__voiceOut > 0), 5000)), String(await A.evaluate(() => window.__voiceOut)));
@@ -146,10 +148,10 @@ try {
   await A.click('.card.report .btn:has-text("Küfür")');
   check('🚩 in the top bar: pick the player and why — the server takes the report', !!(await waitFor(() => A.evaluate(() => document.body.innerText.includes('Şikayetin alındı')), 5000)));
 
-  await A.keyboard.press('e'); await waitFor(() => B.$('text=Reddet')); await B.click('text=Reddet'); await sleep(800);
+  await ask(A); await waitFor(() => B.$('text=Reddet')); await B.click('text=Reddet'); await sleep(800);
   check('declining is reported and no call starts', !(await inCall(A)) && !(await inCall(B)));
 
-  await A.keyboard.press('e'); await waitFor(() => B.$('text=Kabul et')); await B.click('text=Kabul et');
+  await ask(A); await waitFor(() => B.$('text=Kabul et')); await B.click('text=Kabul et');
   await waitFor(() => inCall(A));
   await at(A, -10, 20); await sleep(2500);
   check('walking across the square keeps the call', (await inCall(A)) && (await inCall(B)));
@@ -191,8 +193,8 @@ try {
 
   await at(A, 2, 4); await at(B, 3.5, 4); await sleep(500);
   await waitFor(async () => (await label(A))?.includes('sesli sohbet'), 6000);
-  await A.keyboard.press('e'); await waitFor(() => B.$('text=Engelle')); await B.click('text=Engelle'); await sleep(800);
-  await A.keyboard.press('e'); await sleep(1500);
+  await ask(A); await waitFor(() => B.$('text=Engelle')); await B.click('text=Engelle'); await sleep(800);
+  await ask(A); await sleep(1500);
   check('a blocked player cannot ask again', !(await B.$('text=Kabul et')) && !(await inCall(A)) && !(await inCall(B)));
 
   // giant chess: A takes white, B black, A moves; B (and the board on the square) follow

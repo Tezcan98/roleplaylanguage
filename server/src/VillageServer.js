@@ -32,6 +32,7 @@ const VOICE_MIME = /^audio\/(webm|ogg|mp4|aac|mpeg|wav)(;\s*codecs=[\w.]+)?$/;
 const VOICE_MAX = 60000;                    // base64 characters in one piece of voice (~10 s at 16 kbit/s is ~27 000)
 const BASE64 = /^[A-Za-z0-9+/]+={0,2}$/;
 const LAST_PIECE = 15000;                   // ms after a call / a zone during which its last piece of voice is still taken
+const SPOKEN = 5;                           // 100 ms frames of speech a piece of voice needs to be kept (the game's VoiceRecorder.js measures them)
 const IDLE = 45000;                         // ms without any message from a page that promised a keep-alive (`ka`): its game is frozen (phone locked) — drop it
 
 
@@ -60,9 +61,10 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'zone', zone }                walked into a talking zone ('kahve' | 'avlu') or out of it (null)
  *   { type: 'zone-rtc', to, data }        WebRTC offer / answer (with its candidates) to someone in the same zone
  *   { type: 'goal', side }                a goal in a schoolyard match ('a' | 'b'), relayed to the room
- *   { type: 'voice', ctx, mime, data }    a piece (≤ ~10 s, base64) of my own voice while my mic is open in a call
- *                                         (ctx 'call') or a talking zone ('zone'): into the encrypted voice log (48 h) and,
- *                                         for ten minutes, into memory for reports (Reports.js); never relayed
+ *   { type: 'voice', ctx, mime, data, speech }  a piece (≤ ~10 s, base64) of my own voice while my mic is open in a call
+ *                                         (ctx 'call'), a talking zone ('zone') or push-to-talk ('ptt'): into the encrypted voice log (48 h) and,
+ *                                         for ten minutes, into memory for reports (Reports.js); never relayed. `speech`: how many
+ *                                         100 ms frames had speech in them — a piece with less than SPOKEN is not kept (older games send none)
  *   { type: 'report', to, reason? }       report a player in this room ("Şikayet et"; Reports.js)
  *   { type: 'jump' }                      my horse jumped (relayed: { type: 'jump', id })
  *   { type: 'chess-ask', color } | { type: 'chess-dede', color? } | { type: 'chess-leave' } | { type: 'chess-resign' }
@@ -288,11 +290,12 @@ export class VillageServer {
       case 'goal': // a match in the schoolyard: the scorer's screen tells the others
         if (msg.side === 'a' || msg.side === 'b') this.#toRoom(c, { type: 'goal', id: c.id, side: msg.side });
         break;
-      case 'voice': { // my own voice in a call or a talking zone: kept for safety, never relayed
-        const ctx = msg.ctx === 'call' ? 'call' : msg.ctx === 'zone' ? 'zone' : null;
+      case 'voice': { // my own voice in a call, a talking zone or push-to-talk: kept for safety, never relayed
+        const ctx = ['call', 'zone', 'ptt'].includes(msg.ctx) ? msg.ctx : null;
         if (typeof msg.mime !== 'string' || !VOICE_MIME.test(msg.mime) || typeof msg.data !== 'string' || msg.data.length > VOICE_MAX || !BASE64.test(msg.data)) return;
+        if (typeof msg.speech === 'number' && msg.speech < SPOKEN) return; // nobody spoke in it: not kept
         const recent = (last) => (last && Date.now() < last.until ? last.with : null); // the last piece arrives just after hanging up / walking out
-        const peer = ctx === 'call' ? members.get(c.partner)?.name ?? recent(c.lastCall) : ctx === 'zone' ? c.zone ?? recent(c.lastZone) : null;
+        const peer = ctx === 'call' ? members.get(c.partner)?.name ?? recent(c.lastCall) : ctx === 'zone' ? c.zone ?? recent(c.lastZone) : ctx === 'ptt' ? 'meydan' : null; // (push-to-talk: said to everyone in the room)
         if (!peer) return;
         this.voiceAudit?.write({ kind: 'voice', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, ctx, with: peer, mime: msg.mime, audio: msg.data });
         this.reports?.spoke(c, { mime: msg.mime, data: msg.data, ctx });
