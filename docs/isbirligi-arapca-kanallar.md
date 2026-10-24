@@ -55,9 +55,15 @@ Her mail aynı gövdeyi kullanır; yalnızca `{افتتاحية}` satırı kanal
 >
 > {افتتاحية}
 >
-> نحن فريق صغير طوّر لعبة **عائلتي التركية – Turkish Family**، وهي متوفّرة الآن مجانًا على Google Play. في اللعبة يعيش
-> الطفل مع عائلة تركية في قرية، ويتعلّم التركية بالكلام الحقيقي: يبني الجمل عند البقّال، ويتحدّث مع المعلّمة وزملائه في
-> المدرسة، ويلعب مع أطفال آخرين في الساحة ويتكلّمون بالتركية. كل الشرح والمعاني بالعربية.
+> نحن فريق صغير طوّر لعبة **عائلتي التركية – Turkish Family**، وهي متوفّرة الآن مجانًا على Google Play: لعبة قصصية
+> ثلاثية الأبعاد يتعلّم فيها اللاعب التركية كما يتعلّمها الأطفال، من الحياة اليومية لا من الكتاب.
+>
+> - **يعيش مع عائلة تركية:** الأم والجدّ والأخ وأهل القرية يتحدّثون معه بالتركية فقط، وكل يوم مهامّ وكلمات جديدة.
+> - **يتكلّم بصوته:** يقول الجمل بصوت عالٍ واللعبة تفهمه، ويمكنه أن يدردش بحرّية مع شخصيات اللعبة.
+> - **دروس في المدرسة خطوة بخطوة:** مع المعلّمة وزملاء الصف، من المستوى A1، والمعلّمة تصحّح الخطأ.
+> - **المعنى بالعربية تحت كل جملة تركية،** ودفتر كلمات يجمع كل ما تعلّمه مع تمارين للمراجعة.
+> - **ساحة القرية:** يلتقي فيها بمتعلّمين حقيقيين من أنحاء العالم ويتحدّثون معًا بالتركية، كتابةً وصوتًا (المحادثة الصوتية
+>   فقط بموافقة الطرفين، ومراقَبة لحماية الأطفال).
 >
 > جمهوركم هو بالضبط من نصنع اللعبة لأجلهم، لذلك نودّ أن نقترح تعاونًا بسيطًا:
 > - أن تجرّبوا اللعبة في أحد فيديوهاتكم أو في مقطع قصير (Shorts)،
@@ -93,8 +99,13 @@ Her mail aynı gövdeyi kullanır; yalnızca `{افتتاحية}` satırı kanal
 | Walid Salahuddin (112K) | دروسكم في تعليم التركية يتابعها كثير من المتعلّمين العرب. |
 
 **Türkçesi (gövde):** Selam. {kanala özel açılış}. Biz Türk Ailem – Turkish Family oyununu yapan küçük bir ekibiz; oyun şimdi
-Google Play'de ücretsiz. Çocuk köyde Türk bir aileyle yaşar, gerçek konuşarak Türkçe öğrenir: bakkalda cümle kurar, okulda
-öğretmen ve arkadaşlarıyla konuşur, meydanda başka çocuklarla Türkçe konuşarak oynar; açıklamalar Arapça. Kitleniz tam da
+Google Play'de ücretsiz: Türkçeyi çocukların öğrendiği gibi, kitaptan değil günlük hayattan öğreten hikâyeli bir 3D oyun.
+• Türk bir aileyle yaşar: anne, dede, kardeş ve köylüler onunla yalnızca Türkçe konuşur; her gün yeni görevler, yeni kelimeler.
+• Kendi sesiyle konuşur: cümleleri yüksek sesle söyler, oyun anlar; karakterlerle serbestçe sohbet de edebilir.
+• Okulda adım adım dersler: öğretmen ve sınıf arkadaşlarıyla, A1'den başlayarak; öğretmen yanlışı düzeltir.
+• Her Türkçe cümlenin altında Arapça anlamı; öğrendiği her kelime deftere yazılır, pratikle tekrar eder.
+• Köy meydanı: dünyanın her yerinden gerçek öğrencilerle Türkçe konuşur, yazılı ve sesli (sesli sohbet yalnızca iki taraf
+  kabul ederse; çocukları korumak için denetlenir). Kitleniz tam da
 oyunu yaptığımız kişiler; basit bir işbirliği öneriyoruz: oyunu bir videonuzda ya da Short'ta denemeniz, karşılığında
 kanalınızı bizim videolarımızda ve hesaplarımızda tanıtmamız, ve oyunu Arap öğrenciler için iyileştirmek üzere
 görüşleriniz. Bağlantı … (Google Play'de "Turkish Family" diye arayın). Teşekkürler, cevabınızı bekliyoruz. Turkish Family ekibi.
