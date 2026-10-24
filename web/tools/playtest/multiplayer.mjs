@@ -155,6 +155,33 @@ try {
   await waitFor(() => inCall(A));
   await at(A, -10, 20); await sleep(2500);
   check('walking across the square keeps the call', (await inCall(A)) && (await inCall(B)));
+  // the call bar: 🎙️ and 🔊, a tap turns each off (crossed out) and on again
+  const bar = (p) => p.evaluate(() => { const [mic, spk] = document.querySelectorAll('.callbar .chipbtn.icon'), v = window.__game.village.voice; return { mic: !mic.classList.contains('off'), spk: !spk.classList.contains('off'), muted: v.muted, heard: v._debugAudio().every((a) => !a.muted) }; });
+  await A.click('.callbar .chipbtn.icon >> nth=0'); const micOff = await bar(A);
+  await A.click('.callbar .chipbtn.icon >> nth=0'); const micOn = await bar(A);
+  check('🎙️ in the call bar: a tap turns my mic off, another on', !micOff.mic && micOff.muted && micOn.mic && !micOn.muted, JSON.stringify([micOff, micOn]));
+  await B.click('.callbar .chipbtn.icon >> nth=1'); const spkOff = await bar(B);
+  await B.click('.callbar .chipbtn.icon >> nth=1'); const spkOn = await bar(B);
+  check('🔊 in the call bar: a tap turns the others\' voices off (the mic stays on), another on', !spkOff.spk && !spkOff.heard && spkOff.mic && spkOn.spk && spkOn.heard, JSON.stringify([spkOff, spkOn]));
+  // a third player joins: C asks B (who is in the call), B lets C in, C connects to both
+  {
+    const C = await player('C', 'Cem');
+    const bp = await B.evaluate(() => window.__game.player.position.toArray());
+    await at(C, bp[0] + 1.5, bp[2]); await sleep(800);
+    await waitFor(async () => (await label(C))?.includes('sesli sohbet'), 8000);
+    await ask(C);
+    const card = await waitFor(() => B.$('.overlay.open:has-text("katılmak istiyor")'), 8000);
+    check('C asks B, who is in a call: B is asked to let C join', !!card);
+    await B.click('text=Kabul et');
+    const all = () => Promise.all([A, B, C].map((p) => p.evaluate(() => Object.values(window.__game.village.voice.states())))).then((s) => (s.every((x) => x.length === 2 && x.every((v) => v === 'connected')) ? s : null));
+    const three = await waitFor(all, 45000) ?? await Promise.all([A, B, C].map((p) => p.evaluate(() => window.__game.village.voice.states())));
+    check('…a call of three: everyone connected to the other two', !!(await all()), JSON.stringify(three));
+    check('…the call bar names both others', (await C.textContent('.callbar')).includes('+1'));
+    await C.click('.callbar .danger');
+    check('…C hangs up: A and B go on talking', !!(await waitFor(async () => !(await inCall(C)) && (await peers(A)) === 1 && (await peers(B)) === 1 && (await inCall(A)) && (await inCall(B)), 8000)));
+    await C.close();
+    await waitFor(async () => (await A.evaluate(() => window.__game.village.remotes.count)) === 1, 8000);
+  }
   await A.click('.callbar .danger');
   await waitFor(async () => !(await inCall(A)) && !(await inCall(B)), 6000);
 

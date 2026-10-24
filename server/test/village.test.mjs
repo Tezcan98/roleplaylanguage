@@ -169,6 +169,52 @@ test('voice: request needs consent, signalling only between partners, only a hug
   await Promise.all([a, b, c].map((p) => p.close()));
 });
 
+test('voice: a call of more than two — join by asking someone in it, invite from it, the last one alone is told it is over', async () => {
+  const [a, b, c, d] = await Promise.all(['Ali', 'Banu', 'Cem', 'Derya'].map((n) => join(n, 'group', { calls: 2 })));
+  const old = await join('Eski', 'group'); // an older game: no `calls`
+  for (const p of [a, b, c, d, old]) p.send({ type: 'state', x: 0, z: 0, rot: 0, moving: false });
+  await silence();
+  const id = (p) => p.welcome.id;
+  a.send({ type: 'call-request', to: id(b) });
+  await b.next('call-request');
+  b.send({ type: 'call-answer', to: id(a), accept: true });
+  await a.next('call-start'); await b.next('call-start');
+
+  // C asks B, who is in a call: B is asked to let C in; C calls both
+  c.send({ type: 'call-request', to: id(b) });
+  assert.equal((await b.next('call-request')).join, true);
+  b.send({ type: 'call-answer', to: id(c), accept: true });
+  const start = await c.next('call-start');
+  assert.equal(start.initiator, true);
+  assert.deepEqual(start.peers.sort(), [id(a), id(b)].sort());
+  assert.equal((await a.next('call-join')).id, id(c));
+  assert.equal((await b.next('call-join')).id, id(c));
+  c.send({ type: 'rtc', to: id(a), data: { sdp: 'offer-c' } }); // signalling between everyone in the call
+  assert.deepEqual((await a.next('rtc')).data, { sdp: 'offer-c' });
+  d.send({ type: 'rtc', to: id(a), data: { sdp: 'intruder' } });
+
+  // A invites D from the call; an older game can't be pulled into a group
+  a.send({ type: 'call-request', to: id(d) });
+  assert.deepEqual((await d.next('call-request')).with.sort(), ['Banu', 'Cem']);
+  d.send({ type: 'call-answer', to: id(a), accept: true });
+  assert.equal((await d.next('call-start')).peers.length, 3);
+  a.send({ type: 'call-request', to: id(old) });
+  assert.equal((await a.next('call-declined')).reason, 'busy');
+  await silence();
+  assert.equal(a.inbox.some((m) => m.type === 'rtc' && m.data.sdp === 'intruder'), false, 'not in the call: no signalling');
+
+  // leaving: the others go on; the last one alone gets call-end
+  c.send({ type: 'call-end' });
+  assert.equal((await c.next('call-end')).reason, 'hangup');
+  assert.equal((await a.next('call-leave')).id, id(c));
+  d.close(); // left the square
+  assert.equal((await a.next('call-leave')).id, id(d));
+  b.send({ type: 'call-end' });
+  await b.next('call-end');
+  assert.equal((await a.next('call-end')).with, id(b), 'alone in the call: it is over');
+  await Promise.all([a, b, c, old].map((p) => p.close()));
+});
+
 test('too far away to ask', async () => {
   const a = await join('Uzak', 'far');
   const b = await join('Yakın', 'far');

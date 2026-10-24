@@ -2732,5 +2732,12 @@
  "Watch a short video and ride 5 more minutes!": "Regarde une courte vidéo et chevauche 5 minutes de plus !",
  "Watch a video: twice as many.": "Regarde une vidéo : deux fois plus.",
  "Yours for a day!": "À toi pour une journée !",
- "Follow the golden arrow. It shows the way.": "Suis la flèche dorée. Elle montre le chemin."
+ "Follow the golden arrow. It shows the way.": "Suis la flèche dorée. Elle montre le chemin.",
+ "No voice connection to them on this network": "Pas de connexion vocale avec cette personne sur ce réseau",
+ "is in a full voice chat (5 at most)": "est dans un chat vocal complet (5 au maximum)",
+ "joined the voice chat": "a rejoint le chat vocal",
+ "left the voice chat": "a quitté le chat vocal",
+ "{name} invites you to a voice chat": "{name} t'invite à un chat vocal",
+ "{name} wants to join your voice chat": "{name} veut rejoindre votre chat vocal",
+ "Alone here · others in another city": "Seul ici · d'autres dans une autre ville"
 }

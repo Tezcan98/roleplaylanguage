@@ -1,6 +1,6 @@
 # Türk Ailem — Gizlilik Politikası
 
-**Son güncelleme:** 23 Ekim 2026
+**Son güncelleme:** 24 Ekim 2026
 
 Türk Ailem, çocukların dil gelişimini ve sosyalleşmesini hikâye ve 3D köy yaşamı üzerinden destekleyen bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
 
@@ -10,11 +10,11 @@ Uygulama mikrofonu üç özellik için kullanabilir:
 
 - **Konuşma tanıma:** Oyuncunun söylediği Türkçe cümleyi oyundaki konuşma etkinliklerinde değerlendirmek için kullanılır.
 - **Bas-konuş:** Köy meydanında konuş düğmesine basılı tutulduğunda söylenen cümle yazıya çevrilir ve herkesin göreceği bir konuşma balonu olarak gösterilir.
-- **Sesli sohbet:** Köy meydanında iki oyuncu birbirinin isteğini kabul ettiğinde ya da kahvehane, cami avlusu gibi toplu konuşma alanlarında konuş düğmesine basılı tutulduğunda sesli iletişim kurulur.
+- **Sesli sohbet:** Köy meydanında iki oyuncu birbirinin isteğini kabul ettiğinde (sohbetteki biri kabul ederse en çok 5 kişiye kadar başkaları da katılabilir) ya da kahvehane, cami avlusu gibi toplu konuşma alanlarında konuş düğmesine basılı tutulduğunda sesli iletişim kurulur.
 
 Hikâyedeki konuşma etkinliklerinde söylenenler kaydedilmez. Android'de konuşma tanıma için cihazın yerel konuşma tanıma servisi kullanılır. İsteğe bağlı bir uzak STT sunucusu yapılandırılırsa ses verisi tanıma amacıyla bu sunucuya geçici olarak gönderilebilir; bu sunucunun işletmecisi veriyi saklamayacak şekilde yapılandırılmalıdır.
 
-Sesli sohbet WebRTC ile oyuncular arasında kurulur. **Güvenlik için, oyuncunun mikrofonu sesli sohbette ya da meydanda bas-konuş ile konuşurken açıkken kendi sesi kısa parçalar hâlinde oyunun sunucusuna da gönderilir ve güvenlik kaydında saklanır** (bkz. 2c). İçinde konuşma olmayan (sessiz) parçalar gönderilmez ve saklanmaz. Bu bilgi meydana ilk girişteki onay kartında verilir ve onay alınır (bkz. 2c).
+Sesli sohbet WebRTC ile oyuncular arasında kurulur. **Güvenlik için, oyuncunun mikrofonu sesli sohbette ya da (bilgisayardaki tarayıcıda) meydanda bas-konuş ile konuşurken açıkken kendi sesi kısa parçalar hâlinde oyunun sunucusuna da gönderilir ve güvenlik kaydında saklanır** (bkz. 2c). Telefonda bas-konuşun sesi yalnızca telefonun konuşma tanıma servisine gider; oyunun sunucusunda bu sesin kendisi değil, yazıya çevrilen metni saklanır. İçinde konuşma olmayan (sessiz) parçalar gönderilmez ve saklanmaz. Bu bilgi meydana ilk girişteki onay kartında verilir ve onay alınır (bkz. 2c).
 
 ## 2. Kullanıcı adı ve cihaz kimliği
 

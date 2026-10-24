@@ -6,6 +6,7 @@ import { VoiceRecorder } from '../services/multiplayer/VoiceRecorder.js';
 const SEND_EVERY = 0.1; // seconds
 const KEEPALIVE = 10;   // seconds: my state goes out at least this often, even standing still (the server drops frozen pages)
 const AWAY_AFTER = 20000; // ms in the background before leaving the square
+const PHONE = !!window.Capacitor?.isNativePlatform?.() || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const ASK_RANGE = 4;    // metres: "voice chat with X" appears this close
 /** In a talking zone: how loud someone is at `d` metres (1 m and nearer: full; 4 m: half; 7 m: a fifth). */
 export const zoneVolume = (d) => 1 / (1 + (Math.max(0, d - 1) / 3) ** 2);
@@ -14,6 +15,7 @@ const DECLINE_TEXT = {
   declined: ['isteğini reddetti', 'declined'],
   busy: ['şu an başka biriyle konuşuyor', 'is busy'],
   far: ['çok uzakta', 'is too far away'],
+  full: ['olan sohbet dolu (en çok 5 kişi)', 'is in a full voice chat (5 at most)'],
 };
 const BLOCKED_TEXT = {
   language: ['Meydanda Türkçe konuşalım! Mesajın gösterilmedi.', "Let's speak Turkish in the square! Your message was not shown."],
@@ -26,7 +28,7 @@ const REPORT_FAILED = {
   gone: ['Bu oyuncu meydandan ayrılmış.', 'That player has left the square.'],
   paused: ['Son şikayetlerin asılsız çıktı. {d} gün şikayet edemezsin.', 'Your last reports were unfounded, so you cannot report for a few days.'],
 };
-const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Oyuncu engellendi, sohbet bitti.' };
+const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Oyuncu engellendi, sohbet bitti.', lost: 'Ses bağlantısı koptu, sohbet bitti.' };
 
 /**
  * The multiplayer village square:
@@ -46,6 +48,7 @@ export class VillageMultiplayer {
   #retryDelay = 0;
   #rolling = new Set(); // balls we kicked last: report where they stop, for players who join later
   #pttRec = null;      // push-to-talk's voice recorder
+  #elsewhereTimer = null; // alone here: how many are in the other squares, once a minute
   #zoneOk = new Set();  // talking zones the player said yes to at the door (until leaving the square)
   #atDoor = false;      // the "go in?" card is up
   #outside = null;      // where the player last stood outside every zone (stopped there at the door)
@@ -100,9 +103,9 @@ export class VillageMultiplayer {
       this.toasts.show(tr.replace('{m}', Math.max(1, Math.ceil(((until ?? 0) - Date.now()) / 60000))), en);
     });
     net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
-    net.on('call-request', async ({ from, name }) => {
+    net.on('call-request', async ({ from, name, join = false, with: others = [] }) => {
       if (this.isBlocked(from, name)) { this.net.send({ type: 'call-answer', to: from, accept: false }); return; }
-      const answer = await this.calls.ask(name);
+      const answer = await this.calls.ask(name, { join, others });
       if (answer === 'block') this.blockPlayer(from, name);
       this.net.send({ type: 'call-answer', to: from, accept: answer === true && !this.isBlocked(from, name) });
     });
@@ -110,7 +113,9 @@ export class VillageMultiplayer {
       const [tr, en] = DECLINE_TEXT[reason] ?? DECLINE_TEXT.declined;
       this.toasts.show(`${this.remotes.get(id)?.name ?? 'Oyuncu'} ${tr}`, en);
     });
-    net.on('call-start', ({ with: id, initiator }) => this.#startCall(id, initiator));
+    net.on('call-start', ({ with: id, initiator, peers }) => this.#startCall(peers ?? [id], initiator));
+    net.on('call-join', ({ id, name }) => { if (!this.voice.inCall) return; this.voice.add(id, false); this.#callNames(); this.toasts.show(`${name} sohbete katıldı`, 'joined the voice chat'); });
+    net.on('call-leave', ({ id }) => { const n = this.remotes.get(id)?.name ?? 'Oyuncu'; this.#markCall(id, false); this.voice.remove(id); this.#callNames(); this.toasts.show(`${n} sohbetten ayrıldı`, 'left the voice chat'); });
     net.on('report-ok', ({ name }) => this.toasts.show(`Şikayetin alındı${name ? ` (${name})` : ''}. İnceleyeceğiz, teşekkürler!`, 'Thanks — your report was sent and will be checked.'));
     net.on('report-failed', ({ reason, until }) => {
       const [tr, en] = REPORT_FAILED[reason] ?? ['Şikayet şu an gönderilemedi.', 'The report could not be sent right now.'];
@@ -201,7 +206,7 @@ export class VillageMultiplayer {
     this.settings.set('blockedPlayers', list.slice(-100));
     const c = this.remotes.get(id);
     if (c) this.labels.bubble?.(c, '', null, 0);
-    if (this.voice.partner === id) { this.net.send({ type: 'call-end' }); this.#endCall(END_TEXT.blocked); }
+    if (this.voice.peers.includes(id)) { this.net.send({ type: 'call-end' }); this.#endCall(END_TEXT.blocked); }
     this.toasts.show(`${name ?? 'Oyuncu'} engellendi`, 'Player blocked');
   }
 
@@ -210,10 +215,29 @@ export class VillageMultiplayer {
     this.settings.set('blockedPlayers', list);
   }
 
+  /** Hang up here (the app went to the background…): the server is told too, or the others would stay "busy" with me. */
   endVoiceCall(reason = 'hangup') {
-    if (this.voice.inCall) this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup);
+    if (!this.voice.inCall) return;
+    this.net.send({ type: 'call-end' });
+    this.#endCall(END_TEXT[reason] ?? END_TEXT.hangup);
   }
-  #count() { this.ptt.setOnline(this.remotes.count + 1, this.net.name, this.#roomLabel()); }
+  #count() {
+    this.ptt.setOnline(this.remotes.count + 1, this.net.name, this.#roomLabel());
+    clearInterval(this.#elsewhereTimer);
+    if (this.remotes.count > 0) return;
+    this.#lookElsewhere();
+    this.#elsewhereTimer = setInterval(() => (this.net.connected && this.remotes.count === 0 ? this.#lookElsewhere() : clearInterval(this.#elsewhereTimer)), 60000);
+  }
+
+  /** Alone here: are there players in the other cities' squares (of this place)? The note on the left only then. */
+  async #lookElsewhere() {
+    if (!this.healthUrl) return;
+    let rooms;
+    try { rooms = (await (await fetch(this.healthUrl, { cache: 'no-store' })).json()).rooms ?? {}; } catch { return; }
+    const mine = `${this.settings.get('serverRegion', 'ankara')}${this.places[this.joinedAt]?.suffix ?? ''}`, suffix = this.places[this.joinedAt]?.suffix ?? '';
+    const n = this.rooms.map(([id]) => `${id}${suffix}`).filter((r) => r !== mine).reduce((t, r) => t + Number(rooms[r] ?? 0), 0);
+    if (this.remotes.count === 0) this.ptt.setElsewhere(n);
+  }
 
   async join() {
     if (this.net.connected || this.joining || this.stayOffline) return;
@@ -381,7 +405,9 @@ export class VillageMultiplayer {
   async #listenLoop() {
     this.#talking = true;
     this.net.send({ type: 'talk', on: true });
-    const mic = this.#recordPtt(); // the voice itself is kept too (encrypted, 48 h), not only the text
+    // the voice itself is kept too (encrypted, 48 h), not only the text — but not on a phone: there the
+    // speech recognizer is another app (Google's), and while the game holds the mic it hears silence
+    const mic = PHONE ? Promise.resolve(null) : this.#recordPtt();
     this.player.voice = true;
     const until = Date.now() + 20000; // tapped and forgot: 20 s at most
     const parts = [];
@@ -432,11 +458,14 @@ export class VillageMultiplayer {
 
   /** Interaction provider: offer "voice chat with X" next to another player. */
   find(pos) {
-    if (!this.net.connected || this.voice.inCall || this.world.current.id !== this.joinedAt) return null;
+    if (!this.net.connected || this.world.current.id !== this.joinedAt) return null;
     if (this.chess?.myColor || this.chess?.squareAt(pos)) return null; // at the chess board the action key is for the pieces
     if (this.group?.zone || this.#zoneAt(pos)) return null; // in a talking zone everyone hears everyone (hold the talk button): no one-to-one call there
     let best = null;
+    const inCall = this.voice.inCall, mine = this.voice.peers;
+    if (inCall && mine.length >= 4) return null; // (a call holds five)
     for (const id of this.remotes.ids()) {
+      if (mine.includes(id)) continue; // already talking with them
       const c = this.remotes.get(id);
       const d = Math.hypot(c.position.x - pos.x, c.position.z - pos.z);
       if (d < ASK_RANGE && (!best || d < best.dist)) best = { id, name: c.name, dist: d };
@@ -444,7 +473,7 @@ export class VillageMultiplayer {
     if (!best) return null;
     const blocked = this.isBlocked(best.id, best.name);
     return {
-      label: blocked ? `${best.name} engelini kaldır` : `${best.name} ile sesli sohbet et`,
+      label: blocked ? `${best.name} engelini kaldır` : inCall ? `${best.name} kişisini sohbete çağır` : `${best.name} ile sesli sohbet et`,
       dist: best.dist,
       priority: blocked ? 0.9 : 1,
       left: true, // its own button, on the left
@@ -456,28 +485,44 @@ export class VillageMultiplayer {
     };
   }
 
-  async #startCall(id, initiator) {
+  /** A call starts (or I join one): connect to everyone already in it. */
+  async #startCall(ids, initiator) {
     this.onStat?.('voice');
-    const c = this.remotes.get(id);
-    const name = c?.name ?? 'Oyuncu';
-    if (c) c.call = true;
-    this.calls.showCall(name, { onMute: (m) => this.voice.setMuted(m), onEnd: () => this.net.send({ type: 'call-end' }), onReport: () => this.report(id) });
-    const micOk = await this.voice.start(id, initiator);
-    this.toasts.show(`${name} ile sesli sohbet başladı`, micOk ? 'Voice chat started' : 'Mikrofon yok: sadece dinleyebilirsin · listen only');
+    this.calls.showCall({
+      onMute: (m) => this.voice.setMuted(m),
+      onSpeaker: (on) => this.voice.setSpeaker(on),
+      onEnd: () => this.net.send({ type: 'call-end' }),
+      onReport: () => this.report(this.voice.peers),
+    });
+    const micOk = this.voice.start(ids, initiator);
+    ids.forEach((id) => this.#markCall(id, true));
+    this.#callNames();
+    const names = ids.map((id) => this.remotes.get(id)?.name ?? 'Oyuncu').join(', ');
+    this.toasts.show(`${names} ile sesli sohbet başladı`, (await micOk) ? 'Voice chat started' : 'Mikrofon yok: sadece dinleyebilirsin · listen only');
   }
 
-  /** How the voice connection is doing (from VoiceChat). */
-  voiceState(st) {
-    if (st === 'connected') this.toasts.show('Ses bağlandı 🔊', 'Voice connected');
-    else if (st === 'failed') this.toasts.show('Ses bağlantısı kurulamadı', 'Voice could not connect on this network. You can still talk with text.');
-    else if (st === 'blocked-audio') this.calls.showUnmute(() => this.voice.resumeAudio());
+  #markCall(id, on) { const c = this.remotes.get(id); if (c) c.call = on; }
+  #callNames() {
+    const ids = this.voice.peers;
+    ids.forEach((id) => this.#markCall(id, true));
+    this.calls.setNames(ids.map((id) => this.remotes.get(id)?.name ?? 'Oyuncu'));
+  }
+
+  /** How the voice connection to `id` is doing (from VoiceChat). */
+  voiceState(st, id) {
+    const name = this.remotes.get(id)?.name ?? 'Oyuncu';
+    if (st === 'connected') this.toasts.show(this.voice.peers.length > 1 ? `${name} ile ses bağlandı 🔊` : 'Ses bağlandı 🔊', 'Voice connected');
+    else if (st === 'failed' || st === 'lost') {
+      // no voice between us: a call of two is over (it would only look "busy" to everyone else); in a bigger one the others go on
+      if (this.voice.peers.length <= 1) { this.endVoiceCall(st === 'lost' ? 'lost' : 'hangup'); if (st === 'failed') this.toasts.show('Ses bağlantısı kurulamadı', 'Voice could not connect on this network. You can still talk with text.'); }
+      else this.toasts.show(`${name} ile ses bağlantısı kurulamadı`, 'No voice connection to them on this network');
+    } else if (st === 'blocked-audio') this.calls.showUnmute();
   }
 
   #endCall(message) {
-    const id = this.voice.partner;
-    const c = id && this.remotes.get(id);
-    if (c) c.call = false;
-    if (!id) return;
+    const ids = this.voice.peers;
+    ids.forEach((id) => this.#markCall(id, false));
+    if (!ids.length) return;
     this.voice.end();
     this.calls.hideCall();
     if (message) this.toasts.show(message, 'Voice chat ended');
@@ -489,15 +534,15 @@ export class VillageMultiplayer {
    * Pick a player here (the call partner, or the nearest first) and why; the server checks what
    * they said in the last ten minutes, text and voice, and the operator decides on a ban.
    */
-  async report(only = null) {
+  async report(only = null) { // only: an id, or the ids of a call
     if (!this.net.connected) { this.toasts.show('Meydana bağlı değilsin', 'Not connected to the square'); return; }
     const here = this.player.position;
     const players = this.remotes.ids()
-      .filter((id) => !only || id === only)
+      .filter((id) => !only || (Array.isArray(only) ? only.includes(id) : id === only))
       .map((id) => { const c = this.remotes.get(id); return { id, name: c.name, dist: Math.hypot(c.position.x - here.x, c.position.z - here.z) }; })
-      .sort((a, b) => (b.id === this.voice.partner) - (a.id === this.voice.partner) || a.dist - b.dist)
+      .sort((a, b) => this.voice.peers.includes(b.id) - this.voice.peers.includes(a.id) || a.dist - b.dist)
       .slice(0, 12)
-      .map((p) => ({ ...p, note: p.id === this.voice.partner ? 'sesli sohbet' : this.group?.ids().includes(p.id) ? 'yanında konuşuyor' : `${Math.round(p.dist)} m` }));
+      .map((p) => ({ ...p, note: this.voice.peers.includes(p.id) ? 'sesli sohbet' : this.group?.ids().includes(p.id) ? 'yanında konuşuyor' : `${Math.round(p.dist)} m` }));
     if (!players.length) { this.toasts.show('Şikayet edilecek kimse yok', 'Nobody here to report'); return; }
     const pick = await this.reportDialog?.ask(players);
     if (!pick || !this.net.connected) return;

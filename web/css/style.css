@@ -46,8 +46,8 @@ body.tr-only .en-t:not(.def),body.tr-only #dlg .en-btn,.def:empty{display:none!i
 .toast small{display:block;color:#D9C7A3;font-weight:700;font-size:12px}
 @keyframes tin{from{opacity:0;transform:translateY(-8px)}}
 /* "alone in the square", on the left under the task (ui/PushToTalk.js) */
-.alone-note{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 30px + var(--hud-h,46px) + var(--quest-h,0px));max-width:min(300px,60vw);pointer-events:auto;cursor:pointer;text-align:left;background:rgba(42,30,21,.82);color:var(--parch);border:2px solid var(--gold);border-radius:12px;padding:6px 10px;font:800 13px/1.3 Nunito,sans-serif}
-.alone-note small{display:block;font-weight:700;font-size:12px;color:#D9C7A3;margin-top:2px}
+.alone-note{position:absolute;left:12px;top:calc(env(safe-area-inset-top,0px) + 30px + var(--hud-h,46px) + var(--quest-h,0px));max-width:min(220px,50vw);pointer-events:auto;cursor:pointer;text-align:left;background:rgba(42,30,21,.75);color:var(--parch);border:1px solid var(--gold);border-radius:9px;padding:3px 8px;font:800 11px/1.25 Nunito,sans-serif}
+.alone-note small{display:block;font-weight:700;font-size:10px;color:#D9C7A3;margin-top:1px}
 .alone-note[hidden],body.menu .alone-note,body.in-lesson .alone-note{display:none!important}
 /* the round map, top right under the HUD (ui/Minimap.js), its fold button on the lower left; the toasts come under it */
 .minimap-wrap{--map:112px;position:absolute;top:calc(env(safe-area-inset-top,0px) + 20px + var(--hud-h,46px));right:12px;width:var(--map);height:var(--map)}
@@ -252,6 +252,9 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #act-lef
 .callbar>span:nth-child(2){overflow:hidden;text-overflow:ellipsis;max-width:120px}
 .callbar .chipbtn{min-height:32px;padding:0 10px;font-size:13px;white-space:nowrap}
 .chipbtn.danger{background:#E4574A;color:#fff;border-color:#8A1F17}
+.callbar .chipbtn.icon{padding:0 7px;min-width:36px;justify-content:center}
+.callbar .chipbtn.icon.off{background:#F6D3CF;color:#8A1F17;border-color:#8A1F17}
+.callbar .chipbtn.icon.ask{background:var(--gold);animation:pulse 1s infinite}
 .caption{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);width:min(560px,calc(100vw - 24px));background:rgba(42,30,21,.92);color:var(--parch);border:2px solid var(--gold);border-radius:14px;padding:12px 16px;text-align:center;pointer-events:none}
 .caption[hidden]{display:none}
 .cap-title{font:700 24px Fredoka,sans-serif;color:var(--gold)}
@@ -342,7 +345,7 @@ body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
   #quest{top:calc(env(safe-area-inset-top,0px) + 12px + var(--hud-h,40px));left:max(8px,env(safe-area-inset-left));max-width:min(300px,38vw);padding:5px 10px}
   #quest .qt{font-size:13px}
   #toasts{max-width:42vw}
-  .alone-note{top:calc(env(safe-area-inset-top,0px) + 20px + var(--hud-h,40px) + var(--quest-h,0px));left:max(8px,env(safe-area-inset-left));max-width:min(300px,38vw);font-size:12px}
+  .alone-note{top:calc(env(safe-area-inset-top,0px) + 20px + var(--hud-h,40px) + var(--quest-h,0px));left:max(8px,env(safe-area-inset-left));max-width:min(200px,32vw);font-size:10.5px}
   .minimap-wrap{--map:92px;top:calc(env(safe-area-inset-top,0px) + 10px + var(--hud-h,40px));right:max(8px,env(safe-area-inset-right))}
   body.has-map #toasts{top:calc(env(safe-area-inset-top,0px) + 18px + var(--hud-h,40px) + 92px)}
   #dlg{max-height:calc(100dvh - 16px);bottom:8px;width:min(620px,calc(100vw - 16px))}

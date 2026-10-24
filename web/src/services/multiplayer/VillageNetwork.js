@@ -33,7 +33,7 @@ export class VillageNetwork {
       const ws = this.#ws = new WebSocket(this.url);
       const fail = (message, code = '') => { reject(Object.assign(new Error(message), { code })); this.close(); };
       const timer = setTimeout(() => fail('timeout'), 6000);
-      ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', name, room, gender, style, pid, outfit, ...(gid ? { gid } : {}), ...(consent ? { consent } : {}) }));
+      ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', name, room, gender, style, pid, outfit, calls: 2, ...(gid ? { gid } : {}), ...(consent ? { consent } : {}) }));
       ws.onerror = () => { clearTimeout(timer); fail('unreachable'); };
       ws.onclose = () => { if (this.id) this.#emit('disconnected', {}); this.id = null; };
       ws.onmessage = (e) => {

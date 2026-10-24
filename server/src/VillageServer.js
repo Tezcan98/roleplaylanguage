@@ -13,6 +13,7 @@ const FAR_EVERY = 5;
 const CALL_RANGE = 6;   // metres: how close you must be to ask someone for a voice chat
 const CALL_DROP = 200;  // metres: practically never — a call ends when someone hangs up or leaves the square
 const REQUEST_TTL = 20000;
+const MAX_CALL = 5;     // voices in one call (each phone sends its voice to every other one)
 const ZONES = new Set(['kahve', 'avlu']);   // places where everyone in them hears each other (the kahvehane, the mosque's courtyard)
 const MAX_ZONE = 16;                        // voices in one zone (each player connects to every other one)
 const ROOM = /^[a-z0-9-]{1,24}$/;
@@ -40,14 +41,17 @@ const IDLE = 45000;                         // ms without any message from a pag
  * Multiplayer village square.
  * - In public, speech is shown as text only: the client turns push-to-talk into text
  *   (speech-to-text) and the server relays `say` bubbles. No open voice to strangers.
- * - Voice is one-to-one and needs consent: A asks B (`call-request`), B accepts, and only
- *   then the server relays WebRTC signalling between exactly those two.
+ * - Voice needs consent: A asks B (`call-request`), B accepts, and only then the server relays
+ *   WebRTC signalling between exactly those two. A call holds up to MAX_CALL players: asking
+ *   someone who is in a call asks to join it (they accept for it), asking from a call invites;
+ *   the newcomer calls everyone already in it. Only between games that said `calls: 2` in their
+ *   hello — an older game is "busy" while in a call, as before.
  * - Except in a talking zone (the kahvehane, shown on screen as one): whoever walks in hears the
  *   others there and is heard while holding the talk button. Signalling only between two players
  *   in the same zone; the newcomer calls everyone already there.
  *
  * client → server
- *   { type: 'hello', name, room?, gender?, style?, consent? } join with a username (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open';
+ *   { type: 'hello', name, room?, gender?, style?, consent?, calls? } join with a username (calls: 2 — can be in a call of more than two) (gender: 'boy' | 'girl', style: 'modest' | 'strong' | 'covered' | 'open';
  *                                         consent: { v, at } — the player agreed to the recording, version v at time at: into the safety log once)
  *   { type: 'state', x, z, rot, moving, sit?, ride? }  own position (~10/s); sit = on a chair or bench, ride = 'horse' | 'scooter' | 'bike' (true / 1: horse, older games)
  *   { type: 'talk', on }                  push-to-talk pressed / released (🎙️ marker)
@@ -56,7 +60,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'call-answer', to, accept }   answer a request
  *   { type: 'call-end' }                  hang up
  *   { type: 'ball', n?, x, z, vx, vz }    kicked shared ball n (0 when left out; relayed, last state kept for newcomers)
- *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to your call partner
+ *   { type: 'rtc', to, data }             WebRTC offer / answer / ICE — only to someone in your call
  *   { type: 'call-diag', state, detail? } how the voice connection went (logged, for support)
  *   { type: 'zone', zone }                walked into a talking zone ('kahve' | 'avlu') or out of it (null)
  *   { type: 'zone-rtc', to, data }        WebRTC offer / answer (with its candidates) to someone in the same zone
@@ -84,8 +88,10 @@ const IDLE = 45000;                         // ms without any message from a pag
  *   { type: 'report-ok' } | { type: 'report-failed', reason, until? }  ('limit' | 'again' | 'gone' | 'off' | 'self' | 'paused')
  *   { type: 'error', code: 'offline' }    a player the operator banned after a report: the game quietly plays offline (no message)
  *   { type: 'talk', id, on } | { type: 'say', id, text } | { type: 'ball', id, n, x, z, vx, vz }
- *   { type: 'call-request', from, name } | { type: 'call-declined', id, reason }
- *   { type: 'call-start', with, initiator } | { type: 'call-end', with, reason }
+ *   { type: 'call-request', from, name, join?, with? } | { type: 'call-declined', id, reason }  (join: they want into
+ *                                         my call; with: the names already in theirs; reason 'busy' | 'declined' | 'far' | 'full')
+ *   { type: 'call-start', with, initiator, peers? } (peers: everyone already in the call — the newcomer calls each)
+ *   | { type: 'call-join', id, name } | { type: 'call-leave', id, reason } | { type: 'call-end', with, reason }
  *   { type: 'rtc', from, data }
  *   { type: 'zone-peers', zone, ids } (call each of them) | { type: 'zone-join', id } | { type: 'zone-leave', id }
  *   | { type: 'zone-full', zone } | { type: 'zone-rtc', from, data }
@@ -166,7 +172,7 @@ export class VillageServer {
   }
 
   #connect(ws, ip) {
-    const client = { ws, ip, id: null, name: null, room: null, x: -14.8, z: 0, rot: Math.PI / 2, moving: false, sit: false, ride: false, talking: false, dirty: false, partner: null, zone: null, requests: new Map(), tokens: RATE.burst, refilled: Date.now(), lastSay: 0 };
+    const client = { ws, ip, id: null, name: null, room: null, x: -14.8, z: 0, rot: Math.PI / 2, moving: false, sit: false, ride: false, talking: false, dirty: false, call: null, zone: null, requests: new Map(), tokens: RATE.burst, refilled: Date.now(), lastSay: 0 };
     this.#perIp.set(ip, (this.#perIp.get(ip) ?? 0) + 1);
     ws.alive = true;
     ws.on('pong', () => { ws.alive = true; });
@@ -236,11 +242,13 @@ export class VillageServer {
       }
       case 'call-request': {
         const to = members.get(msg.to);
-        if (!to || to === c) return;
-        if (c.partner || to.partner) return this.#send(c, { type: 'call-declined', id: msg.to, reason: 'busy' });
+        if (!to || to === c || (c.call && c.call === to.call)) return;
+        const no = this.#cannotCall(c, to);
+        if (no) { this.log(`[village] call ${c.name} → ${to.name}: ${no}`); return this.#send(c, { type: 'call-declined', id: msg.to, reason: no }); }
         if (this.#dist(c, to) > CALL_RANGE) return this.#send(c, { type: 'call-declined', id: msg.to, reason: 'far' });
         to.requests.set(c.id, Date.now());
-        this.#send(to, { type: 'call-request', from: c.id, name: c.name });
+        const others = c.call ? [...c.call].filter((m) => m !== c).map((m) => m.name) : [];
+        this.#send(to, { type: 'call-request', from: c.id, name: c.name, ...(to.call ? { join: true } : {}), ...(others.length ? { with: others } : {}) });
         break;
       }
       case 'call-answer': {
@@ -248,12 +256,22 @@ export class VillageServer {
         const asked = c.requests.get(msg.to);
         c.requests.delete(msg.to);
         if (!from || !asked || Date.now() - asked > REQUEST_TTL) return;
-        if (!msg.accept || c.partner || from.partner) return this.#send(from, { type: 'call-declined', id: c.id, reason: msg.accept ? 'busy' : 'declined' });
-        c.partner = from.id;
-        from.partner = c.id;
-        this.#send(from, { type: 'call-start', with: c.id, initiator: true });
-        this.#send(c, { type: 'call-start', with: from.id, initiator: false });
-        this.log(`[village] call ${from.name} ↔ ${c.name}`);
+        const no = msg.accept ? this.#cannotCall(from, c) : 'declined';
+        if (no) return this.#send(from, { type: 'call-declined', id: c.id, reason: no });
+        const group = from.call ?? c.call;
+        if (!group) { // a new call of two (as it always was)
+          from.call = c.call = new Set([from, c]);
+          this.#send(from, { type: 'call-start', with: c.id, initiator: true });
+          this.#send(c, { type: 'call-start', with: from.id, initiator: false });
+          this.log(`[village] call ${from.name} ↔ ${c.name}`);
+          break;
+        }
+        const newcomer = group === from.call ? c : from, there = [...group];
+        group.add(newcomer);
+        newcomer.call = group;
+        there.forEach((m) => this.#send(m, { type: 'call-join', id: newcomer.id, name: newcomer.name }));
+        this.#send(newcomer, { type: 'call-start', with: there[0].id, initiator: true, peers: there.map((m) => m.id) });
+        this.log(`[village] call +${newcomer.name} (${[...group].map((m) => m.name).join(', ')})`);
         break;
       }
       case 'chess-draw': case 'chess-draw-accept': case 'chess-draw-decline': { // a draw offered / answered through Dede
@@ -296,7 +314,7 @@ export class VillageServer {
         if (typeof msg.mime !== 'string' || !VOICE_MIME.test(msg.mime) || typeof msg.data !== 'string' || msg.data.length > VOICE_MAX || !BASE64.test(msg.data)) return;
         if (typeof msg.speech === 'number' && msg.speech < SPOKEN) return; // nobody spoke in it: not kept
         const recent = (last) => (last && Date.now() < last.until ? last.with : null); // the last piece arrives just after hanging up / walking out
-        const peer = ctx === 'call' ? members.get(c.partner)?.name ?? recent(c.lastCall) : ctx === 'zone' ? c.zone ?? recent(c.lastZone) : ctx === 'ptt' ? 'meydan' : null; // (push-to-talk: said to everyone in the room)
+        const peer = ctx === 'call' ? (c.call ? [...c.call].filter((m) => m !== c).map((m) => m.name).join(', ') : recent(c.lastCall)) : ctx === 'zone' ? c.zone ?? recent(c.lastZone) : ctx === 'ptt' ? 'meydan' : null; // (push-to-talk: said to everyone in the room)
         if (!peer) return;
         this.voiceAudit?.write({ kind: 'voice', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, ctx, with: peer, mime: msg.mime, audio: msg.data });
         this.reports?.spoke(c, { mime: msg.mime, data: msg.data, ctx });
@@ -325,9 +343,9 @@ export class VillageServer {
         break;
       }
       case 'rtc': {
-        if (msg.to !== c.partner) return; // signalling only between the two who agreed
         const peer = members.get(msg.to);
-        if (peer) this.#send(peer, { type: 'rtc', from: c.id, data: msg.data });
+        if (!c.call || !peer || peer === c || peer.call !== c.call) return; // signalling only within a call everyone in it agreed to
+        this.#send(peer, { type: 'rtc', from: c.id, data: msg.data });
         break;
       }
       default: break;
@@ -347,7 +365,7 @@ export class VillageServer {
     this.#hello(c, msg);
   }
 
-  #hello(c, { name, room = 'village', gender, style, pid, gid, outfit, consent }) {
+  #hello(c, { name, room = 'village', gender, style, pid, gid, outfit, consent, calls }) {
     if (c.id) return;
     if (typeof room !== 'string' || !ROOM.test(room)) return this.#send(c, { type: 'error', message: 'Geçersiz oda.' });
     const clean = String(name ?? '').trim();
@@ -368,7 +386,7 @@ export class VillageServer {
     const taken = new Set([...members.values()].map((m) => m.name.toLocaleLowerCase('tr')));
     let unique = clean, n = 2;
     while (taken.has(unique.toLocaleLowerCase('tr'))) unique = `${clean}${n++}`;
-    Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], ...lookOf(gender, style), ...outfitOf(outfit) } });
+    Object.assign(c, { id: `p${++this.#seq}`, name: unique, room, calls: Number.isInteger(calls) ? calls : 1, look: { shirt: SHIRTS[this.#seq % SHIRTS.length], ...lookOf(gender, style), ...outfitOf(outfit) } });
     this.#send(c, { type: 'welcome', id: c.id, name: c.name, look: c.look, peers: [...members.values()].map((m) => this.#public(m)), ...this.#ballsFor(room), chess: this.#table(room).state(), dama: this.#damaOf(room).state(), ice: this.iceFor(c.id) });
     this.#toRoom(c, { type: 'join', peer: this.#public(c) });
     members.set(c.id, c);
@@ -420,13 +438,32 @@ export class VillageServer {
     there.forEach((m) => this.#send(m, { type: 'zone-join', id: c.id }));
   }
 
+  /** Why `a` can't ask `b` (or take b's answer) — null when they can: one of them may be in a call of games that take more than two. */
+  #cannotCall(a, b) {
+    if (a.call && b.call) return 'busy'; // (in two different calls)
+    const group = a.call ?? b.call;
+    if (!group) return null;
+    if (![a, b, ...group].every((m) => m.calls >= 2)) return 'busy'; // an older game in it: one-to-one only
+    return group.size >= MAX_CALL ? 'full' : null;
+  }
+
+  /** `c` leaves its call; the others go on talking — the last one left alone is told the call is over. */
   #endCall(c, reason) {
-    if (!c.partner) return;
-    const peer = this.#room(c.room).get(c.partner);
-    c.partner = null;
-    if (peer) { c.lastCall = { with: peer.name, until: Date.now() + LAST_PIECE }; peer.lastCall = { with: c.name, until: Date.now() + LAST_PIECE }; }
-    this.#send(c, { type: 'call-end', with: peer?.id, reason });
-    if (peer && peer.partner === c.id) { peer.partner = null; this.#send(peer, { type: 'call-end', with: c.id, reason }); }
+    const group = c.call;
+    if (!group) return;
+    group.delete(c);
+    c.call = null;
+    const until = Date.now() + LAST_PIECE, others = [...group];
+    c.lastCall = { with: others.map((m) => m.name).join(', '), until };
+    this.#send(c, { type: 'call-end', with: others[0]?.id, reason });
+    if (others.length === 1) {
+      const [last] = others;
+      group.delete(last);
+      last.call = null;
+      last.lastCall = { with: c.name, until };
+      this.#send(last, { type: 'call-end', with: c.id, reason });
+    } else others.forEach((m) => this.#send(m, { type: 'call-leave', id: c.id, reason }));
+    this.log(`[village] call -${c.name} (${reason})`);
   }
 
   #leave(c) {
@@ -462,8 +499,8 @@ export class VillageServer {
   #dropFarCalls() {
     for (const members of this.#rooms.values()) {
       for (const c of members.values()) {
-        const p = c.partner && members.get(c.partner);
-        if (p && this.#dist(c, p) > CALL_DROP) this.#endCall(c, 'far');
+        const others = c.call ? [...c.call].filter((m) => m !== c) : [];
+        if (others.length && others.every((p) => this.#dist(c, p) > CALL_DROP)) this.#endCall(c, 'far');
       }
     }
   }

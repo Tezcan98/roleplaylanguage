@@ -106,17 +106,22 @@ export class PushToTalk {
   /** No speech-to-text here: type the sentence instead. */
   typeInstead() { this.typeBox.hidden = false; this.input.focus(); }
   /** Who is here, short (it sits in the top bar): "👥 3 · Ankara"; the details on a long press / hover. */
-  setOnline(n, name, room = '') { this.offline = false; this.#alone(n <= 1 ? 'alone' : null); this.status.textContent = `👥 ${n}${room ? ` · ${room.split(' · ')[0]}` : ''}`; this.status.title = `${name} · ${room ? `${room} · ` : ''}meydanda ${n} kişi`; }
+  setOnline(n, name, room = '') { this.offline = false; this.#here = n; this.#alone(n <= 1 && this.#elsewhere > 0 ? 'alone' : null); this.status.textContent = `👥 ${n}${room ? ` · ${room.split(' · ')[0]}` : ''}`; this.status.title = `${name} · ${room ? `${room} · ` : ''}meydanda ${n} kişi`; }
   /** Not in the square's crowd (the recording wasn't agreed to): the top bar says so, a tap asks again (`onRetry`). */
   setOffline() { this.offline = true; this.status.hidden = false; this.status.textContent = '📴 Çevrimdışı'; this.status.title = 'Meydana bağlan · connect to the square'; this.#alone('offline'); }
 
-  /** The note on the left: null | 'offline' | 'alone' (Turkish, its meaning in the player's language under it). */
+  #here = 0;
+  #elsewhere = 0;
+  /** How many are in the other cities' squares right now: alone here, the note says so only when someone is there (all empty: no note). */
+  setElsewhere(n) { this.#elsewhere = n; if (!this.offline) this.#alone(this.#here <= 1 && n > 0 ? 'alone' : null); }
+
+  /** The small note on the left: null | 'offline' | 'alone' (Turkish, its meaning in the player's language under it). */
   #alone(kind) {
     this.alone.hidden = !kind;
     if (!kind) return;
     const [tr, en] = kind === 'offline'
-      ? ['📴 Çevrimdışısın: meydanda yalnızsın. Bağlanmak için dokun.', "You're offline: alone in the square. Tap to connect."]
-      : ['👤 Bu meydanda şu an yalnızsın. Başka şehre geçmek için dokun.', "You're alone in this square right now. Tap to pick another city."];
+      ? ['📴 Çevrimdışı · bağlanmak için dokun', "You're offline: alone in the square. Tap to connect."]
+      : [`👤 Yalnızsın · başka şehirde ${this.#elsewhere} kişi`, 'Alone here · others in another city'];
     const g = gloss(en);
     this.alone.replaceChildren(tr, ...(g ? [el('small', { class: 'en-t', text: g })] : []));
   }

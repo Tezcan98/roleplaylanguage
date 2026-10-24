@@ -2733,5 +2733,12 @@
  "Watch a short video and ride 5 more minutes!": "شاهد فيديو قصيرًا واركب 5 دقائق أخرى!",
  "Watch a video: twice as many.": "شاهد فيديو: ضعف العدد.",
  "Yours for a day!": "لك ليوم واحد!",
- "Follow the golden arrow. It shows the way.": "اتبع السهم الذهبي. إنه يدلّك على الطريق."
+ "Follow the golden arrow. It shows the way.": "اتبع السهم الذهبي. إنه يدلّك على الطريق.",
+ "No voice connection to them on this network": "لا يوجد اتصال صوتي معه على هذه الشبكة",
+ "is in a full voice chat (5 at most)": "في محادثة صوتية ممتلئة (5 على الأكثر)",
+ "joined the voice chat": "انضم إلى المحادثة الصوتية",
+ "left the voice chat": "غادر المحادثة الصوتية",
+ "{name} invites you to a voice chat": "{name} يدعوك إلى محادثة صوتية",
+ "{name} wants to join your voice chat": "{name} يريد الانضمام إلى محادثتكم الصوتية",
+ "Alone here · others in another city": "وحدك هنا · آخرون في مدينة أخرى"
 }

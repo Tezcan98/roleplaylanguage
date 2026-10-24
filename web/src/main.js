@@ -280,7 +280,7 @@ const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(
 // every ad event to our server too: live numbers (AdMob's own come a day or two late; server/src/AdStats.js)
 const adEvent = (e, f, d) => {
   if (!settings.get('deviceId')) settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (as the square makes it: one per device)
-  const body = { e, f, v: appVersion, pid: settings.get('deviceId'), ...(d.valueMicros != null ? { micros: Number(d.valueMicros), cur: d.currencyCode } : {}) };
+  const body = { e, f, v: appVersion, pid: settings.get('deviceId'), ...(d.valueMicros != null ? { micros: Number(d.valueMicros), cur: d.currencyCode } : {}), ...(e === 'fail' && Number.isInteger(d.code) ? { code: d.code } : {}) };
   import('@capacitor/core').then(({ CapacitorHttp }) => CapacitorHttp.post({ url: 'https://anadoluailesi.com.tr/api/ad-event', headers: { 'Content-Type': 'application/json' }, data: body })).catch(() => {});
 };
 let appVersion = '';
@@ -426,7 +426,7 @@ effects
 // --- multiplayer village square (server: tools/serve.mjs or server/index.mjs) ---
 const villageNet = new VillageNetwork(villageServer);
 const village = new VillageMultiplayer({
-  bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st) => village.voiceState(st), relayOnly: params.has('relayonly') }),
+  bus, net: villageNet, voice: new VoiceChat({ net: villageNet, iceServers: manifest.iceServers ?? [{ urls: 'stun:stun.l.google.com:19302' }], onState: (st, id) => village.voiceState(st, id), relayOnly: params.has('relayonly') }),
   group: new GroupVoice({ net: villageNet, iceServers: manifest.iceServers, onState: (st) => village.zoneState(st) }),
   zones: { // talking zones: everyone inside hears each other
     kahve: { ...KAHVEHANE, name: 'Kahvehane' },

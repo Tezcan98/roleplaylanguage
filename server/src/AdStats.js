@@ -8,7 +8,7 @@ import { createHash } from 'node:crypto';
  * impression (needs "impression-level ad revenue" on in the AdMob account). Nothing about the ad
  * is changed — this only counts.
  *
- *   POST /api/ad-event  { e, f, micros?, cur?, v?, pid? }   from the app (web/src/services/monetization/AdMobAdProvider.js)
+ *   POST /api/ad-event  { e, f, micros?, cur?, v?, pid?, code? }  (code: AdMob's error code of a 'fail')   from the app (web/src/services/monetization/AdMobAdProvider.js)
  *   GET  /api/ad-stats?key=…  a page with today, the last days and the latest events (&format=json)
  *
  * One JSON line per event in DIR/YYYY-MM-DD.jsonl (Turkish time), the last DAYS days kept in memory.
@@ -53,6 +53,7 @@ export class AdStats {
     if (Number.isFinite(micros) && micros >= 0 && micros < 1e9) ev.micros = Math.round(micros);
     if (/^[A-Z]{3}$/.test(String(msg.cur ?? ''))) ev.cur = msg.cur;
     if (typeof msg.v === 'string') ev.v = msg.v.slice(0, 16);
+    if (msg.e === 'fail' && Number.isInteger(msg.code) && msg.code >= -1 && msg.code < 100) ev.code = msg.code;
     if (msg.pid) ev.d = createHash('sha256').update(String(msg.pid)).digest('hex').slice(0, 10);
     if (/^[A-Z]{2}$/.test(country)) ev.c = country;
     const d = day(now);
@@ -106,6 +107,8 @@ export class AdStats {
 }
 
 const NAMES = { interstitial: 'Geçiş reklamı', rewarded: 'Ödüllü video', banner: 'Banner' };
+/** AdMob's error codes (LoadAdError / AdError). */
+const CODES = { 0: 'iç hata', 1: 'geçersiz istek', 2: 'ağ hatası', 3: 'reklam yok (no fill)', 8: 'uygulama kimliği', 9: 'aracılıkta reklam yok', 11: 'zaten gösteriliyor' };
 const EV = { show: 'gösterildi', impression: 'gösterim', paid: 'gelirli gösterim', reward: 'ödül verildi', click: 'tıklandı', dismiss: 'kapatıldı', fail: 'hata' };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const REGIONS = new Intl.DisplayNames(['tr'], { type: 'region' });
@@ -141,6 +144,6 @@ ${installsBlock(s.installs)}
 <h2>Son günler</h2><table><tr><th>Gün</th><th>olay</th><th>cihaz</th><th>gösterim</th><th>ödül</th><th>tıklama</th><th>tahmini gelir</th></tr>
 ${s.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.events}</td><td>${d.devices}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'show') + cell(d, f, 'impression'), 0)}</td><td>${cell(d, 'rewarded', 'reward')}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'click'), 0)}</td><td>${esc(money(d.revenue))}</td></tr>`).join('')}</table>
 <h2>Son olaylar</h2><table><tr><th>Saat</th><th>Reklam</th><th>Olay</th><th>Gelir</th><th>Ülke</th><th>Sürüm</th><th>Cihaz</th></tr>
-${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>${EV[e.e]}</td><td>${e.micros != null ? `${(e.micros / 1e6).toFixed(5)} ${esc(e.cur ?? '')}` : ''}</td><td>${esc(country(e.c))}</td><td>${esc(e.v ?? '')}</td><td>${esc(e.d ?? '')}</td></tr>`).join('')}</table>
+${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>${EV[e.e]}${e.code != null ? ` · ${e.code} ${esc(CODES[e.code] ?? '')}` : ''}</td><td>${e.micros != null ? `${(e.micros / 1e6).toFixed(5)} ${esc(e.cur ?? '')}` : ''}</td><td>${esc(country(e.c))}</td><td>${esc(e.v ?? '')}</td><td>${esc(e.d ?? '')}</td></tr>`).join('')}</table>
 </body></html>`;
 }
