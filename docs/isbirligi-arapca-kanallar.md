@@ -98,14 +98,27 @@ Her mail aynı gövdeyi kullanır; yalnızca `{افتتاحية}` satırı kanal
 | Rslan Rihan (119K) | سلسلتكم المرتّبة حسب المستويات من الحروف حتى المحادثة مفيدة جدًّا. |
 | Walid Salahuddin (112K) | دروسكم في تعليم التركية يتابعها كثير من المتعلّمين العرب. |
 
-**Türkçesi (gövde):** Selam. {kanala özel açılış}. Biz Türk Ailem – Turkish Family oyununu yapan küçük bir ekibiz; oyun şimdi
-Google Play'de ücretsiz: Türkçeyi çocukların öğrendiği gibi, kitaptan değil günlük hayattan öğreten hikâyeli bir 3D oyun.
-• Türk bir aileyle yaşar: anne, dede, kardeş ve köylüler onunla yalnızca Türkçe konuşur; her gün yeni görevler, yeni kelimeler.
-• Kendi sesiyle konuşur: cümleleri yüksek sesle söyler, oyun anlar; karakterlerle serbestçe sohbet de edebilir.
-• Okulda adım adım dersler: öğretmen ve sınıf arkadaşlarıyla, A1'den başlayarak; öğretmen yanlışı düzeltir.
-• Her Türkçe cümlenin altında Arapça anlamı; öğrendiği her kelime deftere yazılır, pratikle tekrar eder.
-• Köy meydanı: dünyanın her yerinden gerçek öğrencilerle Türkçe konuşur, yazılı ve sesli (sesli sohbet yalnızca iki taraf
-  kabul ederse; çocukları korumak için denetlenir). Kitleniz tam da
-oyunu yaptığımız kişiler; basit bir işbirliği öneriyoruz: oyunu bir videonuzda ya da Short'ta denemeniz, karşılığında
-kanalınızı bizim videolarımızda ve hesaplarımızda tanıtmamız, ve oyunu Arap öğrenciler için iyileştirmek üzere
-görüşleriniz. Bağlantı … (Google Play'de "Turkish Family" diye arayın). Teşekkürler, cevabınızı bekliyoruz. Turkish Family ekibi.
+**Mail iki dilli gider:** Arapça metnin altına bir ayraç (`—————`) ve aynı mailin Türkçesi. Türkçedeki `{açılış}`, tablodaki Arapça açılışın Türkçesidir.
+
+> Merhaba,
+>
+> {açılış}
+>
+> Biz **Türk Ailem – Turkish Family** oyununu geliştiren küçük bir ekibiz; oyun şimdi Google Play'de ücretsiz. Türkçeyi
+> çocukların öğrendiği gibi, kitaptan değil günlük hayattan öğreten hikâyeli bir 3D oyun:
+>
+> - **Türk bir aileyle yaşar:** anne, dede, kardeş ve köylüler onunla yalnızca Türkçe konuşur; her gün yeni görevler, yeni kelimeler.
+> - **Kendi sesiyle konuşur:** cümleleri yüksek sesle söyler, oyun anlar; karakterlerle serbestçe sohbet de edebilir.
+> - **Okulda adım adım dersler:** öğretmen ve sınıf arkadaşlarıyla, A1'den başlayarak; öğretmen yanlışı düzeltir.
+> - **Her Türkçe cümlenin altında Arapça anlamı;** öğrendiği her kelime deftere yazılır, pratikle tekrar eder.
+> - **Köy meydanı:** dünyanın her yerinden gerçek öğrencilerle yazılı ve sesli Türkçe konuşur (sesli sohbet yalnızca iki
+>   taraf kabul ederse açılır; çocukları korumak için denetlenir).
+>
+> Kitleniz tam da oyunu yaptığımız kişiler; bu yüzden basit bir işbirliği öneriyoruz: oyunu bir videonuzda ya da bir
+> Shorts'ta denemeniz, karşılığında kanalınızı bizim videolarımızda ve hesaplarımızda tanıtmamız. Oyunu Arap öğrenciler
+> için iyileştirmek üzere görüşlerinizi de çok isteriz.
+>
+> Oyun: https://play.google.com/store/apps/details?id=com.anadolu (Google Play'de "Turkish Family" diye aratabilirsiniz)
+>
+> Vakit ayırdığınız için teşekkürler, cevabınızı bekliyoruz.
+> Turkish Family ekibi — info@sorexdigital.com

@@ -98,7 +98,7 @@ const PROMO_CSS = `
     background:rgba(27,36,64,.78);color:#fff;border-radius:18px;padding:14px 30px 12px;font-family:Fredoka,system-ui,sans-serif;
     box-shadow:0 8px 30px rgba(0,0,0,.25);animation:promoIn .45s ease-out both;max-width:80vw}
   .promo-cap.bottom{top:auto;bottom:4vh}
-  body.short .promo-cap{top:8vh;left:5vw;right:5vw;transform:none;max-width:none;padding:16px 20px 14px;border-radius:22px;animation-name:promoCard}body.short .hud,body.short .net-status,body.short .minimap-wrap{visibility:hidden!important}body.short #toasts{top:26vh!important}body.short .promo-cap b{font-size:40px}body.short .promo-cap small{font-size:20px}
+  body.short .promo-cap{top:8vh;left:5vw;right:5vw;transform:none;max-width:none;padding:16px 20px 14px;border-radius:22px;animation-name:promoCard}body.short .hud,body.short .net-status,body.short .minimap-wrap{visibility:hidden!important}body.short #toasts{top:26vh!important}body.short #dlg{max-height:44vh}body.short #dlg .words,body.short .classroom .words{display:none!important}body.short .classroom{height:42vh!important}body.short .promo-cap b{font-size:40px}body.short .promo-cap small{font-size:20px}
   body.short .promo-card h1{font-size:54px}body.short .promo-card p{font-size:30px;padding:0 20px}body.short .promo-card img{width:170px;height:170px}
   .promo-badges{display:flex;gap:12px;justify-content:center;margin-top:16px}.promo-badges span{background:#000;color:#fff;border:2px solid #fff6;border-radius:12px;padding:10px 16px;font:600 20px system-ui,sans-serif}
   .promo-cap.side{left:3vw;top:38vh;transform:none;max-width:21vw;text-align:left;animation-name:promoSide}.promo-cap.side b{font-size:32px}.promo-cap.side small{font-size:18px}
