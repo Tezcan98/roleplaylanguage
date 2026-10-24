@@ -20,6 +20,7 @@ import { EPISODES } from './series.mjs';
 
 const out = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'promo-out';
 const only = process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',');
+const MUSIC = process.argv.find((a) => a.startsWith('--music='))?.slice(8) ?? 'bahce'; // --music=okul: the bed under a Short (assets/audio/<name>.mp3; okul is the liveliest)
 const JOIN = process.argv.includes('--join'); // --join: only join the scene clips already recorded (after re-recording one with --only)
 const CLEAN = process.argv.includes('--clean'); // --clean: no interface, no captions (a background loop for the website)
 const opt = (k) => process.argv.find((a) => a.startsWith(`--${k}=`))?.slice(k.length + 3);
@@ -318,7 +319,7 @@ async function kidsAudio(video, clips, fade) {
   const lang = LANG ?? 'tr', lines = (EPISODE ? EPISODES[EPISODE].vo : KIDS_VO)[lang], dir = join(out, `vo-${lang}`); mkdirSync(dir, { recursive: true });
   const total = clips.reduce((n, c) => n + c.seconds, 0) - fade * (clips.length - 1);
   const starts = []; let t = 0; clips.forEach((c) => { starts.push(t); t += c.seconds - fade; });
-  const music = new URL('../../assets/audio/bahce.mp3', import.meta.url).pathname;
+  const music = new URL(`../../assets/audio/${MUSIC}.mp3`, import.meta.url).pathname;
   const bed = `[1:a]atrim=0:${total.toFixed(2)},afade=t=in:d=0.4,afade=t=out:st=${(total - 1.2).toFixed(2)}:d=1.2,volume=0.28[m]`;
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, '-stream_loop', '-1', '-i', music, '-filter_complex', bed, '-map', '0:v', '-map', '[m]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-t', total.toFixed(2), '-movflags', '+faststart', video.replace(/\.mp4$/, '-muzik.mp4')]);
   writeFileSync(video.replace(/\.mp4$/, '-seslendirme.txt'), `${lines.map((l, i) => `${i + 1}. ${starts[i].toFixed(1)} sn – ${(i < lines.length - 1 ? starts[i + 1] : total).toFixed(1)} sn: ${l}`).join('\n')}\n\nElevenLabs: her satırı ayrı dosya yap (1.mp3 … ${lines.length}.mp3), sonra: node tools/promo/record.mjs <klasör> ${EPISODE ? `--episode=${EPISODE}` : '--kids'} --lang=${lang} --join --vo=<mp3 klasörü>\n`);
@@ -333,7 +334,8 @@ async function kidsAudio(video, clips, fade) {
   const len = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f]).toString());
   const parts = files.map((f, i) => { const room = (i < files.length - 1 ? starts[i + 1] : total) - starts[i] - 0.35; return { f, at: starts[i] + 0.2, tempo: Math.min(1.3, Math.max(1, len(f) / room)) }; });
   const vo = parts.map((p, i) => `[${i + 2}:a]atempo=${p.tempo.toFixed(3)},adelay=${Math.round(p.at * 1000)}|${Math.round(p.at * 1000)},volume=1.5[v${i}]`).join(';');
-  const mix = `${bed.replace('volume=0.28', 'volume=0.16')};${vo};[m]${parts.map((_, i) => `[v${i}]`).join('')}amix=inputs=${parts.length + 1}:normalize=0,alimiter=limit=0.95[a]`;
+  // the music stays up between the lines and dips under the voice (side-chain), so a Short never goes quiet
+  const mix = `${bed.replace('volume=0.28', 'volume=0.36')};${vo};${parts.map((_, i) => `[v${i}]`).join('')}amix=inputs=${parts.length}:normalize=0,asplit=2[vs][vk];[m][vk]sidechaincompress=threshold=0.02:ratio=8:attack=15:release=350[md];[md][vs]amix=inputs=2:normalize=0,alimiter=limit=0.95[a]`;
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', video, '-stream_loop', '-1', '-i', music, ...parts.flatMap((p) => ['-i', p.f]), '-filter_complex', mix, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', '-t', total.toFixed(2), '-movflags', '+faststart', video.replace(/\.mp4$/, voDir ? '-elevenlabs.mp4' : '-ses.mp4')]);
   console.log(`→ ${video.replace(/\.mp4$/, '-muzik.mp4')} · ${video.replace(/\.mp4$/, voDir ? '-elevenlabs.mp4' : '-ses.mp4')}`);
 }
