@@ -7,9 +7,9 @@ import { start, fixed, showLabels } from './kids-scenes.mjs';
  * ElevenLabs files with --vo=<dir>).
  */
 const END = {
-  tr: { name: 'Türk Ailem', line: 'Dil gelişim ve sosyalleşme oyunu', free: 'Ücretsiz' },
-  en: { name: 'My Turkish Family', line: 'Play, speak, learn Turkish', free: 'Free' },
-  ar: { name: 'عائلتي التركية', line: 'العب، تكلّم، تعلّم التركية', free: 'مجانًا' },
+  tr: { name: 'Türk Ailem', line: 'Dil gelişim ve sosyalleşme oyunu', free: 'Ücretsiz', now: 'Şimdi Google Play’de', search: 'Türk Ailem' },
+  en: { name: 'My Turkish Family', line: 'Play, speak, learn Turkish', free: 'Free', now: 'On Google Play now', search: 'Turkish Family' },
+  ar: { name: 'عائلتي التركية', line: 'العب، تكلّم، تعلّم التركية', free: 'مجانًا', now: 'متوفّرة الآن على Google Play', search: 'ابحث عن: Turkish Family' },
 };
 const endCard = (name) => ({
   name, seconds: 3.6,
@@ -253,12 +253,13 @@ EPISODES.tanitim = {
       },
       cleanup: async () => { for (const p of [crowd.me, ...Object.values(crowd.pages)]) await p.context().close(); },
     },
-    card('tLogo', 3.6, (e) => `<img src="assets/icons/icon-512.png" alt=""><h1 dir="auto">${e.name}</h1><p dir="auto">${e.line}</p><div class="promo-badges"><span>▶ Google Play</span><span class="free">${e.free}</span></div>`),
+    // (on the store now, not "soon": the name to search for on Google Play is on the card)
+    card('tLogo', 3.6, (e) => `<img src="assets/icons/icon-512.png" alt=""><h1 dir="auto">${e.name}</h1><p dir="auto">${e.now}</p><div class="promo-badges"><span dir="auto">▶ ${e.search}</span><span class="free">${e.free}</span></div>`),
     card('tFollow', 3.2, (e, lang) => `<img src="assets/icons/icon-512.png" alt=""><h1 dir="auto">${(FOLLOW[lang] ?? FOLLOW.tr)[0]}</h1><p dir="auto">${(FOLLOW[lang] ?? FOLLOW.tr)[1]}</p><div class="promo-badges"><span class="free">🔔 ${e.name}</span></div>`),
   ],
   vo: {
-    tr: ['Çocuğunuz cümleler kurarak öğrenir,', 'okulda konuşur,', 'Meydanda arkadaşlarıyla oynar, Türkçe konuşur.', 'Türk Ailem. Google Play’de ücretsiz.', 'Takip et, yeni videoları kaçırma.'],
-    en: ['Your child builds sentences,', 'talks at school,', 'They play with friends in the square, speaking Turkish.', 'My Turkish Family. Free on Google Play.', 'Follow us, and don’t miss the next videos.'],
-    ar: ['طفلك يبني الجمل،', 'ويتحدّث في المدرسة،', 'ويلعب مع أصدقائه في الساحة ويتحدّث بالتركية.', 'عائلتي التركية. مجانًا على غوغل بلاي.', 'تابعنا ولا تفوّت الفيديوهات القادمة.'],
+    tr: ['Çocuğunuz cümleler kurarak öğrenir,', 'okulda konuşur,', 'Meydanda arkadaşlarıyla oynar, Türkçe konuşur.', 'Türk Ailem, şimdi Google Play’de ücretsiz.', 'Takip et, yeni videoları kaçırma.'],
+    en: ['Your child builds sentences,', 'talks at school,', 'They play with friends in the square, speaking Turkish.', 'Turkish Family, free on Google Play now.', 'Follow us, and don’t miss the next videos.'],
+    ar: ['طفلك يبني الجمل،', 'ويتحدّث في المدرسة،', 'ويلعب مع أصدقائه في الساحة ويتحدّث بالتركية.', 'عائلتي التركية، متوفّرة الآن مجانًا على غوغل بلاي.', 'تابعنا ولا تفوّت الفيديوهات القادمة.'],
   },
 };
