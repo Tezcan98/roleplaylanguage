@@ -55,6 +55,7 @@ import { CreditWallet } from './services/monetization/CreditWallet.js';
 import { MockAdProvider } from './services/monetization/AdProvider.js';
 import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder, updateGate } from './platform/native.js';
 import { shareGame } from './platform/share.js';
+import { HouseBanner } from './ui/HouseBanner.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
 import { SettingsPanel } from './ui/SettingsPanel.js';
@@ -639,6 +640,13 @@ const shop = new ShopView(host, {
   // new colours: saved, then the game opens again with them (and goes on where it was)
   onOutfit: () => { playerHd(); shop.render(); if (village.net.connected) { village.leave(); village.join(); } }, // others see it after a quick reconnect
 });
+// AdMob has no banner to give (no fill): our own offers in its place until it has one (HouseBanner)
+const house = new HouseBanner(host, [
+  { icon: '🚫', tr: 'Reklamsız oyna', en: 'Play without ads', run: () => shop.open('wear') },
+  { icon: '▶️', tr: 'Video izle, kredi kazan', en: 'Watch a video, earn credits', run: () => shop.open('gold') },
+  { icon: '📤', tr: 'Paylaş, kredi kazan', en: 'Share the game, earn credits', run: () => shop.open('gold') },
+]);
+ads.onHouse = (on) => house.set(on && !wallet.adFree);
 const dailyView = new DailyRewardView(host, modes);
 function takeDaily() {
   const d = wallet.takeDaily();

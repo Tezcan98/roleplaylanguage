@@ -426,6 +426,12 @@ html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
 .fs-btn{position:absolute;top:10px;right:10px}
 .fs-tip{font-size:13px;margin:0;color:var(--muted)}
 .main-menu .card{position:relative}
+.house-banner{position:fixed;left:50%;bottom:env(safe-area-inset-bottom,0px);transform:translateX(-50%);z-index:30;width:min(468px,100vw);height:56px;display:flex;align-items:center;gap:10px;padding:0 12px;background:linear-gradient(90deg,#2A1E15,#4A3322);color:var(--parch);border:0;border-top:2px solid var(--gold);font:800 15px/1.2 Nunito,sans-serif;text-align:left;cursor:pointer;pointer-events:auto}
+.house-banner[hidden]{display:none}
+.house-banner .hb-icon{font-size:24px}
+.house-banner>span:nth-child(2){flex:1;min-width:0}
+.house-banner small{display:block;font-weight:700;font-size:11px;color:#D9C7A3}
+.house-banner .hb-go{font-size:26px;color:var(--gold)}
 body.banner-on .overlay.main-menu{padding-bottom:calc(env(safe-area-inset-bottom,0px) + var(--banner-h,64px) + 16px)} /* a banner ad at the bottom: the menu stays above it with a gap */
 body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesson #toasts{display:none!important}
 @media (orientation:landscape) and (max-height:520px){.classroom .cls-q{font-size:17px}.classroom .cls-main{padding:8px;gap:5px}}
