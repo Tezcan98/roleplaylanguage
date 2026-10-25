@@ -1,4 +1,4 @@
-import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents, RewardAdPluginEvents } from '@capacitor-community/admob';
+import { AdMob, MaxAdContentRating, BannerAdSize, BannerAdPosition, BannerAdPluginEvents, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { AdProvider } from './AdProvider.js';
 
 // Google's test units: used until the real ones are in assets/manifest.json → "admob"
@@ -32,9 +32,11 @@ export class AdMobAdProvider extends AdProvider {
 
   #init() {
     this.ready ??= (async () => {
-      // any ad AdMob has (no child-directed treatment, no content-rating limit: with those, few ads were left to fill
-      // the requests, in Pakistan above all); personalised where the player agreed (the consent form below, EU / UK)
-      await AdMob.initialize({ initializeForTesting: Object.values(this.testing).some(Boolean), tagForChildDirectedTreatment: false, tagForUnderAgeOfConsent: false });
+      // not child-directed (with it few ads were left to fill the requests, in Pakistan above all), but nothing past
+      // "parental guidance": no mature or suggestive ads. Alcohol, gambling, dating and the like are blocked in the AdMob
+      // console (Blocking controls → Sensitive / General categories: docs/reklam-engelleme.md). Personalised where the
+      // player agreed (the consent form below, EU / UK).
+      await AdMob.initialize({ initializeForTesting: Object.values(this.testing).some(Boolean), tagForChildDirectedTreatment: false, tagForUnderAgeOfConsent: false, maxAdContentRating: MaxAdContentRating.ParentalGuidance });
       this.#listen();
       try {
         const info = await AdMob.requestConsentInfo({ tagForUnderAgeOfConsent: false });
