@@ -10,6 +10,8 @@ import { gloss } from '../i18n/Gloss.js';
 const LOCAL_SCORES = 'chessScores';
 const loadScores = () => { try { return JSON.parse(localStorage.getItem(LOCAL_SCORES) ?? '{}'); } catch { return {}; } };
 const MIN_MOVES = 6; // walking away from the board (resign) counts only after a few moves
+const ASK_AWAY = 14;  // metres from the board's middle (it is 8.8 m across): "Maçı bırakıyor musun?"
+const GIVE_UP = 26;   // …and this far (or off the square altogether): the game is given up
 
 /** Turkish piece names (taught while playing). */
 export const PIECE_WORDS = { k: ['şah', 'king'], q: ['vezir', 'queen'], r: ['kale', 'rook'], b: ['fil', 'bishop'], n: ['at', 'knight'], p: ['piyon', 'pawn'] };
@@ -37,7 +39,7 @@ function dedeMove(g) {
  * ui/ChessView.js: it comes up when your game starts, the chess bar opens it again), or on the
  * square itself — on your turn step next to your piece, take it (action key), carry it to a lit
  * square and put it down. Touching a piece while not seated asks Dede for that
- * colour. Walking away never costs you your seat. The 3D pieces follow every move, so
+ * colour. Walking away from a game of mine: asked whether I leave it, further on it is given up. The 3D pieces follow every move, so
  * people walking by can watch. Dede announces what happens
  * (`onSay`) and the score board behind the board is kept up to date.
  */
@@ -53,14 +55,18 @@ export class ChessGame {
   #carry = null;  // the piece in my hands: { from, mesh, legal }
   #lights = [];
 
-  constructor({ host, mf, square, net, vocab, toasts, player, world, view = null, onSay = () => {}, onAskDede = () => {} }) {
+  #asked = false;  // "leaving the game?" asked on this walk away (again once back near the board)
+  #gaveUp = false; // given up by walking off: once per game
+
+  constructor({ host, mf, square, net, vocab, toasts, player, world, view = null, choice = null, onSay = () => {}, onAskDede = () => {} }) {
+    this.choice = choice; // ChoiceCard: "Maçı bırakıyor musun?"
     Object.assign(this, { mf, square, net, vocab, toasts, player, world, view, onSay, onAskDede });
     if (view) { view.onMove = (from, to) => { this.#dropCarry(); this.#move(from, to); }; view.onToggle = () => this.#paintBar(); }
     // while you play: your colour, whose turn it is (and Dede's 10 minutes); a tap opens the board on screen
     this.bar = el('button', { class: 'pill chess-bar', attrs: { type: 'button', 'aria-live': 'polite' }, on: { click: () => this.view?.open() } });
     this.bar.hidden = true;
     host.append(this.bar);
-    setInterval(() => this.#paintBar(), 500);
+    setInterval(() => { this.#paintBar(); this.#watchAway(); }, 500);
     this.online = false;
     this.state = null;
     this.#resetLocal();
@@ -318,6 +324,31 @@ export class ChessGame {
   squareAt(pos) {
     const file = Math.round((pos.x - CHESS.cx) / CHESS.size + 3.5), rank = Math.round(3.5 - (pos.z - CHESS.cz) / CHESS.size);
     return file >= 0 && file < 8 && rank >= 0 && rank < 8 ? `${'abcdefgh'[file]}${rank + 1}` : null;
+  }
+
+  /** In a game of mine, walking away from the board: asked first, far away (or off the square) it is given up. */
+  #watchAway() {
+    if (!this.myColor || this.state?.phase !== 'playing' || !this.player) { this.#asked = false; this.#gaveUp = false; return; }
+    if (this.#gaveUp) return;
+    const p = this.player.position;
+    const d = this.world?.current?.id === 'village' ? Math.hypot(p.x - CHESS.cx, p.z - CHESS.cz) : Infinity;
+    if (d > GIVE_UP) {
+      this.#gaveUp = true;
+      this.toasts?.show('Tahtadan çok uzaklaştın: maçı pes etmiş sayıldın.', gloss('You went too far from the board: you gave up the game.'));
+      this.resign();
+    } else if (d < ASK_AWAY - 3) this.#asked = false; // back by the board: asked again next time
+    else if (d > ASK_AWAY && !this.#asked) { this.#asked = true; this.#askAway(); }
+  }
+
+  async #askAway() {
+    if (!this.choice) return;
+    const stay = await this.choice.ask({
+      title: 'Maçı bırakıyor musun?',
+      text: 'Tahtadan uzaklaşıyorsun. Biraz daha uzaklaşırsan pes etmiş sayılırsın.',
+      en: 'You are walking away from the board. A little further and you give up the game.',
+      yes: 'Tahtaya dönüyorum', no: 'Pes et',
+    });
+    if (!stay && this.myColor && this.state?.phase === 'playing' && !this.#gaveUp) { this.#gaveUp = true; this.resign(); }
   }
 
   /** Interaction provider: what the action key does on the board right now. */

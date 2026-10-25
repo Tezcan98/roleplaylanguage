@@ -473,7 +473,7 @@ playerHd();
 
 // --- giant chess on the square: online the server's board (İsmail Dede runs it), offline Dede plays you ---
 const chess = new ChessGame({
-  host, mf, square: world.get('village'), net: villageNet, vocab, toasts, player, world, view: new ChessView(host, { modes }),
+  host, mf, square: world.get('village'), net: villageNet, vocab, toasts, player, world, view: new ChessView(host, { modes }), choice: new ChoiceCard(host, modes), // ("Maçı bırakıyor musun?")
   // İsmail Dede announces the games: a bubble over his head (no voice)
   onSay: (line) => {
     const dede = cast.get('ismail');
