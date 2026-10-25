@@ -100,7 +100,7 @@ const PROMO_CSS = `
     box-shadow:0 8px 30px rgba(0,0,0,.25);animation:promoIn .45s ease-out both;max-width:80vw}
   .promo-cap.bottom{top:auto;bottom:4vh}
   body.short .promo-cap{top:8vh;left:5vw;right:5vw;transform:none;max-width:none;padding:16px 20px 14px;border-radius:22px;animation-name:promoCard}body.short .hud,body.short .net-status,body.short .minimap-wrap{visibility:hidden!important}body.short #toasts{top:26vh!important}body.short #dlg{max-height:44vh}body.short #dlg .words,body.short .classroom .words{display:none!important}body.short .classroom{height:42vh!important}body.short .promo-cap b{font-size:40px}body.short .promo-cap small{font-size:20px}
-  body.short.lang-ur .promo-cap b,body.short.lang-ur .promo-card h1,body.short.lang-ur .promo-card p,body.short.lang-ur .promo-badges span{font-family:'Noto Nastaliq Urdu',serif;line-height:1.9}body.short.lang-ur .promo-cap b{font-size:34px}
+  body.short.lang-ur .promo-cap b,body.short.lang-ur .promo-card h1,body.short.lang-ur .promo-card p,body.short.lang-ur .promo-badges span{font-family:'Noto Nastaliq Urdu',serif;line-height:1.9}body.short.lang-ur .promo-cap{line-height:2.05}body.short.lang-ur .promo-cap b{display:block;font-size:32px;line-height:2.05}
   body.short .promo-card h1{font-size:54px}body.short .promo-card p{font-size:30px;padding:0 20px}body.short .promo-card img{width:170px;height:170px}
   .promo-badges{display:flex;gap:12px;justify-content:center;margin-top:16px}.promo-badges span{background:#000;color:#fff;border:2px solid #fff6;border-radius:12px;padding:10px 16px;font:600 20px system-ui,sans-serif}
   .promo-cap.side{left:3vw;top:38vh;transform:none;max-width:21vw;text-align:left;animation-name:promoSide}.promo-cap.side b{font-size:32px}.promo-cap.side small{font-size:18px}
@@ -114,7 +114,7 @@ const PROMO_CSS = `
   .promo-card p{margin:0;font-size:30px}.promo-card small{font-size:22px;opacity:.85}
   .promo-card .badge{margin-top:10px;background:#FFC845;color:#1B2440;border-radius:999px;padding:10px 26px;font-size:26px;font-weight:600}
   .promo-hide #joy,.promo-hide .help-btn,.promo-hide #quest,.promo-hide #toasts,.promo-hide .ptt-wrap,.promo-hide #shot,.promo-hide #act,.promo-hide #act-more{visibility:hidden!important}
-  body.short .promo-cap.kids{top:7vh;padding:18px 22px 16px;background:rgba(20,28,52,.82);border:2px solid rgba(255,200,69,.55)}body.short .promo-cap.kids b{font-size:44px;line-height:1.14}
+  body.short .promo-cap.kids{top:7vh;padding:18px 22px 16px;background:rgba(20,28,52,.82);border:2px solid rgba(255,200,69,.55)}body.short .promo-cap.kids b{font-size:44px;line-height:1.14}body.short.lang-ur .promo-cap.kids b{font-size:32px;line-height:2.05} /* (Nastaliq: tall, lines apart) */
   .promo-badges .free{background:#FFC845;color:#1B2440;border-color:#FFC845}
   @keyframes promoIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1}}
   .promo-card{animation-name:promoCard}@keyframes promoCard{from{opacity:0}to{opacity:1}}`;
