@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Türk Ailem · Gizlilik Politikası</title>
+<meta name="description" content="Türk Ailem (Turkish Family, com.anadolu) gizlilik politikası — nsSoft">
+<style>
+  body{font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;background:#FBF6EC;color:#2A1E15;margin:0}
+  main{max-width:760px;margin:0 auto;padding:24px 18px 56px}
+  h1{font-size:26px}h2{font-size:19px;margin-top:1.8em}a{color:#9A5B12}
+  code{background:#F1E6D2;padding:1px 4px;border-radius:4px}
+  blockquote{margin:1em 0;padding:8px 14px;background:#fff;border-left:4px solid #E0B04A}
+  table{border-collapse:collapse}td,th{border:1px solid #E3D6C0;padding:4px 8px}
+</style>
+</head><body><main>
+<!-- generated from docs/store/privacy-policy.md -->
+<h1>Türk Ailem — Gizlilik Politikası</h1>
+<p><strong>Son güncelleme:</strong> 26 Ekim 2026</p>
+<p>Türk Ailem (Google Play'de <em>Turkish Family: Learn Turkish</em>, paket <code>com.anadolu</code>), <strong>nsSoft</strong> tarafından geliştirilen; Türkçeyi hikâye ve 3D köy yaşamı içinde, konuşarak öğretmeyi amaçlayan bir dil gelişimi ve sosyalleşme oyunudur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.</p>
+<h2>1. Mikrofon ve konuşma</h2>
+<p>Uygulama mikrofonu üç özellik için kullanabilir:</p>
+<ul>
+<li><strong>Konuşma tanıma:</strong> Oyuncunun söylediği Türkçe cümleyi oyundaki konuşma etkinliklerinde değerlendirmek için kullanılır.</li>
+<li><strong>Bas-konuş:</strong> Köy meydanında konuş düğmesine basılı tutulduğunda söylenen cümle yazıya çevrilir ve herkesin göreceği bir konuşma balonu olarak gösterilir.</li>
+<li><strong>Sesli sohbet:</strong> Köy meydanında iki oyuncu birbirinin isteğini kabul ettiğinde (sohbetteki biri kabul ederse en çok 5 kişiye kadar başkaları da katılabilir) ya da kahvehane, cami avlusu gibi toplu konuşma alanlarında konuş düğmesine basılı tutulduğunda sesli iletişim kurulur.</li>
+</ul>
+<p>Hikâyedeki konuşma etkinliklerinde söylenenler kaydedilmez. Android'de konuşma tanıma için cihazın yerel konuşma tanıma servisi kullanılır. İsteğe bağlı bir uzak STT sunucusu yapılandırılırsa ses verisi tanıma amacıyla bu sunucuya geçici olarak gönderilebilir; bu sunucunun işletmecisi veriyi saklamayacak şekilde yapılandırılmalıdır.</p>
+<p>Sesli sohbet WebRTC ile oyuncular arasında kurulur. <strong>Güvenlik için, oyuncunun mikrofonu sesli sohbette ya da (bilgisayardaki tarayıcıda) meydanda bas-konuş ile konuşurken açıkken kendi sesi kısa parçalar hâlinde oyunun sunucusuna da gönderilir ve güvenlik kaydında saklanır</strong> (bkz. 2c). Telefonda bas-konuşun sesi yalnızca telefonun konuşma tanıma servisine gider; oyunun sunucusunda bu sesin kendisi değil, yazıya çevrilen metni saklanır. İçinde konuşma olmayan (sessiz) parçalar gönderilmez ve saklanmaz. Bu bilgi meydana ilk girişteki onay kartında verilir ve onay alınır (bkz. 2c).</p>
+<h2>2. Kullanıcı adı ve cihaz kimliği</h2>
+<p>Köy meydanında çok oyunculu bağlantı için seçtiğiniz kullanıcı adı diğer oyunculara gösterilir. Kullanıcı adı cihazınızda da ayarlanabilir.</p>
+<p>Bağlantı koptuğunda yeniden bağlanan oyuncunun eski oturumunu kapatabilmek için uygulama, cihazda rastgele üretilen bir <strong>cihaz kimliğini</strong> sunucuya gönderir. Bu kimlik reklam kimliği değildir, kişiyi tanımlamaz ve yalnızca bağlantı süresince kullanılır.</p>
+<p>Dev satranç tahtasındaki <strong>skor tablosu</strong> için kullanıcı adı ile oynanan, kazanılan ve berabere biten oyun sayıları sunucuda saklanır ve meydandaki herkese gösterilir.</p>
+<h2>2a. Karakterlerle serbest sohbet (yapay zekâ)</h2>
+<p>Oyundaki bazı karakterlerle serbest sohbet edilebilir. Bu sohbette yazdığınız ya da söylediğiniz (yazıya çevrilmiş) mesaj, sohbetin son birkaç mesajı, seçtiğiniz anlam dili ve kullanıcı adınız, oyunun sunucusu üzerinden <strong>Google Gemini</strong> hizmetine gönderilir ve karakterin cevabı oradan gelir. Mesaj ve karakterin cevabı, 2c'de anlatılan güvenlik kaydına şifreli olarak yazılır (90 gün); başka bir amaçla kullanılmaz. Google'ın Gemini API kullanım koşulları ve gizlilik politikası ayrıca geçerlidir. Sohbette kişisel bilgilerinizi paylaşmamanızı öneririz.</p>
+<h2>2b. Karakter sesleri</h2>
+<p>Karakterlerin sabit repliklerinin sesi oyunun sunucusunda üretilir: erkek sesleri sunucudaki açık kaynaklı Piper ile, kadın sesleri Google Gemini metinden sese hizmetiyle. Bunun için sunucuya yalnızca söylenecek cümlenin metni gönderilir; üretilen ses dosyası herkes için aynı olduğundan sunucuda saklanır ve tekrar kullanılır. Kişisel veri içermez.</p>
+<h2>2c. Güvenlik kaydı (90 gün)</h2>
+<p>Oyuncuları, özellikle çocukları korumak için <strong>köy meydanındaki yazılı konuşmalar</strong> (konuşma balonları) ve <strong>karakterlerle serbest sohbetteki mesajlar</strong> sunucuda <strong>şifreli olarak 90 gün</strong>, <strong>sesli sohbetler ve bas-konuş</strong> (birebir sohbet, toplu konuşma alanları ve meydanda bas-konuş; her oyuncunun mikrofonu açıkken kendi sesi) ise <strong>şifreli olarak 48 saat</strong> saklanır; sonra otomatik olarak silinir. Kayıtta mesajın metni ya da ses parçası (karakter sohbetinde karakterin cevabı da), zamanı, oda, kiminle konuşulduğu, kullanıcı adı, cihaz kimliği, varsa Google Play Games oyuncu kimliği ve IP adresi bulunur.</p>
+<ul>
+<li>Kayıtlar, yalnızca yetkili güvenlik görevlisinde bulunan bir anahtarla açılabilecek şekilde şifrelenir; oyunun sunucusu kayıtları yazabilir ama okuyamaz.</li>
+<li>Kayıtlar yalnızca zararlı veya tehlikeli konuşmaları (taciz, zorbalık, tehdit, uygunsuz içerik, kişisel bilgi isteme vb.) incelemek, gerekirse ilgili hesabı engellemek ve yasal bir talep olduğunda yetkili makamlarla paylaşmak için kullanılır.</li>
+<li><strong>Onay:</strong> Köy meydanına (çok oyunculu alana) ilk girişte bu kayıtlar ve nasıl işlendikleri bir kartta anlatılır; oyuncu "Okudum, kayıt tutulmasını ve bu şekilde işlenmesini kabul ediyorum" kutusunu işaretleyip kabul etmeden meydana bağlanamaz (kabul etmezse oyunu çevrimdışı oynamaya devam eder). Onay cihazda saklanır ve kanıt olarak tarihiyle birlikte güvenlik kaydına yazılır. 18 yaşından küçük oyunculardan metni anne-babalarıyla okumaları istenir.</li>
+<li><strong>Şikayet:</strong> Oyuncular rahatsız oldukları birini oyun içindeki 🚩 düğmesiyle şikayet edebilir. Bu durumda şikayet edilen oyuncunun son 10 dakikada yazdıkları ve sesli söyledikleri (sunucunun belleğinde yalnızca 10 dakika tutulur) yazıya dökülüp değerlendirilmek üzere <strong>Google Gemini</strong> hizmetine gönderilir. Sonuç (döküm, karar, gerekçe) şikayet kaydıyla birlikte sunucuda saklanır ve bir yetkiliye iletilir; engelleme kararını yetkili verir. Aynı oyuncu kısa sürede birden çok kişi tarafından şikayet edilirse, ses kayıtları incelenmek üzere yetkiliye e-postayla gönderilebilir. Sürekli asılsız şikayette bulunan oyuncu bir süre şikayet edemez. Şikayet edilen oyuncuya kimin şikayet ettiği söylenmez.</li>
+<li><strong>Engelleme:</strong> Engellenen oyuncunun cihaz kimliği, varsa Play Games kimliği ve kullanıcı adı, engel süresince sunucuda tutulur; engellenen oyuncu diğer oyuncularla etkileşime giremez.</li>
+<li>Oyun içinde meydana ilk girişte ve sohbet kutusunda bu kayıt hakkında bilgi verilir.</li>
+</ul>
+<h2>2d. Google Play Games girişi (Android)</h2>
+<p>Android sürümünde oyun, Google Play Games'e otomatik olarak giriş yapmayı dener. Giriş yapılırsa yalnızca <strong>Play Games oyuncu kimliği</strong> (ve görünen ad) alınır ve güvenlik kaydında kullanılır. Oyun e-posta adresinizi veya Google hesap bilginizi görmez. Play Games'e giriş yapmadan da oynayabilirsiniz.</p>
+<h2>3. Oyun ilerlemesi ve ayarlar</h2>
+<p>Oyun ilerlemesi, kelime bilgisi, kredi bakiyesi ve bazı ayarlar cihazdaki <strong>localStorage</strong> alanında tutulur. Bunlar oyunun kendi sunucusuna ilerleme kaydı olarak gönderilmez.</p>
+<h2>3a. Anonim oyun istatistikleri</h2>
+<p>Oyunu geliştirmek için oyunun sunucusu <strong>anonim kullanım sayıları</strong> toplar: oyunun kaç cihazda açıldığı, hangi bölüme kadar gidildiği, ne kadar süre oynandığı ve hangi yerlerin, karakterlerin ve etkinliklerin kaç kez kullanıldığı (ör. "annenle konuşma: 3", "köy meydanında yazılan cümle sayısı: 5"). Bu sayılar <strong>yalnızca sayıdır</strong>: kimin ne yazdığı ya da söylediği, kullanıcı adı, ad, konum, rehber ya da reklam kimliği bu kayda <strong>girmez</strong>. Cihazlar, oyunun kendi ürettiği rastgele cihaz kimliğinin kısaltılmış bir özetiyle ayırt edilir (reklam kimliği değildir, kişiyi tanımlamaz). Günlük sayılar sunucuda 30 gün ayrıntılı tutulur; cihaz başına küçük bir özet (ilk ve son gün, en ileri bölüm, toplam süre) süresiz saklanır ve istek üzerine silinir (bkz. 9. İletişim). Reklam sayıları ayrıca ve yine anonim olarak aynı şekilde sayılır. Bu veriler kimseyle paylaşılmaz ve reklam amacıyla kullanılmaz.</p>
+<h2>4. Reklamlar, satın almalar ve bildirimler</h2>
+<ul>
+<li><strong>Reklamlar:</strong> Kredi kazanmak için isteğe bağlı <strong>ödüllü video</strong> izlenebilir; hikâye modunda günler arasında <strong>tam ekran reklam</strong> gösterilir (reklamsız mod satın alınınca gösterilmez). Android sürümünde reklamlar Google AdMob üzerinden gösterilir. AdMob, kendi hizmeti kapsamında cihaz ve reklamla ilgili verileri (ör. reklam kimliği) işleyebilir; uygulama ilk açılışta gerekli yerlerde reklam izni (rıza) ister. Google'ın güncel reklam ve gizlilik politikaları ayrıca geçerlidir.</li>
+<li><strong>Satın almalar:</strong> Kredi paketleri <strong>Google Play Faturalandırma</strong> ile satılır. Ödeme bilgileriniz Google tarafından işlenir; uygulama ve sunucusu kart veya ödeme bilgisi görmez ve saklamaz. Kredi bakiyesi cihazda tutulur.</li>
+<li><strong>Bildirimler:</strong> Android'de izin verirseniz uygulama günlük ödül için cihazda yerel bir hatırlatma bildirimi planlar. Bunun için sunucuya veri gönderilmez.</li>
+</ul>
+<h2>5. İsteğe bağlı ses modelleri</h2>
+<p>Doğal/neural karakter sesleri etkinleştirilirse gerekli ses modelleri <strong>Hugging Face</strong> üzerinden indirilebilir. Bu modeller cihazda kullanılmak üzere önbelleğe alınır. Neural sesler Android sürümünde varsayılan olarak kapalıdır.</p>
+<h2>6. Çok oyunculu güvenlik</h2>
+<p>Köy meydanında kullanıcı adları ve genel konuşma metinleri sunucudan diğer oyunculara aktarılır. Kötüye kullanımı azaltmak için <strong>kullanıcı adları ve meydandaki konuşma balonları otomatik denetimden geçer</strong>: Türkçe, Arapça ve İngilizce bir küfür ve zararlı kelime listesi ile meydandaki balonların Türkçe olup olmadığına bakan bir kontrol. Bu denetim oyunun kendi sunucusunda yapılır; metin bunun için başka bir hizmete gönderilmez. Uygun bulunmayan kullanıcı adı kabul edilmez (oyuncuya nedeni söylenir), uygun bulunmayan balon diğer oyunculara gösterilmez ve güvenlik kaydına yazılır (bkz. 2c). Bu denetime ileride bir yapay zekâ sınıflandırma hizmeti (ör. Google Gemini) eklenirse, bu politika hangi verinin o hizmete gittiğini belirtecek şekilde önceden güncellenir. Oyuncular ayrıca cihazlarında başka oyuncuları engelleyebilir ve 🚩 düğmesiyle şikayet edebilir (bkz. 2c).</p>
+<h2>7. Saklama ve silme</h2>
+<ul>
+<li>Yerel oyun ilerlemesi ve ayarlar, uygulamanın cihazdaki localStorage verisi temizlendiğinde silinir.</li>
+<li>Kullanıcı adı ve cihaz kimliği, çok oyunculu bağlantı açık olduğu sürece sunucu tarafında oturum verisi olarak tutulur; kalıcı hesap sistemi yoktur.</li>
+<li>Güvenlik kaydı şifreli olarak saklanır ve sonra otomatik silinir: meydan ve karakter sohbeti mesajları 90 gün, sesli sohbetler ve bas-konuş sesi 48 saat.</li>
+<li>Şikayet kayıtları (döküm ve karar) ve engel listesi, incelemeyi ve engeli yürütmek için sunucuda tutulur.</li>
+<li>Satranç skor tablosundaki kullanıcı adı ve oyun sayıları sunucuda kalır; silinmesini istediğiniz kullanıcı adı için geliştiriciye yazabilirsiniz.</li>
+<li>Karakter sesleri (kişisel veri içermeyen ses dosyaları) sunucuda önbellek olarak saklanır.</li>
+<li>Sunucunun teknik bağlantı günlükleri yalnızca arıza ve kötüye kullanım incelemesi için kısa süre tutulur.</li>
+<li><strong>Silme talebi:</strong> Verilerinizin silinmesini <a href="https://anadoluailesi.com.tr/veri-silme/">https://anadoluailesi.com.tr/veri-silme/</a> adresindeki adımlarla (e-posta ile) isteyebilirsiniz; talepler en geç 30 gün içinde yerine getirilir.</li>
+</ul>
+<h2>8. Yaş ve ebeveynler</h2>
+<p>Uygulamanın Google Play'deki hedef kitlesi <strong>13 yaş ve üzeridir</strong>. Köy meydanında başka oyuncularla yazılı ve sesli sohbet bulunduğundan, 18 yaşından küçük kullanıcıların oyunu bir ebeveyn ya da öğretmen gözetiminde oynamasını öneririz; meydana ilk girişteki onay kartı da bu metni anne-babalarıyla okumalarını ister. Tek oyunculu hikâye bölümü internet ve meydan olmadan da oynanabilir.</p>
+<h2>9. İletişim</h2>
+<ul>
+<li><strong>Geliştirici:</strong> nsSoft</li>
+<li><strong>E-posta:</strong> info@sorexdigital.com</li>
+<li><strong>Veri silme:</strong> <a href="https://anadoluailesi.com.tr/veri-silme/">https://anadoluailesi.com.tr/veri-silme/</a></li>
+</ul>
+<p>Bu politikada önemli bir değişiklik olduğunda "Son güncelleme" tarihi değişir; onay gerektiren bir değişiklikte (ör. yeni bir kayıt türü) oyun meydana girişte onayı yeniden ister.</p>
+</main></body></html>

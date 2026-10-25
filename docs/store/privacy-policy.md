@@ -1,8 +1,8 @@
 # Türk Ailem — Gizlilik Politikası
 
-**Son güncelleme:** 24 Ekim 2026
+**Son güncelleme:** 26 Ekim 2026
 
-Türk Ailem, çocukların dil gelişimini ve sosyalleşmesini hikâye ve 3D köy yaşamı üzerinden destekleyen bir oyundur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
+Türk Ailem (Google Play'de *Turkish Family: Learn Turkish*, paket `com.anadolu`), **nsSoft** tarafından geliştirilen; Türkçeyi hikâye ve 3D köy yaşamı içinde, konuşarak öğretmeyi amaçlayan bir dil gelişimi ve sosyalleşme oyunudur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
 
 ## 1. Mikrofon ve konuşma
 
@@ -26,7 +26,7 @@ Dev satranç tahtasındaki **skor tablosu** için kullanıcı adı ile oynanan, 
 
 ## 2a. Karakterlerle serbest sohbet (yapay zekâ)
 
-Oyundaki bazı karakterlerle serbest sohbet edilebilir. Bu sohbette yazdığınız ya da söylediğiniz (yazıya çevrilmiş) mesaj, sohbetin son birkaç mesajı, seçtiğiniz anlam dili ve kullanıcı adınız, oyunun sunucusu üzerinden **Google Gemini** hizmetine gönderilir ve karakterin cevabı oradan gelir. Oyunun sunucusu bu mesajları kaydetmez. Google'ın Gemini API kullanım koşulları ve gizlilik politikası ayrıca geçerlidir. Sohbette kişisel bilgilerinizi paylaşmamanızı öneririz.
+Oyundaki bazı karakterlerle serbest sohbet edilebilir. Bu sohbette yazdığınız ya da söylediğiniz (yazıya çevrilmiş) mesaj, sohbetin son birkaç mesajı, seçtiğiniz anlam dili ve kullanıcı adınız, oyunun sunucusu üzerinden **Google Gemini** hizmetine gönderilir ve karakterin cevabı oradan gelir. Mesaj ve karakterin cevabı, 2c'de anlatılan güvenlik kaydına şifreli olarak yazılır (90 gün); başka bir amaçla kullanılmaz. Google'ın Gemini API kullanım koşulları ve gizlilik politikası ayrıca geçerlidir. Sohbette kişisel bilgilerinizi paylaşmamanızı öneririz.
 
 ## 2b. Karakter sesleri
 
@@ -77,15 +77,17 @@ Köy meydanında kullanıcı adları ve genel konuşma metinleri sunucudan diğe
 - Şikayet kayıtları (döküm ve karar) ve engel listesi, incelemeyi ve engeli yürütmek için sunucuda tutulur.
 - Satranç skor tablosundaki kullanıcı adı ve oyun sayıları sunucuda kalır; silinmesini istediğiniz kullanıcı adı için geliştiriciye yazabilirsiniz.
 - Karakter sesleri (kişisel veri içermeyen ses dosyaları) sunucuda önbellek olarak saklanır.
-- Sunucunun geçici bağlantı/log verileri üretim sunucusunun yapılandırmasına bağlıdır ve yayın öncesinde gerçek saklama süresi ayrıca belirlenmelidir.
-- Kalıcı kullanıcı hesabı veya hesap silme özelliği eklenirse bu politika ve Play Console beyanları buna göre güncellenmelidir.
+- Sunucunun teknik bağlantı günlükleri yalnızca arıza ve kötüye kullanım incelemesi için kısa süre tutulur.
+- **Silme talebi:** Verilerinizin silinmesini https://anadoluailesi.com.tr/veri-silme/ adresindeki adımlarla (e-posta ile) isteyebilirsiniz; talepler en geç 30 gün içinde yerine getirilir.
 
-## 8. Çocuklar ve ebeveynler
+## 8. Yaş ve ebeveynler
 
-Uygulamada çevrimiçi oyuncu etkileşimi ve sesli sohbet bulunur. Uygulamanın hedef kitlesi çocuklar olarak seçilecekse Google Play'in çocuklar/aileler için güncel şartları ayrıca değerlendirilmelidir; özellikle sesli sohbet özelliği için uygun yaş ve güvenlik ayarları belirlenmelidir.
+Uygulamanın Google Play'deki hedef kitlesi **13 yaş ve üzeridir**. Köy meydanında başka oyuncularla yazılı ve sesli sohbet bulunduğundan, 18 yaşından küçük kullanıcıların oyunu bir ebeveyn ya da öğretmen gözetiminde oynamasını öneririz; meydana ilk girişteki onay kartı da bu metni anne-babalarıyla okumalarını ister. Tek oyunculu hikâye bölümü internet ve meydan olmadan da oynanabilir.
 
 ## 9. İletişim
 
-Gizlilik politikasıyla ilgili sorularınız için uygulamanın Google Play mağaza sayfasında yayınlanan geliştirici iletişim adresini kullanabilirsiniz.
+- **Geliştirici:** nsSoft
+- **E-posta:** info@sorexdigital.com
+- **Veri silme:** https://anadoluailesi.com.tr/veri-silme/
 
-> Bu belge Play Console için taslaktır. Yayına almadan önce gerçek geliştirici/şirket adı, iletişim adresi ve varsa veri işleyen hizmetlerin hukuki bilgileri eklenmelidir.
+Bu politikada önemli bir değişiklik olduğunda "Son güncelleme" tarihi değişir; onay gerektiren bir değişiklikte (ör. yeni bir kayıt türü) oyun meydana girişte onayı yeniden ister.
