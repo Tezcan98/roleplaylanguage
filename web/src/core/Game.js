@@ -5,7 +5,22 @@ export class Game {
 
   constructor(parts) { Object.assign(this, parts); }
 
-  start() { const tick = (now) => { this.tick(now); requestAnimationFrame(tick); }; tick(performance.now()); }
+  /** Frames a second at most (null: as many as the screen shows — 120 on some phones, which heats them up). */
+  fps = null;
+
+  start() {
+    let due = 0; // when the next frame is wanted
+    const tick = (now) => {
+      requestAnimationFrame(tick);
+      if (this.fps) {
+        const every = 1000 / this.fps;
+        if (now < due - every / 4) return; // too soon: skip this screen refresh (a quarter frame of slack: refreshes are not evenly spaced)
+        due = now - due > every ? now + every : due + every; // on the beat (60 of a 90 Hz screen's 90), or again from now after a pause
+      }
+      this.tick(now);
+    };
+    tick(performance.now());
+  }
 
   tick(now = performance.now()) {
     // the real time since the last frame, from the frame's own timestamp (when it is shown), not smoothed: an averaged frame time

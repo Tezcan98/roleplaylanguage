@@ -264,6 +264,9 @@ body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #act-lef
 /* ---------- Arabic glosses (right-to-left) ---------- */
 .en-t,.e,.cen,.qe{unicode-bidi:plaintext}
 body.gloss-rtl .en-t,body.gloss-rtl .rtl{font-family:var(--gloss-font,Nunito,sans-serif);font-style:normal}
+/* Urdu's Nastaliq reaches far above and below the line: room for it, or its words run into the next line and out of a pill */
+html[data-gloss="ur"] body.gloss-rtl .en-t,html[data-gloss="ur"] body.gloss-rtl .rtl,html[data-gloss="ur"] body.gloss-rtl .gl{line-height:2}
+html[data-gloss="ur"] .word{border-radius:14px;line-height:1.9;padding-bottom:9px}
 body.gloss-rtl p.en-t,body.gloss-rtl div.en-t,body.gloss-rtl .cen,body.gloss-rtl .qe,body.gloss-rtl .toast small,body.gloss-rtl .cap-en,body.gloss-rtl .rtl{direction:rtl;text-align:right}
 body.gloss-rtl .cap-en,body.gloss-rtl .cen{text-align:center}
 body.gloss-rtl .word .en-t,body.gloss-rtl .choice .e{unicode-bidi:isolate;direction:rtl}
@@ -403,8 +406,13 @@ html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
 .chess-seats{display:flex;gap:12px;flex-wrap:wrap;font-weight:700}
 .chess-seat{display:flex;align-items:center;gap:6px}
 .chess-status{margin:0;font-weight:800}
-.chess-board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;flex-shrink:0;width:min(100%,360px);align-self:center;border:4px solid var(--wood);border-radius:8px;overflow:hidden}
-.chess-board .sq{border:0;padding:0;font-size:min(7vw,34px);line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;aspect-ratio:1}
+.chess .card{padding:14px}
+.chess-board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;flex-shrink:0;width:min(100%,58vh,420px);align-self:center;border:5px solid #5B3A29;border-radius:8px;overflow:hidden;box-shadow:0 4px 0 #3E2718}
+.chess-board .sq{border:0;padding:0;font-size:min(8.5vw,6.2vh,40px);line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;aspect-ratio:1}
+.chess-board .sq.can{box-shadow:inset 0 0 0 3px rgba(123,224,126,.9)}
+.chess-board .sq.check{background:#E4574A!important}
+.chess-status small,.chess-words small{font:700 12px Nunito,sans-serif;color:#6B5444}.chess-words{font-weight:800;color:#5B3A29}
+.chess-clocks{margin:0;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;color:#6B5444}
 .chess-board .sq.l{background:#EDE3CF}.chess-board .sq.d{background:#8B6A4E}
 .chess-board .sq[data-c="w"]{color:#FFFDF8;text-shadow:0 0 2px #000,0 0 1px #000}
 .chess-board .sq[data-c="b"]{color:#1B1B1B}
@@ -490,7 +498,7 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .book-page{font:800 15px Nunito,sans-serif;color:var(--muted)}
 @media (orientation:landscape) and (max-height:520px){.book .card{width:min(820px,100%)}.book-text{font-size:18px}}
 /* while playing the giant chess: colour, clock, turn */
-.chess-bar{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 14px + var(--hud-h,46px));pointer-events:none;font-weight:800}
+.chess-bar{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 14px + var(--hud-h,46px));pointer-events:auto;cursor:pointer;font-weight:800}
 .chess-bar[hidden]{display:none}
 .fs-back{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);z-index:60;pointer-events:auto;min-height:44px;padding:0 16px;border-radius:999px;border:3px solid var(--wood);background:var(--gold);color:var(--ink);font:700 16px Fredoka,sans-serif;box-shadow:0 4px 0 var(--wood2)}
 .fs-back[hidden]{display:none}

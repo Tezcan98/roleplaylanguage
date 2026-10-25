@@ -58,8 +58,8 @@ export class VillageMultiplayer {
    * @param {Object<string, { suffix: string, balls?: object[], label: string }>} o.places
    *   public places: location id → room suffix (the city server + suffix is the room), its shared balls
    */
-  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null, consent = null }) {
-    Object.assign(this, { net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog, consent });
+  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null, consent = null, canAsk = null }) {
+    Object.assign(this, { canAsk, net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog, consent });
     this.stayOffline = false; // the server said so (a ban after a report): offline this game, without a word
     this.consentDeclined = false; // said no this time: offline in the square until the next game (or the menu)
     ptt.onReport = () => this.report();
@@ -610,7 +610,7 @@ export class VillageMultiplayer {
     if (this.group) {
       const P = this.player.position, zone = this.#zoneAt(P);
       if (!zone) this.#outside = { x: P.x, z: P.z, rot: this.player.group.rotation.y };
-      if (zone && zone !== this.group.zone && !this.#zoneOk.has(zone)) this.#door(zone); // not in yet: stop at the door and ask
+      if (zone && zone !== this.group.zone && !this.#zoneOk.has(zone)) { if (this.canAsk?.() !== false) this.#door(zone); } // not in yet: stop at the door and ask (not in the middle of a talk: the story may walk you in — asked once it's over)
       else this.#setZone(zone);
       for (const id of this.group.ids()) {
         const c = this.remotes.get(id);

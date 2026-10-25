@@ -7,6 +7,7 @@ const I = {
   sound: icon('<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 9a4 4 0 0 1 0 6"/>'),
   voices: icon('<path d="M20 11.5a7.5 7.5 0 0 1-11 6.6L4 19.5l1.4-4.6A7.5 7.5 0 1 1 20 11.5z"/>'),
   music: icon('<path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>'),
+  speed: icon('<path d="M12 21a9 9 0 1 1 9-9"/><path d="M12 12l4-4"/><circle cx="12" cy="12" r="1.2"/>'),
   picture: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/>'),
   help: icon('<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .9-1 1.6v.4"/><path d="M12 17.2h.01"/>'),
   user: icon('<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/>'),
@@ -15,6 +16,9 @@ const I = {
   home: icon('<path d="M4 11.5 12 4l8 7.5"/><path d="M6.5 10v10h11V10"/>'),
 };
 const QUALITY = [['low', 'Düşük'], ['medium', 'Orta'], ['high', 'Yüksek']];
+/** Frames a second at most (settings 'fps'): fewer keep a phone cool and the battery longer. */
+export const FPS = [['30', '30'], ['60', '60'], ['max', 'Sınırsız']];
+export const defaultFps = () => (window.Capacitor?.isNativePlatform?.() || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? '30' : '60');
 
 /**
  * In-game settings (⚙️ in the HUD), one compact card: the three sound levels, the picture quality,
@@ -26,8 +30,8 @@ export class SettingsPanel {
   #pop = null;
   #taps = [];
 
-  constructor(host, { modes, settings, confirmQuality = async () => true, onHelp, onMenu, onSound, onFeedback = null, onRename = null, onRooms = null, room = () => '', onStartAt = null, chapters = [] }) {
-    Object.assign(this, { modes, settings, confirmQuality, onHelp, onMenu, onSound, onFeedback, onRename, onRooms, room, onStartAt, chapters });
+  constructor(host, { modes, settings, confirmQuality = async () => true, onHelp, onMenu, onSound, onFeedback = null, onRename = null, onRooms = null, room = () => '', onStartAt = null, chapters = [], onFps = null }) {
+    Object.assign(this, { modes, settings, confirmQuality, onHelp, onMenu, onSound, onFeedback, onRename, onRooms, room, onStartAt, chapters, onFps });
     this.body = el('div', { class: 'settings-body' });
     const title = el('h2', { class: 'set-title', text: 'Ayarlar', on: { click: () => this.#tap() } });
     this.root = el('div', { class: 'overlay dim settings-panel' }, [el('div', { class: 'card' }, [
@@ -81,6 +85,12 @@ export class SettingsPanel {
       paint(); row.classList.toggle('off', range.value === '0');
       return row;
     };
+    // frames a second: right away (no restart); 30 keeps a phone cool
+    const fpsNow = s.get('fps', defaultFps());
+    const fps = el('div', { class: 'seg', attrs: { role: 'radiogroup', 'aria-label': 'Kare hızı (saniyede)' } }, FPS.map(([id, name]) => el('button', {
+      class: `seg-btn${id === fpsNow ? ' on' : ''}`, text: name, attrs: { type: 'button', role: 'radio', 'aria-checked': String(id === fpsNow), 'data-fps': id, title: id === '30' ? 'Telefon daha az ısınır, pil daha uzun gider' : '' },
+      on: { click: () => { s.set('fps', id); this.onFps?.(id); [...fps.children].forEach((b) => { const on = b.dataset.fps === id; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); }); } },
+    })));
     // picture quality: three choices side by side (takes effect on a fresh start: saved, reloaded, and on where you were)
     const q = s.get('quality', 'medium');
     const quality = el('div', { class: 'seg', attrs: { role: 'radiogroup', 'aria-label': 'Görüntü kalitesi' } }, QUALITY.map(([id, name]) => el('button', {
@@ -98,6 +108,7 @@ export class SettingsPanel {
         slider('music', I.music, 'Müzik', 'Music'),
       ]),
       el('div', { class: 'set-group set-row' }, [el('span', { class: 'set-ico', html: I.picture }), el('span', { class: 'vol-name', text: 'Görüntü' }), quality]),
+      el('div', { class: 'set-group set-row' }, [el('span', { class: 'set-ico', html: I.speed }), el('span', { class: 'vol-name', text: 'Kare hızı' }), fps]),
       el('div', { class: 'set-tiles' }, [
         tile(I.help, 'Nasıl oynanır', '', () => this.onHelp?.()),
         this.onFeedback && tile(I.feedback, 'Yorum yaz', '+20 kredi', () => this.onFeedback()),

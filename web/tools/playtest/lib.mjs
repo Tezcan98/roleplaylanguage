@@ -136,7 +136,7 @@ export async function drainUi(page, { pace = 1 } = {}) {
       // lesson: presentation (Next / say it), practice (choice, listen, order), then speaking turns
       await ev(() => {
         const q = (sel) => document.querySelector(`.classroom ${sel}`);
-        const f = [...document.querySelectorAll('.classroom .btn')].find((b) => b.textContent === 'Dersi bitir');
+        const f = q('.cls-done'); // "Dersi bitir" (in the player's language)
         if (f) return f.click();
         if (q('.cls-next')) return q('.cls-next').click();
         const step = window.__game.lessons.step;

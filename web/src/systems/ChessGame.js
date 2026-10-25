@@ -33,9 +33,10 @@ function dedeMove(g) {
  * server owns the table (server/src/ChessTable.js): you ask Dede for a colour, he seats
  * the players and starts the game when both colours are there, watches that nobody sits on the
  * score board, and plays you himself when the board is free. Offline nobody else is
- * around, so Dede plays the other colour. Two ways to move: on the 2D board on screen, or
- * on the square itself — on your turn step next to your piece, take it (action key), carry
- * it to a lit square and put it down. Touching a piece while not seated asks Dede for that
+ * around, so Dede plays the other colour. Two ways to move: on the board on screen (`view`,
+ * ui/ChessView.js: it comes up when your game starts, the chess bar opens it again), or on the
+ * square itself — on your turn step next to your piece, take it (action key), carry it to a lit
+ * square and put it down. Touching a piece while not seated asks Dede for that
  * colour. Walking away never costs you your seat. The 3D pieces follow every move, so
  * people walking by can watch. Dede announces what happens
  * (`onSay`) and the score board behind the board is kept up to date.
@@ -52,10 +53,11 @@ export class ChessGame {
   #carry = null;  // the piece in my hands: { from, mesh, legal }
   #lights = [];
 
-  constructor({ host, mf, square, net, vocab, toasts, player, world, onSay = () => {}, onAskDede = () => {} }) {
-    Object.assign(this, { mf, square, net, vocab, toasts, player, world, onSay, onAskDede });
-    // while you play: your colour, whose turn it is (and Dede's 10 minutes) — nothing else on the screen
-    this.bar = el('div', { class: 'pill chess-bar', attrs: { 'aria-live': 'polite' } });
+  constructor({ host, mf, square, net, vocab, toasts, player, world, view = null, onSay = () => {}, onAskDede = () => {} }) {
+    Object.assign(this, { mf, square, net, vocab, toasts, player, world, view, onSay, onAskDede });
+    if (view) { view.onMove = (from, to) => { this.#dropCarry(); this.#move(from, to); }; view.onToggle = () => this.#paintBar(); }
+    // while you play: your colour, whose turn it is (and Dede's 10 minutes); a tap opens the board on screen
+    this.bar = el('button', { class: 'pill chess-bar', attrs: { type: 'button', 'aria-live': 'polite' }, on: { click: () => this.view?.open() } });
     this.bar.hidden = true;
     host.append(this.bar);
     setInterval(() => this.#paintBar(), 500);
@@ -134,7 +136,7 @@ export class ChessGame {
 
   #paintBar() {
     const st = this.state, mine = this.myColor;
-    const show = !!mine && (st?.phase === 'playing' || st?.phase === 'waiting') && this.world?.current?.id === 'village';
+    const show = !!mine && (st?.phase === 'playing' || st?.phase === 'waiting') && this.world?.current?.id === 'village' && !this.view?.isOpen; // (the board on screen has its own)
     this.bar.hidden = !show;
     if (!show) return;
     const g = this.game, since = Date.now() - st.at;
@@ -144,6 +146,7 @@ export class ChessGame {
     const clock = (c) => mmss(Math.max(0, (st.clocks?.[c] ?? CLOCK) - (st.running === c ? since : 0)));
     const theirs = mine === 'w' ? 'b' : 'w';
     this.bar.textContent = `♟ Sen ${COLOR[mine]} ⏱ ${clock(mine)} · Rakip ⏱ ${clock(theirs)} · ${turn}`;
+    if (this.view?.isOpen) this.view.setClocks(`⏱ Sen ${clock(mine)} · Rakip ${clock(theirs)}`);
   }
 
   #move(from, to) {
@@ -168,7 +171,18 @@ export class ChessGame {
     }
     if (st.fen !== before?.fen) this.#render3D(st.fen, st.last);
     if (JSON.stringify(st.scores ?? []) !== JSON.stringify(before?.scores ?? [])) this.square.writeChessScores?.(st.scores ?? []);
+    this.#syncView(before, mine);
     this.#paintBar();
+  }
+
+  /** The board on screen: up when a game of mine starts, following every move, away when I'm no longer at the board. */
+  #syncView(before, wasMine) {
+    const v = this.view;
+    if (!v) return;
+    const mine = this.myColor, live = (s) => s?.phase === 'playing' || s?.phase === 'waiting';
+    v.update(this.state, mine || wasMine || 'w');
+    if (mine && live(this.state) && !(wasMine && live(before))) v.open();
+    else if (!mine && this.state.phase !== 'over' && v.isOpen) v.close();
   }
 
   /** What İsmail Dede says about a change on the board (Turkish; null = nothing). */

@@ -10,6 +10,7 @@ const END = {
   tr: { name: 'Türk Ailem', line: 'Dil gelişim ve sosyalleşme oyunu', free: 'Ücretsiz', now: 'Şimdi Google Play’de', search: 'Türk Ailem' },
   en: { name: 'My Turkish Family', line: 'Play, speak, learn Turkish', free: 'Free', now: 'On Google Play now', search: 'Turkish Family' },
   ar: { name: 'عائلتي التركية', line: 'العب، تكلّم، تعلّم التركية', free: 'مجانًا', now: 'متوفّرة الآن على Google Play', search: 'ابحث عن: Turkish Family' },
+  ur: { name: 'میرا ترک خاندان', line: 'کھیلو، بولو، ترکی سیکھو', free: 'مفت', now: 'اب Google Play پر دستیاب', search: 'تلاش کریں: Turkish Family' },
 };
 const endCard = (name) => ({
   name, seconds: 3.6,
@@ -30,6 +31,7 @@ const FOLLOW = {
   tr: ['Takip et', 'Yeni videoları kaçırma'],
   en: ['Follow us', 'Don’t miss the next videos'],
   ar: ['تابعنا', 'لا تفوّت الفيديوهات القادمة'],
+  ur: ['ہمیں فالو کریں', 'اگلی ویڈیوز مت چھوڑیں'],
 };
 /** The park's corners (world/locations/VillageSquare.js PARK: x −46…−32, z 13…25). */
 const SWING = [-42.3, 15.6];
@@ -222,7 +224,7 @@ EPISODES.tanitim = {
       act: async (kit, page) => {
         // the child next to grandpa, facing the camera; both in the middle of the frame (grandpa may have taken a step in the garden)
         await page.evaluate(() => { const g = window.__game, d = g.cast.get('dede').position, p = g.player.position, V = p.constructor; p.set(d.x + 0.9, 0, d.z + 0.15); g.player.group.rotation.y = 0; const m = new V(d.x + 0.3, 0, d.z); g.camera.setFixed(new V(m.x + 0.3, 1.6, m.z + 4.7), new V(m.x, 0.85, m.z)); }); // (wide enough for grandpa's steps along the row)
-        await kit.big(page, { tr: 'Her gün yeni görevler: ailesine yardım eder', en: 'New tasks every day: helping the family', ar: 'كل يوم مهامّ جديدة: يساعد عائلته' });
+        await kit.big(page, { tr: 'Her gün yeni görevler: ailesine yardım eder', en: 'New tasks every day: helping the family', ar: 'كل يوم مهامّ جديدة: يساعد عائلته', ur: 'ہر دن نئے کام: گھر والوں کی مدد کرتا ہے' });
         await kit.sleep(1500);
         await showToasts(page);
         await page.evaluate(() => window.__game.toasts.show('Görev tamamlandı! ✓', 'Quest complete'));
@@ -239,7 +241,7 @@ EPISODES.tanitim = {
         return page;
       },
       act: async (kit, page) => {
-        await kit.big(page, { tr: 'Sesli konuşur, oyun onu anlar', en: 'Speaks out loud, and the game understands', ar: 'يتكلّم بصوته، واللعبة تفهمه' });
+        await kit.big(page, { tr: 'Sesli konuşur, oyun onu anlar', en: 'Speaks out loud, and the game understands', ar: 'يتكلّم بصوته، واللعبة تفهمه', ur: 'بول کر بات کرتا ہے، اور گیم سمجھتا ہے' });
         await page.evaluate(() => window.__game.dialogue.open('anne', 'br1')); // "Kahvaltı nasıldı? Beğendin mi?" → "Çok güzeldi, eline sağlık anne!"
         await overShoulder(page, 'anne');
         await kit.sleep(1300);
@@ -259,7 +261,7 @@ EPISODES.tanitim = {
         return page;
       },
       act: async (kit, page) => {
-        await kit.big(page, { tr: 'Cümleleri kurarak Türkçe öğrenir', en: 'Learns Turkish by building sentences', ar: 'يتعلّم التركية ببناء الجمل' });
+        await kit.big(page, { tr: 'Cümleleri kurarak Türkçe öğrenir', en: 'Learns Turkish by building sentences', ar: 'يتعلّم التركية ببناء الجمل', ur: 'جملے بنا کر ترکی سیکھتا ہے' });
         await page.evaluate(() => window.__game.dialogue.open('manav', 'mv1')); // "Buyur evlat, ne istersin?" → the sentence in tiles
         await overShoulder(page, 'manav');
         await kit.sleep(2000);
@@ -279,7 +281,7 @@ EPISODES.tanitim = {
         return crowd.me;
       },
       act: async (kit, page) => {
-        await kit.big(page, { tr: 'Meydanda bas, konuş: arkadaşlarıyla Türkçe konuşur', en: 'In the square, push to talk: Turkish with friends', ar: 'في الساحة: اضغط وتكلّم بالتركية مع أصدقائه' });
+        await kit.big(page, { tr: 'Meydanda bas, konuş: arkadaşlarıyla Türkçe konuşur', en: 'In the square, push to talk: Turkish with friends', ar: 'في الساحة: اضغط وتكلّم بالتركية مع أصدقائه', ur: 'چوک میں: بٹن دبائیں، دوستوں سے ترکی بولیں' });
         await kit.sleep(500);
         for (const [n, t, w] of [['Mariam', 'Merhaba! Hadi oynayalım!', 1400], ['Yusuf', 'Evet, hadi!', 1100], ['Ben', 'Olur! Ben de geliyorum!', 0]]) { await say(n, t); await kit.sleep(w); }
       },
@@ -293,5 +295,6 @@ EPISODES.tanitim = {
     tr: ['Her gün yeni görevler, ailesine yardım eder,', 'sesli konuşur, oyun onu anlar,', 'cümleler kurar,', 'meydanda bas, konuş: arkadaşlarıyla Türkçe konuşur.', 'Türk Ailem, şimdi Google Play’de ücretsiz.', 'Takip et, yeni videoları kaçırma.'],
     en: ['New tasks every day, helping the family,', 'speaking out loud, and the game understands,', 'building sentences,', 'and in the square, push to talk: Turkish with friends.', 'Turkish Family, free on Google Play now.', 'Follow us, and don’t miss the next videos.'],
     ar: ['كل يوم مهامّ جديدة، يساعد عائلته،', 'يتكلّم بصوته، واللعبة تفهمه،', 'يبني الجمل،', 'وفي الساحة: اضغط وتكلّم بالتركية مع أصدقائه.', 'عائلتي التركية، متوفّرة الآن مجانًا على غوغل بلاي.', 'تابعنا ولا تفوّت الفيديوهات القادمة.'],
+    ur: ['ہر دن نئے کام، گھر والوں کی مدد کرتا ہے،', 'بول کر بات کرتا ہے، اور گیم اسے سمجھتا ہے،', 'جملے بناتا ہے،', 'اور چوک میں بٹن دبا کر دوستوں سے ترکی بولتا ہے۔', 'میرا ترک خاندان، اب گوگل پلے پر مفت دستیاب ہے۔', 'ہمیں فالو کریں اور اگلی ویڈیوز مت چھوڑیں۔'],
   },
 };

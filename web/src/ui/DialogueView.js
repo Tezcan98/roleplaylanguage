@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss, glossInfo, glossRole, meaning, hintText } from '../i18n/Gloss.js';
+import { gloss, glossInfo, glossRole, meaning, hintText, ui } from '../i18n/Gloss.js';
 
 /** Dumb view for conversations: header, line, translation, words, activity slot. */
 export class DialogueView {
@@ -46,7 +46,7 @@ export class DialogueView {
     this.en.textContent = gloss(en) || '';
     this.en.hidden = !en;
   }
-  setHint(text) { this.hint.style.display = text ? 'block' : 'none'; this.hint.replaceChildren(el('b', { text: 'İpucu: ' }), hintText(text) || ''); }
+  setHint(text) { this.hint.style.display = text ? 'block' : 'none'; this.hint.replaceChildren(el('b', { text: `${ui('İpucu', 'Hint')}: ` }), hintText(text) || ''); }
   setWords(list, known = () => false) {
     // a word already in the notebook: ✓ "pekişti" (seen again, reinforced) — not new again
     this.words.replaceChildren(...(list || []).map(([tr, en]) => {

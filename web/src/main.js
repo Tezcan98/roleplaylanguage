@@ -58,7 +58,7 @@ import { shareGame } from './platform/share.js';
 import { HouseBanner } from './ui/HouseBanner.js';
 import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
-import { SettingsPanel } from './ui/SettingsPanel.js';
+import { SettingsPanel, defaultFps } from './ui/SettingsPanel.js';
 import { FeedbackView } from './ui/FeedbackView.js';
 import { ParkPlay } from './systems/ParkPlay.js';
 import { Animals } from './systems/Animals.js';
@@ -66,6 +66,7 @@ import { Bicycle, bikeMount } from './systems/Bicycle.js';
 import { Scooters, scooterMount } from './systems/Scooter.js';
 import { KahveCirak } from './systems/KahveCirak.js';
 import { DamaView } from './ui/DamaView.js';
+import { ChessView } from './ui/ChessView.js';
 import { DamaClub } from './systems/DamaClub.js';
 import { HalayDance } from './systems/HalayDance.js';
 import { el } from './ui/dom.js';
@@ -434,7 +435,7 @@ const village = new VillageMultiplayer({
     avlu: { x: (MOSQUE.x0 + MOSQUE.x1) / 2, z: (MOSQUE.z0 + MOSQUE.z1) / 2, w: MOSQUE.x1 - MOSQUE.x0, d: MOSQUE.z1 - MOSQUE.z0, name: 'Cami avlusu' },
   },
   remotes: new RemotePlayers({ mf, models, baseLook: PLAYER_LOOK, looks: PLAYER_LOOKS, horse: () => animals.mount(), scooter: () => scooterMount(mf), bike: () => bikeMount(mf) }), // others on horseback, a scooter, a bike
-  rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes),
+  rooms: SERVERS, healthUrl: healthUrl(villageServer), choice: new ChoiceCard(host, modes), canAsk: () => modes.is('play'), // (a talking zone's door card: never over a dialogue)
   // public places: the square, and the schoolyard for football (its own room: <city>-okul)
   places: { village: { suffix: '', balls: villageBalls, label: '' }, schoolyard: { suffix: '-okul', balls: [schoolBall], label: 'Okul bahçesi' } },
   world, player, settings, labels, toasts,
@@ -472,7 +473,7 @@ playerHd();
 
 // --- giant chess on the square: online the server's board (İsmail Dede runs it), offline Dede plays you ---
 const chess = new ChessGame({
-  host, mf, square: world.get('village'), net: villageNet, vocab, toasts, player, world,
+  host, mf, square: world.get('village'), net: villageNet, vocab, toasts, player, world, view: new ChessView(host, { modes }),
   // İsmail Dede announces the games: a bubble over his head (no voice)
   onSay: (line) => {
     const dede = cast.get('ismail');
@@ -772,7 +773,7 @@ const devCodes = new DevCodes({
 });
 const codeCard = new CodeCard(host, modes, devCodes);
 const settingsPanel = new SettingsPanel(host, {
-  modes, settings,
+  modes, settings, onFps: (v) => applyFps(v),
   confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onFeedback: () => feedback.open(),
   onRename: () => village.rename(), // the name others see in the square (asked the first time there)
@@ -1001,6 +1002,9 @@ function continueGame(then) {
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
 const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
+// frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
+const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };
+applyFps(settings.get('fps', defaultFps()));
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
 

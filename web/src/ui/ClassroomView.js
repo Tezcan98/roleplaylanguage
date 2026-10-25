@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss, meaning } from '../i18n/Gloss.js';
+import { gloss, meaning, ui } from '../i18n/Gloss.js';
 
 /** Lesson overlay: the teacher's presentation, practice, then questions with a live feed and scoreboard. */
 export class ClassroomView {
@@ -19,13 +19,13 @@ export class ClassroomView {
       el('div', { class: 'cls-main' }, [
         el('div', { class: 'listen-row', style: { alignItems: 'center', justifyContent: 'space-between' } }, [
           this.count, this.live,
-          el('button', { class: 'chipbtn', html: `${ICONS.speaker} Tekrar`, attrs: { type: 'button' }, on: { click: onReplay } }),
+          el('button', { class: 'chipbtn', html: `${ICONS.speaker} ${ui('Tekrar', 'Again')}`, attrs: { type: 'button' }, on: { click: onReplay } }),
         ]),
         this.head, this.q, this.en, this.words, this.slot, this.status, this.nav,
       ]),
       el('div', { class: 'cls-side' }, [
-        el('div', { class: 'cls-score' }, [el('h4', { text: 'Puanlar' }), this.scores]),
-        el('div', { class: 'cls-feed' }, [el('h4', { text: 'Sınıf' }), this.feed]),
+        el('div', { class: 'cls-score' }, [el('h4', { text: ui('Puanlar', 'Points') }), this.scores]),
+        el('div', { class: 'cls-feed' }, [el('h4', { text: ui('Sınıf', 'Class') }), this.feed]),
       ]),
     ])]);
     host.append(this.root);
@@ -66,19 +66,19 @@ export class ClassroomView {
 
   /** One presentation step: what the teacher says + new words; Next (or the repeat activity). */
   teachStep(step, i, n, { onNext, onSkip, onReplay }) {
-    this.teacherLine(step.say, step.en, `Anlatım ${i + 1}/${n}`);
+    this.teacherLine(step.say, step.en, `${ui('Anlatım', 'Explanation')} ${i + 1}/${n}`);
     this.words.replaceChildren(...(step.words ?? []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { class: 'en-t def', text: meaning(tr, en) && `= ${meaning(tr, en)}` })])));
     this.nav.replaceChildren(...[ // (a missing button is left out, not written as "null")
-      el('button', { class: 'chipbtn', html: `${ICONS.speaker} Tekrar dinle`, attrs: { type: 'button' }, on: { click: onReplay } }),
-      !step.repeat && el('button', { class: 'chipbtn primary cls-next', text: 'Anladım, devam ▶', attrs: { type: 'button' }, on: { click: onNext } }),
-      onSkip && el('button', { class: 'linkbtn', text: 'Anlatımı geç', attrs: { type: 'button' }, on: { click: onSkip } }),
+      el('button', { class: 'chipbtn', html: `${ICONS.speaker} ${ui('Tekrar dinle', 'Listen again')}`, attrs: { type: 'button' }, on: { click: onReplay } }),
+      !step.repeat && el('button', { class: 'chipbtn primary cls-next', text: `${ui('Anladım, devam', 'Got it, next')} ▶`, attrs: { type: 'button' }, on: { click: onNext } }),
+      onSkip && el('button', { class: 'linkbtn', text: ui('Anlatımı geç', 'Skip the explanation'), attrs: { type: 'button' }, on: { click: onSkip } }),
     ].filter(Boolean));
   }
 
   practiceStep(p, i, n) {
     this.#clear();
-    this.count.textContent = `Alıştırma ${i + 1}/${n}`;
-    this.q.textContent = p.activity === 'listen' ? '🔊 Dinle ve seç.' : p.say;
+    this.count.textContent = `${ui('Alıştırma', 'Practice')} ${i + 1}/${n}`;
+    this.q.textContent = p.activity === 'listen' ? `🔊 ${ui('Dinle ve seç.', 'Listen and choose.')}` : p.say;
     this.en.textContent = p.activity === 'listen' ? '' : gloss(p.en);
   }
 
@@ -109,10 +109,10 @@ export class ClassroomView {
   summary(scores, me, onDone) {
     const rows = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     const place = rows.findIndex(([id]) => id === me) + 1;
-    this.count.textContent = 'Ders bitti!';
+    this.count.textContent = ui('Ders bitti!', 'Lesson over!');
     this.q.textContent = place === 1 ? 'Birinci oldun! 🏆' : `${place}. oldun. Aferin!`;
     this.en.textContent = place === 1 ? gloss('You came first!') : gloss('You came {place}. Well done!', { place });
     this.status_('');
-    this.slot.replaceChildren(el('button', { class: 'btn', text: 'Dersi bitir', attrs: { type: 'button' }, on: { click: onDone } }));
+    this.slot.replaceChildren(el('button', { class: 'btn cls-done', text: ui('Dersi bitir', 'Finish the lesson'), attrs: { type: 'button' }, on: { click: onDone } }));
   }
 }

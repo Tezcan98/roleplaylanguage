@@ -1,6 +1,6 @@
 import { Activity } from './Activity.js';
 import { el } from '../ui/dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, ui, uiPrompt } from '../i18n/Gloss.js';
 
 function shuffle(list) {
   const a = [...list];
@@ -28,7 +28,7 @@ export class OrderActivity extends Activity {
       let slips = 0;
       const picked = [];
       const line = el('div', { class: 'answer-line', attrs: { 'aria-live': 'polite' } });
-      const reset = el('button', { class: 'chipbtn', text: '↺ Baştan', attrs: { type: 'button' }, on: { click: () => clear() } });
+      const reset = el('button', { class: 'chipbtn', text: `↺ ${ui('Baştan', 'Start over')}`, attrs: { type: 'button' }, on: { click: () => clear() } });
       this.tiles = shuffle(words).map((w) => el('button', {
         class: 'tile', text: w, attrs: { type: 'button' },
         on: { click: (e) => add(e.currentTarget) },
@@ -72,7 +72,7 @@ export class OrderActivity extends Activity {
         }
       };
       this.root = el('div', {}, [
-        el('p', { class: 'act-prompt', text: spec.prompt ?? 'Cümleyi kur:' }),
+        el('p', { class: 'act-prompt', text: spec.prompt ? uiPrompt(spec.prompt) : ui('Cümleyi kur:', 'Build the sentence:') }),
         spec.answerEn && el('p', { class: 'en en-t', text: gloss(spec.answerEn) }),
         line,
         el('div', { class: 'tiles' }, this.tiles),

@@ -74,6 +74,16 @@ export function gloss(en, vars) {
   return s;
 }
 
+/**
+ * A word that tells the player what to do (a button, "Mikrofona bas ve söyle:"): in the player's own
+ * language — someone who knows no Turkish yet must understand it; Turkish only in Turkish-only mode.
+ */
+export const ui = (tr, en) => (turkishOnly() ? tr : gloss(en) || tr);
+
+/** The plain instructions a story's activity may carry as its prompt (the rest of the prompts are the story's own Turkish). */
+const PROMPTS = { 'Cümleyi kur:': 'Build the sentence:', 'Ne duydun?': 'What did you hear?', 'Hangi sayıyı duydun?': 'Which number did you hear?' };
+export const uiPrompt = (tr) => (PROMPTS[tr] ? ui(tr, PROMPTS[tr]) : tr);
+
 /** "anne · mom" → "anne · أم" */
 export const glossRole = (role) => { const [tr, en] = String(role).split(' · '); return en ? withGloss(tr, en) : role; };
 

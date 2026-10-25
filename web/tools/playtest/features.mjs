@@ -204,19 +204,30 @@ try {
   await ev(() => window.__game.dialogue.open('ismail')); await sleep(400);
   await ev(() => [...document.querySelectorAll('#dlg .choice')].find((c) => c.textContent.includes('Seninle oynamak'))?.click());
   check('chess: Dede plays you on a free board', !!(await waitFor(() => ev(() => window.__game.chess.state.phase === 'playing' && window.__game.chess.myColor === 'w'), 5000)));
-  check('…no chess menu on the screen, just your clock and turn', !(await page.$('.chess.open')) && (await ev(() => !document.querySelector('.chess-bar').hidden && document.querySelector('.chess-bar').textContent)).includes('Sen beyaz'));
+  // the board on screen (a phone can hardly walk the pieces): it comes up by itself, tap a pawn, then its square
+  check('…the board comes up on screen with whose turn it is (the bar at the top waits behind it)', !!(await waitFor(() => page.$('.chess.open'), 4000)) && (await ev(() => document.querySelector('.chess.open .chess-status').textContent)).includes('sen beyaz') && (await ev(() => document.querySelector('.chess-bar').hidden)));
   await ev(() => window.__game.dialogue.close?.()); await sleep(300);
-  await stand('e2'); await sleep(400);
+  await page.click('.chess.open .chess-board [data-sq="e2"]'); await sleep(200);
+  const lit = await ev(() => [...document.querySelectorAll('.chess.open .chess-board .sq.to')].map((b) => b.dataset.sq).sort().join(','));
+  check('chess board: a tap on the e2 pawn lights e3 and e4', lit === 'e3,e4', lit);
+  await page.click('.chess.open .chess-board [data-sq="e4"]');
+  const fen1 = await waitFor(() => ev(() => { const f = window.__game.chess.state.fen; return f.includes('4P3') && f.split(' ')[1] === 'w' ? f : null; }), 8000);
+  check('…a tap on e4 plays it, Dede answers on the board', !!fen1, fen1 || await ev(() => window.__game.chess.state.fen));
+  await page.click('.chess.open .iconbtn'); await sleep(300);
+  check('…closing the board keeps the game; the bar (clock, turn) opens it again', !(await page.$('.chess.open')) && (await ev(() => window.__game.chess.state.phase)) === 'playing' && (await ev(() => document.querySelector('.chess-bar').textContent)).includes('Sen beyaz') && !!(await (async () => { await page.click('.chess-bar'); return waitFor(() => page.$('.chess.open'), 2000); })()));
+  await page.click('.chess.open .iconbtn'); await sleep(300);
+  // on foot, on the square's own board
+  await stand('d2'); await sleep(400);
   check('chess: on your turn, standing on a pawn offers to take it', (await act()).includes('piyon taşını al'), await act());
   await page.keyboard.press('e'); await sleep(300);
-  await stand('e5'); await sleep(300);
+  await stand('d5'); await sleep(300);
   check('chess: a square the pawn can’t reach is refused', (await act()).includes('gidemez'), await act());
-  await stand('e4'); await sleep(300);
-  check('chess: a lit square offers the move', (await act()).includes('e4 karesine oyna'), await act());
+  await stand('d4'); await sleep(300);
+  check('chess: a lit square offers the move', (await act()).includes('d4 karesine oyna'), await act());
   await page.keyboard.press('e');
-  const fen = await waitFor(() => ev(() => { const f = window.__game.chess.state.fen; return f.includes('4P3') && f.split(' ')[1] === 'w' ? f : null; }), 8000);
+  const fen = await waitFor(() => ev(() => { const c = window.__game.chess; return !c.game.get('d2') && c.game.turn() === 'w' ? c.state.fen : null; /* (the d-pawn has left d2; Dede may have taken it on d4) */ }), 8000);
   check('chess: the move is played and Dede answers', !!fen, fen || await ev(() => window.__game.chess.state.fen));
-  const from = await ev(() => { const c = window.__game.chess, g = c.game; return ['d2', 'a2', 'h2', 'b1', 'g1'].find((sq) => g.get(sq)?.color === 'w' && g.moves({ square: sq }).length); });
+  const from = await ev(() => { const c = window.__game.chess, g = c.game; return ['a2', 'h2', 'b1', 'g1', 'c2'].find((sq) => g.get(sq)?.color === 'w' && g.moves({ square: sq }).length); });
   await stand(from); await sleep(300); await page.keyboard.press('e'); await sleep(300);
   await ev(() => window.__game.player.position.set(-15 + 7, 0, 15)); await sleep(600);
   check('chess: walking off the board puts the piece back, the game stays yours', (await ev((sq) => window.__game.chess.game.get(sq)?.color === 'w', from)) && (await ev(() => window.__game.chess.myColor)) === 'w' && (await ev(() => window.__game.chess.state.phase)) === 'playing');
@@ -260,8 +271,11 @@ try {
   await ev(() => window.__game.player.sit(false)); await sleep(300);
   await ev(() => { const g = window.__game; g.player.place(g.world.current.anchors.get('chessBench1')); g.player.sit(true); }); await sleep(300);
   check('chess benches: sitting down to watch', (await ev(() => window.__game.talk.listening)) === 'chess');
-  await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/pppppppp/8/8/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 1', last: { from: 'g1', to: 'f3', san: 'Nf3' } }); });
-  const comment = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].map((b) => b.textContent).find((t) => t.includes('At oynadı'))), 12000); // (CI machines are slow)
+  // a take (Dede always says something about one; a plain move only now and then, at random)
+  await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2', last: { from: 'd7', to: 'd5', san: 'd5' } }); });
+  await sleep(300);
+  await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2', last: { from: 'e4', to: 'd5', san: 'exd5' } }); });
+  const comment = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].map((b) => b.textContent).find((t) => t.includes('Piyonu aldı'))), 12000); // (CI machines are slow)
   check('…İsmail Dede comments on the moves', !!comment, comment || '');
   await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/ppp2ppp/8/1B1pp3/4P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 3', last: { from: 'f1', to: 'b5', san: 'Bb5+' } }); });
   check('check: the king’s square glows red', await ev(() => window.__game.world.get('village').chessPieces.children.some((m) => m.isPointLight && m.color.r > 0.9)));
@@ -463,6 +477,7 @@ try {
   await ev((i) => window.__game.story.startChapter(i), wi); await sleep(1500);
   await ev(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(800);
   check('the wedding: the villagers dance the halay by the fountain', await ev(() => ['elif', 'can', 'zehra'].every((id) => window.__game.cast.get(id).behavior.halay) && window.__game.story.quest?.id === 'wedding-congrats'));
+  await ev(() => [...document.querySelectorAll('.overlay.open button')].find((b) => b.textContent.trim() === 'Gir')?.click()); await sleep(300); // the wedding is at the kahvehane, a talking zone: "Gir" at its door
   await ev(() => window.__game.dialogue.open('bakkal')); await sleep(500);
   await page.click('#dlg button:has-text("Allah mesut etsin")'); await sleep(500);
   await page.click('#dlg button:has-text("Hemen katılıyorum")'); await sleep(500);
@@ -542,8 +557,8 @@ try {
     await p2.goto(`${server.url}/?debug&consented&fakemic&nointro&fresh&daily&mockads&fastads&nobilling&quality=low`);
     await p2.waitForFunction(() => window.__game, null, { timeout: 90000 });
     const daily = await waitFor(() => p2.$('.overlay.open.daily'), 8000);
-    check('daily reward on opening the game (day 1: +3)', !!daily && (await p2.textContent('.daily .btn')).includes('+3'));
-    await p2.click('.daily .btn'); await sleep(300);
+    check('daily reward on opening the game (day 1: +3)', !!daily && !!(await p2.$('.daily .btn:has-text("+3 kredi")')), daily ? '' : await e2(() => `open: ${[...document.querySelectorAll('.overlay.open')].map((o) => o.className).join(' | ')} · daily: ${JSON.stringify(window.__game.wallet.daily())}`));
+    await p2.click('.daily .btn:has-text("+3 kredi")'); await sleep(300); // (not "📺 Video izle, +6": twice as many for a video)
     check('…credits 100 → 103', (await e2(() => window.__game.wallet.balance)) === 103);
     await p2.reload(); await p2.waitForFunction(() => window.__game, null, { timeout: 90000 }); await sleep(800);
     check('…not twice the same day, and the credits are kept', !(await p2.$('.overlay.open.daily')) && (await e2(() => window.__game.wallet.balance)) === 103);
