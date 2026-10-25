@@ -6,7 +6,9 @@ import { createHash } from 'node:crypto';
  * Live ad numbers from the Android app (AdMob shows them a day or two late): every ad shown,
  * every reward, a banner opened (its click), and the estimated revenue AdMob's SDK reports for an
  * impression (needs "impression-level ad revenue" on in the AdMob account). Nothing about the ad
- * is changed — this only counts.
+ * is changed — this only counts. A request that came back empty ("no fill": the banner asks again
+ * every minute or so) is not an error the player sees: the page counts it apart, next to the loads
+ * that brought an ad (how often there is one), and keeps it out of the latest events.
  *
  *   POST /api/ad-event  { e, f, micros?, cur?, v?, pid?, code? }  (code: AdMob's error code of a 'fail')   from the app (web/src/services/monetization/AdMobAdProvider.js)
  *   GET  /api/ad-stats?key=…  a page with today, the last days and the latest events (&format=json)
@@ -14,7 +16,10 @@ import { createHash } from 'node:crypto';
  * One JSON line per event in DIR/YYYY-MM-DD.jsonl (Turkish time), the last DAYS days kept in memory.
  * The page needs AD_STATS_KEY; the device id is stored only as a short hash.
  */
-const EVENTS = new Set(['show', 'impression', 'click', 'reward', 'paid', 'fail', 'dismiss']);
+const EVENTS = new Set(['load', 'show', 'impression', 'click', 'reward', 'paid', 'fail', 'dismiss']);
+/** AdMob's "no ad for this request" (no fill, none through mediation): normal, not an error. */
+const EMPTY = new Set([3, 9]);
+export const isEmpty = (ev) => ev.e === 'fail' && EMPTY.has(ev.code);
 const FORMATS = new Set(['interstitial', 'rewarded', 'banner']);
 const DAYS = 14;
 const PER_MINUTE = 60; // events per IP and minute
@@ -71,14 +76,16 @@ export class AdStats {
     const days = [...this.#days.keys()].sort().reverse().map((d) => {
       const list = this.#days.get(d), counts = {}, revenue = {}, devices = new Set();
       for (const ev of list) {
-        (counts[ev.f] ??= {})[ev.e] = (counts[ev.f][ev.e] ?? 0) + 1;
+        const e = isEmpty(ev) ? 'empty' : ev.e; // (an empty request apart from real errors)
+        (counts[ev.f] ??= {})[e] = (counts[ev.f][e] ?? 0) + 1;
         if (ev.e === 'paid' && ev.micros != null) revenue[ev.cur ?? '?'] = (revenue[ev.cur ?? '?'] ?? 0) + ev.micros / 1e6;
         if (ev.d) devices.add(ev.d);
       }
       return { day: d, events: list.length, devices: devices.size, counts, revenue };
     });
-    const latest = (this.#days.get(day()) ?? []).slice(-60).reverse();
-    return { now: new Date().toISOString(), days, latest };
+    const today = this.#days.get(day()) ?? [];
+    const latest = today.filter((ev) => !isEmpty(ev)).slice(-60).reverse(); // (the empty requests only as a count)
+    return { now: new Date().toISOString(), days, latest, emptyToday: today.filter(isEmpty).length };
   }
 
   /** The two routes; true when it answered. */
@@ -109,7 +116,9 @@ export class AdStats {
 const NAMES = { interstitial: 'Geçiş reklamı', rewarded: 'Ödüllü video', banner: 'Banner' };
 /** AdMob's error codes (LoadAdError / AdError). */
 const CODES = { 0: 'iç hata', 1: 'geçersiz istek', 2: 'ağ hatası', 3: 'reklam yok (no fill)', 8: 'uygulama kimliği', 9: 'aracılıkta reklam yok', 11: 'zaten gösteriliyor' };
-const EV = { show: 'gösterildi', impression: 'gösterim', paid: 'gelirli gösterim', reward: 'ödül verildi', click: 'tıklandı', dismiss: 'kapatıldı', fail: 'hata' };
+const EV = { load: 'yüklendi', empty: 'boş döndü', show: 'gösterildi', impression: 'gösterim', paid: 'gelirli gösterim', reward: 'ödül verildi', click: 'tıklandı', dismiss: 'kapatıldı', fail: 'hata' };
+/** Of the requests that came back, how many brought an ad (only once the app reports its loads too). */
+const fill = (d, f) => { const ok = d?.counts[f]?.load ?? 0, empty = d?.counts[f]?.empty ?? 0; return ok + empty ? `%${Math.round((100 * ok) / (ok + empty))}` : '—'; };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const REGIONS = new Intl.DisplayNames(['tr'], { type: 'region' });
 /** "TR" → "Türkiye" (the name in Turkish; the code itself when it is not a country). */
@@ -129,7 +138,8 @@ function installsBlock(i) {
 function page(s) {
   const today = s.days[0];
   const cell = (d, f, e) => d?.counts[f]?.[e] ?? 0;
-  const table = (d) => `<table><tr><th></th>${Object.values(EV).map((e) => `<th>${e}</th>`).join('')}</tr>${[...FORMATS].map((f) => `<tr><td>${NAMES[f]}</td>${Object.keys(EV).map((e) => `<td>${cell(d, f, e) || ''}</td>`).join('')}</tr>`).join('')}</table>`;
+  const table = (d) => `<table><tr><th></th>${Object.values(EV).map((e) => `<th>${e}</th>`).join('')}<th>doluluk</th></tr>${[...FORMATS].map((f) => `<tr><td>${NAMES[f]}</td>${Object.keys(EV).map((e) => `<td>${cell(d, f, e) || ''}</td>`).join('')}<td>${fill(d, f)}</td></tr>`).join('')}</table>
+<small>“Boş döndü”: AdMob o istekte reklam vermedi (no fill). Oyuncu bunu görmez — banner kısa süre sonra yeniden ister, arada bizim afişimiz durur; geçiş reklamında hikâye reklamsız devam eder. “Hata” yalnızca gerçek hatalar. Doluluk: gelen isteklerin yüzde kaçı reklamla döndü (uygulamanın yeni sürümüyle sayılır).</small>`;
   const time = (t) => new Date(t).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul' });
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="15"><title>Reklamlar · canlı</title>
 <style>body{font:15px system-ui,sans-serif;margin:16px;background:#14202e;color:#e8eef5}h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:22px 0 8px}small{color:#9fb0c2}
@@ -143,7 +153,7 @@ ${table(today)}
 ${installsBlock(s.installs)}
 <h2>Son günler</h2><table><tr><th>Gün</th><th>olay</th><th>cihaz</th><th>gösterim</th><th>ödül</th><th>tıklama</th><th>tahmini gelir</th></tr>
 ${s.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.events}</td><td>${d.devices}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'show') + cell(d, f, 'impression'), 0)}</td><td>${cell(d, 'rewarded', 'reward')}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'click'), 0)}</td><td>${esc(money(d.revenue))}</td></tr>`).join('')}</table>
-<h2>Son olaylar</h2><table><tr><th>Saat</th><th>Reklam</th><th>Olay</th><th>Gelir</th><th>Ülke</th><th>Sürüm</th><th>Cihaz</th></tr>
+<h2>Son olaylar <small>${s.emptyToday ? `boş dönen ${s.emptyToday} istek bugün listede gösterilmiyor` : ''}</small></h2><table><tr><th>Saat</th><th>Reklam</th><th>Olay</th><th>Gelir</th><th>Ülke</th><th>Sürüm</th><th>Cihaz</th></tr>
 ${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>${EV[e.e]}${e.code != null ? ` · ${e.code} ${esc(CODES[e.code] ?? '')}` : ''}</td><td>${e.micros != null ? `${(e.micros / 1e6).toFixed(5)} ${esc(e.cur ?? '')}` : ''}</td><td>${esc(country(e.c))}</td><td>${esc(e.v ?? '')}</td><td>${esc(e.d ?? '')}</td></tr>`).join('')}</table>
 </body></html>`;
 }

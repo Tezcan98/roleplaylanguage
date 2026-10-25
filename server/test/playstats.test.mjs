@@ -72,3 +72,16 @@ test('downloads: a device\'s first game opened, by app / web, today and the days
   assert.match(html, /İndirmeler/);
   assert.match(html, /<td>Türkiye<\/td>/, 'the country by name, not "TR"');
 });
+
+test('ad page: an empty request (no fill) is counted apart, not listed as an error; loads give the fill rate', async () => {
+  const { AdStats } = await import('../src/AdStats.js');
+  const ads = new AdStats({ key: 'k' });
+  ads.record({ e: 'load', f: 'banner' }, '1.1.1.1');
+  ads.record({ e: 'fail', f: 'banner', code: 3 }, '1.1.1.1');
+  ads.record({ e: 'fail', f: 'rewarded', code: 1 }, '1.1.1.1'); // a real error stays one
+  const s = ads.summary();
+  assert.deepEqual(s.days[0].counts.banner, { load: 1, empty: 1 });
+  assert.equal(s.days[0].counts.rewarded.fail, 1);
+  assert.deepEqual(s.latest.map((e) => e.e), ['fail', 'load']);
+  assert.equal(s.emptyToday, 1);
+});
