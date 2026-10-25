@@ -37,6 +37,7 @@
     "idleBannerSeconds": 90,
     "menuBannerChance": 1,
     "betweenDays": true,
+    "afterChess": true,
     "travelChance": 0.35,
     "travelGapMinutes": 3
   },

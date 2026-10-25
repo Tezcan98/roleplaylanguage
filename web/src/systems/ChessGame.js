@@ -168,6 +168,7 @@ export class ChessGame {
       const win = st.result?.winner, pts = st.result?.points;
       const tr = !win ? 'Berabere!' : win === mine ? '🏆 Kazandın!' : 'Kaybettin. Bir dahakine!';
       this.toasts.show(pts ? `${tr} · ${pts[mine]} – ${pts[mine === 'w' ? 'b' : 'w']} puan` : tr, !win ? 'Draw!' : win === mine ? 'You won!' : 'You lost. Next time!');
+      this.onGameOver?.(); // (main.js: a full-screen ad after a game of mine)
     }
     if (st.fen !== before?.fen) this.#render3D(st.fen, st.last);
     if (JSON.stringify(st.scores ?? []) !== JSON.stringify(before?.scores ?? [])) this.square.writeChessScores?.(st.scores ?? []);

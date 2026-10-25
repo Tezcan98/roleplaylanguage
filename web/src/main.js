@@ -705,6 +705,8 @@ async function fullAd() {
   if (await fullAdOffer.ask({ title: '🚫 Reklamsız oyna', text: `Reklamlar seni rahatsız ediyor mu? ${item.price} krediyle reklamsız moda geç, hikâye kesintisiz devam etsin.`, en: 'Do the ads bother you? Go ad-free with credits and play on without breaks.', yes: 'Mağazaya bak', no: 'Şimdi değil' })) shop.open('wear');
 }
 // story mode: a full-screen ad between two days (not with ad-free mode)
+// a game of chess of mine is over: a full-screen ad, once the result has been seen
+chess.onGameOver = () => { if (!wallet.adFree && CONFIG.ads.afterChess) setTimeout(() => fullAd(), 3000); };
 story.beforeNewDay = () => (wallet.adFree || !CONFIG.ads.betweenDays ? Promise.resolve() : fullAd());
 // going through a door or a gate (home, yard, square, school): now and then a full-screen ad, as you
 // leave — said first, never out of the blue in the middle of a place (config.json ads.travelChance),

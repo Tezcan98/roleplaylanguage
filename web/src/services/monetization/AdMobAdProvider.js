@@ -1,4 +1,4 @@
-import { AdMob, MaxAdContentRating, BannerAdSize, BannerAdPosition, BannerAdPluginEvents, RewardAdPluginEvents } from '@capacitor-community/admob';
+import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents, RewardAdPluginEvents } from '@capacitor-community/admob';
 import { AdProvider } from './AdProvider.js';
 
 // Google's test units: used until the real ones are in assets/manifest.json → "admob"
@@ -32,11 +32,12 @@ export class AdMobAdProvider extends AdProvider {
 
   #init() {
     this.ready ??= (async () => {
-      // a game for children: AdMob's child-directed treatment (no personalised ads, no tracking) and ads fit for all ages only (Google Play's Families policy)
-      await AdMob.initialize({ initializeForTesting: Object.values(this.testing).some(Boolean), tagForChildDirectedTreatment: true, tagForUnderAgeOfConsent: true, maxAdContentRating: MaxAdContentRating.General });
+      // any ad AdMob has (no child-directed treatment, no content-rating limit: with those, few ads were left to fill
+      // the requests, in Pakistan above all); personalised where the player agreed (the consent form below, EU / UK)
+      await AdMob.initialize({ initializeForTesting: Object.values(this.testing).some(Boolean), tagForChildDirectedTreatment: false, tagForUnderAgeOfConsent: false });
       this.#listen();
       try {
-        const info = await AdMob.requestConsentInfo({ tagForUnderAgeOfConsent: true });
+        const info = await AdMob.requestConsentInfo({ tagForUnderAgeOfConsent: false });
         if (info.isConsentFormAvailable && info.status === 'REQUIRED') await AdMob.showConsentForm();
       } catch { /* no consent form needed */ }
     })();
@@ -60,7 +61,7 @@ export class AdMobAdProvider extends AdProvider {
     try {
       await this.#init();
       this.lastError = '';
-      await AdMob.prepareRewardVideoAd({ adId: this.ids.rewarded, isTesting: this.testing.rewarded, npa: true });
+      await AdMob.prepareRewardVideoAd({ adId: this.ids.rewarded, isTesting: this.testing.rewarded });
       // closed before the end: the plugin's call never answers, so the "dismissed" event does
       let off = null;
       const closed = new Promise((r) => { AdMob.addListener(RewardAdPluginEvents.Dismissed, () => setTimeout(() => r(null), 300)).then((h) => { off = h; }); });
@@ -92,7 +93,7 @@ export class AdMobAdProvider extends AdProvider {
         AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => this.#noAd()),
       ]).catch(() => {});
       if (!this.bannerOn) return; // left the menu meanwhile
-      await AdMob.showBanner({ adId: this.ids.banner, adSize: BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0, isTesting: this.testing.banner, npa: true });
+      await AdMob.showBanner({ adId: this.ids.banner, adSize: BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0, isTesting: this.testing.banner });
       if (!this.bannerOn) await AdMob.removeBanner(); // taken away while it was coming up
     } catch (e) {
       console.warn('[admob] banner failed', e);
@@ -128,7 +129,7 @@ export class AdMobAdProvider extends AdProvider {
   async showInterstitial() {
     try {
       await this.#init();
-      await AdMob.prepareInterstitial({ adId: this.ids.interstitial, isTesting: this.testing.interstitial, npa: true });
+      await AdMob.prepareInterstitial({ adId: this.ids.interstitial, isTesting: this.testing.interstitial });
       await AdMob.showInterstitial();
     } catch (e) {
       console.warn('[admob] interstitial failed', e); // no ad this time: the story just goes on

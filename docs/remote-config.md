@@ -21,6 +21,7 @@ türde bir değer (sayı yerine yazı, eksi sayı) yok sayılır, koddaki varsay
 | `ads.idleBannerSeconds` | kaç saniye kıpırdamayınca banner |
 | `ads.menuBannerChance` | ana menüde banner olasılığı (0–1) |
 | `ads.betweenDays` | hikâyede gün arası geçiş reklamı (true/false) |
+| `ads.afterChess` | kendi satranç maçın bitince geçiş reklamı (true/false) |
 | `ads.travelChance`, `ads.travelGapMinutes` | mekân geçişinde geçiş reklamı olasılığı (0–1) ve iki reklam arası en az dakika |
 | `sellPacks` | kredi paketleri satışta mı (Play Console'da `credits_50/200/500` ürünleri yayındaysa true) |
 | `roomFull` | bu kadar kalabalık odaya, şehir seçmemiş yeni oyuncu girmez (en kalabalık boş olana gider) |
