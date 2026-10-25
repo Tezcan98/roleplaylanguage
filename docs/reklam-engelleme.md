@@ -37,3 +37,14 @@ görüp uygunsuz olanı **Engelle** ile kaldırırsın. Bir reklamverenin sitesi
 bölümüne yazarak o reklamverenin bütün reklamlarını engelleyebilirsin.
 
 Not: Ne kadar çok kategori engellenirse reklam bulma oranı (`/api/ad-stats` sayfasındaki doluluk) o kadar düşer.
+
+## Şu anki ayarlar (25 Ekim 2026, konsolda yapıldı)
+
+- **İçerik derecesi:** en çok **PG** (Ebeveyn Rehberliği; T ve MA engelli). Kod da PG istiyor.
+- **Hassas kategoriler:** Siyaset dışında hepsi engelli (cinsellik, cinsel sağlık, din, flört, ilaç ve takviye, kilo verme,
+  kolay yoldan zengin olma, kozmetik prosedürler, sansasyon, sosyal kumar); kısıtlı kategorilerde **alkol** ve **kumar ve
+  bahis** engelli. Siyaset açık: İslam'a aykırı değil ve gösterimlerin ~%20'si.
+- **Genel kategoriler (74 engelli):** Akşam yemekleri ve gece hayatı, giyim (iç çamaşırı, mayo dahil), güzellik ve kişisel
+  bakım tamamen; ayrıca alkollü içecekler, eğlence amaçlı kumar (poker, kumarhane), oranlı bahis, bahis / eşantiyon
+  promosyonları, astroloji ve burçlar, psişik ve falcılık, romantizm ve ilişkiler, tütün ve elektronik sigara, ve faizli
+  krediler (krediler, kredi kartları, konut / bireysel krediler). Kredi raporları ve bağımlılıktan kurtulma açık.
