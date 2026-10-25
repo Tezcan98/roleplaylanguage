@@ -49,6 +49,8 @@ export class AdMobAdProvider extends AdProvider {
     if (!this.onEvent) return;
     const on = (name, e, f) => AdMob.addListener(name, (d) => { try { this.onEvent(e, f, d ?? {}); } catch { /* never in the ad's way */ } }).catch(() => {});
     for (const [name, e, f] of [
+      // a load that came back with an ad too: without it the page saw only the empty ones (AdStats: how often there is one)
+      ['bannerAdLoaded', 'load', 'banner'], ['interstitialAdLoaded', 'load', 'interstitial'], ['onRewardedVideoAdLoaded', 'load', 'rewarded'],
       ['interstitialAdShowed', 'show', 'interstitial'], ['interstitialAdImpression', 'paid', 'interstitial'], ['interstitialAdDismissed', 'dismiss', 'interstitial'],
       ['interstitialAdFailedToShow', 'fail', 'interstitial'], ['interstitialAdFailedToLoad', 'fail', 'interstitial'],
       ['onRewardedVideoAdShowed', 'show', 'rewarded'], ['onRewardedVideoAdImpression', 'paid', 'rewarded'], ['onRewardedVideoAdReward', 'reward', 'rewarded'],
