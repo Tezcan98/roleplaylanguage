@@ -85,3 +85,13 @@ test('ad page: an empty request (no fill) is counted apart, not listed as an err
   assert.deepEqual(s.latest.map((e) => e.e), ['fail', 'load']);
   assert.equal(s.emptyToday, 1);
 });
+
+test('today and now: devices that played today, and the ones with a batch in the last minutes', () => {
+  const s = new PlayStats();
+  assert.deepEqual(s.online(), { today: 0, now: 0 });
+  s.record(batch());
+  s.record(batch({ pid: 'zzzzzzzz9999' }));
+  s.record(batch({ opens: 0 })); // the same device again
+  assert.deepEqual(s.online(), { today: 2, now: 2 });
+  assert.deepEqual(s.online(Date.now() + 10 * 60_000), { today: 2, now: 0 }); // ten minutes later nobody sent one
+});

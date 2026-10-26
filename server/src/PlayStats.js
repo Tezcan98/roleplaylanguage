@@ -9,11 +9,13 @@ import { createHash } from 'node:crypto';
  *
  *   POST /api/play-event  { pid, v, plat, lang, ch, chId, opens?, sec?, counts: { "talk:ali": 2, … } }   from the game (web/src/services/Stats.js)
  *   GET  /api/stats?key=…  the page (&format=json); the key is AD_STATS_KEY
+ *   GET  /api/play-event     { today, now }: devices that played today / in the last few minutes (the game's menu shows them)
  *
  * Batches are appended to DIR/YYYY-MM-DD.jsonl (Turkish time) and the last DAYS days are kept in
  * memory; DIR/devices.json keeps every device's first day, last day, furthest chapter and totals.
  */
 const DAYS = 30;
+const NOW_MS = 150_000; // "playing now": a batch in the last 2.5 minutes (the game sends one a minute while it is played)
 const PER_MINUTE = 20; // batches per IP and minute
 const MAX_KEYS = 40; // counters in one batch
 const MAX_NAMES = 400; // different counter names in a day (junk can't grow it)
@@ -24,6 +26,7 @@ export class PlayStats {
   #days = new Map(); // day → { devices: Set, opens, sec, counts, names }
   #devices = new Map(); // hash → { first, last, ch, chId, plat, v, lang, sec, opens, counts }
   #hits = new Map();
+  #seen = new Map(); // hash → when its last batch came (for "playing now")
   #dirty = false;
   #timer = null;
 
@@ -78,6 +81,7 @@ export class PlayStats {
     }
     const opens = msg.opens === 1 ? 1 : 0, sec = Number.isInteger(msg.sec) && msg.sec > 0 && msg.sec <= 3600 ? msg.sec : 0;
     const d = day(now), batch = { h, opens, sec, counts };
+    this.#seen.set(h, now);
     this.#tally(d, batch);
     const dev = this.#devices.get(h) ?? { first: d, ch: -1, chId: '', plat: '', v: '', lang: '', sec: 0, opens: 0, counts: {} };
     dev.last = d; dev.sec += sec; dev.opens += opens;
@@ -89,6 +93,12 @@ export class PlayStats {
     this.#devices.set(h, dev); this.#dirty = true;
     if (this.dir) { try { appendFileSync(join(this.dir, `${d}.jsonl`), `${JSON.stringify(batch)}\n`); } catch { /* disk full: the memory still counts */ } }
     return true;
+  }
+
+  /** How many devices played today, and how many are playing now (a batch in the last few minutes). */
+  online(t = Date.now()) {
+    for (const [h, at] of this.#seen) if (t - at > NOW_MS) this.#seen.delete(h);
+    return { today: this.#days.get(day(t))?.devices.size ?? 0, now: this.#seen.size };
   }
 
   /** The device table to disk (every minute when it changed). */
@@ -136,8 +146,13 @@ export class PlayStats {
     };
   }
 
-  /** The two routes; true when it answered. */
+  /** The routes; true when it answered. */
   route(req, res, { clientIp = () => '' } = {}) {
+    if (req.url === '/api/play-event' && req.method === 'GET') { // the counts only, for anyone (the app's pages come from another origin)
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=30', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify(this.online()));
+      return true;
+    }
     if (req.url === '/api/play-event' && req.method === 'POST') {
       let body = '';
       req.on('data', (c) => { body += c; if (body.length > 4096) req.destroy(); });
