@@ -920,7 +920,7 @@ async function editProfile({ cancellable = true } = {}) {
 // how the game is played, anonymously: counts only (server/src/PlayStats.js; the privacy policy says so)
 const stats = new Stats({
   bus, settings, modes, chapters: STORY.chapters.map((c) => c.id), native, lang: () => glossLang(), version: () => appVersion,
-  enabled: !params.has('debug') && !params.has('nointro') && !params.has('fakemic') && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname),
+  enabled: !params.has('debug') && !params.has('nointro') && !params.has('fakemic') && (native || !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)), // (the app's own pages come from https://localhost too: only a dev server's are left out)
   post: async (url, body) => {
     if (native) { const { CapacitorHttp } = await import('@capacitor/core'); const r = await CapacitorHttp.post({ url, headers: { 'Content-Type': 'application/json' }, data: body }); return r.status === 204; }
     const r = await fetch(url, { method: 'POST', body: JSON.stringify(body), keepalive: true, headers: { 'Content-Type': 'text/plain' } }); // (text/plain: no preflight)

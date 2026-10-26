@@ -3,7 +3,7 @@ import { EV } from '../core/events.js';
 /**
  * How the game is played, anonymously (the numbers page: server/src/PlayStats.js): counts of what happens — places,
  * talks, activities, words, chat lines — and play time, never what was said. Sent in small batches: every minute,
- * and when the page is hidden. Not sent for the developer's own device (🔑 on), tests (?debug / ?nointro) or localhost.
+ * and when the page is hidden. Not sent for the developer's own device (🔑 on), tests (?debug / ?nointro) or a dev server on localhost (the app's pages are on https://localhost too: those are sent).
  */
 const URL = 'https://anadoluailesi.com.tr/api/play-event';
 const EVERY = 60_000;
