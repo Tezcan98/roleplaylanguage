@@ -433,9 +433,10 @@ try {
 
   // --- the groom by the horses ------------------------------------------------------------
   await ev(() => window.__game.travel.place('village', 'yardRoad', { force: true })); await sleep(800);
-  await ev(() => window.__game.player.position.set(-4.2, 0, -21)); await sleep(400);
+  await ev(() => window.__game.player.position.set(-19.4, 0, -6.9)); await sleep(400);
   check('the square: Hamdi the groom by the horses', !!(await waitFor(() => ev(() => document.getElementById('act').textContent.includes('Hamdi Amca')), 5000)));
   const rideCredits = await ev(() => window.__game.wallet.balance);
+  await ev(() => window.__game.player.position.set(-24, 0, -2)); await sleep(300); // open ground to the north (the hitching rail is right behind the horses)
   await ev(() => { const g = window.__game; g.animals.ride(g.animals.horses()[0]); });
   check('a ride on a horse: 1 credit, and the 🐎 Zıpla button is there', (await ev(() => window.__game.wallet.balance)) === rideCredits - 1 && !!(await waitFor(() => ev(() => !document.getElementById('jump').hidden), 3000)));
   await page.keyboard.press('Space');

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { gloss, wordNote } from '../i18n/Gloss.js';
 import { RIDE_PRICE, RIDE_SECONDS } from '../content/rides.js';
+import { HORSES } from '../world/locations/VillageSquare.js';
 
 /**
  * Farm animals (Quaternius "Farm Animals", CC0 — assets/models/animal_*.glb): a cow and sheep
@@ -13,10 +14,8 @@ export const HERD = [
   { kind: 'sheep', where: 'yard', x: -13.5, z: 14.5, rot: 0.6, roam: 0 },
   { kind: 'sheep', where: 'yard', x: -11.6, z: 15.8, rot: 2.4, roam: 0 },
   { kind: 'sheep', where: 'yard', x: -12.2, z: 13.2, rot: -1.2, roam: 0 },
-  // the hitching post on the square, by the north fence between the library and the coffeehouse
-  { kind: 'horse', where: 'village', x: -1, z: -25.5, rot: 0, ride: true },
-  { kind: 'horse', where: 'village', x: 2.2, z: -25.5, rot: 0, ride: true },
-  { kind: 'horse', where: 'village', x: 5.4, z: -25.5, rot: 0, ride: true },
+  // the hitching rail on the square, west of the tailor's stall (VillageSquare.js HORSES)
+  ...HORSES.xs.map((x) => ({ kind: 'horse', where: 'village', x, z: HORSES.z, rot: 0, ride: true })),
 ];
 
 /**

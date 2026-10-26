@@ -25,6 +25,8 @@ export const LIBRARY = { x: -34, z: -36, w: 24, d: 14 };
  * chairs, the projector booth by the door (systems/Cinema.js plays films on the screen).
  */
 export const CINEMA = { x: 0, z: -40, w: 22, d: 13, screen: { w: 9, h: 9 * 9 / 16, y: 1.5 } };
+/** The horses' corner (systems/Animals.js ties them here, facing the square): their x, and z. */
+export const HORSES = { xs: [-17, -14, -11], z: -8.6 };
 /** Where the uncles sit (their talk is heard from here: systems/AmbientTalk.js). */
 export const KAHVE_UNCLES = { x: KAHVEHANE.x - 8, z: KAHVEHANE.z - 1 };
 
@@ -674,37 +676,28 @@ export class VillageSquare extends Location {
   }
 
   /**
-   * The horses' place by the north fence (systems/Animals.js ties three there): a hitching rail,
-   * a little open stable with hay, a water trough and a fence on the sides; Hamdi the groom (seyis,
-   * content/addons/seyis.js) stands at the corner.
+   * The horses' corner on the open square, west of the tailor's stall and in line with it, below the
+   * gap between the library and the cinema (HORSES; systems/Animals.js ties three there): a hitching
+   * rail behind them, hay bales, a water trough and a bucket of carrots; Hamdi the groom (seyis,
+   * content/addons/seyis.js) stands at its west end.
    */
   #stable(mf, C) {
-    const add = (m) => this.add(m), x0 = -3.4, x1 = 7.8, zb = -28.3, zf = -23;
-    // the stable: back and side walls of planks, a sloping roof, hay inside
-    add(mf.at(mf.box(x1 - x0 + 0.6, 2.6, 0.2, WOOD), (x0 + x1) / 2, 1.3, zb - 1.4));
-    [x0 - 0.2, x1 + 0.2].forEach((x) => add(mf.at(mf.box(0.2, 2.6, 1.6, WOOD), x, 1.3, zb - 0.7)));
-    const roof = add(mf.at(mf.box(x1 - x0 + 1.2, 0.12, 2.6, { tex: 'roof', repeat: [4, 1] }), (x0 + x1) / 2, 2.85, zb - 0.6)); roof.rotation.x = -0.18;
-    C.addBox(x0 - 0.4, x1 + 0.4, zb - 1.6, zb);
-    const bale = (x, y, z, ry = 0) => { const b = add(mf.at(mf.box(1.1, 0.5, 0.6, 0xD8B65A), x, y, z)); b.rotation.y = ry; add(mf.at(mf.box(1.12, 0.04, 0.62, 0xB0892E), x, y + 0.1, z)).rotation.y = ry; };
-    bale(-2.2, 0.25, zb - 0.6); bale(-1.0, 0.25, zb - 0.6); bale(-1.6, 0.75, zb - 0.6, 0.2); bale(6.6, 0.25, zb - 0.5, 0.4);
+    const add = (m) => this.add(m), H = HORSES, rz = H.z - 1.2, x0 = H.xs[0] - 1.4, x1 = H.xs.at(-1) + 1.4;
     // the hitching rail behind the horses
-    [-2.4, 2.2, 6.6].forEach((x) => add(mf.at(mf.box(0.16, 1.1, 0.16, WOOD), x, 0.55, -26.7)));
-    add(mf.at(mf.box(9.2, 0.12, 0.12, WOOD), 2.1, 1.0, -26.7));
-    C.addBox(-2.5, 6.7, -26.8, -26.6);
-    // side fences
-    const rail = (x, z0, z1) => {
-      for (let z = z0; z <= z1 + 0.01; z += 1.8) add(mf.at(mf.box(0.14, 1.1, 0.14, WOOD), x, 0.55, z));
-      [0.45, 0.9].forEach((y) => add(mf.at(mf.box(0.08, 0.08, z1 - z0, WOOD), x, y, (z0 + z1) / 2)));
-      C.addBox(x - 0.1, x + 0.1, z0, z1);
-    };
-    rail(x0 - 0.2, zb, zf); rail(x1 + 0.2, zb, zf);
-    // a stone water trough and a bucket of carrots
-    add(mf.at(mf.box(2.2, 0.6, 0.7, STONE), 4.6, 0.3, zf + 0.9));
-    add(mf.at(mf.box(2.0, 0.04, 0.5, 0x5FA8C8), 4.6, 0.58, zf + 0.9));
-    C.addBox(3.5, 5.7, zf + 0.55, zf + 1.25);
-    add(mf.at(mf.cyl(0.22, 0.18, 0.4, { tex: 'metal' }, 10), -2.5, 0.2, zf + 0.6));
-    [-0.08, 0, 0.08].forEach((o, i) => { const c = add(mf.at(mf.cone(0.04, 0.22, 0xE67E22, 6), -2.5 + o, 0.46, zf + 0.6 + (i - 1) * 0.05)); c.rotation.x = Math.PI; });
-    this.anchor('seyis', x0 - 1.1, zf + 0.4, 0.3);
+    [x0, H.xs[1], x1].forEach((x) => add(mf.at(mf.box(0.16, 1.1, 0.16, WOOD), x, 0.55, rz)));
+    add(mf.at(mf.box(x1 - x0 + 0.2, 0.12, 0.12, WOOD), (x0 + x1) / 2, 1.0, rz));
+    C.addBox(x0 - 0.1, x1 + 0.1, rz - 0.1, rz + 0.1);
+    // hay bales at the west end
+    const bale = (x, y, z, ry = 0) => { const b = add(mf.at(mf.box(1.1, 0.5, 0.6, 0xD8B65A), x, y, z)); b.rotation.y = ry; add(mf.at(mf.box(1.12, 0.04, 0.62, 0xB0892E), x, y + 0.1, z)).rotation.y = ry; };
+    bale(x0 - 0.9, 0.25, rz - 0.2, 0.2); bale(x0 - 0.9, 0.25, rz + 0.5, -0.1); bale(x0 - 0.85, 0.75, rz + 0.15, 0.4);
+    C.addBox(x0 - 1.5, x0 - 0.3, rz - 0.6, rz + 0.9);
+    // a stone water trough at the east end, and a bucket of carrots
+    add(mf.at(mf.box(0.7, 0.6, 2.2, STONE), x1 + 0.9, 0.3, H.z));
+    add(mf.at(mf.box(0.5, 0.04, 2.0, 0x5FA8C8), x1 + 0.9, 0.58, H.z));
+    C.addBox(x1 + 0.55, x1 + 1.25, H.z - 1.1, H.z + 1.1);
+    add(mf.at(mf.cyl(0.22, 0.18, 0.4, { tex: 'metal' }, 10), x0 - 0.6, 0.2, H.z + 1.1));
+    [-0.08, 0, 0.08].forEach((o, i) => { const c = add(mf.at(mf.cone(0.04, 0.22, 0xE67E22, 6), x0 - 0.6 + o, 0.46, H.z + 1.1 + (i - 1) * 0.05)); c.rotation.x = Math.PI; });
+    this.anchor('seyis', x0 - 1.2, H.z + 0.4, 0.3);
   }
 
   /** Cemal's simit cart west of the fountain: a red cart on two wheels with a glass case full of simits, a sunshade. */
