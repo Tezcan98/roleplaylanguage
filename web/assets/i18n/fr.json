@@ -2776,5 +2776,17 @@
  "What did you hear?": "Qu'as-tu entendu ?",
  "Which number did you hear?": "Quel nombre as-tu entendu ?",
  "You are walking away from the board. A little further and you give up the game.": "Tu t’éloignes de l’échiquier. Encore un peu et tu abandonnes la partie.",
- "You went too far from the board: you gave up the game.": "Tu t’es trop éloigné de l’échiquier : tu as abandonné la partie."
+ "You went too far from the board: you gave up the game.": "Tu t’es trop éloigné de l’échiquier : tu as abandonné la partie.",
+ "Listen…": "Écoute…",
+ "The film is starting…": "Le film commence…",
+ "What did they say?": "Qu'est-ce qui a été dit ?",
+ "Which one did you hear?": "Laquelle as-tu entendue ?",
+ "cinema": "cinéma",
+ "film, movie": "film",
+ "screen (in a cinema); curtain": "écran (de cinéma) ; rideau",
+ "Great, you got them all!": "Génial, tu as tout trouvé !",
+ "Watch it again and you'll do better!": "Regarde-le encore, tu feras mieux !",
+ "Well done, you understood the film!": "Bravo, tu as compris le film !",
+ "You finished the film! +1 credit": "Tu as fini le film ! +1 crédit",
+ "The projectionist isn't here yet. Films are coming soon!": "Le projectionniste n'est pas encore là. Les films arrivent bientôt !"
 }

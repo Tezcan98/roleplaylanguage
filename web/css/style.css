@@ -475,6 +475,8 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .iconbtn.light{background:#fff;color:var(--ink);border-color:var(--wood)}
 .menu-main{width:100%;min-height:58px;font-size:21px}
 .menu-where{margin:-2px 0 0;font:700 14px Nunito,sans-serif;color:var(--muted)}
+.menu-players{margin:-4px 0 0;font:700 12px Nunito,sans-serif;color:var(--muted);opacity:.85}
+.menu-players:empty{display:none}
 .linkbtn{background:none;border:0;padding:4px 2px;font:800 14px Nunito,sans-serif;color:#8A5A12;text-decoration:underline;cursor:pointer}
 .menu-back{align-self:flex-start}
 .main-menu .profile-line{margin:4px 0 0}
@@ -752,3 +754,34 @@ body.menu #run{display:none!important}
 .card.consent li small{display:block;font-weight:500;opacity:.75}
 .card.consent .consent-tick{display:flex;gap:10px;align-items:flex-start;font:700 15px/1.3 Nunito,sans-serif;cursor:pointer}
 .card.consent .consent-tick input{width:22px;height:22px;flex:none;margin-top:1px}
+/* the open-air cinema's panel under the screen (ui/CinemaView.js): the screen stays in view above it */
+.cinema-panel{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 10px);width:min(680px,calc(100vw - 24px));display:flex;flex-direction:column;gap:8px;padding:10px 14px 12px;border-radius:16px;background:rgba(42,30,21,.92);border:2px solid var(--gold);color:var(--parch);pointer-events:auto;z-index:40;box-shadow:0 4px 0 var(--wood2)}
+.cinema-panel[hidden],.cinema-panel [hidden]{display:none}
+.cin-head{display:flex;align-items:center;gap:10px}
+.cin-title{flex:1;font:700 18px Fredoka,sans-serif;color:var(--gold);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cin-title small{color:var(--parch);font:600 13px Nunito,sans-serif;opacity:.8}
+.cin-title .cin-source{color:#F4D58D;opacity:.75}
+.cin-count{font:800 14px Nunito,sans-serif;opacity:.9;white-space:nowrap}
+.cin-prompt{margin:0;font:700 17px Fredoka,sans-serif;text-align:center}
+.cin-prompt small{font:600 13px Nunito,sans-serif;opacity:.8}
+.cin-listen{animation:cinListen 1.2s ease-in-out infinite}
+@keyframes cinListen{50%{opacity:.55}}
+.cin-caption{font:600 19px Fredoka,sans-serif;color:#fff}
+.cin-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cin-opt{min-height:52px;padding:8px 12px;border-radius:12px;border:2px solid var(--wood);background:var(--parch);color:var(--ink);font:700 16px/1.25 Nunito,sans-serif;cursor:pointer;box-shadow:0 3px 0 var(--wood2)}
+.cin-opt:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wood2)}
+.cin-opt.right{background:#BFE5B0;border-color:#3E8E4A}
+.cin-opt.wrong{background:#F3B7AE;border-color:#B03A2E}
+.cin-opt.dim{opacity:.5}
+.cin-shown{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.cin-shown p{margin:0}
+.cin-verdict{font:700 16px Fredoka,sans-serif}.cin-verdict.ok{color:#9BE08A}.cin-verdict.no{color:#F3A096}
+.cin-tr{font:700 20px Fredoka,sans-serif;color:#fff}
+.cin-en{font:600 15px Nunito,sans-serif;opacity:.9}
+.cin-credit{color:var(--gold)}
+.cin-controls{display:flex;justify-content:center;gap:8px}
+.cin-controls:not(:has(button:not([hidden]))){display:none}
+@media (max-width:520px){.cin-options{grid-template-columns:1fr}}
+/* the cinema's video over the screen (ui/ClipScreen.js): taps go through to nothing (the panel has the buttons) */
+.cinema-video{position:absolute;border:0;background:#000;z-index:3;pointer-events:none}
+.cinema-video[hidden]{display:none}

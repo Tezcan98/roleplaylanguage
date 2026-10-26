@@ -18,7 +18,8 @@ const I = {
 const QUALITY = [['low', 'Düşük'], ['medium', 'Orta'], ['high', 'Yüksek']];
 /** Frames a second at most (settings 'fps'): fewer keep a phone cool and the battery longer. */
 export const FPS = [['30', '30'], ['60', '60'], ['max', 'Sınırsız']];
-export const defaultFps = () => (window.Capacitor?.isNativePlatform?.() || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? '30' : '60');
+/** Unlimited for everyone (30 on phones looked like the game was stuttering); 30 / 60 only by choice. */
+export const defaultFps = () => 'max';
 
 /**
  * In-game settings (⚙️ in the HUD), one compact card: the three sound levels, the picture quality,

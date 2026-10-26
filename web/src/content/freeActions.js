@@ -85,6 +85,10 @@ export const FREE_ACTIONS = {
     label: 'Otur, kitap oku', think: 'Bu kitap çok ilginç!', say: 'Kütüphanede oturup kitap okudum.', minutes: 15,
     words: [['kütüphane', 'library'], ['sayfa', 'page'], ['ilginç', 'interesting']],
   },
+  village_cinema: {
+    label: 'Sinemada otur', think: 'Film ne zaman başlayacak?', say: 'Köy sinemasında oturdum.', minutes: 10,
+    words: [['sinema', 'cinema'], ['film', 'film, movie'], ['perde', 'screen (in a cinema); curtain']],
+  },
   village_books: {
     label: 'Raflara bak', think: 'Ne çok kitap var!', say: 'Kütüphanenin raflarına baktım.',
     words: [['raf', 'shelf'], ['kitap', 'book'], ['yazar', 'author']],

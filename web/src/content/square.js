@@ -17,3 +17,6 @@ export const READ_SEATS = READ_TABLES * 2;
 export const BENCHES = 33;
 export const BENCH_SEATS = BENCHES * 2 - 2;
 export const CHESS_SEATS = 8;
+/** The open-air cinema's folding chairs: rows × chairs per row (two blocks, an aisle between them). */
+export const CINEMA_ROWS = 4, CINEMA_COLS = 8;
+export const CINEMA_SEATS = CINEMA_ROWS * CINEMA_COLS;

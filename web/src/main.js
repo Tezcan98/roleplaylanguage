@@ -129,6 +129,9 @@ import { ChessGame } from './systems/ChessGame.js';
 import { Football } from './systems/Football.js';
 import { TalkAreas } from './systems/TalkAreas.js';
 import { Library } from './systems/Library.js';
+import { Cinema } from './systems/Cinema.js';
+import { CinemaView } from './ui/CinemaView.js';
+import { ClipScreen } from './ui/ClipScreen.js';
 import { NeyMusic } from './systems/NeyMusic.js';
 import { BackgroundMusic } from './systems/BackgroundMusic.js';
 import { BookReader } from './ui/BookReader.js';
@@ -153,7 +156,7 @@ import { setPlayerGender, setPlayerLook, playerGender, playerName, personalizeCo
 import { CharacterSetup } from './ui/CharacterSetup.js';
 import {
   STORY, NPCS, PLAYER_LOOK, PLAYER_LOOK_GIRL, PLAYER_LOOKS, lookKey, VOICES, TEACHER_MAN, DIALOGUES, ITEMS, KIND_NAMES, HOTSPOTS, LINKS, FREE_ACTIONS, HOUSE_RULES,
-  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS, KAHVE_TALKS, BOOKS,
+  LESSONS, CLASSMATE_BOTS, TEXTBOOK, MEALS, PRAYER_STEPS, PRAYER_WORDS, KAHVE_TALKS, BOOKS, FILMS,
 } from './content/index.js';
 
 async function loadManifest() {
@@ -542,12 +545,16 @@ const library = new Library({
 });
 effects.register('library', () => library.atShelf());
 effects.register('library-read', () => library.readHere()); // a library seat: a book read aloud with subtitles
+// the open-air cinema: sit on a chair and a cartoon plays on the screen a line at a time; say what each meant (no films yet: coming soon)
+const cinema = new Cinema({ films: FILMS, world, renderer: ctx.renderer, player, camera, vocab, wallet, toasts, state, modes, view: new CinemaView(host), clips: new ClipScreen(host) });
+cinema.build();
+effects.register('cinema', () => cinema.watch());
 // a ney plays quietly in the background in Aslan Bey's open library
 const ney = new NeyMusic({ world, player, place: { location: 'village', x: LIBRARY.x, z: LIBRARY.z }, src: 'assets/audio/kutuphane.mp3', muted: () => musicLevel() <= 0, volume: musicLevel });
 // each outdoor place its own tune; low under talk, and giving way to the library's music near it
 const music = new BackgroundMusic({
   world, muted: () => musicLevel() <= 0, volume: musicLevel,
-  duck: () => (modes.is('dialogue') || village.group.zone || village.voice.inCall || library.reading ? 0.3 : 1) * (1 - ney.level),
+  duck: () => (modes.is('dialogue') || village.group.zone || village.voice.inCall || library.reading || cinema.watching ? 0.3 : 1) * (1 - ney.level),
 });
 chess.onMove = (m) => talk.chessMoved(m);
 effects
@@ -1002,10 +1009,11 @@ function continueGame(then) {
 
 
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
-const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 // frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
 const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };
+if (!settings.get('fpsUnlimited1', false)) { settings.set('fps', defaultFps()); settings.set('fpsUnlimited1', true); } // once: everyone to unlimited (it was 30 on phones by default)
 applyFps(settings.get('fps', defaultFps()));
 game.start();
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
@@ -1078,4 +1086,4 @@ if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { parkPlay, feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { cinema, parkPlay, feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

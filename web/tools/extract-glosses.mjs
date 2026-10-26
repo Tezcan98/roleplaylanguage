@@ -16,7 +16,7 @@ const out = new Set();
 // identifiers (anchors, flags, chapter ids) are not texts
 const ID = /^[\w.-]+(:[\w.-]*)+$|^[a-z]+[A-Z]\w*$|^d\d-/; // effect strings ('talk:dede:ab1'), anchors, chapter ids
 const add = (s) => { if (typeof s === 'string' && /[a-z]/i.test(s) && s.trim() && !ID.test(s.trim())) out.add(s.trim()); };
-const EN_KEYS = new Set(['en', 'answerEn', 'showEn', 'titleEn', 'bagEn']);
+const EN_KEYS = new Set(['en', 'answerEn', 'showEn', 'titleEn', 'bagEn', 'altEn']);
 
 // walk content; call functions (quest texts) with a few fake contexts
 const ctxs = [false, true].map((v) => ({ has: () => v, count: () => (v ? 3 : 0), flag: () => v, isNight: v, words: 0, q: null, chapter: null, reached: () => v }));
@@ -28,7 +28,7 @@ function walk(v, key, seen = new Set()) {
   seen.add(v);
   if (Array.isArray(v)) {
     // [tr, en] word pairs and textbook lines
-    if (v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string' && key !== 'expect' && key !== 'board' && key !== 'travel' && key !== 'link' && key !== 'keywords' && key !== 'botAnswers' && key !== 'botWrong') add(v[1]);
+    if (v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string' && key !== 'expect' && key !== 'cast' && key !== 'board' && key !== 'travel' && key !== 'link' && key !== 'keywords' && key !== 'botAnswers' && key !== 'botWrong') add(v[1]);
     v.forEach((x) => walk(x, key, seen));
     return;
   }

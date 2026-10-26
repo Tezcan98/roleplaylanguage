@@ -1,6 +1,6 @@
 import { FREE_ACTIONS } from './freeActions.js';
 import { looseGoods } from './goods.js';
-import { BENCH_SEATS, TEA_SEATS, CHESS_SEATS, KAHVE_SEATS, READ_SEATS } from './square.js';
+import { BENCH_SEATS, TEA_SEATS, CHESS_SEATS, KAHVE_SEATS, READ_SEATS, CINEMA_SEATS } from './square.js';
 
 const free = (id) => ({ label: FREE_ACTIONS[id].label, use: [`free:${id}`] });
 /**
@@ -54,6 +54,8 @@ export const HOTSPOTS = {
   // the open-air kahvehane and the open library (VillageSquare)
   ...Object.fromEntries(Array.from({ length: KAHVE_SEATS }, (_, i) => i + 1).map((n) => [`village.kahve${n}`, { label: 'Kahvehanede otur', use: [`sit:kahve${n}`, 'free:village_coffee'], available: (c) => !c.seated }])),
   ...Object.fromEntries(Array.from({ length: READ_SEATS }, (_, i) => i + 1).map((n) => [`village.kitap${n}`, { label: 'Otur, kitap oku', use: [`sit:kitap${n}`, 'free:village_read', 'library-read'], available: (c) => !c.seated }])),
+  // the open-air cinema's chairs: a film on the screen (systems/Cinema.js)
+  ...Object.fromEntries(Array.from({ length: CINEMA_SEATS }, (_, i) => i + 1).map((n) => [`village.sinema${n}`, { label: 'Sinemada otur', use: [`sit:sinema${n}`, 'free:village_cinema', 'cinema'], available: (c) => !c.seated }])),
   // under a pitch's score board: back to 0 - 0 (for everyone there)
   'village.scoreReset': { label: 'Skoru sıfırla', use: ['score-reset'] },
   'school.scoreReset': { label: 'Skoru sıfırla', use: ['score-reset'] },

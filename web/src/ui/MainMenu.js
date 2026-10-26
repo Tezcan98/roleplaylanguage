@@ -15,6 +15,8 @@ import { COIN_HTML } from './coin.js';
  */
 /** How often the main menu shows a banner ad (when it opens). */
 const HOME_BANNER = CONFIG.ads.menuBannerChance; // (set on the server: config/remote.js)
+/** Played today / playing now (server/src/PlayStats.js; GET on the same path the game reports to). */
+const PLAYERS_URL = 'https://anadoluailesi.com.tr/api/play-event';
 
 export class MainMenu {
   #view = 'home'; // home | settings
@@ -23,7 +25,7 @@ export class MainMenu {
   constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [], onCode = null }) {
     Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters, onCode });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => { settings.set('serverRegion', id); settings.set('serverPicked', true); } }); // (picked by hand: kept even when busy)
-    this.servers.onUpdate = () => this.#where && (this.#where.textContent = this.#whereText());
+    this.servers.onUpdate = () => { if (this.#where) this.#where.textContent = this.#whereText(); if (this.isOpen) this.#askPlayers(); }; // (refreshed while the menu stays open)
     this.root = el('div', { class: 'overlay main-menu' });
     document.addEventListener('fullscreenchange', () => { if (this.root.classList.contains('open')) this.show(this.#view); });
     host.append(this.root);
@@ -32,6 +34,27 @@ export class MainMenu {
   }
 
   #where = null;
+  #players = null; // { today, now } from the server (services/Stats.js reports; server/src/PlayStats.js counts), or null
+  #playersAt = 0;
+  #playersEl = null;
+
+  /** How many played today and are playing now (every device, in the story or the square): asked at most every 30 s. */
+  #askPlayers() {
+    if (Date.now() - this.#playersAt < 30_000) return;
+    this.#playersAt = Date.now();
+    fetch(PLAYERS_URL, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((p) => {
+      if (!p || !Number.isInteger(p.today)) return;
+      this.#players = p;
+      if (this.#playersEl) this.#playersEl.textContent = this.#playersText();
+    }).catch(() => {});
+  }
+
+  #playersText() {
+    const p = this.#players;
+    if (!p?.today) return '';
+    return `Bugün ${p.today} kişi oynadı${p.now ? ` · şu an ${p.now} kişi oynuyor` : ''}`;
+  }
+
   #whereText() {
     const n = SERVERS.reduce((sum, [id]) => sum + this.servers.count(id), 0);
     return n ? `🏘️ Meydanlarda şu an ${n} kişi var` : '🏘️ Meydanda başka oyuncularla buluşursun';
@@ -106,6 +129,7 @@ export class MainMenu {
         el('p', { class: 'sub', text: 'Köyde yaşa, konuş, arkadaş edin.' }),
         btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(() => { this.settings.set('firstBannerSeen', true); (save ? this.onContinue : this.onStart)(); })), // (every menu before the first game carries the banner)
         el('p', { class: 'menu-where' }, [this.#where]),
+        (this.#playersEl = el('p', { class: 'menu-players', text: this.#playersText() })),
         canInstall() && el('button', { class: 'btn alt menu-install', text: '📲 Uygulama olarak yükle (hep tam ekran)', attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),
         el('div', { class: 'profile-line' }, [
           el('span', { class: 'profile-who' }, [el('img', { class: 'profile-pic', attrs: { src: pic, alt: '' } }), glossInfo().name]),
@@ -116,6 +140,7 @@ export class MainMenu {
     this.root.replaceChildren(el('div', { class: `card menu-${view}` }, body.filter(Boolean)));
     this.root.classList.add('open');
     this.servers.start();
+    this.#askPlayers();
   }
 
   get isOpen() { return this.root.classList.contains('open'); }

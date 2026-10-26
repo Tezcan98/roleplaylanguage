@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { buildPitch } from '../Pitch.js';
 import { Townscape } from '../Townscape.js';
-import { SQUARE_HALF, SQUARE_EAST, TEA_COLS, TEA_ROWS, KAHVE_TABLES, READ_TABLES } from '../../content/square.js';
+import { SQUARE_HALF, SQUARE_EAST, TEA_COLS, TEA_ROWS, KAHVE_TABLES, READ_TABLES, CINEMA_ROWS, CINEMA_COLS } from '../../content/square.js';
 // import { addTrashBin } from '../trashBin.js';
 
 const WOOD = { tex: 'darkWood' };
@@ -19,6 +19,12 @@ export const MOSQUE = { x0: 52, x1: 92, z0: -21, z1: 21, gate: 2.6, hall: { x: 8
 /** Open-air coffeehouse (north-east) and open library (north-west): walls, no roof. */
 export const KAHVEHANE = { x: 34, z: -36, w: 24, d: 14 };
 export const LIBRARY = { x: -34, z: -36, w: 24, d: 14 };
+/**
+ * Köy sineması (the village's open-air cinema) in the north, between the library and the kahvehane: a
+ * whitewashed wall round a gravel yard, the screen at the back facing the square, rows of folding
+ * chairs, the projector booth by the door (systems/Cinema.js plays films on the screen).
+ */
+export const CINEMA = { x: 0, z: -40, w: 22, d: 13, screen: { w: 9, h: 9 * 9 / 16, y: 1.5 } };
 /** Where the uncles sit (their talk is heard from here: systems/AmbientTalk.js). */
 export const KAHVE_UNCLES = { x: KAHVEHANE.x - 8, z: KAHVEHANE.z - 1 };
 
@@ -154,6 +160,7 @@ export class VillageSquare extends Location {
     this.#chessBenches(mf, C);
     this.#kahvehane(mf, C);
     this.#library(mf, C);
+    this.#cinema(mf, C);
     this.#stable(mf, C);
     this.#simitCart(mf, C);
 
@@ -824,6 +831,73 @@ export class VillageSquare extends Location {
       this.#stool(mf, `kitap${n + 1}`, x + 0.4, z - 0.85, 0);
     });
   }
+  /**
+   * The open-air cinema (CINEMA): walls with no roof, the screen in a wooden frame at the back (a live
+   * mesh: the poster, or the film playing — `cinemaScreen`), chairs in two blocks with an aisle
+   * between them (content/square.js CINEMA_ROWS × CINEMA_COLS, anchors `sinema<n>`), strings of bulbs,
+   * the projector booth by the door with its beam (`cinemaBeam`, shown while a film plays).
+   */
+  #cinema(mf, C) {
+    const S = CINEMA, add = (m) => this.add(m), H = 2.4, T = 0.25, wall = { tex: 'whiteWall', repeat: [4, 1] };
+    const x0 = S.x - S.w / 2, x1 = S.x + S.w / 2, z0 = S.z - S.d / 2, z1 = S.z + S.d / 2;
+    add(mf.ground(S.w - 0.3, S.d - 0.3, { tex: 'dirt', repeat: [5, 3] }, 0.025)).position.set(S.x, 0.025, S.z); // gravel
+    add(mf.at(mf.box(S.w, H, T, wall), S.x, H / 2, z0)); C.addBox(x0, x1, z0 - T / 2, z0 + T / 2);
+    [x0, x1].forEach((wx) => { add(mf.at(mf.box(T, H, S.d, wall), wx, H / 2, S.z)); C.addBox(wx - T / 2, wx + T / 2, z0, z1); });
+    const side = (S.w - 3) / 2; // front: a wall either side of the 3 m doorway (the aisle)
+    [x0 + side / 2, x1 - side / 2].forEach((fx) => { add(mf.at(mf.box(side, 1.2, T, wall), fx, 0.6, z1)); C.addBox(fx - side / 2, fx + side / 2, z1 - T / 2, z1 + T / 2); });
+    [S.x - 1.6, S.x + 1.6].forEach((px) => { add(mf.at(mf.box(0.16, 3.4, 0.16, WOOD), px, 1.7, z1)); C.addCircle(px, z1, 0.15); });
+    add(mf.at(mf.box(4.2, 0.2, 0.2, WOOD), S.x, 3.4, z1));
+    this.#sign('KÖY SİNEMASI', S.x, 3.9, z1 + 0.02, 3.8);
+    // the screen: white cloth in a dark frame on two posts, its bottom edge at screen.y
+    const sw = S.screen.w, sh = S.screen.h, sy = S.screen.y + sh / 2, sz = z0 + 0.45;
+    add(mf.at(mf.box(sw + 0.5, sh + 0.5, 0.12, WOOD), S.x, sy, sz - 0.08));
+    [-1, 1].forEach((k) => { add(mf.at(mf.box(0.22, sy + sh / 2 + 0.3, 0.22, WOOD), S.x + k * (sw / 2 + 0.35), (sy + sh / 2 + 0.3) / 2, sz - 0.12)); C.addCircle(S.x + k * (sw / 2 + 0.35), sz - 0.12, 0.2); });
+    this.cinemaScreen = this.live(add(new THREE.Mesh(new THREE.PlaneGeometry(sw, sh), new THREE.MeshBasicMaterial({ color: 0xffffff }))));
+    this.cinemaScreen.position.set(S.x, sy, sz);
+    add(mf.at(mf.box(sw + 0.6, 0.5, 0.3, WOOD), S.x, 0.25, sz + 0.05)); // the low stage under it
+    // chairs: two blocks either side of the aisle, facing the screen (north)
+    const gap = 1.2, step = 0.95, rowStep = 1.45, front = z0 + 6.2;
+    let n = 0;
+    for (let r = 0; r < CINEMA_ROWS; r++) {
+      for (let c = 0; c < CINEMA_COLS; c++) {
+        const half = CINEMA_COLS / 2, k = c < half ? -(half - c) : c - half + 1; // …, -2, -1 | 1, 2, …
+        const x = S.x + Math.sign(k) * (gap + (Math.abs(k) - 1) * step), z = front + r * rowStep;
+        add(this.#chair(mf, x, z, Math.PI));
+        this.anchor(`sinema${++n}`, x, z, Math.PI);
+        this.hotspot(`village.sinema${n}`, x, z + 0.5, 0.55);
+      }
+    }
+    // strings of bulbs from the screen's posts to the front wall
+    const bulb = new THREE.MeshBasicMaterial({ color: 0xFFE7A0 });
+    [-1, 1].forEach((k) => {
+      const ax = S.x + k * (sw / 2 + 0.35), bx = S.x + k * 1.6, ay = sy + sh / 2 + 0.2, by = 3.3;
+      for (let i = 1; i < 12; i++) {
+        const u = i / 12, x = ax + (bx - ax) * u, z = sz + (z1 - sz) * u, y = ay + (by - ay) * u - Math.sin(u * Math.PI) * 0.7;
+        add(mf.at(new THREE.Mesh(this.bulbGeo ??= new THREE.SphereGeometry(0.07, 8, 6), bulb), x, y, z));
+      }
+    });
+    // the projector booth by the door (west of it), its window towards the screen
+    const bx = S.x - 7.5, bz = z1 - 1.2;
+    add(mf.at(mf.box(2.2, 2.6, 1.8, { tex: 'plaster', repeat: [1, 1] }), bx, 1.3, bz)); C.addBox(bx - 1.1, bx + 1.1, bz - 0.9, bz + 0.9);
+    add(mf.at(mf.box(2.5, 0.14, 2.1, { tex: 'roof', repeat: [1, 1] }), bx, 2.67, bz));
+    add(mf.at(mf.box(0.7, 0.45, 0.04, 0x1B2440), bx, 2.0, bz - 0.91)); // its window
+    const lens = add(mf.at(mf.cyl(0.12, 0.16, 0.3, { tex: 'metal' }, 12), bx, 2.0, bz - 0.98)); lens.rotation.x = Math.PI / 2;
+    // the beam from the booth's window to the screen (shown while a film plays)
+    const from = new THREE.Vector3(bx, 2.0, bz - 1.0), to = new THREE.Vector3(S.x, sy, sz + 0.05), len = from.distanceTo(to);
+    const beam = new THREE.Mesh(new THREE.ConeGeometry(Math.hypot(sw, sh) / 2.2, len, 4, 1, true), new THREE.MeshBasicMaterial({ color: 0xFFF6D8, transparent: true, opacity: 0.035, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+    beam.position.copy(from).lerp(to, 0.5);
+    beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), to.clone().sub(from).normalize()); // the cone's wide end at the screen
+    beam.rotateY(Math.PI / 4);
+    beam.visible = false;
+    this.cinemaBeam = this.live(add(beam));
+    // a gazoz crate and a sack of sunflower seeds (çekirdek) by the booth: what you have at the pictures
+    add(mf.at(mf.box(0.6, 0.35, 0.4, 0x2E86C1), bx + 1.6, 0.18, bz + 0.3));
+    [-0.18, 0, 0.18].forEach((o) => add(mf.at(mf.cyl(0.04, 0.04, 0.26, 0x9FD7C5, 8), bx + 1.6 + o, 0.48, bz + 0.3)));
+    add(mf.at(mf.cyl(0.22, 0.26, 0.5, 0xC8A15B, 10), bx + 1.6, 0.25, bz - 0.4));
+    add(mf.disc(0.2, 0x3A2E26, 0.51)).position.set(bx + 1.6, 0.51, bz - 0.4);
+    this.anchor('sinemaci', bx + 1.4, bz + 1.2, Math.PI);
+  }
+
   /**
    * Bakkal: a small shop open at the front so the camera sees in — shelves of goods along
    * the walls (under a roof at the back only), Recep behind the counter with the scales and
