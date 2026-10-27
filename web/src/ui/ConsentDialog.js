@@ -20,7 +20,8 @@ export class ConsentDialog {
       const no = el('button', { class: 'btn alt', text: 'Kabul etmiyorum', attrs: { type: 'button' } });
       tick.addEventListener('change', () => { yes.disabled = !tick.checked; });
       const item = (tr, en) => el('li', {}, [el('span', { text: tr }), el('small', { class: 'en-t', text: en })]);
-      const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card consent' }, [
+      // what is kept (scrolls) and the tick with the buttons (always in sight: side by side on a phone held sideways)
+      const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card consent' }, [el('div', { class: 'consent-text' }, [
         el('p', { class: 'chap', text: 'Köy meydanı · gerçek oyuncular' }),
         el('h2', { class: 'ctitle', text: 'Girmeden önce' }),
         el('p', { class: 'cen en-t', text: gloss('Before you go in') }),
@@ -34,9 +35,10 @@ export class ConsentDialog {
           '18 yaşından küçüksen bunu anne-babanla birlikte oku. Ayrıntılar: ',
           el('a', { text: 'Gizlilik politikası', attrs: { href: PRIVACY_URL, target: '_blank', rel: 'noopener' } }),
         ]),
+      ]), el('div', { class: 'consent-act' }, [
         el('label', { class: 'consent-tick' }, [tick, el('span', { text: 'Okudum, kayıt tutulmasını ve bu şekilde işlenmesini kabul ediyorum.' })]),
         yes, no,
-      ])]);
+      ])])]);
       const done = (v) => { root.remove(); pop(); resolve(v); };
       yes.onclick = () => done(true);
       no.onclick = () => done(false);

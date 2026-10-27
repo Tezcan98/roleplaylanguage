@@ -794,3 +794,13 @@ body.menu #run{display:none!important}
 .menu-rate{align-self:center;font-size:12px;padding:4px 12px;min-height:32px}
 .menu-rate small{font-size:11px}
 @media (max-width:640px){.rate-prompt{max-width:calc(100vw - 32px);top:calc(env(safe-area-inset-top,0px) + 70px + var(--hud-h,46px))}}
+.card.consent .consent-text,.card.consent .consent-act{display:flex;flex-direction:column;gap:12px}
+/* a phone held sideways (S21: 800×360): the text scrolls on the left, the tick and the buttons stay in sight on the right */
+@media (orientation:landscape) and (max-height:520px){
+  .card.consent{flex-direction:row;width:min(800px,100%);padding:14px 16px;gap:16px;overflow:hidden}
+  .card.consent .consent-text{flex:1;min-width:0;overflow:auto;gap:8px}
+  .card.consent .consent-text .ctitle{font-size:24px}
+  .card.consent ul{font-size:14px;gap:6px}
+  .card.consent .consent-act{flex:none;width:min(250px,38%);justify-content:center;gap:10px}
+  .card.consent .consent-act .btn{min-height:46px;font-size:17px}
+}

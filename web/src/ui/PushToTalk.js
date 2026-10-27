@@ -4,17 +4,23 @@ import { gloss } from '../i18n/Gloss.js';
 const MIC = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 
 /**
- * Talk button (also the T key, held): what you say appears as a text bubble. Hold it while you
- * speak and let go, or tap once to start and once more to stop. Where the device can't turn speech into text, the button opens a box to type the
- * sentence instead. Plus the online counter.
+ * Talk button (also the T key, held): what you say appears as a text bubble (in a talking zone:
+ * your voice). One tap starts, another tap stops — and while it is on, the button says so
+ * ("Bitirmek için dokun"); holding it and letting go works too. Where the device can't
+ * turn speech into text, the button opens a box to type the sentence instead. Plus the online counter.
  */
+const LABEL = {
+  idle: 'Dokun, konuş', // (shown the first few times only: then just the mic)
+  rec: 'Bitirmek için dokun', // (short: a phone held sideways is only ~360 px high and the button sits by the corner)
+  zoneRec: 'Bitirmek için dokun',
+};
 export class PushToTalk {
   #placed = '';
   #cap = 0;
   constructor(host, { onChange }) {
     this.onChange = onChange;
     this.on = false;
-    this.btn = el('button', { class: 'ptt', html: `${MIC}<span>Bas, konuş (yazı)</span>`, attrs: { type: 'button', 'aria-label': 'Basılı tut ve konuş (T)' } });
+    this.btn = el('button', { class: 'ptt', html: `${MIC}<span>${LABEL.idle}</span>`, attrs: { type: 'button', 'aria-label': 'Konuşmak için dokun, bitirmek için tekrar dokun (T)' } });
     this.status = el('button', { class: 'pill online', attrs: { type: 'button' }, on: { click: () => (this.offline ? this.onRetry?.() : this.onRooms?.()) } }); // a tap: "Meydan seç" (another city's square) — offline: try again
     // "Şikayet et", next to who is online in the top bar (main.js puts both there)
     this.reportBtn = el('button', { class: 'pill report', text: '🚩 Şikayet et', attrs: { type: 'button', title: 'Bir oyuncuyu şikayet et', 'aria-label': 'Şikayet et' }, on: { click: () => this.onReport?.() } });
@@ -63,6 +69,7 @@ export class PushToTalk {
     clearTimeout(this.#cap);
     if (on) this.#cap = setTimeout(() => this.set(false), 60000); // left on by a cancelled press: off by itself after a minute
     this.btn.classList.toggle('rec', on);
+    this.#label();
     this.onChange(on);
   }
 
@@ -71,7 +78,7 @@ export class PushToTalk {
     const appearing = visible && this.root.hidden;
     this.root.hidden = !visible; this.status.hidden = !visible; this.reportBtn.hidden = !visible;
     if (!visible) this.#alone(null);
-    // a small round mic button; its words ("Bas, konuş") only the first few times, for a few seconds
+    // a small round mic button; its words ("Dokun, konuş") only the first few times, for a few seconds
     if (appearing) {
       let n = 0; try { n = Number(localStorage.getItem('pttHints') ?? 0); localStorage.setItem('pttHints', String(n + 1)); } catch { /* private mode */ }
       if (n < 3) { this.btn.classList.add('hint'); clearTimeout(this.hintTimer); this.hintTimer = setTimeout(() => this.btn.classList.remove('hint'), 5000); }
@@ -97,11 +104,15 @@ export class PushToTalk {
   /** In a talking zone (its name) the button sends the voice; out of it (null), text again. */
   setZone(name) {
     this.zone.hidden = !name;
-    this.btn.classList.toggle('zone', !!name); // in a talking zone its words stay: hold it to speak
+    this.inZone = !!name;
+    this.btn.classList.toggle('zone', !!name); // in a talking zone its words stay
     if (name) this.zone.replaceChildren(`🎙️ ${name}`); // short: the longer words were on the screen all the time and took too much room
     this.zone.title = name ? 'Toplu konuşma alanı: buradakiler seni duyar' : '';
-    this.btn.querySelector('span').textContent = name ? 'Basılı tut, konuş' : 'Bas, konuş (yazı)';
+    this.#label();
   }
+
+  /** The button's words: how to start, or — while on — how to stop. */
+  #label() { this.btn.querySelector('span').textContent = this.on ? (this.inZone ? LABEL.zoneRec : LABEL.rec) : LABEL.idle; }
 
   /** No speech-to-text here: type the sentence instead. */
   typeInstead() { this.typeBox.hidden = false; this.input.focus(); }

@@ -54,7 +54,15 @@ export const DIALOGUES = {
       b3: { say: 'Evet, yirmi beş lira. Buyur, ekmeğin ve sütün.', en: "Yes, twenty-five lira. Here's your bread and milk.", words: [['yirmi beş', 'twenty-five']],
         options: [{ tr: 'Buyurun, otuz lira.', en: 'Here you are, thirty lira.', next: 'b4' }] },
       b4: { say: 'Teşekkürler. Paranın üstü beş lira. Annene selam söyle!', en: "Thanks. Your change is five lira. Say hello to your mom!", words: [['paranın üstü', 'change (money)'], ['beş', 'five']],
-        options: [{ tr: 'Teşekkür ederim, iyi akşamlar!', en: 'Thank you, good evening!', do: ['take:para:25', 'give:ekmek', 'give:sut'] }, { tr: 'Sağ olun Recep amca, iyi akşamlar!', en: 'Thank you, uncle Recep, good evening!', do: ['take:para:25', 'give:ekmek', 'give:sut'] }] },
+        options: [{ tr: 'Teşekkür ederim!', en: 'Thank you!', do: ['take:para:25', 'give:ekmek', 'give:sut'], next: 'bp1' }, { tr: 'Sağ olun Recep amca!', en: 'Thank you, uncle Recep!', do: ['take:para:25', 'give:ekmek', 'give:sut'], next: 'bp1' }] },
+      // the flag on his awning: Palestine (after the first shopping, day 2)
+      bp1: { say: 'Brandamdaki bayrağı gördün mü? O Filistin bayrağı.', en: 'Did you see the flag on my awning? That is the flag of Palestine.', words: [['bayrak', 'flag'], ['branda', 'awning']],
+        options: [{ tr: 'Gördüm! Neden astınız?', en: 'I saw it! Why did you hang it?', next: 'bp2' }] },
+      bp2: { say: 'Filistin’deki kardeşlerimizi unutmamak için. Orada çocuklar bir ekmek bile zor buluyor. Biz ekmeğimizi alırken onları da düşünelim, onlar için dua edelim.', en: 'So that we never forget our brothers and sisters in Palestine. There, children can hardly find even a loaf of bread. When we buy our bread, let us think of them too and pray for them.',
+        words: [['unutmak', 'to forget'], ['düşünmek', 'to think (of)'], ['dua etmek', 'to pray (make a supplication)']],
+        options: [{ tr: 'Ben de onlar için dua ediyorum.', en: 'I pray for them too.', next: 'bp3' }, { tr: 'Çok üzücü Recep amca.', en: 'It is very sad, uncle Recep.', next: 'bp3' }] },
+      bp3: { say: 'Allah onların yardımcısı olsun. Hadi evlat, annen seni bekliyor. İyi akşamlar!', en: 'May Allah help them. Off you go, kid, your mom is waiting for you. Good evening!', words: [['yardımcı', 'helper']],
+        options: [{ tr: 'Amin! İyi akşamlar!', en: 'Amen! Good evening!' }] },
       // shopping: the shop window with the shelves (prices, paid from the bag)
       shop: { say: 'Hoş geldin! Ne istersin? Ekmek, süt, simit, ayran, peynir, yumurta… hepsi taze.', en: 'Welcome! What would you like? Bread, milk, simit, ayran, cheese, eggs… all fresh.',
         words: [['bakkal', 'grocer'], ['taze', 'fresh'], ['istemek', 'to want']],
@@ -262,6 +270,7 @@ export const DIALOGUES = {
         case 'place-bread': return 'br3';
         case 'talk-dede-night': return 'nightChat';
         case 'talk-dede-3': return 'midweekChat';
+        case 'dede-filistin': return 'fl1';
         case 'sun-dede': return 'sunChat';
         case 'laundry-listen': case 'laundry': return 'later';
         case 'masal': return 'kazan.start';
@@ -320,6 +329,30 @@ export const DIALOGUES = {
         options: TALES.map((t) => ({ tr: t.title, en: '', next: `${t.id}.start` })) },
       // --- week chats (Monday night, Tuesday, Sunday) ---
       nightChat: { say: 'Yarın yine okul var. Erken yatarsan sabah dinç kalkarsın.', en: 'School is tomorrow again. If you go to bed early, you will wake up fresh.', words: [['erken', 'early']], options: [{ tr: 'İyi geceler dede!', en: 'Good night grandpa!', do: ['quest'] }, { tr: 'Sana da iyi geceler dede, Allah rahatlık versin.', en: 'Good night to you too, grandpa, sleep well.', do: ['quest'] }] },
+      // Palestine (day 3, after the cauldron tale): we live in peace, Gaza's children don't; pray for them, and don't
+      // be afraid to speak up against the oppression — against the oppression, never with bad words about people
+      fl1: { say: 'Masal güzeldi, değil mi? Şimdi sana önemli bir şey anlatacağım evladım.', en: 'The tale was nice, wasn’t it? Now I will tell you something important, my child.', words: [['önemli', 'important']],
+        options: [{ tr: 'Anlat dede, dinliyorum.', en: 'Tell me, grandpa, I am listening.', next: 'fl2' }] },
+      fl2: { say: 'Biz burada huzur içindeyiz. Sıcak evimiz, sofrada yemeğimiz var; okula gidiyor, oyun oynuyoruz. Ama Filistin’de, Gazze’de çocuklar böyle yaşayamıyor.', en: 'Here we live in peace. We have a warm home and food on the table; we go to school and play. But in Palestine, in Gaza, children cannot live like this.',
+        words: [['huzur', 'peace (of mind)'], ['Filistin', 'Palestine'], ['sofra', 'the meal spread / table']],
+        options: [{ tr: 'Neden dede?', en: 'Why, grandpa?', next: 'fl3' }] },
+      fl3: { say: 'Orada büyük bir zulüm var. Evler yıkılıyor, çok insan ölüyor, çocuklar aç ve susuz kalıyor. Buna soykırım diyorlar.', en: 'There is great oppression there. Homes are destroyed, many people are dying, children are left hungry and thirsty. People call it genocide.',
+        words: [['zulüm', 'oppression, cruelty'], ['yıkılmak', 'to be destroyed'], ['aç', 'hungry'], ['soykırım', 'genocide']],
+        options: [{ tr: 'Çok üzüldüm dede.', en: 'I am very sad, grandpa.', next: 'fl4' }, { tr: 'Biz ne yapabiliriz?', en: 'What can we do?', next: 'fl4' }] },
+      fl4: { say: 'Önce elimizdekilere şükredeceğiz. Sonra dua edeceğiz. Her namazdan sonra Filistinli kardeşlerimiz için de dua et, olur mu?', en: 'First we will be thankful for what we have. Then we will pray. After every prayer, pray for our Palestinian brothers and sisters too, all right?',
+        words: [['şükretmek', 'to give thanks (to God)'], ['dua etmek', 'to pray (make a supplication)'], ['kardeş', 'brother / sister']],
+        options: [{ tr: 'Olur dede, dua edeceğim.', en: 'All right grandpa, I will pray.', next: 'fl5' }] },
+      fl5: { say: 'Bir de şunu unutma: Zulmü görünce susma. İnternette, sosyal medyada doğruyu söylemekten korkma. Ama kimseye kötü söz söyleme; biz zulme karşıyız.', en: 'And don’t forget this: when you see oppression, don’t stay silent. Don’t be afraid to tell the truth on the internet and social media. But never say bad words to anyone; we are against oppression.',
+        words: [['susmak', 'to stay silent'], ['doğru', 'the truth, right'], ['korkmak', 'to be afraid'], ['karşı olmak', 'to be against']],
+        options: [{ tr: 'Anladım dede.', en: 'I understand, grandpa.', next: 'fl6' }] },
+      fl6: { say: 'Söyle bakalım: Bir zulüm gördüğümüzde ne yaparız?', en: 'Tell me then: what do we do when we see oppression?', hint: 'dua, doğru',
+        options: [
+          { tr: 'Susarız.', en: 'We stay silent.', wrong: true },
+          { tr: 'Dua ederiz, doğruyu söyleriz.', en: 'We pray and tell the truth.', next: 'fl7' },
+          { tr: 'Unuturuz.', en: 'We forget it.', wrong: true },
+        ] },
+      fl7: { say: 'Aferin evladım. Allah bütün mazlumların yardımcısı olsun.', en: 'Well done, my child. May Allah help all the oppressed.', words: [['mazlum', 'the oppressed']],
+        options: [{ tr: 'Amin dede.', en: 'Amen, grandpa.', do: ['quest'] }] },
       midweekChat: { say: 'Yarın bahçede domateslere bakacağım. Hafta sonu da arkadaşlarınla buluşursun.', en: 'I will check the tomatoes tomorrow. At the weekend you can meet your friends.', words: [['yarın', 'tomorrow'], ['hafta sonu', 'weekend']], options: [{ tr: 'Tamam dede!', en: 'Okay grandpa!', do: ['quest'] }] },
       sunChat: { say: 'Güzel bir hafta geçirdin. Al bakalım, bu da harçlığın. Şimdi biraz dinlenip arkadaşlarının yanına gidebilirsin.', en: 'You had a good week. Here you go, this is your pocket money. Now you can rest a little and go see your friends.', words: [['hafta', 'week'], ['dinlenmek', 'to rest'], ['el öpmek', 'to kiss an elder’s hand and touch it to your forehead (respect)']], options: [{ tr: '(Dedenin elini öper) Sağ ol dede, Allah razı olsun!', en: '(kisses grandpa’s hand) Thank you grandpa, God bless you!', do: ['pocket-money:10', 'quest'] }, { tr: 'Teşekkürler dede!', en: 'Thanks grandpa!', do: ['quest'] }] },
       ...taleNodes(),

@@ -192,7 +192,7 @@ try {
   check('…but first stopped at the door: "emin misin?"', !!asked && (await A.evaluate(() => window.__game.village.group.zone)) === null && (await A.textContent('.overlay.open')).includes('emin misin'));
   await door(A); await door(B);
   const inZone = await waitFor(async () => (await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.group.zone)))).every((z) => z === 'kahve'), 8000);
-  check('kahvehane: walking in joins its talking zone, and the screen says so', !!inZone && await A.evaluate(() => !document.querySelector('.pill.zone-note').hidden && document.querySelector('.ptt span').textContent.includes('Basılı tut')),
+  check('kahvehane: walking in joins its talking zone, and the screen says so', !!inZone && await A.evaluate(() => !document.querySelector('.pill.zone-note').hidden && document.querySelector('.ptt span').textContent.includes('Dokun')),
     await A.evaluate(() => document.querySelector('.pill.zone-note')?.textContent));
   const zoneUp = () => Promise.all([A, B].map((p) => p.evaluate(() => Object.values(window.__game.village.group.states())))).then((s) => (s.every((x) => x.length === 1 && x[0] === 'connected') ? s : null));
   const zs = await waitFor(zoneUp, 45000) ?? await Promise.all([A, B].map((p) => p.evaluate(() => window.__game.village.group.states())));
@@ -276,7 +276,7 @@ try {
   await B.evaluate(() => { const g = window.__game, z = g.village.zones.kahve; g.player.position.set(z.x + 1, 0, z.z); });
   await door(A); await door(B);
   check('kahvehane: both in the talking zone, connected to each other', !!(await waitFor(async () => (await A.evaluate(() => Object.values(window.__game.village.group.states())[0])) === 'connected' && (await B.evaluate(() => Object.values(window.__game.village.group.states())[0])) === 'connected', 20000)));
-  check('…the talk button says to hold it there', (await A.textContent('.ptt')).includes('Basılı tut'));
+  check('…the talk button says to tap it there', (await A.textContent('.ptt')).includes('Dokun'));
   await A.evaluate(() => window.__game.village.talk(true));
   await B.mouse.click(450, 120); // (a tap: the browser lets the sound start)
   const aId = await A.evaluate(() => window.__game.village.net.id);
