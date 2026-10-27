@@ -88,10 +88,22 @@ test('ad page: an empty request (no fill) is counted apart, not listed as an err
 
 test('today and now: devices that played today, and the ones with a batch in the last minutes', () => {
   const s = new PlayStats();
-  assert.deepEqual(s.online(), { today: 0, now: 0 });
+  assert.deepEqual(s.online(), { total: 0, today: 0, now: 0 });
   s.record(batch());
   s.record(batch({ pid: 'zzzzzzzz9999' }));
   s.record(batch({ opens: 0 })); // the same device again
-  assert.deepEqual(s.online(), { today: 2, now: 2 });
-  assert.deepEqual(s.online(Date.now() + 10 * 60_000), { today: 2, now: 0 }); // ten minutes later nobody sent one
+  assert.deepEqual(s.online(), { total: 2, today: 2, now: 2 });
+  assert.deepEqual(s.online(Date.now() + 10 * 60_000), { total: 2, today: 2, now: 0 }); // ten minutes later nobody sent one
+});
+
+test('total with the ad numbers: the app\'s players from those, the browser\'s from the play numbers, each once', async () => {
+  const { AdStats } = await import('../src/AdStats.js');
+  const s = new PlayStats(), ads = new AdStats({ key: 'k' });
+  s.adDevices = () => ads.devices();
+  ads.record({ e: 'load', f: 'banner', pid: 'aaaaaaaa1111' }, '1.1.1.1');
+  ads.record({ e: 'impression', f: 'banner', pid: 'aaaaaaaa1111' }, '1.1.1.1'); // the same phone again
+  ads.record({ e: 'load', f: 'banner', pid: 'bbbbbbbb2222' }, '1.1.1.2');
+  s.record(batch({ pid: 'aaaaaaaa1111', plat: 'app' })); // a phone that is in the ad numbers too: not twice
+  s.record(batch({ pid: 'cccccccc3333', plat: 'web' })); // a browser: no ads there
+  assert.equal(s.online().total, 3);
 });

@@ -1,10 +1,11 @@
 import { CONFIG } from '../config/remote.js';
 import { el } from './dom.js';
-import { gloss, glossInfo } from '../i18n/Gloss.js';
+import { gloss, glossInfo, ui } from '../i18n/Gloss.js';
 import { ServerPicker, SERVERS } from './ServerPicker.js';
 import { characterPicture } from './CharacterSetup.js';
 import { fullscreenPossible, goFullscreen, fullscreenIcon, canInstall, installApp } from './Landscape.js';
 import { COIN_HTML } from './coin.js';
+import { canRate, openStore } from '../platform/rate.js';
 
 
 /**
@@ -34,16 +35,16 @@ export class MainMenu {
   }
 
   #where = null;
-  #players = null; // { today, now } from the server (services/Stats.js reports; server/src/PlayStats.js counts), or null
+  #players = null; // { total, today, now } from the server (services/Stats.js reports; server/src/PlayStats.js counts), or null
   #playersAt = 0;
   #playersEl = null;
 
-  /** How many played today and are playing now (every device, in the story or the square): asked at most every 30 s. */
+  /** How many have played so far and are playing now (every device, in the story or the square): asked at most every 30 s. */
   #askPlayers() {
     if (Date.now() - this.#playersAt < 30_000) return;
     this.#playersAt = Date.now();
     fetch(PLAYERS_URL, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((p) => {
-      if (!p || !Number.isInteger(p.today)) return;
+      if (!p || !Number.isInteger(p.total)) return;
       this.#players = p;
       if (this.#playersEl) this.#playersEl.textContent = this.#playersText();
     }).catch(() => {});
@@ -51,8 +52,8 @@ export class MainMenu {
 
   #playersText() {
     const p = this.#players;
-    if (!p?.today) return '';
-    return `Bugün ${p.today} kişi oynadı${p.now ? ` · şu an ${p.now} kişi oynuyor` : ''}`;
+    if (!p?.total) return '';
+    return `Bugüne kadar ${p.total} kişi oynadı${p.now ? ` · şu an ${p.now} kişi oynuyor` : ''}`;
   }
 
   #whereText() {
@@ -129,12 +130,13 @@ export class MainMenu {
         el('p', { class: 'sub', text: 'Köyde yaşa, konuş, arkadaş edin.' }),
         btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(() => { this.settings.set('firstBannerSeen', true); (save ? this.onContinue : this.onStart)(); })), // (every menu before the first game carries the banner)
         el('p', { class: 'menu-where' }, [this.#where]),
-        (this.#playersEl = el('p', { class: 'menu-players', text: this.#playersText() })),
         canInstall() && el('button', { class: 'btn alt menu-install', text: '📲 Uygulama olarak yükle (hep tam ekran)', attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),
         el('div', { class: 'profile-line' }, [
           el('span', { class: 'profile-who' }, [el('img', { class: 'profile-pic', attrs: { src: pic, alt: '' } }), glossInfo().name]),
           btn('Değiştir', 'chipbtn', () => this.onProfile()),
         ]),
+        canRate() && el('button', { class: 'chipbtn menu-rate', attrs: { type: 'button' }, on: { click: () => openStore(this.settings) } }, ['⭐ Bize destek ol: puan ver', ...(ui('', 'Support us: rate the game') ? [el('small', { class: 'en-t' }, [' · ', el('bdi', { text: ui('', 'Support us: rate the game') })])] : [])]), // (no reward: Google Play forbids rewarding ratings)
+        (this.#playersEl = el('p', { class: 'menu-players', text: this.#playersText() })), // small, at the very bottom
       ];
     }
     this.root.replaceChildren(el('div', { class: `card menu-${view}` }, body.filter(Boolean)));

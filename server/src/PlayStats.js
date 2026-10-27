@@ -9,7 +9,7 @@ import { createHash } from 'node:crypto';
  *
  *   POST /api/play-event  { pid, v, plat, lang, ch, chId, opens?, sec?, counts: { "talk:ali": 2, … } }   from the game (web/src/services/Stats.js)
  *   GET  /api/stats?key=…  the page (&format=json); the key is AD_STATS_KEY
- *   GET  /api/play-event     { today, now }: devices that played today / in the last few minutes (the game's menu shows them)
+ *   GET  /api/play-event     { total, today, now }: devices that ever played / today / in the last few minutes (the game's menu)
  *
  * Batches are appended to DIR/YYYY-MM-DD.jsonl (Turkish time) and the last DAYS days are kept in
  * memory; DIR/devices.json keeps every device's first day, last day, furthest chapter and totals.
@@ -27,6 +27,8 @@ export class PlayStats {
   #devices = new Map(); // hash → { first, last, ch, chId, plat, v, lang, sec, opens, counts }
   #hits = new Map();
   #seen = new Map(); // hash → when its last batch came (for "playing now")
+  /** () → how many devices ever sent an ad event (AdStats.js): the app's players, counted there since before these numbers (index.mjs sets it). */
+  adDevices = null;
   #dirty = false;
   #timer = null;
 
@@ -95,10 +97,16 @@ export class PlayStats {
     return true;
   }
 
-  /** How many devices played today, and how many are playing now (a batch in the last few minutes). */
+  /**
+   * How many devices ever played (`total`), played today, and are playing now (a batch in the last few
+   * minutes). `total` with the ad numbers: the app's players from those (they started earlier, and the app
+   * sent no play numbers at first), the browser's from here — each device once (the two hash it differently).
+   */
   online(t = Date.now()) {
     for (const [h, at] of this.#seen) if (t - at > NOW_MS) this.#seen.delete(h);
-    return { today: this.#days.get(day(t))?.devices.size ?? 0, now: this.#seen.size };
+    const devs = [...this.#devices.values()];
+    const total = this.adDevices ? this.adDevices() + devs.filter((v) => v.plat === 'web').length : devs.length;
+    return { total, today: this.#days.get(day(t))?.devices.size ?? 0, now: this.#seen.size };
   }
 
   /** The device table to disk (every minute when it changed). */

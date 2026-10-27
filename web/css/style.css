@@ -475,7 +475,7 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .iconbtn.light{background:#fff;color:var(--ink);border-color:var(--wood)}
 .menu-main{width:100%;min-height:58px;font-size:21px}
 .menu-where{margin:-2px 0 0;font:700 14px Nunito,sans-serif;color:var(--muted)}
-.menu-players{margin:-4px 0 0;font:700 12px Nunito,sans-serif;color:var(--muted);opacity:.85}
+.menu-players{margin:2px 0 -4px;font:600 10.5px Nunito,sans-serif;color:var(--muted);opacity:.75;text-align:center}
 .menu-players:empty{display:none}
 .linkbtn{background:none;border:0;padding:4px 2px;font:800 14px Nunito,sans-serif;color:#8A5A12;text-decoration:underline;cursor:pointer}
 .menu-back{align-self:flex-start}
@@ -785,3 +785,12 @@ body.menu #run{display:none!important}
 /* the cinema's video over the screen (ui/ClipScreen.js): taps go through to nothing (the panel has the buttons) */
 .cinema-video{position:absolute;border:0;background:#000;z-index:3;pointer-events:none}
 .cinema-video[hidden]{display:none}
+/* "support us: rate the game" (ui/RatePrompt.js at the top while playing on your own; the menu's chip) — no reward */
+.rate-prompt{position:absolute;top:calc(env(safe-area-inset-top,0px) + 18px + var(--hud-h,46px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;max-width:min(560px,calc(100vw - 260px));z-index:30;animation:tin .3s ease-out}
+.rate-prompt[hidden]{display:none}
+.rate-go{pointer-events:auto;flex:1;min-height:36px;padding:6px 14px;border-radius:999px;border:2px solid var(--gold);background:rgba(42,30,21,.9);color:var(--parch);font:700 13px/1.25 Nunito,sans-serif;cursor:pointer;text-align:center}
+.rate-x{pointer-events:auto;width:32px;height:32px;flex:none;border-radius:50%;border:2px solid var(--gold);background:rgba(42,30,21,.9);color:var(--parch);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.rate-x svg{width:14px;height:14px}
+.menu-rate{align-self:center;font-size:12px;padding:4px 12px;min-height:32px}
+.menu-rate small{font-size:11px}
+@media (max-width:640px){.rate-prompt{max-width:calc(100vw - 32px);top:calc(env(safe-area-inset-top,0px) + 70px + var(--hud-h,46px))}}

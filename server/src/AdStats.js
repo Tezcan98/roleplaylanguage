@@ -1,4 +1,4 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 
@@ -35,7 +35,15 @@ export class AdStats {
     if (dir) { mkdirSync(dir, { recursive: true }); this.#load(); }
   }
 
+  #everyone = new Set(); // every device that ever sent an event (its short hash), from all the day files
+
+  /** How many devices (app players) ever sent an ad event. */
+  devices() { return this.#everyone.size; }
+
   #load() {
+    for (const f of readdirSync(this.dir).filter((n) => /^\d{4}-\d{2}-\d{2}\.jsonl$/.test(n))) {
+      for (const line of readFileSync(join(this.dir, f), 'utf8').split('\n')) { const m = /"d":"([0-9a-f]{10})"/.exec(line); if (m) this.#everyone.add(m[1]); }
+    }
     for (let k = 0; k < DAYS; k++) {
       const d = day(Date.now() - k * 86400000), f = join(this.dir, `${d}.jsonl`);
       if (!existsSync(f)) continue;
@@ -59,7 +67,7 @@ export class AdStats {
     if (/^[A-Z]{3}$/.test(String(msg.cur ?? ''))) ev.cur = msg.cur;
     if (typeof msg.v === 'string') ev.v = msg.v.slice(0, 16);
     if (msg.e === 'fail' && Number.isInteger(msg.code) && msg.code >= -1 && msg.code < 100) ev.code = msg.code;
-    if (msg.pid) ev.d = createHash('sha256').update(String(msg.pid)).digest('hex').slice(0, 10);
+    if (msg.pid) { ev.d = createHash('sha256').update(String(msg.pid)).digest('hex').slice(0, 10); this.#everyone.add(ev.d); }
     if (/^[A-Z]{2}$/.test(country)) ev.c = country;
     const d = day(now);
     if (!this.#days.has(d)) {
