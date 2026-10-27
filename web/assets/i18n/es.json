@@ -566,7 +566,6 @@
  "In the school book, cards link a Turkish word to a word that sounds similar and a funny picture. That way you won’t forget it!": "En el libro de la escuela, unas tarjetas unen una palabra turca con otra que suena parecido y un dibujo gracioso. ¡Así no la olvidarás!",
  "In the schoolyard.": "En el patio de la escuela.",
  "In the square you meet real players. What you say appears as text above your head. Voice chat is only between two people, after both agree. You can play football together too!": "En la plaza conoces a jugadores de verdad. Lo que dices aparece como texto sobre tu cabeza. El chat de voz es solo entre dos personas y cuando las dos aceptan. ¡También podéis jugar al fútbol juntos!",
- "In the square your words appear as text above your head: press “Bas, konuş” or the T key and speak.": "En la plaza tus palabras aparecen como texto sobre tu cabeza: pulsa «Bas, konuş» o la tecla T y habla.",
  "In the time of Suleiman the Magnificent there was a poor but proud man called Cevri Çelebi. The sultan sent him as an envoy to a king in Europe.": "En tiempos de Solimán el Magnífico había un hombre pobre pero orgulloso llamado Cevri Çelebi. El sultán lo envió como embajador ante un rey de Europa.",
  "In the village square.": "En la plaza del pueblo.",
  "In this square the tea maker knows everything, kid. Here, take it while it is hot. Don’t spill it!": "En esta plaza el del té lo sabe todo, chico. Toma, llévalo calentito. ¡No lo derrames!",
@@ -2703,7 +2702,6 @@
  "Too many reports — try again a little later.": "Demasiadas denuncias — inténtalo un poco más tarde.",
  "Who are you reporting?": "¿A quién denuncias?",
  "You already reported this player; it is being checked.": "Ya denunciaste a este jugador; se está revisando.",
- "Everyone in here hears each other. Hold the talk button to speak.": "Aquí todos se oyen. Mantén pulsado el botón para hablar.",
  "Before you go in": "Antes de entrar",
  "If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.": "Si alguien te denuncia, lo que dijiste en los últimos 10 minutos se transcribe y lo revisa una IA (Google Gemini); un moderador lo mira y puede expulsarte de la plaza.",
  "These records are used only to keep players safe, and given to the authorities if the law asks for them.": "Estos registros solo se usan para proteger a los jugadores, y se entregan a las autoridades si la ley lo pide.",
@@ -2711,7 +2709,6 @@
  "You go on offline in the square": "Sigues sin conexión en la plaza",
  "Your voice in voice chats is kept encrypted for 48 hours.": "Tu voz en los chats de voz se guarda cifrada durante 48 horas.",
  "Your voice in voice chats and push-to-talk is kept encrypted for 48 hours.": "Tu voz en los chats de voz y al pulsar para hablar se guarda cifrada durante 48 horas.",
- "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "Aquí hay jugadores reales. Lo que dices aparece como texto sobre tu cabeza («Bas, konuş» o T). El chat de voz es solo entre dos personas, después de que la otra acepte. Si alguien te molesta, denúncialo con la 🚩 de arriba. ¡Sé amable!",
  "This is a talking area: everyone inside hears you.": "Es una zona de conversación: todos los de dentro te oyen.",
  "Your last reports were unfounded, so you cannot report for a few days.": "Tus últimas denuncias no tenían fundamento: no puedes denunciar durante unos días.",
  "“A letter is not without a kâtip.” Do you know what “kâtip” means?": "«Una letra no existe sin kâtip.» ¿Sabes qué significa «kâtip»?",
@@ -2826,5 +2823,8 @@
  "awning": "toldo",
  "flag": "bandera",
  "helper": "ayudante",
- "to think (of)": "pensar (en)"
+ "to think (of)": "pensar (en)",
+ "Everyone in here hears each other. Tap the 🎤 button to speak, tap it again when you are done.": "Aquí todos se oyen. Toca el botón 🎤 para hablar y vuelve a tocarlo cuando termines.",
+ "In the square your words appear as text above your head: tap the 🎤 button and speak, tap it again when you are done (or hold the T key).": "En la plaza tus palabras aparecen como texto sobre tu cabeza: toca el botón 🎤 y habla, vuelve a tocarlo cuando termines (o mantén pulsada la tecla T).",
+ "There are real players here. Tap the 🎤 button at the bottom right to speak and tap it again when you are done: what you say appears as text above your head. Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "Aquí hay jugadores reales. Toca el botón 🎤 abajo a la derecha para hablar y vuelve a tocarlo cuando termines: lo que dices aparece como texto sobre tu cabeza. El chat de voz es solo entre dos personas, después de que la otra acepte. Si alguien te molesta, denúncialo con la 🚩 de arriba. ¡Sé amable!"
 }

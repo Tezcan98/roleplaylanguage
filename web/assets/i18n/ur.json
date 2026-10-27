@@ -566,7 +566,6 @@
  "In the school book, cards link a Turkish word to a word that sounds similar and a funny picture. That way you won’t forget it!": "اسکول کی کتاب میں کارڈ ترکی لفظ کو ملتی جلتی آواز والے لفظ اور ایک مزاحیہ تصویر سے جوڑتے ہیں۔ یوں تم اسے نہیں بھولو گے!",
  "In the schoolyard.": "اسکول کے صحن میں۔",
  "In the square you meet real players. What you say appears as text above your head. Voice chat is only between two people, after both agree. You can play football together too!": "چوک میں تم اصلی کھلاڑیوں سے ملتے ہو۔ جو تم کہتے ہو وہ تمہارے سر کے اوپر لکھا نظر آتا ہے۔ آواز والی گفتگو صرف دو لوگوں میں اور دونوں کی رضامندی سے ہوتی ہے۔ تم مل کر فٹ بال بھی کھیل سکتے ہو!",
- "In the square your words appear as text above your head: press “Bas, konuş” or the T key and speak.": "چوک میں تمہاری باتیں سر کے اوپر لکھی نظر آتی ہیں: «Bas, konuş» یا T کی دباؤ اور بولو۔",
  "In the time of Suleiman the Magnificent there was a poor but proud man called Cevri Çelebi. The sultan sent him as an envoy to a king in Europe.": "سلطان سلیمان قانونی کے زمانے میں جوری چلبی نام کا ایک غریب مگر خوددار آدمی تھا۔ سلطان نے اسے سفیر بنا کر یورپ کے ایک بادشاہ کے پاس بھیجا۔",
  "In the village square.": "گاؤں کے چوک میں۔",
  "In this square the tea maker knows everything, kid. Here, take it while it is hot. Don’t spill it!": "اس چوک میں چائے والا سب کچھ جانتا ہے بچے۔ لو، گرم گرم لے جاؤ۔ گرانا مت!",
@@ -2703,7 +2702,6 @@
  "Too many reports — try again a little later.": "بہت زیادہ شکایتیں — تھوڑی دیر بعد دوبارہ کوشش کریں۔",
  "Who are you reporting?": "آپ کس کی شکایت کر رہے ہیں؟",
  "You already reported this player; it is being checked.": "آپ نے ابھی اس کھلاڑی کی شکایت کی ہے؛ جائزہ جاری ہے۔",
- "Everyone in here hears each other. Hold the talk button to speak.": "یہاں سب ایک دوسرے کو سنتے ہیں۔ بولنے کے لیے بٹن دبا کر رکھیں۔",
  "Before you go in": "اندر جانے سے پہلے",
  "If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.": "اگر کوئی آپ کی شکایت کرے تو آپ کی پچھلے 10 منٹ کی باتیں مصنوعی ذہانت (Google Gemini) سے لکھی اور جانچی جاتی ہیں؛ پھر ایک نگران دیکھتا ہے اور آپ کو چوک سے روک سکتا ہے۔",
  "These records are used only to keep players safe, and given to the authorities if the law asks for them.": "یہ ریکارڈ صرف کھلاڑیوں کی حفاظت کے لیے استعمال ہوتے ہیں، اور قانون مانگے تو حکام کو دیے جاتے ہیں۔",
@@ -2711,7 +2709,6 @@
  "You go on offline in the square": "آپ چوک میں آف لائن جاری رکھتے ہیں",
  "Your voice in voice chats is kept encrypted for 48 hours.": "صوتی گفتگو میں آپ کی آواز 48 گھنٹے تک خفیہ طور پر محفوظ رہتی ہے۔",
  "Your voice in voice chats and push-to-talk is kept encrypted for 48 hours.": "صوتی گفتگو اور دبا کر بولنے میں آپ کی آواز 48 گھنٹے تک خفیہ طور پر محفوظ رہتی ہے۔",
- "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "یہاں اصلی کھلاڑی ہیں۔ آپ جو کہتے ہیں وہ آپ کے سر کے اوپر لکھا نظر آتا ہے («Bas, konuş» یا T)۔ صوتی گفتگو صرف دو لوگوں کے درمیان ہوتی ہے، دوسرے کی رضامندی کے بعد۔ اگر کوئی آپ کو تنگ کرے تو اوپر 🚩 سے شکایت کریں۔ مہربان رہیں!",
  "This is a talking area: everyone inside hears you.": "یہ اجتماعی گفتگو کی جگہ ہے: اندر سب آپ کو سنتے ہیں۔",
  "Your last reports were unfounded, so you cannot report for a few days.": "آپ کی پچھلی شکایتیں بے بنیاد نکلیں، اس لیے آپ کچھ دن شکایت نہیں کر سکتے۔",
  "“A letter is not without a kâtip.” Do you know what “kâtip” means?": "«کوئی حرف کاتب کے بغیر نہیں ہوتا۔» جانتے ہو «کاتب» (kâtip) کا کیا مطلب ہے؟",
@@ -2826,5 +2823,8 @@
  "awning": "سائبان (دکان کی چھتری)",
  "flag": "جھنڈا",
  "helper": "مددگار",
- "to think (of)": "سوچنا (کے بارے میں)"
+ "to think (of)": "سوچنا (کے بارے میں)",
+ "Everyone in here hears each other. Tap the 🎤 button to speak, tap it again when you are done.": "یہاں سب ایک دوسرے کو سنتے ہیں۔ بولنے کے لیے 🎤 بٹن کو چھوئیں، ختم ہونے پر دوبارہ چھوئیں۔",
+ "In the square your words appear as text above your head: tap the 🎤 button and speak, tap it again when you are done (or hold the T key).": "چوک میں آپ کی باتیں آپ کے سر کے اوپر لکھی نظر آتی ہیں: 🎤 بٹن کو چھو کر بولیں، ختم ہونے پر دوبارہ چھوئیں (یا T کی دبا کر رکھیں)۔",
+ "There are real players here. Tap the 🎤 button at the bottom right to speak and tap it again when you are done: what you say appears as text above your head. Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "یہاں اصلی کھلاڑی ہیں۔ بولنے کے لیے نیچے دائیں طرف 🎤 بٹن کو چھوئیں اور ختم ہونے پر دوبارہ چھوئیں: آپ جو کہتے ہیں وہ آپ کے سر کے اوپر لکھا نظر آتا ہے۔ صوتی گفتگو صرف دو لوگوں کے درمیان ہوتی ہے، دوسرے کی رضامندی کے بعد۔ اگر کوئی آپ کو تنگ کرے تو اوپر 🚩 سے شکایت کریں۔ مہربان رہیں!"
 }

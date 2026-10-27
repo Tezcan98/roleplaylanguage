@@ -49,7 +49,7 @@ export class HelpPanel {
       section(`🏫 ${gloss('Practice')}`,
         p(gloss('Garden gate → school: practise with the teacher for 1 credit at any time of day. Grandma on the sedir gives a new piece of advice every day.'))),
       section(`🌐 ${gloss('The village square (with other players)')}`,
-        p(gloss('In the square your words appear as text above your head: press “Bas, konuş” or the T key and speak.')),
+        p(gloss('In the square your words appear as text above your head: tap the 🎤 button and speak, tap it again when you are done (or hold the T key).')),
         p(gloss('Voice chat is only between two people and needs both to agree. Be kind to everyone.'))),
       el('div', { class: 'row help-actions' }, [
         el('button', { class: 'btn alt sm', text: `📖 ${gloss('Words')} (${s.words})`, attrs: { type: 'button' }, on: { click: () => { this.close(); this.onWords(); } } }),

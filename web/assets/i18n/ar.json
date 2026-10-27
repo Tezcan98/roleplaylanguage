@@ -566,7 +566,6 @@
  "In the school book, cards link a Turkish word to a word that sounds similar and a funny picture. That way you won’t forget it!": "في كتاب المدرسة بطاقات تربط الكلمة التركية بكلمة تشبهها في الصوت وصورة مضحكة. هكذا لا تنساها!",
  "In the schoolyard.": "في ساحة المدرسة.",
  "In the square you meet real players. What you say appears as text above your head. Voice chat is only between two people, after both agree. You can play football together too!": "في الساحة تلتقي لاعبين حقيقيين. ما تقوله يظهر نصاً فوق رأسك. المحادثة الصوتية بين شخصين فقط وبعد موافقة الطرفين. ويمكنكم أيضاً لعب الكرة معاً!",
- "In the square your words appear as text above your head: press “Bas, konuş” or the T key and speak.": "في الساحة يظهر كلامك نصاً فوق رأسك: اضغط «Bas, konuş» أو مفتاح T وتكلّم.",
  "In the time of Suleiman the Magnificent there was a poor but proud man called Cevri Çelebi. The sultan sent him as an envoy to a king in Europe.": "في عهد السلطان سليمان القانوني كان هناك رجل فقير لكنه عزيز النفس اسمه جوري چلبي. أرسله السلطان سفيرًا إلى ملك في أوروبا.",
  "In the village square.": "في ساحة القرية.",
  "In this square the tea maker knows everything, kid. Here, take it while it is hot. Don’t spill it!": "في هذه الساحة صانع الشاي يعرف كل شيء يا ولد. خذ، احمله وهو ساخن. لا تسكبه!",
@@ -2704,7 +2703,6 @@
  "Too many reports — try again a little later.": "بلاغات كثيرة — حاول بعد قليل.",
  "Who are you reporting?": "عمّن تبلّغ؟",
  "You already reported this player; it is being checked.": "لقد أبلغت عن هذا اللاعب للتو؛ البلاغ قيد المراجعة.",
- "Everyone in here hears each other. Hold the talk button to speak.": "هنا يسمع الجميع بعضهم بعضًا. اضغط مطولًا على الزر لتتكلم.",
  "Before you go in": "قبل أن تدخل",
  "If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.": "إذا أبلغ عنك أحد، يُفرَّغ ما قلته في آخر 10 دقائق نصًا ويفحصه الذكاء الاصطناعي (Google Gemini)؛ ثم ينظر فيه مشرف وقد يمنعك من الساحة.",
  "These records are used only to keep players safe, and given to the authorities if the law asks for them.": "تُستخدم هذه السجلات فقط لحماية اللاعبين، وتُسلَّم إلى السلطات إذا طلبها القانون.",
@@ -2712,7 +2710,6 @@
  "You go on offline in the square": "تتابع في الساحة دون اتصال",
  "Your voice in voice chats is kept encrypted for 48 hours.": "صوتك في الدردشات الصوتية يُحفظ مشفّرًا لمدة 48 ساعة.",
  "Your voice in voice chats and push-to-talk is kept encrypted for 48 hours.": "صوتك في الدردشات الصوتية وعند الضغط للتحدث يُحفظ مشفّرًا لمدة 48 ساعة.",
- "There are real players here. What you say appears as text above your head («Bas, konuş» or T). Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "هنا لاعبون حقيقيون. ما تقوله يظهر نصًا فوق رأسك («Bas, konuş» أو T). الدردشة الصوتية بين شخصين فقط، بعد موافقة الطرف الآخر. إن أزعجك أحد فأبلغ عنه بعلامة 🚩 في الأعلى. كن لطيفًا!",
  "This is a talking area: everyone inside hears you.": "هذه منطقة كلام جماعي: كل من في الداخل يسمعك.",
  "Your last reports were unfounded, so you cannot report for a few days.": "بلاغاتك الأخيرة لم تكن صحيحة، لذا لا يمكنك الإبلاغ لبضعة أيام.",
  "“A letter is not without a kâtip.” Do you know what “kâtip” means?": "«لا حرف بلا كاتب.» أتعرف ما معنى «كاتب» (kâtip)؟",
@@ -2827,5 +2824,8 @@
  "awning": "مظلّة (قماش فوق المحل)",
  "flag": "علم",
  "helper": "معين",
- "to think (of)": "يفكر (في)"
+ "to think (of)": "يفكر (في)",
+ "Everyone in here hears each other. Tap the 🎤 button to speak, tap it again when you are done.": "هنا يسمع الجميع بعضهم بعضًا. المس زر 🎤 لتتكلم، والمسه مرة أخرى عندما تنتهي.",
+ "In the square your words appear as text above your head: tap the 🎤 button and speak, tap it again when you are done (or hold the T key).": "في الساحة يظهر كلامك نصًا فوق رأسك: المس زر 🎤 وتكلم، ثم المسه مرة أخرى عندما تنتهي (أو اضغط مطولًا على مفتاح T).",
+ "There are real players here. Tap the 🎤 button at the bottom right to speak and tap it again when you are done: what you say appears as text above your head. Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "هنا لاعبون حقيقيون. المس زر 🎤 في الأسفل يمينًا لتتكلم، والمسه مرة أخرى عندما تنتهي: ما تقوله يظهر نصًا فوق رأسك. الدردشة الصوتية بين شخصين فقط، بعد موافقة الطرف الآخر. إن أزعجك أحد فأبلغ عنه بعلامة 🚩 في الأعلى. كن لطيفًا!"
 }
