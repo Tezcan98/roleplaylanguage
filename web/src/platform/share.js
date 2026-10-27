@@ -1,11 +1,11 @@
 /**
- * "Paylaş, kazan": the game shared with friends — its Google Play page and, for iPhones, anadoluailesi.com.tr/ios. In the app: Android's share
+ * "Davet et, kazan": the game shared with friends as an invitation — its Google Play page and, for iPhones, anadoluailesi.com.tr/ios. In the app: Android's share
  * sheet (@capacitor/share, apps from 1.0.29 on; it answers whether something was shared). In a
  * browser: the browser's own sheet where there is one. Otherwise (an older app, a desktop browser):
  * a WhatsApp message — counted as shared when the game goes to the background for it.
  * Resolves true when it was (or very likely was) shared.
  */
-const TEXT = 'Çocuklar için dil gelişim ve sosyalleşme oyunu: Türk Ailem 🇹🇷';
+const TEXT = 'Seni Türk Ailem’e davet ediyorum! Türk bir aileyle yaşayarak Türkçe öğren 🇹🇷';
 const LINK = 'https://play.google.com/store/apps/details?id=com.anadolu';
 /** iPhone: no App Store app yet — our site's page that opens the game and shows how to put it on the home screen (site/ios/). */
 const IOS = 'https://anadoluailesi.com.tr/ios';
@@ -17,7 +17,7 @@ export async function shareGame() {
   if (native && cap.isPluginAvailable?.('Share')) {
     try {
       const { Share } = await import('@capacitor/share');
-      await Share.share({ title: 'Türk Ailem', text: MESSAGE, dialogTitle: 'Arkadaşlarınla paylaş' });
+      await Share.share({ title: 'Türk Ailem', text: MESSAGE, dialogTitle: 'Arkadaşını davet et' });
       return true; // (closing the sheet without sharing rejects)
     } catch { return false; }
   }

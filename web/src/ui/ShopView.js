@@ -29,7 +29,7 @@ export class ShopView {
 
   constructor(host, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts, share = null, feedback = null, onEat = () => {}, onCode = null }) {
     this.onCode = onCode; // five quick taps on the "Altın" tab: the developer's code card
-    this.share = share; // "Paylaş, kazan": () => Promise<shared?> (platform/share.js)
+    this.share = share; // "Davet et, kazan": () => Promise<shared?> (platform/share.js)
     this.feedback = feedback; // "Yorum yaz, kazan": { due(), open() } (ui/FeedbackView.js: once a day, up to 20 credits)
     Object.assign(this, { modes, wallet, ads, billing, gender, look, onDaily, onOutfit, toasts, onEat });
     this.tabs = el('div', { class: 'shop-tabs', attrs: { role: 'tablist' } });
@@ -92,10 +92,11 @@ export class ShopView {
             else if (this.ads.lastError) this.toasts.show(`Şu an reklam yok, sonra tekrar dene. (AdMob: ${this.ads.lastError})`, 'No ad right now — try again later.');
             this.render();
           }), { subTr: true }),
-        this.share && card('free share', '📤', `+${SHARE_REWARD}`, 'Paylaş, kazan',
-          w.sharedToday() ? btn('Yarın yine ✓', '', () => {}, true) : btn('Paylaş', 'go', async (e) => {
+        // "Davet et, kazan": the share sheet with an invitation; the credits once a friend's app was picked in it
+        this.share && card('free share', '💌', `+${SHARE_REWARD}`, 'Davet et, kazan',
+          w.sharedToday() ? btn('Yarın yine ✓', '', () => {}, true) : btn('Davet et', 'go', async (e) => {
             e.target.disabled = true;
-            if (await this.share()) { w.shared(); this.toasts.show(`Teşekkürler! +${SHARE_REWARD} kredi`, 'Thanks for sharing!'); }
+            if (await this.share()) { w.shared(); this.toasts.show(`Teşekkürler! +${SHARE_REWARD} kredi`, 'Thanks for inviting a friend!'); }
             this.render();
           }), { subTr: true }),
         this.feedback && card('free feedback', '💬', '+20', 'Yorum yaz, kazan',

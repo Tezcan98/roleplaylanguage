@@ -600,8 +600,8 @@ try {
     await p2.click('.shop.open .shop-tab:has-text("Altın")'); await sleep(200);
     await e2(() => { window.__game.shop.share = async () => true; window.__game.shop.render(); }); // (the share sheet itself is the phone's)
     const before = await e2(() => window.__game.wallet.balance);
-    await p2.click('.shop.open .shop-card:has-text("Paylaş, kazan") button');
-    check('"Paylaş, kazan": +5 credits, then "Yarın yine" (once a day)', !!(await waitFor(() => e2((b) => window.__game.wallet.balance === b + 5, before), 3000)) && await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Paylaş, kazan')).querySelector('button').disabled));
+    await p2.click('.shop.open .shop-card:has-text("Davet et, kazan") button');
+    check('"Davet et, kazan": +5 credits, then "Yarın yine" (once a day)', !!(await waitFor(() => e2((b) => window.__game.wallet.balance === b + 5, before), 3000)) && await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Paylaş, kazan')).querySelector('button').disabled));
     await e2(() => window.__game.shop.close());
     // a full-screen ad between two story days (not within the same day)
     await e2(() => document.querySelector('.main-menu.open .btn')?.click()); await sleep(1500);
