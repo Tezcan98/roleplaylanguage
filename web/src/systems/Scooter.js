@@ -85,7 +85,7 @@ export class Scooters {
     p.setMount(m);
     this.vocab.learn('scooter', 'electric scooter'); this.vocab.learn('binmek', 'to get on, to ride');
     this.vocab.learn('elektrikli', 'electric');
-    this.toasts.show('Elektrikli scooter\'a bindin! Hadi, meydanı dolaş.', gloss('You are on an electric scooter! Go on, ride around the square.'));
+    this.toasts.show('Elektrikli scooter\'a bindin! Hadi, köy meydanını dolaş.', gloss('You are on an electric scooter! Go on, ride around the square.'));
   }
 
   getOff() {

@@ -21,19 +21,18 @@ export class LessonController {
 
   done(id) { return !!this.state.flags[`lesson-${id}`]; }
 
-  /** Classroom door: pay (once per lesson), then walk in and start. */
+  /** Classroom door: walk in and start (lessons are free). */
   async enter(id) {
     const lesson = this.lessons[id];
     if (this.done(id)) { this.travel.go('classroom', 'door'); return; }
-    if (!(await this.gate.request(lesson))) return;
     this.travel.go('classroom', 'door', () => this.#start(lesson));
   }
 
   /**
-   * Free practice any time (1 credit): one of the lessons again — the ones already done
+   * Free practice any time (no credits): one of the lessons again — the ones already done
    * first — with the presentation (skippable), the exercises and the class questions.
    * `onDone()` runs after the summary (the caller takes the player home).
-   * @returns {Promise<boolean>} false when the player didn't pay
+   * @returns {Promise<boolean>} true (it always starts)
    */
   async practice({ onDone }) {
     const all = Object.values(this.lessons);
@@ -41,7 +40,6 @@ export class LessonController {
     const pool = done.length ? done : all.slice(0, 1);
     const base = pool[(Math.random() * pool.length) | 0];
     const lesson = { ...base, id: `practice-${base.id}`, title: `Tekrar: ${base.title}`, titleEn: 'Free practice', isPractice: true };
-    if (!(await this.gate.request(lesson))) return false;
     this.onPracticeDone = onDone;
     this.travel.go('classroom', 'door', () => { this.cast.move('ogretmen', 'classroom', 'teacher', 'teach'); this.#start(lesson); });
     return true;

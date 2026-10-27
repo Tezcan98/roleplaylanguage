@@ -114,7 +114,7 @@ export class SettingsPanel {
         tile(I.help, 'Nasıl oynanır', '', () => this.onHelp?.()),
         this.onFeedback && tile(I.feedback, 'Yorum yaz', '+20 kredi', () => this.onFeedback()),
         this.onRename && tile(I.user, 'Kullanıcı adı', `@${s.get('username') || '—'}`, () => this.onRename()),
-        this.onRooms && tile(I.square, 'Meydan', this.room(), () => this.onRooms()), // another city's square
+        this.onRooms && tile(I.square, 'Köy meydanı', this.room(), () => this.onRooms()), // another city's square
         tile(I.home, 'Ana menü', '', () => this.onMenu()),
       ].filter(Boolean)),
     ].filter(Boolean));

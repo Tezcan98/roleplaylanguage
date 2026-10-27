@@ -18,7 +18,7 @@ const TABS = [['gold', '🪙', 'Altın', 'Gold'], ['food', '🌶️', 'Yiyecek',
  * The shop (the coin in the HUD, and on the main menu), in tabs of bright cards: earn credits
  * (daily reward, a rewarded video every hour, sharing), buy credit packs (Google Play, in the
  * app), spend credits on food that works for a few minutes (Urfa biberi: faster) and on ad-free
- * mode and outfits. Lessons and practice also cost credits, at the school.
+ * mode (on the gold tab) and outfits. Lessons and practice at the school are free.
  */
 export class ShopView {
   #pop = null;
@@ -100,6 +100,8 @@ export class ShopView {
           }), { subTr: true }),
         this.feedback && card('free feedback', '💬', '+20', 'Yorum yaz, kazan',
           this.feedback.due() ? btn('Yaz', 'go', () => { this.close(); this.feedback.open(); }) : btn('Yarın yine ✓', '', () => {}, true), { subTr: true }),
+        // ad-free mode: here with the gold, not among the outfits
+        this.#itemCard(SHOP.find((i) => i.id === 'adFree'), { card, btn, price }),
         // the packs with their prices; not on sale yet (config.json sellPacks): shown, the button off
         ...PACKS.map((p, i) => card(`pack pack${i}`, ['🪙', '💰', '💎'][i] ?? '💎', `${p.credits}`, SELL_PACKS ? 'kredi' : 'kredi · yakında',
           btn(this.#prices[p.id] ?? p.price, 'buy', async (e) => {
@@ -124,31 +126,36 @@ export class ShopView {
         }, f.title), { subTr: !!left, ribbon: left ? 'Aktif' : 'Yeni' });
       });
     } else {
-      // outfits (one on at a time) and ad-free mode
-      cards = SHOP.filter((i) => (!i.for || i.for(this.gender, this.look))).map((i) => {
-        const owned = w.owns(i.id), worn = i.slot && w.equipped(i.slot) === i.id && (!i.needs || w.equipped(i.needs) === i.needs);
-        const trying = owned && !w.bought(i.id); // tried on for a day (a video): wear it, or buy it for good
-        // a rewarded video puts it on for a day (an outfit: with the HD character it needs)
-        const tryOn = i.slot && !owned && this.ads.hasRewarded && btn('📺 1 gün dene', 'go', async (e) => {
-          e.target.disabled = true;
-          if (await this.ads.showRewarded()) {
-            w.tryOn([i.id, i.needs].filter(Boolean)); this.#wear(i);
-            this.toasts.show(`${i.title} bir gün senin!`, 'Yours for a day!'); this.onOutfit();
-          } else { if (this.ads.lastError) this.toasts.show('Şu an reklam yok, sonra tekrar dene.', 'No ad right now — try again later.'); this.render(); }
-        });
-        let action;
-        if (i.needs && !w.owns(i.needs)) action = tryOn || btn('Önce HD karakter', '', () => {}, true); // outfits are for the HD character
-        else if (!owned) action = price(i.price, () => this.#buy(i), i.title);
-        else if (!i.slot) action = btn('Alındı ✓', '', () => {}, true);
-        else action = worn ? btn('Çıkar', 'worn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Giy', 'go', () => { this.#wear(i); this.onOutfit(); });
-        if (tryOn && action !== tryOn) action = el('div', { class: 'shop-btns' }, [action, tryOn]);
-        if (trying) action = el('div', { class: 'shop-btns' }, [action, price(i.price, () => this.#buy(i), i.title)]);
-        // what the character will look like (no icons): the outfit picture, a glowing ring
-        const pic = i.outfit || i.look || i.picture ? el('img', { class: 'shop-pic', attrs: { src: outfitPicture(i, this.gender, this.look), alt: i.title, loading: 'lazy' } }) : i.icon;
-        return card(worn ? 'item worn' : `item${i.id === 'adFree' ? ' noads' : ''}`, pic, i.title, gloss(i.en), action, { ribbon: trying ? `Deneme · ${left_(w.trialLeft(i.id))}` : worn ? 'Üstünde' : '' });
-      });
+      // outfits (one on at a time) and the HD character they need
+      cards = SHOP.filter((i) => i.id !== 'adFree' && (!i.for || i.for(this.gender, this.look))).map((i) => this.#itemCard(i, { card, btn, price }));
     }
     this.body.replaceChildren(el('div', { class: `shop-grid tab-${this.#tab}` }, cards.filter(Boolean)));
+  }
+
+  /** A card of something credits buy (content/shop.js SHOP): price, or wear / take off, or "1 gün dene" with a video. */
+  #itemCard(i, { card, btn, price }) {
+    if (!i) return null;
+    const w = this.wallet;
+    const owned = w.owns(i.id), worn = i.slot && w.equipped(i.slot) === i.id && (!i.needs || w.equipped(i.needs) === i.needs);
+    const trying = owned && !w.bought(i.id); // tried on for a day (a video): wear it, or buy it for good
+    // a rewarded video puts it on for a day (an outfit: with the HD character it needs)
+    const tryOn = i.slot && !owned && this.ads.hasRewarded && btn('📺 1 gün dene', 'go', async (e) => {
+      e.target.disabled = true;
+      if (await this.ads.showRewarded()) {
+        w.tryOn([i.id, i.needs].filter(Boolean)); this.#wear(i);
+        this.toasts.show(`${i.title} bir gün senin!`, 'Yours for a day!'); this.onOutfit();
+      } else { if (this.ads.lastError) this.toasts.show('Şu an reklam yok, sonra tekrar dene.', 'No ad right now — try again later.'); this.render(); }
+    });
+    let action;
+    if (i.needs && !w.owns(i.needs)) action = tryOn || btn('Önce HD karakter', '', () => {}, true); // outfits are for the HD character
+    else if (!owned) action = price(i.price, () => this.#buy(i), i.title);
+    else if (!i.slot) action = btn('Alındı ✓', '', () => {}, true);
+    else action = worn ? btn('Çıkar', 'worn', () => { w.unequip(i.slot); this.onOutfit(); }) : btn('Giy', 'go', () => { this.#wear(i); this.onOutfit(); });
+    if (tryOn && action !== tryOn) action = el('div', { class: 'shop-btns' }, [action, tryOn]);
+    if (trying) action = el('div', { class: 'shop-btns' }, [action, price(i.price, () => this.#buy(i), i.title)]);
+    // what the character will look like (no icons): the outfit picture, a glowing ring
+    const pic = i.outfit || i.look || i.picture ? el('img', { class: 'shop-pic', attrs: { src: outfitPicture(i, this.gender, this.look), alt: i.title, loading: 'lazy' } }) : i.icon;
+    return card(worn ? 'item worn' : `item${i.id === 'adFree' ? ' noads' : ''}`, pic, i.title, gloss(i.en), action, { ribbon: trying ? `Deneme · ${left_(w.trialLeft(i.id))}` : worn ? 'Üstünde' : '' });
   }
 
   /** Five quick taps on the "Altın" tab (2.5 s): the code card. */

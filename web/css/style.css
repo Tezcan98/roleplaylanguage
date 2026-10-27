@@ -533,11 +533,24 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .pill.credits-btn{cursor:pointer}
 /* daily reward */
 .daily-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.daily-act{display:flex;flex-direction:column;gap:14px}
 .daily-day{border:2px solid rgba(58,42,30,.25);border-radius:10px;padding:4px 2px;text-align:center;background:#fff;display:flex;flex-direction:column}
 .daily-day small{font-size:11px;font-weight:700;color:var(--muted)}
 .daily-day b{font:700 16px Fredoka,sans-serif}
 .daily-day.done{opacity:.5}
 .daily-day.today{background:var(--gold);border-color:var(--wood);transform:scale(1.08)}
+/* a phone held sideways (S21: 800×360): the strip on the left, the buttons on the right — everything in sight, no scrolling */
+@media (orientation:landscape) and (max-height:520px){
+  .daily .card{width:min(780px,100%);display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,32%);column-gap:16px;row-gap:6px;padding:14px 16px;align-content:center}
+  .daily .card>*{grid-column:1}
+  .daily .card>.daily-act{grid-column:2;grid-row:1 / span 4;align-self:center;gap:8px}
+  .daily-act .btn{min-height:46px;font-size:16px}
+  .daily-act .cen{margin:0;font-size:13px}
+  .daily .card .ctitle{font-size:22px}
+  .daily .card .ctext{margin:0;font-size:15px}
+  .daily-day b{font-size:14px}
+  .daily-day small{font-size:10px}
+}
 .overlay.ad.interstitial{background:#111;flex-direction:column;gap:12px}
 @media (orientation:landscape) and (max-height:520px){.shop .card{width:min(820px,100%)}.shop-sec{padding:8px 10px;gap:6px}}
 .dama .card{width:min(460px,100%);gap:8px;padding:14px}

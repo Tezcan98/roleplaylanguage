@@ -26,9 +26,9 @@ export class ConsentDialog {
         el('h2', { class: 'ctitle', text: 'Girmeden önce' }),
         el('p', { class: 'cen en-t', text: gloss('Before you go in') }),
         el('ul', {}, [
-          item('Meydanda yazdıkların şifreli olarak 90 gün saklanır.', gloss('What you write in the square is kept encrypted for 90 days.')),
+          item('Köy meydanında yazdıkların şifreli olarak 90 gün saklanır.', gloss('What you write in the square is kept encrypted for 90 days.')),
           item('Sesli sohbette ve bas-konuş ile konuşurken sesin şifreli olarak 48 saat saklanır.', gloss('Your voice in voice chats and push-to-talk is kept encrypted for 48 hours.')),
-          item('Biri seni şikayet ederse son 10 dakikada söylediklerin yapay zekâyla (Google Gemini) yazıya dökülüp incelenir; bir yetkili bakar ve gerekirse seni meydandan engeller.', gloss('If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.')),
+          item('Biri seni şikayet ederse son 10 dakikada söylediklerin yapay zekâyla (Google Gemini) yazıya dökülüp incelenir; bir yetkili bakar ve gerekirse seni köy meydanından engeller.', gloss('If someone reports you, what you said in the last 10 minutes is transcribed and checked by AI (Google Gemini); a moderator looks at it and may ban you from the square.')),
           item('Bu kayıtlar yalnızca oyuncuları korumak için ve yasal bir talep olursa yetkililere verilmek için kullanılır.', gloss('These records are used only to keep players safe, and given to the authorities if the law asks for them.')),
         ]),
         el('p', { class: 'note' }, [

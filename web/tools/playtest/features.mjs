@@ -1,8 +1,8 @@
 /**
  * The player-requested features, each checked in a real browser:
  * character setup (language, girl → Sare), 50 credits, grandma's advice rotation, free
- * NPC chat (dev server's canned answers), physical ball, square fence, school practice for
- * 1 credit (story paused and resumed), classroom door after the lesson, word practice,
+ * NPC chat (dev server's canned answers), physical ball, square fence, free school practice
+ * (story paused and resumed), classroom door after the lesson, word practice,
  * textbook units with credits.  Exit 1 on the first failed check.
  * Usage: npm run playtest:features
  */
@@ -374,15 +374,14 @@ try {
   check('"Okula git" leads to the schoolyard first, not straight into a lesson', !!(await waitFor(() => ev(() => window.__game.world.current.id === 'schoolyard'), 6000)) && !(await page.$('.classroom.open')));
   await ev(() => { const g = window.__game, d = g.world.current.hotspots.get('school.door'); g.player.position.set(d.pos.x, 0, d.pos.z + 0.6); }); await sleep(500);
   const doorPractice = await ev(() => document.getElementById('act').textContent);
-  check('the classroom door offers practice (1 credit)', doorPractice.includes('pratik'), doorPractice);
-  await page.keyboard.press('e');
-  await waitFor(() => page.$('.overlay.open .card .btn:has-text("Krediyle")'), 5000);
-  await page.click('.overlay.open .card .btn:has-text("Krediyle")');
+  check('the classroom door offers practice (free)', doorPractice.includes('pratik'), doorPractice);
+  await page.keyboard.press('e'); // (no credit card any more: straight in)
+  check('…no credits asked at the door', !(await waitFor(() => page.$('.overlay.open .card .btn:has-text("Krediyle")'), 2000)));
   await waitFor(() => page.$('.classroom.open'), 10000);
   check('practice: in the classroom, story paused', (await ev(() => window.__game.world.current.id)) === 'classroom' && (await ev(() => window.__game.story.paused)));
   for (let i = 0; i < 40 && !(await ev(() => window.__game.world.current.id === 'schoolyard' && !window.__game.story.paused)); i++) { await drainUi(page); await sleep(800); }
   check('practice: back in the schoolyard afterwards, the day continues', (await ev(() => window.__game.world.current.id)) === 'schoolyard' && (await ev(() => window.__game.story.quest?.id)) === questBefore);
-  check('practice cost 1 credit', (await ev(() => window.__game.wallet.balance)) === creditsBeforePractice - 1);
+  check('practice is free (no credits)', (await ev(() => window.__game.wallet.balance)) === creditsBeforePractice);
 
   // --- the schoolyard: benches to sit on, the canteen -------------------------------------
   await goTo('school.bench1'); await sleep(400);
@@ -470,7 +469,7 @@ try {
   check('…getting up takes the board away, Rıfat Amca goes back to his table', await ev(() => !window.__game.dama.mine() && !document.querySelector('.dama.open') && !window.__game.player.seated && window.__game.cast.get('rifat').home === window.__game.world.get('village').anchors.get('amca3')));
   // content after the language review: polite pairs, the first day lighter, the prayer by choice, a surprise not a secret
   check('"Hoş geldin" is answered "Hoş bulduk", "Kolay gelsin" with "Sağ ol"', await ev(() => { const d = window.__game.dialogue.dialogues; return d.dede.nodes.d1.options.every((o) => o.tr.startsWith('Hoş bulduk')) && d.dede.nodes.d2k.say.startsWith('Sağ ol') && d.baba.nodes.b1k.say.startsWith('Sağ ol'); }));
-  check('Sunday has no tale and no greengrocer any more (Tuesday, after the numbers lesson)', await ev(() => { const ch = (id) => window.__game.story.story.chapters.find((c) => c.id === id).quests.map((q) => q.id); return !ch('d1-afternoon').includes('masal') && !ch('d1-afternoon').includes('manav') && ch('d3-home').join() === 'review-2,manav,masal,talk-baba-tools,talk-dede-3'; }));
+  check('Sunday has no tale and no greengrocer any more (Tuesday, after the numbers lesson)', await ev(() => { const ch = (id) => window.__game.story.story.chapters.find((c) => c.id === id).quests.map((q) => q.id); return !ch('d1-afternoon').includes('masal') && !ch('d1-afternoon').includes('manav') && ch('d3-home').join() === 'review-2,manav,masal,dede-filistin,talk-baba-tools,talk-dede-3'; }));
   check('the prayer: grandpa asks whether you join or watch', await ev(() => window.__game.dialogue.dialogues.dede.nodes.ez2.options.some((o) => o.next === 'ezWatch')));
   check('the envelope is a surprise, nobody asks to keep a secret', await ev(() => !JSON.stringify(Object.values(window.__game.dialogue.dialogues).map((d) => Object.values(d.nodes).map((n) => [n.say, ...(n.options ?? []).map((o) => o.tr)]))).match(/[Aa]ramızda kalsın|[Kk]imseye gösterme|sorular sorulmaz/)));
   // Saturday evening: the wedding — congratulate, join the halay, home
@@ -573,8 +572,9 @@ try {
     check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 106 && (await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Video izle')).querySelector('button').disabled)));
     check('credit packs shown with their prices, not for sale yet (buttons off)', (await e2(() => [...document.querySelectorAll('.shop.open .shop-card.pack')].map((c) => c.querySelector('button').disabled))).join() === 'true,true,true' && !(await page.evaluate(() => window.__game.billing.available)));
     await e2(() => { window.__game.wallet.trySpend(50); window.__game.shop.render(); }); // 56
+    check('not enough credits for ad-free mode (100) yet: its button is off (on the gold tab)', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod'))?.querySelector('button').disabled));
     await p2.click('.shop.open .shop-tab:has-text("Kıyafet")'); await sleep(200);
-    check('not enough credits for ad-free mode (100) yet: its button is off', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod')).querySelector('button').disabled));
+    check('…and not among the outfits', await e2(() => ![...document.querySelectorAll('.shop.open .shop-card')].some((i) => i.textContent.includes('Reklamsız mod'))));
     check('outfits need the HD character first', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Günlük kıyafet')).querySelector('button').disabled));
     await e2(() => { window.__game.wallet.add(45); window.__game.shop.render(); }); // 101
     await p2.click('.shop.open .shop-card:has-text("HD karakter") button'); await sleep(200);

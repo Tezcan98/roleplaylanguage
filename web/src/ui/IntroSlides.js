@@ -9,9 +9,9 @@ export const SLIDES = [
   { icon: '🏡', title: 'Welcome to your Turkish family!', text: 'Learn Turkish while living with the family in the village: help your mom, listen to grandpa’s tales, and go to school.', tr: 'Türk Ailem’e hoş geldin!' },
   { icon: '🕹️', title: 'Walking and quests', text: 'Walk with the joystick or the WASD keys. Follow the golden arrow, and when the yellow button appears, press it (or E).', tr: 'Yürü, oku takip et, sarı düğmeye bas.' },
   { icon: '💬', title: 'Talking', text: 'The Turkish sentence is on top and the translation below it. Pick the answer, or press 🎤 and say it out loud. 🔊 reads the sentence to you.', tr: 'Cevabı seç ya da mikrofona bas ve söyle.' },
-  { icon: '🏫', title: 'School practice', text: 'Outside school days, the garden gate takes you to school to practise for 1 credit. Your day at home waits until you come back. You start with 100 credits.', tr: 'Bahçe kapısından 1 krediyle okula gidip pratik yapabilirsin.' },
+  { icon: '🏫', title: 'School practice', text: 'Outside school days, the garden gate takes you to school to practise, free. Your day at home waits until you come back. You start with 100 credits.', tr: 'Bahçe kapısından okula gidip ücretsiz pratik yapabilirsin.' },
   { icon: '؟', title: 'The help button', text: 'The “?” button in the corner explains in your language what to do now, what is in your bag and how to play.', tr: 'Köşedeki ? düğmesi her şeyi senin dilinde anlatır.' },
-  { icon: '🌐', title: 'The village square', text: 'In the square you meet real players. What you say appears as text above your head. Voice chat is only between two people, after both agree. You can play football together too!', tr: 'Meydanda konuşmalar yazıyla görünür; sesli sohbet karşılıklı onayla.' },
+  { icon: '🌐', title: 'The village square', text: 'In the square you meet real players. What you say appears as text above your head. Voice chat is only between two people, after both agree. You can play football together too!', tr: 'Köy meydanında konuşmalar yazıyla görünür; sesli sohbet karşılıklı onayla.' },
   { icon: '🐘', title: 'Elephant memory', text: 'In the school book, cards link a Turkish word to a word that sounds similar and a funny picture. That way you won’t forget it!', tr: 'Kelimeleri komik benzetmelerle hatırla.' },
 ];
 

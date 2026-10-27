@@ -117,9 +117,9 @@ export class PushToTalk {
   /** No speech-to-text here: type the sentence instead. */
   typeInstead() { this.typeBox.hidden = false; this.input.focus(); }
   /** Who is here, short (it sits in the top bar): "👥 3 · Ankara"; the details on a long press / hover. */
-  setOnline(n, name, room = '') { this.offline = false; this.#here = n; this.#alone(n <= 1 && this.#elsewhere > 0 ? 'alone' : null); this.status.textContent = `👥 ${n}${room ? ` · ${room.split(' · ')[0]}` : ''}`; this.status.title = `${name} · ${room ? `${room} · ` : ''}meydanda ${n} kişi`; }
+  setOnline(n, name, room = '') { this.offline = false; this.#here = n; this.#alone(n <= 1 && this.#elsewhere > 0 ? 'alone' : null); this.status.textContent = `👥 ${n}${room ? ` · ${room.split(' · ')[0]}` : ''}`; this.status.title = `${name} · ${room ? `${room} · ` : ''}köy meydanında ${n} kişi`; }
   /** Not in the square's crowd (the recording wasn't agreed to): the top bar says so, a tap asks again (`onRetry`). */
-  setOffline() { this.offline = true; this.status.hidden = false; this.status.textContent = '📴 Çevrimdışı'; this.status.title = 'Meydana bağlan · connect to the square'; this.#alone('offline'); }
+  setOffline() { this.offline = true; this.status.hidden = false; this.status.textContent = '📴 Çevrimdışı'; this.status.title = 'Köy meydanına bağlan · connect to the village square'; this.#alone('offline'); }
 
   #here = 0;
   #elsewhere = 0;

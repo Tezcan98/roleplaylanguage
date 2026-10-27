@@ -47,7 +47,7 @@ export class HelpPanel {
         p(gloss('Walking: the joystick in the corner or the WASD / arrow keys.')),
         p(gloss('“Defter” = the notebook of words you learned · “Çanta” = the bag · “Kitap” = the school book.'))),
       section(`🏫 ${gloss('Practice')}`,
-        p(gloss('Garden gate → school: practise with the teacher for 1 credit at any time of day. Grandma on the sedir gives a new piece of advice every day.'))),
+        p(gloss('Garden gate → school: practise with the teacher for free at any time of day. Grandma on the sedir gives a new piece of advice every day.'))),
       section(`🌐 ${gloss('The village square (with other players)')}`,
         p(gloss('In the square your words appear as text above your head: tap the 🎤 button and speak, tap it again when you are done (or hold the T key).')),
         p(gloss('Voice chat is only between two people and needs both to agree. Be kind to everyone.'))),

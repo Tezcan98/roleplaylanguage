@@ -18,17 +18,17 @@ const DECLINE_TEXT = {
   full: ['olan sohbet dolu (en çok 5 kişi)', 'is in a full voice chat (5 at most)'],
 };
 const BLOCKED_TEXT = {
-  language: ['Meydanda Türkçe konuşalım! Mesajın gösterilmedi.', "Let's speak Turkish in the square! Your message was not shown."],
-  harm: ['Bu mesaj meydana uygun değil, gösterilmedi.', 'This message is not suitable for the square, so it was not shown.'],
+  language: ['Köy meydanında Türkçe konuşalım! Mesajın gösterilmedi.', "Let's speak Turkish in the square! Your message was not shown."],
+  harm: ['Bu mesaj köy meydanına uygun değil, gösterilmedi.', 'This message is not suitable for the square, so it was not shown.'],
   muted: ['Bir süre mesaj gönderemezsin ({m} dk).', 'You cannot send messages for a little while.'],
 };
 const REPORT_FAILED = {
   limit: ['Kısa sürede çok şikayet gönderdin, biraz sonra tekrar dene.', 'Too many reports — try again a little later.'],
   again: ['Bu oyuncuyu az önce şikayet ettin, inceleniyor.', 'You already reported this player; it is being checked.'],
-  gone: ['Bu oyuncu meydandan ayrılmış.', 'That player has left the square.'],
+  gone: ['Bu oyuncu köy meydanından ayrılmış.', 'That player has left the square.'],
   paused: ['Son şikayetlerin asılsız çıktı. {d} gün şikayet edemezsin.', 'Your last reports were unfounded, so you cannot report for a few days.'],
 };
-const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf meydandan ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Oyuncu engellendi, sohbet bitti.', lost: 'Ses bağlantısı koptu, sohbet bitti.' };
+const END_TEXT = { far: 'Uzaklaştınız, sesli sohbet bitti.', left: 'Karşı taraf köy meydanından ayrıldı.', hangup: 'Sesli sohbet bitti.', blocked: 'Oyuncu engellendi, sohbet bitti.', lost: 'Ses bağlantısı koptu, sohbet bitti.' };
 
 /**
  * The multiplayer village square:
@@ -82,12 +82,12 @@ export class VillageMultiplayer {
       if (this.joinedAt && this.joinedAt !== id) this.leave(); // square ↔ schoolyard: another room
       this.join();
     });
-    net.on('join', ({ peer }) => { this.remotes.add(this.#loc(), peer); this.toasts.show(`${peer.name} meydana geldi`, 'joined the square'); this.#count(); });
+    net.on('join', ({ peer }) => { this.remotes.add(this.#loc(), peer); this.toasts.show(`${peer.name} köy meydanına geldi`, 'joined the square'); this.#count(); });
     net.on('leave', ({ id }) => {
       const name = this.remotes.get(id)?.name;
       this.remotes.remove(id);
       this.#count();
-      if (name) this.toasts.show(`${name} meydandan ayrıldı`, 'left the square');
+      if (name) this.toasts.show(`${name} köy meydanından ayrıldı`, 'left the square');
     });
     net.on('states', ({ players }) => this.remotes.setStates(players));
     net.on('talk', ({ id, on }) => this.remotes.setTalking(id, on));
@@ -179,10 +179,10 @@ export class VillageMultiplayer {
     if (!best || !n || this.remotes.count > 0 || !this.net.connected) return;
     // walked in from the story (the room lookup was too slow before joining): just go where the others are
     const go = !this.chosenRoom || await this.choice.ask({
-      title: `${this.#roomLabel(mine)} meydanı şimdilik boş`,
-      text: `${this.#roomLabel(best)} meydanında ${n} kişi var. Oraya geçelim mi?`,
+      title: `${this.#roomLabel(mine)} köy meydanı şimdilik boş`,
+      text: `${this.#roomLabel(best)} köy meydanında ${n} kişi var. Oraya geçelim mi?`,
       en: 'This square is empty right now. Another square has players — switch there?',
-      yes: `${this.#roomLabel(best)} meydanına geç`, no: 'Burada kal',
+      yes: `${this.#roomLabel(best)} köy meydanına geç`, no: 'Burada kal',
     });
     if (!go || !this.#inSquare()) return;
     this.settings.set('serverRegion', best);
@@ -279,7 +279,7 @@ export class VillageMultiplayer {
       if (welcome.chess && here === 'village') this.chess?.applyServer(welcome.chess);
       this.ptt.show(true);
       this.#count();
-      this.toasts.show(`${this.#roomLabel()} meydanına hoş geldin, ${welcome.name}!`, 'Bas-konuş: söylediğin yazı olarak görünür · Push-to-talk shows your words as text');
+      this.toasts.show(`${this.#roomLabel()} köy meydanına hoş geldin, ${welcome.name}!`, 'Bas-konuş: söylediğin yazı olarak görünür · Push-to-talk shows your words as text');
       if (!this.settings.get('villageIntroSeen', false)) { this.settings.set('villageIntroSeen', true); this.onFirstVisit?.(); }
       this.#retryDelay = 0;
       this.#suggestBusierRoom();
@@ -311,7 +311,7 @@ export class VillageMultiplayer {
     if (yes) { this.settings.set('dataConsent', { v: CONSENT_VERSION, at: Date.now() }); this.consentDeclined = false; return true; }
     this.consentDeclined = true;
     if (this.chosenRoom) this.onNameCancel?.(); // picked the square on the menu: back to it
-    else { this.toasts.show('Meydanda çevrimdışı devam ediyorsun · bağlanmak için üstteki 📴', 'You go on offline in the square — tap 📴 at the top to connect'); this.ptt.setOffline(); }
+    else { this.toasts.show('Köy meydanında çevrimdışı devam ediyorsun · bağlanmak için üstteki 📴', 'You go on offline in the square — tap 📴 at the top to connect'); this.ptt.setOffline(); }
     return false;
   }
 
@@ -381,7 +381,7 @@ export class VillageMultiplayer {
 
   /** Public push-to-talk: speech becomes a text bubble for everyone (no open voice) — in a talking zone, your voice. */
   talk(on) {
-    if (!this.net.connected) { if (on) { this.ptt.set(false); this.toasts.show('Meydana bağlı değilsin', 'Not connected to the square'); } return; }
+    if (!this.net.connected) { if (on) { this.ptt.set(false); this.toasts.show('Köy meydanına bağlı değilsin', 'Not connected to the square'); } return; }
     if (this.group?.zone) {
       if (on && !this.group.micOk) { this.ptt.set(false); this.toasts.show('Mikrofon izni yok: sadece dinleyebilirsin', 'No microphone: you can listen only'); return; }
       this.group.talk(on);
@@ -535,7 +535,7 @@ export class VillageMultiplayer {
    * they said in the last ten minutes, text and voice, and the operator decides on a ban.
    */
   async report(only = null) { // only: an id, or the ids of a call
-    if (!this.net.connected) { this.toasts.show('Meydana bağlı değilsin', 'Not connected to the square'); return; }
+    if (!this.net.connected) { this.toasts.show('Köy meydanına bağlı değilsin', 'Not connected to the square'); return; }
     const here = this.player.position;
     const players = this.remotes.ids()
       .filter((id) => !only || (Array.isArray(only) ? only.includes(id) : id === only))

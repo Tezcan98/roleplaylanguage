@@ -85,9 +85,9 @@ export const HOTSPOTS = {
   'yard.tap': questOnly('wash', 'yard.tap'),
   'yard.garden': free('water_garden'),
   // school days: the lesson (open for it, and afterwards whenever the quest leads back
-  // inside to talk to the teacher); other days: a practice lesson for 1 credit
+  // inside to talk to the teacher); other days: a practice lesson (free)
   'school.door': {
-    label: (c) => (schoolDay(c) ? 'Sınıfa gir' : 'Sınıfa gir: pratik (1 kredi)'), lockedLabel: 'Sınıf kapısı', use: ['school-door'], link: 'classroom',
+    label: (c) => (schoolDay(c) ? 'Sınıfa gir' : 'Sınıfa gir: pratik'), lockedLabel: 'Sınıf kapısı', use: ['school-door'], link: 'classroom',
     locked: (c) => {
       if (schoolDay(c)) return String(c.q ?? '').startsWith('lesson') || c.targetNpcLoc === 'classroom' ? null : ['Önce arkadaşınla tanış!', 'Meet your friend first!'];
       if (c.online) return ['Dersler hikaye modunda.', 'Lessons are in story mode.'];

@@ -22,14 +22,16 @@ export class DailyRewardView {
         el('p', { class: 'ctext', text: d.day > 1 ? `${d.day} gündür her gün geliyorsun. Aferin!` : 'Hoş geldin! Her gün gelirsen ödül büyür.' }),
         el('p', { class: 'cen en-t', text: gloss('Come every day: the reward grows.') }),
         strip,
-        double && el('button', { class: 'btn', text: `📺 Video izle, +${d.amount * 2} kredi al`, attrs: { type: 'button' }, on: { click: async (e) => {
-          e.currentTarget.disabled = true;
-          const ok = await double();
-          root.remove(); pop(); resolve(ok);
-        } } }),
-        double && el('p', { class: 'cen en-t', text: gloss('Watch a video: twice as many.') }),
-        el('button', { class: double ? 'btn alt' : 'btn', text: `+${d.amount} kredi al`, attrs: { type: 'button' }, on: { click: () => { root.remove(); pop(); resolve(false); } } }),
-      ].filter(Boolean))]);
+        el('div', { class: 'daily-act' }, [ // (a phone held sideways: a column of its own on the right)
+          double && el('button', { class: 'btn', text: `📺 Video izle, +${d.amount * 2} kredi al`, attrs: { type: 'button' }, on: { click: async (e) => {
+            e.currentTarget.disabled = true;
+            const ok = await double();
+            root.remove(); pop(); resolve(ok);
+          } } }),
+          double && el('p', { class: 'cen en-t', text: gloss('Watch a video: twice as many.') }),
+          el('button', { class: double ? 'btn alt' : 'btn', text: `+${d.amount} kredi al`, attrs: { type: 'button' }, on: { click: () => { root.remove(); pop(); resolve(false); } } }),
+        ].filter(Boolean)),
+      ])]);
       this.host.append(root);
     });
   }

@@ -16,10 +16,10 @@ export class RoomCard {
       const picker = new ServerPicker({ villageServer: this.villageServer, value: current, follow: false, onChange: (id) => done(id) }); // (only the player's tap picks here)
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card room-card' }, [
         el('div', { class: 'set-head' }, [
-          el('div', {}, [el('h2', { class: 'ctitle', text: 'Meydan seç' }), el('small', { class: 'en-t', text: gloss('Choose a square') })]),
+          el('div', {}, [el('h2', { class: 'ctitle', text: 'Köy meydanı seç' }), el('small', { class: 'en-t', text: gloss('Choose a square') })]),
           el('button', { class: 'iconbtn light', html: ICONS.close, attrs: { type: 'button', 'aria-label': 'Kapat' }, on: { click: () => done(null) } }),
         ]),
-        el('p', { class: 'ctext', text: 'Her şehir ayrı bir meydan. Arkadaşınla aynı şehri seç.' }),
+        el('p', { class: 'ctext', text: 'Her şehirde ayrı bir köy meydanı var. Arkadaşınla aynı şehri seç.' }),
         el('p', { class: 'en-t', text: gloss('Each city is its own square. Pick the same city as your friend.') }),
         picker.root,
       ].filter((n) => !(n.classList?.contains('en-t') && !n.textContent)))]);

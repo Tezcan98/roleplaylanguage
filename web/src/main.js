@@ -960,7 +960,7 @@ function backToMenu() {
 }
 effects.register('main-menu', () => backToMenu());
 
-/** Outside school days: practise in the classroom for 1 credit; home life waits until you are back in the yard. */
+/** Outside school days: practise in the classroom (free); home life waits until you are back in the yard. */
 async function schoolPractice() {
   story.pause();
   const paid = await lessons.practice({

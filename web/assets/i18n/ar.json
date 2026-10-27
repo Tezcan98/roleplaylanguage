@@ -317,7 +317,6 @@
  "From now on I'll always greet first.": "من الآن فصاعداً سأبدأ أنا بالسلام دائماً.",
  "Full screen": "ملء الشاشة",
  "Funny, that's true. But don't believe everything you hear. First think, then ask.": "مضحك، هذا صحيح. لكن لا تصدق كل ما تسمعه. فكّر أولاً، ثم اسأل.",
- "Garden gate → school: practise with the teacher for 1 credit at any time of day. Grandma on the sedir gives a new piece of advice every day.": "باب الحديقة ← المدرسة: تدرّب مع المعلمة مقابل رصيد واحد في أي وقت من النهار. والجدة على الأريكة تعطيك نصيحة جديدة كل يوم.",
  "Get a tea for Aslan Bey from Osman at the tea garden": "خذ شاياً لأصلان بك من عثمان في حديقة الشاي",
  "Get the bread from the kitchen": "أحضر الخبز من المطبخ",
  "Give the envelope to Aslan Bey at the library": "أعطِ الظرف لأصلان بك في المكتبة",
@@ -806,7 +805,6 @@
  "Our television is thirty years old, Rıfat. It can hardly hear itself!": "تلفازنا عمره ثلاثون سنة يا رفعت. بالكاد يسمع نفسه!",
  "Our television is very old, Rıfat. It is not even connected to the internet.": "تلفازنا قديم جدًا يا رفعت. ليس متصلًا بالإنترنت أصلًا.",
  "Outfits and more": "ملابس والمزيد",
- "Outside school days, the garden gate takes you to school to practise for 1 credit. Your day at home waits until you come back. You start with 100 credits.": "في غير أيام الدراسة، يأخذك باب الحديقة إلى المدرسة للتدرّب مقابل رصيد واحد. ويومك في البيت ينتظرك حتى تعود. تبدأ اللعبة ومعك 100 رصيد.",
  "Paradise lies at the feet of mothers. Don't even say “ugh” to your mother; earn her prayers.": "الجنة تحت أقدام الأمهات. لا تقل لأمك «أُفّ» أبداً؛ وانل دعاءها.",
  "Peace be upon you, child! Sit on a chair and have a tea. We are chatting here.": "السلام عليكم يا ولدي! اجلس على كرسي واشرب الشاي. نحن نتسامر هنا.",
  "Peace be upon you, grandma!": "السلام عليكم يا جدتي!",
@@ -2834,5 +2832,7 @@
  "to think (of)": "يفكر (في)",
  "Everyone in here hears each other. Tap the 🎤 button to speak, tap it again when you are done.": "هنا يسمع الجميع بعضهم بعضًا. المس زر 🎤 لتتكلم، والمسه مرة أخرى عندما تنتهي.",
  "In the square your words appear as text above your head: tap the 🎤 button and speak, tap it again when you are done (or hold the T key).": "في الساحة يظهر كلامك نصًا فوق رأسك: المس زر 🎤 وتكلم، ثم المسه مرة أخرى عندما تنتهي (أو اضغط مطولًا على مفتاح T).",
- "There are real players here. Tap the 🎤 button at the bottom right to speak and tap it again when you are done: what you say appears as text above your head. Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "هنا لاعبون حقيقيون. المس زر 🎤 في الأسفل يمينًا لتتكلم، والمسه مرة أخرى عندما تنتهي: ما تقوله يظهر نصًا فوق رأسك. الدردشة الصوتية بين شخصين فقط، بعد موافقة الطرف الآخر. إن أزعجك أحد فأبلغ عنه بعلامة 🚩 في الأعلى. كن لطيفًا!"
+ "There are real players here. Tap the 🎤 button at the bottom right to speak and tap it again when you are done: what you say appears as text above your head. Voice chat is only between two people, after the other person agrees. If someone bothers you, report them with the 🚩 at the top. Be kind!": "هنا لاعبون حقيقيون. المس زر 🎤 في الأسفل يمينًا لتتكلم، والمسه مرة أخرى عندما تنتهي: ما تقوله يظهر نصًا فوق رأسك. الدردشة الصوتية بين شخصين فقط، بعد موافقة الطرف الآخر. إن أزعجك أحد فأبلغ عنه بعلامة 🚩 في الأعلى. كن لطيفًا!",
+ "Outside school days, the garden gate takes you to school to practise, free. Your day at home waits until you come back. You start with 100 credits.": "في غير أيام الدراسة، يأخذك باب الحديقة إلى المدرسة للتدرّب مجانًا. ويومك في البيت ينتظرك حتى تعود. تبدأ اللعبة ومعك 100 رصيد.",
+ "Garden gate → school: practise with the teacher for free at any time of day. Grandma on the sedir gives a new piece of advice every day.": "باب الحديقة ← المدرسة: تدرّب مع المعلمة مجانًا في أي وقت من النهار. والجدة على الأريكة تعطيك نصيحة جديدة كل يوم."
 }
