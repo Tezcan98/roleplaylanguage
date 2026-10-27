@@ -345,7 +345,7 @@ body.gloss-rtl .gl{font-family:var(--gloss-font,Nunito,sans-serif)}
 @media (orientation:landscape) and (max-height:520px){
   .hud{top:calc(env(safe-area-inset-top,0px) + 6px);left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right))}
   .pill{padding:2px 10px;font-size:13px;min-height:34px;gap:6px}
-  #quest{top:calc(env(safe-area-inset-top,0px) + 12px + var(--hud-h,40px));left:max(8px,env(safe-area-inset-left));max-width:min(300px,38vw);padding:5px 10px}
+  #quest{top:calc(env(safe-area-inset-top,0px) + 12px + var(--hud-h,40px));left:max(8px,env(safe-area-inset-left));max-width:min(300px,38vw);padding:5px 24px 5px 10px} /* (room on the right for the fold button) */
   #quest .qt{font-size:13px}
   #toasts{max-width:42vw}
   .alone-note{top:calc(env(safe-area-inset-top,0px) + 20px + var(--hud-h,40px) + var(--quest-h,0px));left:max(8px,env(safe-area-inset-left));max-width:min(200px,32vw);font-size:10.5px}
