@@ -1019,6 +1019,7 @@ const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };
 if (!settings.get('fpsUnlimited1', false)) { settings.set('fps', defaultFps()); settings.set('fpsUnlimited1', true); } // once: everyone to unlimited (it was 30 on phones by default)
 applyFps(settings.get('fps', defaultFps()));
 game.start();
+game.rest = () => damaView.isOpen || chess.view?.isOpen; // a board on screen: the world isn't drawn under it
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
 
 // headscarves: off at home, on outside and for the prayer (mom, and Sare if she wears one)

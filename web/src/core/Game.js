@@ -8,12 +8,20 @@ export class Game {
   /** Frames a second at most (null: as many as the screen shows — 120 on some phones, which heats them up). */
   fps = null;
 
+  /**
+   * () → true while a board covers the world (dama, chess): the world is not drawn (its last frame stays
+   * under the board), only the game's logic runs — the network, the moves, the voices — 10 times a second.
+   */
+  rest = null;
+  static REST_FPS = 10;
+
   start() {
     let due = 0; // when the next frame is wanted
     const tick = (now) => {
       requestAnimationFrame(tick);
-      if (this.fps) {
-        const every = 1000 / this.fps;
+      const cap = this.rest?.() ? Game.REST_FPS : this.fps;
+      if (cap) {
+        const every = 1000 / cap;
         if (now < due - every / 4) return; // too soon: skip this screen refresh (a quarter frame of slack: refreshes are not evenly spaced)
         due = now - due > every ? now + every : due + every; // on the beat (60 of a 90 Hz screen's 90), or again from now after a pause
       }
@@ -30,6 +38,12 @@ export class Game {
     const t = (this.t += dt);
     const { ambient = [], shotButton, help, prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx } = this;
     const playing = modes.base === 'play';
+    if (this.rest?.()) { // a board covers the world: only what plays on without being seen
+      time.update(dt);
+      village.update(dt, t);
+      ambient.forEach((a) => a.update(dt, t));
+      return;
+    }
 
     time.update(dt);
     lighting.update(dt, t);
