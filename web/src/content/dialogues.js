@@ -263,7 +263,10 @@ export const DIALOGUES = {
   dede: {
     start(ctx) {
       switch (ctx.q) {
-        case 'talk-mom': case 'take-jacket': case 'go-out': case 'talk-dede': return 'd1';
+        // the game starts in the square: on the way home you may meet him before mom — not his task yet
+        case 'talk-mom': return 'dMom';
+        case 'take-jacket': return 'dJacket';
+        case 'go-out': case 'talk-dede': return 'd1';
         case 'bucket': return ctx.has('kova') ? 'dq' : 'dw';
         case 'bread': return 'br1';
         case 'bring-bread': return 'brW';
@@ -281,6 +284,10 @@ export const DIALOGUES = {
       }
     },
     nodes: {
+      dMom: { say: 'Hoş geldin evladım! Annen seni çağırıyor, önce eve git. Sonra gel, bahçede bana yardım edersin.', en: 'Welcome, my child! Your mom is calling you, go home first. Then come and help me in the garden.', words: [['önce', 'first'], ['sonra', 'then, afterwards']],
+        options: [{ tr: 'Tamam dede, hemen gidiyorum.', en: "All right, grandpa, I'm going right away." }] },
+      dJacket: { say: 'Hava serin evladım, montun nerede? Önce montunu al, sonra gel.', en: "It's chilly, my child — where is your jacket? Get your jacket first, then come.", words: [['serin', 'cool, chilly'], ['mont', 'jacket, coat']],
+        options: [{ tr: 'Tamam dede, alıyorum.', en: "All right, grandpa, I'm getting it." }] },
       d1: { say: 'Hoş geldin evladım! Bak, domatesler kızarmış, ne güzel olmuş!', en: 'Welcome, my child! Look, the tomatoes have turned red, how nice they are!', words: [['hoş geldin', 'welcome'], ['hoş bulduk', 'glad to be here (the answer to “hoş geldin”)']],
         options: [{ tr: 'Hoş bulduk dede! Ne yapıyorsun?', en: 'Glad to be here, grandpa! What are you doing?', next: 'd2' }, { tr: 'Hoş bulduk! Kolay gelsin dede.', en: 'Glad to be here! Take it easy, grandpa. (said to someone working)', next: 'd2k' }] },
       d2: { say: 'Domateslere su veriyorum. Ama kova lazım. Kovayı getirir misin?', en: 'I am watering the tomatoes. But I need the bucket. Will you bring the bucket?', words: [['domates', 'tomato'], ['kova', 'bucket']],

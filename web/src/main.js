@@ -165,7 +165,9 @@ async function loadManifest() {
 }
 
 const manifest = await loadManifest();
-await document.fonts?.load('700 40px Fredoka').catch(() => {}); // canvas textures (signs, chalkboard) use it
+// canvas textures (signs, chalkboard, score boards) use Fredoka: both weights, with the Turkish letters — they are in a
+// second part of the font (latin-ext) that a page only loads when it needs them; drawn before it, İ ğ ş came out in another font
+await Promise.all(['700 40px Fredoka', '500 40px Fredoka'].map((f) => document.fonts?.load(f, 'ÇĞİÖŞÜçğıöşü').catch(() => {})));
 const params = new URLSearchParams(location.search);
 const host = document.getElementById('ui');
 

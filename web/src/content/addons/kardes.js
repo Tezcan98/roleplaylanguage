@@ -66,7 +66,7 @@ function nodes() {
       options: [opts[1], opts[0], opts[2]],
     };
     out[`ok${i}`] = {
-      say: `Evet! Bu bir ${t.tr}. Sen çok biliyorsun abi!`, en: `Yes! This is a ${t.en}. You know so much, big brother!`,
+      say: `Evet! Bu bir ${t.tr}. Ne güzel bildin abi!`, en: `Yes! This is a ${t.en}. Well done, you got it, big brother!`, // (not “sen çok biliyorsun”: that can sound like “know-it-all”)
       words: [[t.tr, t.en]],
       options: [{ tr: 'Aferin sana, Ali!', en: 'Well done, Ali!', do: [`flag:kardes-${t.tr}`] }],
     };

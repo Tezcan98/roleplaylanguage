@@ -114,7 +114,7 @@ export class HouseInterior extends Location {
     this.anchor('sofraE', 0.4, -0.4, -Math.PI / 2);
     this.anchor('sofraS', -0.8, 0.75, Math.PI);
     this.hotspot('house.sofra', -0.8, 0.78, 1.0);
-    this.hotspot('house.breadTable', -0.45, -0.55, 1.0);
+    this.hotspot('house.breadTable', -0.8, -0.4, 1.75); // anywhere round the sini (its edge stops you 0.85 m from the middle; a small spot by it was all but out of reach, with dad sitting there)
     this.hotspot('house.tableGoods', -2.0, -1.0, 1.0); // put what you bought on the sini (systems/TableAndBins.js)
 
     this.bread = mf.group(
