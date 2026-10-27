@@ -6,13 +6,13 @@ const MIC = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke=
 /**
  * Talk button (also the T key, held): what you say appears as a text bubble (in a talking zone:
  * your voice). One tap starts, another tap stops — and while it is on, the button says so
- * ("Dinliyorum · bitirmek için dokun"); holding it and letting go works too. Where the device can't
+ * ("Bitirmek için dokun"); holding it and letting go works too. Where the device can't
  * turn speech into text, the button opens a box to type the sentence instead. Plus the online counter.
  */
 const LABEL = {
   idle: 'Dokun, konuş', // (shown the first few times only: then just the mic)
-  rec: 'Dinliyorum · bitirmek için dokun',
-  zoneRec: 'Seni duyuyorlar · bitirmek için dokun',
+  rec: 'Bitirmek için dokun', // (short: a phone held sideways is only ~360 px high and the button sits by the corner)
+  zoneRec: 'Bitirmek için dokun',
 };
 export class PushToTalk {
   #placed = '';
