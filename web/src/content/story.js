@@ -338,6 +338,8 @@ export const STORY = {
         { id: 'review-2', title: 'Dersi tekrar et', obj: 'Kitabından bugünkü konuyu tekrar et', en: 'Review today’s topic in your book', target: { hotspot: 'house.shelf' }, complete: { use: 'house.shelf' }, minutes: 20 },
         // Nasreddin Hoca's cauldron: past tense and -mış come after the first days (it was on Sunday)
         { id: 'masal', title: 'Dedenin masalı', obj: 'Dedenin yanına otur, masal dinle', en: 'Sit with grandpa and listen to a tale', target: { npc: 'dede' }, complete: { flag: 'tale-kazan' }, minutes: 60 },
+        // after the tale grandpa talks about Palestine: Gaza's children, prayer, not being afraid to speak up
+        { id: 'dede-filistin', title: 'Dedenin sözleri', obj: 'Dedeni dinle', en: 'Listen to grandpa', target: { npc: 'dede' }, minutes: 15 },
         { id: 'talk-baba-tools', title: 'Babaya yardım', obj: 'Babanla konuş', en: 'Talk to dad', target: { npc: 'baba' }, minutes: 15 },
         { id: 'talk-dede-3', title: 'Bahçe planı', obj: 'Dedenle yarın için konuş', en: 'Talk to grandpa about tomorrow', target: { npc: 'dede' }, after: ['chapter'], minutes: 15 },
       ],

@@ -262,6 +262,7 @@ export const DIALOGUES = {
         case 'place-bread': return 'br3';
         case 'talk-dede-night': return 'nightChat';
         case 'talk-dede-3': return 'midweekChat';
+        case 'dede-filistin': return 'fl1';
         case 'sun-dede': return 'sunChat';
         case 'laundry-listen': case 'laundry': return 'later';
         case 'masal': return 'kazan.start';
@@ -320,6 +321,30 @@ export const DIALOGUES = {
         options: TALES.map((t) => ({ tr: t.title, en: '', next: `${t.id}.start` })) },
       // --- week chats (Monday night, Tuesday, Sunday) ---
       nightChat: { say: 'Yarın yine okul var. Erken yatarsan sabah dinç kalkarsın.', en: 'School is tomorrow again. If you go to bed early, you will wake up fresh.', words: [['erken', 'early']], options: [{ tr: 'İyi geceler dede!', en: 'Good night grandpa!', do: ['quest'] }, { tr: 'Sana da iyi geceler dede, Allah rahatlık versin.', en: 'Good night to you too, grandpa, sleep well.', do: ['quest'] }] },
+      // Palestine (day 3, after the cauldron tale): we live in peace, Gaza's children don't; pray for them, and don't
+      // be afraid to speak up against the oppression — against the oppression, never with bad words about people
+      fl1: { say: 'Masal güzeldi, değil mi? Şimdi sana önemli bir şey anlatacağım evladım.', en: 'The tale was nice, wasn’t it? Now I will tell you something important, my child.', words: [['önemli', 'important']],
+        options: [{ tr: 'Anlat dede, dinliyorum.', en: 'Tell me, grandpa, I am listening.', next: 'fl2' }] },
+      fl2: { say: 'Biz burada huzur içindeyiz. Sıcak evimiz, sofrada yemeğimiz var; okula gidiyor, oyun oynuyoruz. Ama Filistin’de, Gazze’de çocuklar böyle yaşayamıyor.', en: 'Here we live in peace. We have a warm home and food on the table; we go to school and play. But in Palestine, in Gaza, children cannot live like this.',
+        words: [['huzur', 'peace (of mind)'], ['Filistin', 'Palestine'], ['sofra', 'the meal spread / table']],
+        options: [{ tr: 'Neden dede?', en: 'Why, grandpa?', next: 'fl3' }] },
+      fl3: { say: 'Orada büyük bir zulüm var. Evler yıkılıyor, çok insan ölüyor, çocuklar aç ve susuz kalıyor. Buna soykırım diyorlar.', en: 'There is great oppression there. Homes are destroyed, many people are dying, children are left hungry and thirsty. People call it genocide.',
+        words: [['zulüm', 'oppression, cruelty'], ['yıkılmak', 'to be destroyed'], ['aç', 'hungry'], ['soykırım', 'genocide']],
+        options: [{ tr: 'Çok üzüldüm dede.', en: 'I am very sad, grandpa.', next: 'fl4' }, { tr: 'Biz ne yapabiliriz?', en: 'What can we do?', next: 'fl4' }] },
+      fl4: { say: 'Önce elimizdekilere şükredeceğiz. Sonra dua edeceğiz. Her namazdan sonra Filistinli kardeşlerimiz için de dua et, olur mu?', en: 'First we will be thankful for what we have. Then we will pray. After every prayer, pray for our Palestinian brothers and sisters too, all right?',
+        words: [['şükretmek', 'to give thanks (to God)'], ['dua etmek', 'to pray (make a supplication)'], ['kardeş', 'brother / sister']],
+        options: [{ tr: 'Olur dede, dua edeceğim.', en: 'All right grandpa, I will pray.', next: 'fl5' }] },
+      fl5: { say: 'Bir de şunu unutma: Zulmü görünce susma. İnternette, sosyal medyada doğruyu söylemekten korkma. Ama kimseye kötü söz söyleme; biz zulme karşıyız.', en: 'And don’t forget this: when you see oppression, don’t stay silent. Don’t be afraid to tell the truth on the internet and social media. But never say bad words to anyone; we are against oppression.',
+        words: [['susmak', 'to stay silent'], ['doğru', 'the truth, right'], ['korkmak', 'to be afraid'], ['karşı olmak', 'to be against']],
+        options: [{ tr: 'Anladım dede.', en: 'I understand, grandpa.', next: 'fl6' }] },
+      fl6: { say: 'Söyle bakalım: Bir zulüm gördüğümüzde ne yaparız?', en: 'Tell me then: what do we do when we see oppression?', hint: 'dua, doğru',
+        options: [
+          { tr: 'Susarız.', en: 'We stay silent.', wrong: true },
+          { tr: 'Dua ederiz, doğruyu söyleriz.', en: 'We pray and tell the truth.', next: 'fl7' },
+          { tr: 'Unuturuz.', en: 'We forget it.', wrong: true },
+        ] },
+      fl7: { say: 'Aferin evladım. Allah bütün mazlumların yardımcısı olsun.', en: 'Well done, my child. May Allah help all the oppressed.', words: [['mazlum', 'the oppressed']],
+        options: [{ tr: 'Amin dede.', en: 'Amen, grandpa.', do: ['quest'] }] },
       midweekChat: { say: 'Yarın bahçede domateslere bakacağım. Hafta sonu da arkadaşlarınla buluşursun.', en: 'I will check the tomatoes tomorrow. At the weekend you can meet your friends.', words: [['yarın', 'tomorrow'], ['hafta sonu', 'weekend']], options: [{ tr: 'Tamam dede!', en: 'Okay grandpa!', do: ['quest'] }] },
       sunChat: { say: 'Güzel bir hafta geçirdin. Al bakalım, bu da harçlığın. Şimdi biraz dinlenip arkadaşlarının yanına gidebilirsin.', en: 'You had a good week. Here you go, this is your pocket money. Now you can rest a little and go see your friends.', words: [['hafta', 'week'], ['dinlenmek', 'to rest'], ['el öpmek', 'to kiss an elder’s hand and touch it to your forehead (respect)']], options: [{ tr: '(Dedenin elini öper) Sağ ol dede, Allah razı olsun!', en: '(kisses grandpa’s hand) Thank you grandpa, God bless you!', do: ['pocket-money:10', 'quest'] }, { tr: 'Teşekkürler dede!', en: 'Thanks grandpa!', do: ['quest'] }] },
       ...taleNodes(),
