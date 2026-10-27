@@ -54,7 +54,15 @@ export const DIALOGUES = {
       b3: { say: 'Evet, yirmi beş lira. Buyur, ekmeğin ve sütün.', en: "Yes, twenty-five lira. Here's your bread and milk.", words: [['yirmi beş', 'twenty-five']],
         options: [{ tr: 'Buyurun, otuz lira.', en: 'Here you are, thirty lira.', next: 'b4' }] },
       b4: { say: 'Teşekkürler. Paranın üstü beş lira. Annene selam söyle!', en: "Thanks. Your change is five lira. Say hello to your mom!", words: [['paranın üstü', 'change (money)'], ['beş', 'five']],
-        options: [{ tr: 'Teşekkür ederim, iyi akşamlar!', en: 'Thank you, good evening!', do: ['take:para:25', 'give:ekmek', 'give:sut'] }, { tr: 'Sağ olun Recep amca, iyi akşamlar!', en: 'Thank you, uncle Recep, good evening!', do: ['take:para:25', 'give:ekmek', 'give:sut'] }] },
+        options: [{ tr: 'Teşekkür ederim!', en: 'Thank you!', do: ['take:para:25', 'give:ekmek', 'give:sut'], next: 'bp1' }, { tr: 'Sağ olun Recep amca!', en: 'Thank you, uncle Recep!', do: ['take:para:25', 'give:ekmek', 'give:sut'], next: 'bp1' }] },
+      // the flag on his awning: Palestine (after the first shopping, day 2)
+      bp1: { say: 'Brandamdaki bayrağı gördün mü? O Filistin bayrağı.', en: 'Did you see the flag on my awning? That is the flag of Palestine.', words: [['bayrak', 'flag'], ['branda', 'awning']],
+        options: [{ tr: 'Gördüm! Neden astınız?', en: 'I saw it! Why did you hang it?', next: 'bp2' }] },
+      bp2: { say: 'Filistin’deki kardeşlerimizi unutmamak için. Orada çocuklar bir ekmek bile zor buluyor. Biz ekmeğimizi alırken onları da düşünelim, onlar için dua edelim.', en: 'So that we never forget our brothers and sisters in Palestine. There, children can hardly find even a loaf of bread. When we buy our bread, let us think of them too and pray for them.',
+        words: [['unutmak', 'to forget'], ['düşünmek', 'to think (of)'], ['dua etmek', 'to pray (make a supplication)']],
+        options: [{ tr: 'Ben de onlar için dua ediyorum.', en: 'I pray for them too.', next: 'bp3' }, { tr: 'Çok üzücü Recep amca.', en: 'It is very sad, uncle Recep.', next: 'bp3' }] },
+      bp3: { say: 'Allah onların yardımcısı olsun. Hadi evlat, annen seni bekliyor. İyi akşamlar!', en: 'May Allah help them. Off you go, kid, your mom is waiting for you. Good evening!', words: [['yardımcı', 'helper']],
+        options: [{ tr: 'Amin! İyi akşamlar!', en: 'Amen! Good evening!' }] },
       // shopping: the shop window with the shelves (prices, paid from the bag)
       shop: { say: 'Hoş geldin! Ne istersin? Ekmek, süt, simit, ayran, peynir, yumurta… hepsi taze.', en: 'Welcome! What would you like? Bread, milk, simit, ayran, cheese, eggs… all fresh.',
         words: [['bakkal', 'grocer'], ['taze', 'fresh'], ['istemek', 'to want']],

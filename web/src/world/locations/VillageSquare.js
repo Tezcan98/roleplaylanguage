@@ -929,6 +929,15 @@ export class VillageSquare extends Location {
     this.hotspot('village.bakkalCounter', x1 - 1.0, z1 + 0.9, 1.0); // the shop window (ui/MarketView.js)
     // outside: bread basket, crates of produce and milk bottles under a striped awning
     add(mf.at(mf.box(w + 0.4, 0.06, 1.6, { tex: 'awning', repeat: [4, 1] }), x, 2.75, z1 + 0.6)).rotation.x = 0.18;
+    // a Palestinian flag hung from the awning's front edge (the grocer talks about it: content/dialogues.js bakkal)
+    const fc = document.createElement('canvas'); fc.width = 256; fc.height = 128;
+    const fg = fc.getContext('2d');
+    [['#000000', 0], ['#FFFFFF', 1], ['#149954', 2]].forEach(([col, i]) => { fg.fillStyle = col; fg.fillRect(0, (i * 128) / 3, 256, 128 / 3 + 1); });
+    fg.fillStyle = '#E4312B'; fg.beginPath(); fg.moveTo(0, 0); fg.lineTo(110, 64); fg.lineTo(0, 128); fg.closePath(); fg.fill();
+    const ftex = new THREE.CanvasTexture(fc); ftex.colorSpace = THREE.SRGBColorSpace;
+    const flag = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.65), new THREE.MeshBasicMaterial({ map: ftex, side: THREE.DoubleSide }));
+    flag.position.set(x - 1.9, 2.24, z1 + 1.42); add(flag);
+    add(mf.at(mf.cyl(0.015, 0.015, 1.4, WOOD, 6), x - 1.9, 2.58, z1 + 1.42)).rotation.z = Math.PI / 2; // the rod it hangs from
     [x0 + 0.1, x1 - 0.1].forEach((px) => add(mf.at(mf.box(0.1, 2.7, 0.1, WOOD), px, 1.35, z1 + 1.35)));
     const crate = (cx, color, n = 6) => {
       add(mf.at(mf.box(0.8, 0.45, 0.6, LIGHT_WOOD), cx, 0.23, z1 + 0.7));
