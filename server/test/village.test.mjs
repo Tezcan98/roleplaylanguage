@@ -422,6 +422,40 @@ test('a crowd: players far away are sent less often, near ones every tick', asyn
   crowd.forEach((c) => c.ws.close()); v.close(); h.close();
 });
 
+test('a few on the square: moves by distance (close 10, mid 5, far 2 a second), never your own back', async () => {
+  const h = createServer(), v = new VillageServer({ server: h, log: () => {}, allowOrigin: () => true, maxPerIp: 100 });
+  await new Promise((r) => h.listen(0, '127.0.0.1', r));
+  const at = `ws://127.0.0.1:${h.address().port}/ws/village`;
+  const joinAt = async (name) => {
+    const ws = new WebSocket(at, { origin: 'http://localhost:1' }), inbox = [];
+    ws.on('message', (d) => inbox.push(JSON.parse(d)));
+    await new Promise((res, rej) => { ws.once('open', res); ws.once('error', rej); });
+    ws.send(JSON.stringify({ type: 'hello', name, room: 'few' }));
+    while (!inbox.some((m) => m.type === 'welcome')) await silence(10);
+    return { ws, inbox, id: inbox.find((m) => m.type === 'welcome').id, send: (m) => ws.send(JSON.stringify(m)) };
+  };
+  const [me, near, mid, far] = [await joinAt('Ben'), await joinAt('Yakin'), await joinAt('Orta'), await joinAt('Uzak')];
+  me.send({ type: 'state', x: 0, z: 0, rot: 0 });
+  await silence(300);
+  me.inbox.length = 0;
+  for (let k = 0; k < 20; k++) { // two seconds of everyone walking
+    near.send({ type: 'state', x: 10 + k * 0.1, z: 0, rot: 0, moving: true });
+    mid.send({ type: 'state', x: 35 + k * 0.1, z: 0, rot: 0, moving: true });
+    far.send({ type: 'state', x: -80 - k * 0.1, z: 30, rot: 0, moving: true });
+    me.send({ type: 'state', x: 0, z: k * 0.05, rot: 0, moving: true });
+    await silence(100);
+  }
+  await silence(600);
+  const seen = (id) => me.inbox.filter((m) => m.type === 'states' && m.players.some((p) => p.id === id)).length;
+  assert.ok(seen(near.id) >= 16, `near seen ${seen(near.id)} times`);
+  assert.ok(seen(mid.id) >= 8 && seen(mid.id) <= 15 && seen(mid.id) < seen(near.id), `mid seen ${seen(mid.id)} times (near ${seen(near.id)})`); // (2.6 s at 5 a second)
+  assert.ok(seen(far.id) >= 3 && seen(far.id) <= 7, `far seen ${seen(far.id)} times`); // (2.6 s at 2 a second)
+  assert.equal(seen(me.id), 0, 'my own moves do not come back');
+  const last = (id) => me.inbox.filter((m) => m.type === 'states').flatMap((m) => m.players).filter((p) => p.id === id).pop();
+  assert.ok(last(far.id).x <= -81.8 && last(mid.id).x >= 36.8, 'the last places still arrive');
+  [me, near, mid, far].forEach((c) => c.ws.close()); v.close(); h.close();
+});
+
 test('usernames are unique: a name belongs to the device that took it first', async () => {
   const { NameRegistry } = await import('../src/NameRegistry.js');
   const h = createServer(), v = new VillageServer({ server: h, log: () => {}, allowOrigin: () => true, maxPerIp: 100, names: new NameRegistry() });

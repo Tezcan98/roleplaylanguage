@@ -8,8 +8,9 @@ import { Moderator } from './Moderator.js';
 const NAME = /^[\p{L}\p{N}_ .-]{2,16}$/u;
 const SHIRTS = [0xE4574A, 0x2F6FDB, 0x3E8E4A, 0xE0B04A, 0x7A3552, 0x16A085, 0xD35400, 0x8E44AD];
 const MAX_PER_ROOM = 100;                   // the square holds a crowd (clients draw only the nearest 40)
-const NEAR = 50;                            // metres: players farther than this get each other's moves every FAR_EVERY ticks
-const FAR_EVERY = 5;
+/** How often a player's moves go to another, by the distance between them (ticks of 100 ms): close by every tick, then less and less. */
+const NEAR = 20, MID = 50;                   // metres
+const MID_EVERY = 2, FAR_EVERY = 5;          // up to MID: 5 a second; farther: 2 a second (the game carries a figure on between reports up to 0.6 s)
 const CALL_RANGE = 6;   // metres: how close you must be to ask someone for a voice chat
 const CALL_DROP = 200;  // metres: practically never — a call ends when someone hangs up or leaves the square
 const REQUEST_TTL = 20000;
@@ -101,7 +102,7 @@ const IDLE = 45000;                         // ms without any message from a pag
 export class VillageServer {
   #rooms = new Map(); // room → Map(id → client)
   #seq = 0;
-  #ticks = 0; // state broadcasts so far (far players every FAR_EVERY)
+  #ticks = 0; // state broadcasts so far (mid / far players every MID_EVERY / FAR_EVERY)
 
   #perIp = new Map();
   #consents = new Set(); // consents already in the safety log (since this start)
@@ -218,7 +219,7 @@ export class VillageServer {
     switch (msg.type) {
       case 'state':
         if (msg.ka) c.ws.keepalive = true; // this page sends its state at least every 10 s
-        if ([msg.x, msg.z, msg.rot].every(Number.isFinite)) Object.assign(c, { x: msg.x, z: msg.z, rot: msg.rot, moving: !!msg.moving, sit: !!msg.sit, ride: msg.ride === 'scooter' || msg.ride === 'bike' ? msg.ride : msg.ride ? 'horse' : false, dirty: true, farDirty: true });
+        if ([msg.x, msg.z, msg.rot].every(Number.isFinite)) Object.assign(c, { x: msg.x, z: msg.z, rot: msg.rot, moving: !!msg.moving, sit: !!msg.sit, ride: msg.ride === 'scooter' || msg.ride === 'bike' ? msg.ride : msg.ride ? 'horse' : false, dirty: true, midDirty: true, farDirty: true });
         break;
       case 'talk':
         c.talking = !!msg.on;
@@ -506,27 +507,27 @@ export class VillageServer {
   }
 
   /**
-   * Moves, ten times a second, in one message per player. A player far away (over NEAR metres)
-   * is sent only every FAR_EVERY ticks: with a hundred on the square that keeps each message small.
+   * Moves, in one message per player and tick (100 ms), each only to whom it matters how often: someone
+   * within NEAR metres every tick, within MID every MID_EVERY ticks, farther every FAR_EVERY — the far
+   * end of the square hardly moves on a phone's screen, and its data was most of what a phone took in.
+   * Nobody gets their own moves back. A change since the last time its distance came round is never lost.
    */
   #broadcastStates() {
-    const farTick = ++this.#ticks % FAR_EVERY === 0;
+    const tick = ++this.#ticks, midTick = tick % MID_EVERY === 0, farTick = tick % FAR_EVERY === 0;
     const state = ({ id, x, z, rot, moving, sit, ride }) => ({ id, x, z, rot, moving, sit, ...(ride ? { ride } : {}) });
     for (const members of this.#rooms.values()) {
       const all = [...members.values()];
-      if (!all.some((m) => m.dirty || (farTick && m.farDirty))) continue;
-      const near = all.length > 30;
-      if (!near) {
-        const msg = JSON.stringify({ type: 'states', players: all.filter((m) => m.dirty).map(state) });
-        if (all.some((m) => m.dirty)) all.forEach((m) => { if (m.ws.readyState === 1) m.ws.send(msg); });
-      } else {
-        for (const to of all) {
-          if (to.ws.readyState !== 1) continue;
-          const players = all.filter((m) => (farTick && m.farDirty) || (m.dirty && this.#dist(m, to) <= NEAR)).map(state);
-          if (players.length) to.ws.send(JSON.stringify({ type: 'states', players }));
-        }
+      if (!all.some((m) => m.dirty || (midTick && m.midDirty) || (farTick && m.farDirty))) continue;
+      for (const to of all) {
+        if (to.ws.readyState !== 1) continue;
+        const players = all.filter((m) => {
+          if (m === to) return false;
+          const d = this.#dist(m, to);
+          return (m.dirty && d <= NEAR) || (midTick && m.midDirty && d <= MID) || (farTick && m.farDirty);
+        }).map(state);
+        if (players.length) to.ws.send(JSON.stringify({ type: 'states', players }));
       }
-      all.forEach((m) => { m.dirty = false; if (farTick || !near) m.farDirty = false; });
+      all.forEach((m) => { m.dirty = false; if (midTick) m.midDirty = false; if (farTick) m.farDirty = false; });
     }
   }
 
