@@ -48,7 +48,7 @@ export function playBlock(p, countries = []) {
 <div class="big"><div><b>${n(t.devices)}</b>cihaz</div><div><b>${n(t.returned)}${pct(t.returned, t.devices)}</b>başka bir gün geri geldi</div><div><b>${n(t.spoke)}${pct(t.spoke, t.devices)}</b>biriyle konuştu</div><div><b>${n(t.hours)}</b>toplam saat</div><div><b>${n(t.app)}</b>Android · ${n(t.web)} web</div></div>
 <h2>Günlük aktif cihaz <small>son 3 hafta</small></h2>${columns(days.map((d) => ({ day: d.day, v: d.active })))}
 <h2>Yeni cihaz <small>ilk açılış</small></h2>${columns(days.map((d) => ({ day: d.day, v: d.new })), { color: '#81c784' })}
-<h2>Ülkeler <small>reklam olaylarından gelen cihazlar</small></h2>${bars(countries, { color: '#7986cb' })}`;
+<h2>Ülkeler <small>toplam: son 14 günde reklam olayı gönderen cihazlar (her biri bir kez) · yanda bugün kaçı</small></h2>${bars(countries, { color: '#7986cb' })}`;
   const progress = `<h2>Hangi bölüme kadar gidildi <small>o bölüme ulaşan cihaz sayısı: nerede bırakıyorlar</small></h2>${bars(reach, { color: '#ba68c8' })}
 <h2>Görevler <small>kaç cihaz yaptı · kaç kez (en çok yapılandan)</small></h2>${bars(quests, { color: '#4db6ac' })}`;
   const places = `<div class="two"><div><h2>Gidilen mekânlar <small>kez</small></h2>${bars(visited)}</div><div><h2>Konuşulan karakterler <small>kez</small></h2>${bars(people, { color: '#ffb74d' })}</div></div>

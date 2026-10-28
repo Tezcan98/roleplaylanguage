@@ -116,3 +116,18 @@ test('tasks: how many devices did each, and how many times', () => {
   const q = Object.fromEntries(s.summary().quests.map((x) => [x.id, [x.devices, x.times]]));
   assert.deepEqual(q, { 'talk-mom': [2, 2], bucket: [1, 2] });
 });
+
+test('numbers page: tabs kept through the refresh (a script, not a meta refresh); countries are the devices of the kept days, with today beside', async () => {
+  const { AdStats } = await import('../src/AdStats.js');
+  const ads = new AdStats({ key: 'k' });
+  ads.record({ e: 'load', f: 'banner', pid: 'aaaaaaaa1111' }, '1.1.1.1', 'PK');
+  ads.record({ e: 'load', f: 'banner', pid: 'aaaaaaaa1111' }, '1.1.1.1', 'PK'); // the same device: once
+  ads.record({ e: 'load', f: 'banner', pid: 'bbbbbbbb2222' }, '1.1.1.2', 'TR');
+  const get = (url) => { let b = ''; ads.route({ url, method: 'GET' }, { writeHead() {}, end(x) { b = x; } }); return b; };
+  const html = get('/api/istatistik?key=k'); // (the old /api/ad-stats address answers too)
+  assert.doesNotMatch(html, /http-equiv="refresh"/);
+  assert.match(html, /localStorage/);
+  assert.match(html, /location\.reload\(\)/);
+  assert.equal(get('/api/ad-stats?key=k').length > 1000, true);
+  assert.deepEqual(JSON.parse(get('/api/istatistik?key=k&format=json')).countries, [['PK', 1, 1], ['TR', 1, 1]]);
+});

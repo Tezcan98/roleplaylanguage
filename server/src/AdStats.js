@@ -95,11 +95,11 @@ export class AdStats {
     const today = this.#days.get(day()) ?? [];
     const latest = today.filter((ev) => !isEmpty(ev)).slice(-60).reverse(); // (the empty requests only as a count)
     // the devices by country (the ad events carry it): each device once, in the country it was last seen in
-    const seen = new Map();
-    for (const list of this.#days.values()) for (const ev of list) if (ev.d && ev.c) seen.set(ev.d, ev.c);
-    const byCountry = {};
-    for (const c of seen.values()) byCountry[c] = (byCountry[c] ?? 0) + 1;
-    const countries = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).map(([c, v]) => [c, v]);
+    const seen = new Map(), todayDevs = new Map();
+    for (const [d, list] of this.#days) for (const ev of list) if (ev.d && ev.c) { seen.set(ev.d, ev.c); if (d === day()) todayDevs.set(ev.d, ev.c); }
+    const count = (m) => { const o = {}; for (const c of m.values()) o[c] = (o[c] ?? 0) + 1; return o; };
+    const all = count(seen), now = count(todayDevs);
+    const countries = Object.entries(all).sort((a, b) => b[1] - a[1]).map(([c, v]) => [c, v, now[c] ?? 0]); // [country, devices in the kept days, devices today]
     return { now: new Date().toISOString(), days, latest, emptyToday: today.filter(isEmpty).length, countries };
   }
 
@@ -155,16 +155,16 @@ const TABS = [['reklam', 'Reklamlar'], ['olaylar', 'Son olaylar'], ['oyuncular',
 /** The stats page: refreshes itself every 15 seconds. */
 function page(s) {
   const today = s.days[0];
-  const play = playBlock(s.play, s.countries.map(([c, v]) => [country(c) || c, v]));
+  const play = playBlock(s.play, s.countries.map(([c, v, bugun]) => [country(c) || c, v, `bugün ${bugun}`]));
   const cell = (d, f, e) => d?.counts[f]?.[e] ?? 0;
   const table = (d) => `<table><tr><th></th>${Object.values(EV).map((e) => `<th>${e}</th>`).join('')}<th>doluluk</th></tr>${[...FORMATS].map((f) => `<tr><td>${NAMES[f]}</td>${Object.keys(EV).map((e) => `<td>${cell(d, f, e) || ''}</td>`).join('')}<td>${fill(d, f)}</td></tr>`).join('')}</table>
 <small>“Boş döndü”: AdMob o istekte reklam vermedi (no fill). Oyuncu bunu görmez — banner kısa süre sonra yeniden ister, arada bizim afişimiz durur; geçiş reklamında hikâye reklamsız devam eder. “Hata” yalnızca gerçek hatalar. Doluluk: gelen isteklerin yüzde kaçı reklamla döndü (uygulamanın yeni sürümüyle sayılır).</small>`;
   const time = (t) => new Date(t).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul' });
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="15"><title>İstatistik · canlı</title>
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>İstatistik · canlı</title>
 <style>body{font:15px system-ui,sans-serif;margin:16px;background:#14202e;color:#e8eef5}h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:22px 0 8px}small{color:#9fb0c2}
 table{border-collapse:collapse;width:100%;max-width:900px;background:#1d2b3c;border-radius:10px;overflow:hidden}th,td{padding:7px 9px;border-bottom:1px solid #2b3c50;text-align:right}th:first-child,td:first-child{text-align:left}th{color:#9fb0c2;font-weight:600}
 .big{display:flex;gap:12px;flex-wrap:wrap}.big div{background:#1d2b3c;border-radius:12px;padding:10px 14px}.big b{display:block;font-size:24px;color:#ffd54a}${chartsCss}</style></head><body>
-<h1>İstatistik · canlı</h1><small>Uygulamadan anlık · AdMob'un kesin rakamları 1–2 gün sonra · her 15 sn yenilenir · ${esc(time(s.now))}</small>
+<h1>İstatistik · canlı</h1><small>Uygulamadan anlık · AdMob'un kesin rakamları 1–2 gün sonra · her 15 sn yenilenir (seçili sekme kalır) · ${esc(time(s.now))}</small>
 <nav class="tabs">${TABS.map(([id, label]) => `<a href="#${id}" data-tab="${id}">${label}</a>`).join('')}</nav>
 <section class="tab" id="reklam">
 <h2>Bugün (${esc(today?.day ?? '—')})</h2>
@@ -182,6 +182,6 @@ ${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>$
 ${play.players}</section>
 <section class="tab" id="bolumler">${play.progress}</section>
 <section class="tab" id="yerler">${play.places}</section>
-<script>(function(){var ids=['reklam','olaylar','oyuncular','bolumler','yerler'];function show(){var h=(location.hash||'').slice(1);if(ids.indexOf(h)<0)h=ids[0];ids.forEach(function(i){document.getElementById(i).classList.toggle('on',i===h)});document.querySelectorAll('.tabs a').forEach(function(a){a.classList.toggle('on',a.dataset.tab===h)})}addEventListener('hashchange',show);show()})()</script>
+<script>(function(){var ids=['reklam','olaylar','oyuncular','bolumler','yerler'],K='istatistik-sekme';function saved(){try{return localStorage.getItem(K)}catch(e){return null}}function show(){var h=(location.hash||'').slice(1);if(ids.indexOf(h)<0)h=saved();if(ids.indexOf(h)<0)h=ids[0];try{localStorage.setItem(K,h)}catch(e){}ids.forEach(function(i){document.getElementById(i).classList.toggle('on',i===h)});document.querySelectorAll('.tabs a').forEach(function(a){a.classList.toggle('on',a.dataset.tab===h)})}addEventListener('hashchange',show);show();setTimeout(function(){location.reload()},15000)})()</script>
 </body></html>`;
 }
