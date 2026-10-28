@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { playBlock, chartsCss } from './StatsCharts.js';
 
 /**
  * Live ad numbers from the Android app (AdMob shows them a day or two late): every ad shown,
@@ -11,7 +12,7 @@ import { createHash } from 'node:crypto';
  * that brought an ad (how often there is one), and keeps it out of the latest events.
  *
  *   POST /api/ad-event  { e, f, micros?, cur?, v?, pid?, code? }  (code: AdMob's error code of a 'fail')   from the app (web/src/services/monetization/AdMobAdProvider.js)
- *   GET  /api/ad-stats?key=…  a page with today, the last days and the latest events (&format=json)
+ *   GET  /api/istatistik?key=…  a page with the ads (today, the last days, the latest events) and how the game is played, with charts (&format=json); /api/ad-stats the same, the old address
  *
  * One JSON line per event in DIR/YYYY-MM-DD.jsonl (Turkish time), the last DAYS days kept in memory.
  * The page needs AD_STATS_KEY; the device id is stored only as a short hash.
@@ -29,9 +30,9 @@ export class AdStats {
   #days = new Map(); // day → events
   #hits = new Map(); // ip → { n, at }
 
-  /** `installs()`: the download counter shown on the page (PlayStats.js `installs()`), or null. */
-  constructor({ dir = null, key = '', installs = null } = {}) {
-    this.dir = dir; this.key = key; this.installs = installs;
+  /** `installs()`: the download counter shown on the page (PlayStats.js `installs()`), or null. `play()`: how the game is played (PlayStats.js `summary()`), shown below the ads. */
+  constructor({ dir = null, key = '', installs = null, play = null } = {}) {
+    this.dir = dir; this.key = key; this.installs = installs; this.play = play;
     if (dir) { mkdirSync(dir, { recursive: true }); this.#load(); }
   }
 
@@ -93,7 +94,13 @@ export class AdStats {
     });
     const today = this.#days.get(day()) ?? [];
     const latest = today.filter((ev) => !isEmpty(ev)).slice(-60).reverse(); // (the empty requests only as a count)
-    return { now: new Date().toISOString(), days, latest, emptyToday: today.filter(isEmpty).length };
+    // the devices by country (the ad events carry it): each device once, in the country it was last seen in
+    const seen = new Map();
+    for (const list of this.#days.values()) for (const ev of list) if (ev.d && ev.c) seen.set(ev.d, ev.c);
+    const byCountry = {};
+    for (const c of seen.values()) byCountry[c] = (byCountry[c] ?? 0) + 1;
+    const countries = Object.entries(byCountry).sort((a, b) => b[1] - a[1]).map(([c, v]) => [c, v]);
+    return { now: new Date().toISOString(), days, latest, emptyToday: today.filter(isEmpty).length, countries };
   }
 
   /** The two routes; true when it answered. */
@@ -108,10 +115,10 @@ export class AdStats {
       });
       return true;
     }
-    if (req.url.startsWith('/api/ad-stats')) {
+    if (req.url.startsWith('/api/istatistik') || req.url.startsWith('/api/ad-stats')) { // (one page for the ads and how the game is played; ad-stats is the old address)
       const u = new URL(req.url, 'http://x');
       if (!this.key || u.searchParams.get('key') !== this.key) { res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('yetkisiz\n'); return true; }
-      const s = { ...this.summary(), installs: this.installs?.() ?? null };
+      const s = { ...this.summary(), installs: this.installs?.() ?? null, play: this.play?.() ?? null };
       if (u.searchParams.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(s)); return true; }
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' });
       res.end(page(s));
@@ -152,7 +159,7 @@ function page(s) {
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="15"><title>Reklamlar · canlı</title>
 <style>body{font:15px system-ui,sans-serif;margin:16px;background:#14202e;color:#e8eef5}h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:22px 0 8px}small{color:#9fb0c2}
 table{border-collapse:collapse;width:100%;max-width:900px;background:#1d2b3c;border-radius:10px;overflow:hidden}th,td{padding:7px 9px;border-bottom:1px solid #2b3c50;text-align:right}th:first-child,td:first-child{text-align:left}th{color:#9fb0c2;font-weight:600}
-.big{display:flex;gap:12px;flex-wrap:wrap}.big div{background:#1d2b3c;border-radius:12px;padding:10px 14px}.big b{display:block;font-size:24px;color:#ffd54a}</style></head><body>
+.big{display:flex;gap:12px;flex-wrap:wrap}.big div{background:#1d2b3c;border-radius:12px;padding:10px 14px}.big b{display:block;font-size:24px;color:#ffd54a}${chartsCss}</style></head><body>
 <h1>Reklamlar · canlı</h1><small>Uygulamadan anlık · AdMob'un kesin rakamları 1–2 gün sonra · her 15 sn yenilenir · ${esc(time(s.now))}</small>
 <h2>Bugün (${esc(today?.day ?? '—')})</h2>
 <div class="big"><div><b>${today?.events ?? 0}</b>olay</div><div><b>${today?.devices ?? 0}</b>cihaz</div><div><b>${esc(money(today?.revenue ?? {}))}</b>tahmini gelir</div>
@@ -163,5 +170,6 @@ ${installsBlock(s.installs)}
 ${s.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.events}</td><td>${d.devices}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'show') + cell(d, f, 'impression'), 0)}</td><td>${cell(d, 'rewarded', 'reward')}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'click'), 0)}</td><td>${esc(money(d.revenue))}</td></tr>`).join('')}</table>
 <h2>Son olaylar <small>${s.emptyToday ? `boş dönen ${s.emptyToday} istek bugün listede gösterilmiyor` : ''}</small></h2><table><tr><th>Saat</th><th>Reklam</th><th>Olay</th><th>Gelir</th><th>Ülke</th><th>Sürüm</th><th>Cihaz</th></tr>
 ${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>${EV[e.e]}${e.code != null ? ` · ${e.code} ${esc(CODES[e.code] ?? '')}` : ''}</td><td>${e.micros != null ? `${(e.micros / 1e6).toFixed(5)} ${esc(e.cur ?? '')}` : ''}</td><td>${esc(country(e.c))}</td><td>${esc(e.v ?? '')}</td><td>${esc(e.d ?? '')}</td></tr>`).join('')}</table>
+${playBlock(s.play, s.countries.map(([c, v]) => [country(c) || c, v]))}
 </body></html>`;
 }

@@ -32,7 +32,7 @@
  *   TTS_GEMINI_PER_DAY, GEMINI_TTS_MODEL  new women's lines per day (default 1500); TTS model (default gemini-3.8-flash-tts, then 2.5)
  *   GEMINI_MODEL      default gemini-flash-latest
  *   NPC_CHAT_PER_MINUTE / NPC_CHAT_PER_DAY (per IP, default 8 / 150), NPC_CHAT_GLOBAL_PER_DAY (default 1200)
- *   AD_STATS_KEY, AD_STATS_DIR  the live ad numbers page (GET /api/ad-stats?key=…) and where its day files go (AdStats.js)
+ *   AD_STATS_KEY, AD_STATS_DIR  the live ad numbers page (GET /api/istatistik?key=…) and where its day files go (AdStats.js)
  *   PLAY_STATS_DIR  where the anonymous play numbers go (PlayStats.js; GET /api/stats?key=… with the same AD_STATS_KEY)
  *   FEEDBACK_DIR, FEEDBACK_KEY (default AD_STATS_KEY), FEEDBACK_MODEL  the players' feedback, graded by Gemini for credits (Feedback.js)
  *   REPORTS_DIR, REPORT_KEY (default AD_STATS_KEY), REPORT_MODEL  player reports ("Şikayet et"): the reported player's last
@@ -41,7 +41,7 @@
  *   MAIL_API_URL, MAIL_API_KEY, REPORT_MAIL_TO  the mail API on the SMTP machine and the operator's address (Mailer.js; TODO)
  *
  * Endpoints: ws(s)://host/ws/village · GET /health · GET /health?name=&pid= (is the username free) · POST /api/npc-chat
- *            · POST /api/ad-event · GET /api/ad-stats?key= · POST /api/feedback · GET /api/feedback-list?key=
+ *            · POST /api/ad-event · GET /api/istatistik?key= · POST /api/feedback · GET /api/feedback-list?key=
  *            · GET /api/reports?key= · GET /api/report-action?id=&key=&do=ban7|ban|dismiss|unban
  */
 import { createServer } from 'node:http';
@@ -83,7 +83,7 @@ const chat = new NpcChat({
 
 // live ad numbers from the app (AdMob's own come a day or two late)
 const playStats = new PlayStats({ dir: env.PLAY_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'play') : null), key: env.AD_STATS_KEY ?? '' }); // how the game is played, anonymously: POST /api/play-event · GET /api/stats?key= (same key)
-const adStats = new AdStats({ dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '', installs: () => playStats.installs() }); // (its page shows the downloads too)
+const adStats = new AdStats({ dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '', installs: () => playStats.installs(), play: () => playStats.summary() }); // (its page shows the downloads too)
 playStats.adDevices = () => adStats.devices(); // (the menu's "bugüne kadar": the app's players are in the ad numbers)
 
 // what the players think of the game: once a day, credits for a real opinion
