@@ -149,27 +149,39 @@ function installsBlock(i) {
 <table><tr><th>Gün</th><th>uygulama</th><th>web</th><th>toplam</th></tr>${i.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.app || ''}</td><td>${d.web || ''}</td><td>${d.app + d.web || ''}</td></tr>`).join('')}</table>`;
 }
 
+/** The page's tabs: the ads, the players, how far they got and the tasks, where they went and whom they talked to. */
+const TABS = [['reklam', 'Reklamlar'], ['olaylar', 'Son olaylar'], ['oyuncular', 'Oyuncular'], ['bolumler', 'Bölümler ve görevler'], ['yerler', 'Yerler ve kişiler']];
+
 /** The stats page: refreshes itself every 15 seconds. */
 function page(s) {
   const today = s.days[0];
+  const play = playBlock(s.play, s.countries.map(([c, v]) => [country(c) || c, v]));
   const cell = (d, f, e) => d?.counts[f]?.[e] ?? 0;
   const table = (d) => `<table><tr><th></th>${Object.values(EV).map((e) => `<th>${e}</th>`).join('')}<th>doluluk</th></tr>${[...FORMATS].map((f) => `<tr><td>${NAMES[f]}</td>${Object.keys(EV).map((e) => `<td>${cell(d, f, e) || ''}</td>`).join('')}<td>${fill(d, f)}</td></tr>`).join('')}</table>
 <small>“Boş döndü”: AdMob o istekte reklam vermedi (no fill). Oyuncu bunu görmez — banner kısa süre sonra yeniden ister, arada bizim afişimiz durur; geçiş reklamında hikâye reklamsız devam eder. “Hata” yalnızca gerçek hatalar. Doluluk: gelen isteklerin yüzde kaçı reklamla döndü (uygulamanın yeni sürümüyle sayılır).</small>`;
   const time = (t) => new Date(t).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul' });
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="15"><title>Reklamlar · canlı</title>
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="15"><title>İstatistik · canlı</title>
 <style>body{font:15px system-ui,sans-serif;margin:16px;background:#14202e;color:#e8eef5}h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:22px 0 8px}small{color:#9fb0c2}
 table{border-collapse:collapse;width:100%;max-width:900px;background:#1d2b3c;border-radius:10px;overflow:hidden}th,td{padding:7px 9px;border-bottom:1px solid #2b3c50;text-align:right}th:first-child,td:first-child{text-align:left}th{color:#9fb0c2;font-weight:600}
 .big{display:flex;gap:12px;flex-wrap:wrap}.big div{background:#1d2b3c;border-radius:12px;padding:10px 14px}.big b{display:block;font-size:24px;color:#ffd54a}${chartsCss}</style></head><body>
-<h1>Reklamlar · canlı</h1><small>Uygulamadan anlık · AdMob'un kesin rakamları 1–2 gün sonra · her 15 sn yenilenir · ${esc(time(s.now))}</small>
+<h1>İstatistik · canlı</h1><small>Uygulamadan anlık · AdMob'un kesin rakamları 1–2 gün sonra · her 15 sn yenilenir · ${esc(time(s.now))}</small>
+<nav class="tabs">${TABS.map(([id, label]) => `<a href="#${id}" data-tab="${id}">${label}</a>`).join('')}</nav>
+<section class="tab" id="reklam">
 <h2>Bugün (${esc(today?.day ?? '—')})</h2>
 <div class="big"><div><b>${today?.events ?? 0}</b>olay</div><div><b>${today?.devices ?? 0}</b>cihaz</div><div><b>${esc(money(today?.revenue ?? {}))}</b>tahmini gelir</div>
 <div><b>${[...FORMATS].reduce((n, f) => n + cell(today, f, 'click'), 0)}</b>tıklama (banner)</div></div>
 ${table(today)}
-${installsBlock(s.installs)}
 <h2>Son günler</h2><table><tr><th>Gün</th><th>olay</th><th>cihaz</th><th>gösterim</th><th>ödül</th><th>tıklama</th><th>tahmini gelir</th></tr>
 ${s.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.events}</td><td>${d.devices}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'show') + cell(d, f, 'impression'), 0)}</td><td>${cell(d, 'rewarded', 'reward')}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'click'), 0)}</td><td>${esc(money(d.revenue))}</td></tr>`).join('')}</table>
+</section>
+<section class="tab" id="olaylar">
 <h2>Son olaylar <small>${s.emptyToday ? `boş dönen ${s.emptyToday} istek bugün listede gösterilmiyor` : ''}</small></h2><table><tr><th>Saat</th><th>Reklam</th><th>Olay</th><th>Gelir</th><th>Ülke</th><th>Sürüm</th><th>Cihaz</th></tr>
 ${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>${EV[e.e]}${e.code != null ? ` · ${e.code} ${esc(CODES[e.code] ?? '')}` : ''}</td><td>${e.micros != null ? `${(e.micros / 1e6).toFixed(5)} ${esc(e.cur ?? '')}` : ''}</td><td>${esc(country(e.c))}</td><td>${esc(e.v ?? '')}</td><td>${esc(e.d ?? '')}</td></tr>`).join('')}</table>
-${playBlock(s.play, s.countries.map(([c, v]) => [country(c) || c, v]))}
+</section>
+<section class="tab" id="oyuncular">${installsBlock(s.installs)}
+${play.players}</section>
+<section class="tab" id="bolumler">${play.progress}</section>
+<section class="tab" id="yerler">${play.places}</section>
+<script>(function(){var ids=['reklam','olaylar','oyuncular','bolumler','yerler'];function show(){var h=(location.hash||'').slice(1);if(ids.indexOf(h)<0)h=ids[0];ids.forEach(function(i){document.getElementById(i).classList.toggle('on',i===h)});document.querySelectorAll('.tabs a').forEach(function(a){a.classList.toggle('on',a.dataset.tab===h)})}addEventListener('hashchange',show);show()})()</script>
 </body></html>`;
 }
