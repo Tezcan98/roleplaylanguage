@@ -36,7 +36,8 @@ export class Tts {
 
   /**
    * @param {{ piperDir: string, cacheDir: string, concurrency?: number, perMinute?: number,
-   *   gemini?: { key: string, models?: string[], perDay?: number, fetch?: Function } }} o
+   *   gemini?: { key: string, keys?: string[], models?: string[], perDay?: number, fetch?: Function } }} o
+   * `keys`: more keys for the voices (each from its own Google project, each with its own daily cap): the next is tried when one is over its cap.
    */
   constructor({ piperDir, cacheDir, concurrency = 2, perMinute = 90, gemini = null, log = console.log }) {
     Object.assign(this, { piperDir, cacheDir, concurrency, perMinute, log });
@@ -124,7 +125,7 @@ export class Tts {
 
   /** A woman's line from Gemini text-to-speech (tries the models in turn). */
   async #gemini(voiceName, text, file) {
-    const { key, models, fetch } = this.gemini;
+    const { key, models, fetch } = this.gemini, keys = [...new Set([key, ...(this.gemini.keys ?? [])])].filter(Boolean);
     const body = JSON.stringify({
       contents: [{ parts: [{ text }] }],
       generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } },
@@ -132,9 +133,13 @@ export class Tts {
     let last = null, wait = 0;
     for (const m of [...models, ...models]) { // each model gets a second try: now and then one answers without audio
       try {
-        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
-          method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body, signal: AbortSignal.timeout(25000),
-        });
+        let r = null;
+        for (const k of keys) { // the next key when this one's cap is reached
+          r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
+            method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': k }, body, signal: AbortSignal.timeout(25000),
+          });
+          if (r.status !== 429) break;
+        }
         if (r.status === 429) { wait = Math.max(wait, await retryAfter(r)); last = new Error(`gemini tts ${m}: HTTP 429 (quota)`); continue; }
         if (!r.ok) { last = new Error(`gemini tts ${m}: HTTP ${r.status}`); continue; }
         const part = (await r.json())?.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData;

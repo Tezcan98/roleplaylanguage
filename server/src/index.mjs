@@ -28,6 +28,7 @@
  *   AUDIT_VOICE_HOURS  how long the voice pieces (calls, talking zones) stay in that folder (default 48)
  *   MODERATION_TURKISH_ONLY=0  allow other languages · MODERATION_FAIL_CLOSED=1  hold back everything while the model is down
  *   CHESS_SCORES      file for İsmail Dede's chess score board, default /tmp/yilmaz-chess-scores.json
+ *   GEMINI_TTS_KEYS   more Gemini keys (comma-separated, each from its own Google project) used only for the voices: the next one when a key's daily cap is reached
  *   GEMINI_API_KEY    enables free conversation with village characters (POST /api/npc-chat) and the women's voices
  *   TTS_GEMINI_PER_DAY, GEMINI_TTS_MODEL  new women's lines per day (default 1500); TTS model (default gemini-3.8-flash-tts, then 2.5)
  *   GEMINI_MODEL      default gemini-flash-latest
@@ -74,7 +75,7 @@ const started = Date.now();
 const tts = new Tts({
   piperDir: env.PIPER_DIR, cacheDir: env.TTS_CACHE ?? '/tmp/yilmaz-tts',
   // women and girls speak with Gemini's voices (Piper has no Turkish woman's voice)
-  gemini: env.GEMINI_API_KEY ? { key: env.GEMINI_API_KEY, perDay: Number(env.TTS_GEMINI_PER_DAY ?? 1500), ...(env.GEMINI_TTS_MODEL ? { models: [env.GEMINI_TTS_MODEL] } : {}) } : null,
+  gemini: env.GEMINI_API_KEY ? { key: env.GEMINI_API_KEY, keys: String(env.GEMINI_TTS_KEYS ?? '').split(',').map((k) => k.trim()).filter(Boolean), perDay: Number(env.TTS_GEMINI_PER_DAY ?? 1500), ...(env.GEMINI_TTS_MODEL ? { models: [env.GEMINI_TTS_MODEL] } : {}) } : null,
 });
 const chat = new NpcChat({
   apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL || undefined,

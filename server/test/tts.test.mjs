@@ -1,7 +1,7 @@
 /** Tts with a fake piper (a shell script writing a small file): caching, limits, validation. */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, chmodSync, readdirSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, chmodSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Tts } from '../src/Tts.js';
@@ -105,4 +105,22 @@ test('men and boys: their own Gemini voice (no more robotic Piper); Piper when G
   assert.equal((await keyless.handle('g-Orus', 'Selam', 'x', 'none')).status, 503, 'no key, no Piper wanted: nothing');
   const off = new Tts({ piperDir: dir, cacheDir: join(dir, 'cache3'), log: () => {} });
   assert.equal((await off.handle('g-Orus', 'Selam', 'x', 'fettah')).status, 200, 'no Gemini key: Piper');
+});
+
+test('voices: when one key is over its cap the next key makes the line; the pause only when all are', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'tts-keys-'));
+  const used = [];
+  const fetch = async (url, { headers }) => {
+    const k = headers['x-goog-api-key']; used.push(k);
+    if (k === 'one') return { ok: false, status: 429, headers: { get: () => null }, json: async () => ({}) };
+    return { ok: true, json: async () => ({ candidates: [{ content: { parts: [{ inlineData: { mimeType: 'audio/L16;rate=24000', data: Buffer.from([1, 0]).toString('base64') } }] } }] }) };
+  };
+  try {
+    const tts = new Tts({ piperDir: dir, cacheDir: join(dir, 'cache'), gemini: { key: 'one', keys: ['two'], models: ['a'], perDay: 50, fetch }, log: () => {} });
+    assert.equal((await tts.handle('g-Algenib', 'Birinci anahtar dolu.', 'x', 'none')).status, 200);
+    assert.deepEqual(used, ['one', 'two'], 'the first key said 429, the second made it');
+    assert.equal(tts.geminiPausedUntil ?? 0, 0, 'no pause while a key still works');
+    const both = new Tts({ piperDir: dir, cacheDir: join(dir, 'cache2'), gemini: { key: 'one', keys: ['one'], models: ['a'], perDay: 50, fetch }, log: () => {} });
+    assert.equal((await both.handle('g-Algenib', 'Hepsi dolu.', 'x', 'none')).status, 503, 'every key over its cap and no Piper wanted: nothing');
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

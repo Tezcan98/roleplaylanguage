@@ -133,6 +133,7 @@ import { Cinema } from './systems/Cinema.js';
 import { CinemaView } from './ui/CinemaView.js';
 import { ClipScreen } from './ui/ClipScreen.js';
 import { RatePrompt } from './ui/RatePrompt.js';
+import { FirstSteps } from './systems/FirstSteps.js';
 import { NeyMusic } from './systems/NeyMusic.js';
 import { BackgroundMusic } from './systems/BackgroundMusic.js';
 import { BookReader } from './ui/BookReader.js';
@@ -565,6 +566,8 @@ const library = new Library({
 effects.register('library', () => library.atShelf());
 effects.register('library-read', () => library.readHere()); // a library seat: a book read aloud with subtitles
 // the open-air cinema: sit on a chair and a cartoon plays on the screen a line at a time; say what each meant (no films yet: coming soon)
+// the first chapter: only the park and the road home are open in the square, the rest after it (a card asks; "çevrimiçi oynamak istiyorum" opens it all)
+const firstSteps = new FirstSteps({ world, player, story, settings, choice: new ChoiceCard(host, modes), bus, enabled: !params.has('debug') || params.has('firststeps') });
 // playing on your own (home, the garden, school — anywhere but the square): now and then a line at the top, in the player's language, asking for a rating on Google Play (no reward: Play forbids it)
 const ratePrompt = new RatePrompt(host, { settings, modes, alone: () => !!world.current && world.current.id !== 'village' });
 const cinema = new Cinema({ films: FILMS, world, renderer: ctx.renderer, player, camera, vocab, wallet, toasts, state, modes, view: new CinemaView(host), clips: new ClipScreen(host) });
@@ -1030,7 +1033,7 @@ function continueGame(then) {
 
 
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
-const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, ratePrompt, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 // frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
 const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };
@@ -1108,4 +1111,4 @@ if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { cinema, ratePrompt, parkPlay, feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { cinema, ratePrompt, firstSteps, parkPlay, feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
