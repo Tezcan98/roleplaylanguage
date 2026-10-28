@@ -566,8 +566,8 @@ const library = new Library({
 effects.register('library', () => library.atShelf());
 effects.register('library-read', () => library.readHere()); // a library seat: a book read aloud with subtitles
 // the open-air cinema: sit on a chair and a cartoon plays on the screen a line at a time; say what each meant (no films yet: coming soon)
-// the first chapter: only the park and the road home are open in the square, the rest after it (a card asks; "çevrimiçi oynamak istiyorum" opens it all)
-const firstSteps = new FirstSteps({ world, player, story, settings, choice: new ChoiceCard(host, modes), bus, enabled: !params.has('debug') || params.has('firststeps') });
+// the first tasks are at home: walking away from the park and the road home in the square gets a small note (nothing is shut)
+const firstSteps = new FirstSteps({ host, world, player, story, enabled: !params.has('debug') || params.has('firststeps') });
 // playing on your own (home, the garden, school — anywhere but the square): now and then a line at the top, in the player's language, asking for a rating on Google Play (no reward: Play forbids it)
 const ratePrompt = new RatePrompt(host, { settings, modes, alone: () => !!world.current && world.current.id !== 'village' });
 const cinema = new Cinema({ films: FILMS, world, renderer: ctx.renderer, player, camera, vocab, wallet, toasts, state, modes, view: new CinemaView(host), clips: new ClipScreen(host) });

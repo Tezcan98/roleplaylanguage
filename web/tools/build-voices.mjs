@@ -82,17 +82,21 @@ let piperLeft = 0;
 for (const [who, text] of lines) {
   const voice = voiceOf(who), key = await speechKey(voice, text);
   if (todo.has(key)) continue;
-  if (!index.has(key)) todo.set(key, { voice, text: speechText(text) });
-  else if (redo && voice.piper && isPiper(key)) { todo.set(key, { voice, text: speechText(text) }); piperLeft++; }
+  if (!index.has(key)) todo.set(key, { voice, text: speechText(text), who });
+  else if (redo && voice.piper && isPiper(key)) { todo.set(key, { voice, text: speechText(text), who }); piperLeft++; }
 }
 if (piperLeft) console.log(`  ${piperLeft} of them are Piper lines to be made again with Gemini`);
+/** Most players never get past the first tasks (anne, dede, baba, Ali at home and in the yard): their lines are made first, then the school, then the rest. */
+const EARLY = ['anne', 'dede', 'baba', 'kardes', 'ogretmen', 'bakkal', 'elif', 'can', 'zehra', 'nine'];
+const rank = (who) => { const i = EARLY.indexOf(who); return i < 0 ? EARLY.length : i; };
+const queue = [...todo].sort(([, a], [, b]) => rank(a.who) - rank(b.who)); // (a stable sort: inside a speaker the story's order)
 console.log(`${look}: ${lines.length} lines, ${todo.size} not recorded yet`);
 
 let made = 0, state = 'done';
 const limit = Number(opt.limit ?? Infinity);
 const ffmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
 if (opt.server) {
-  for (const [key, { voice, text }] of todo) {
+  for (const [key, { voice, text }] of queue) {
     if (made >= limit) { state = 'stopped'; break; }
     const v = serverVoice(voice), f = voice.piper ? '&f=none' : ''; // (a man's line: Gemini or nothing — never Piper kept in the library)
     const res = await fetch(`${opt.server}?v=${encodeURIComponent(v)}${f}&t=${encodeURIComponent(text)}`).catch(() => null);
