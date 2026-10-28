@@ -1,7 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { playBlock, chartsCss } from './StatsCharts.js';
+import { playBlock, moneyBlock, chartsCss } from './StatsCharts.js';
 
 /**
  * Live ad numbers from the Android app (AdMob shows them a day or two late): every ad shown,
@@ -31,8 +31,8 @@ export class AdStats {
   #hits = new Map(); // ip → { n, at }
 
   /** `installs()`: the download counter shown on the page (PlayStats.js `installs()`), or null. `play()`: how the game is played (PlayStats.js `summary()`), shown below the ads. */
-  constructor({ dir = null, key = '', installs = null, play = null } = {}) {
-    this.dir = dir; this.key = key; this.installs = installs; this.play = play;
+  constructor({ dir = null, key = '', installs = null, play = null, money = null } = {}) {
+    this.dir = dir; this.key = key; this.installs = installs; this.play = play; this.money = money; // money: Money.js (typed revenue and spend)
     if (dir) { mkdirSync(dir, { recursive: true }); this.#load(); }
   }
 
@@ -115,10 +115,22 @@ export class AdStats {
       });
       return true;
     }
+    if (req.url.startsWith('/api/istatistik') && req.method === 'POST') { // the money form on the page: { day, revenue?, spend? }
+      const u = new URL(req.url, 'http://x');
+      if (!this.key || u.searchParams.get('key') !== this.key || !this.money) { res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('yetkisiz\n'); return true; }
+      let body = '';
+      req.on('data', (c) => { body += c; if (body.length > 1024) req.destroy(); });
+      req.on('end', () => {
+        let msg = null; try { msg = JSON.parse(body); } catch { /* not JSON */ }
+        const ok = !!msg && this.money.set(msg.day, { revenue: msg.revenue, spend: msg.spend });
+        res.writeHead(ok ? 200 : 400, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(ok ? this.money.summary() : { error: 'geçersiz' }));
+      });
+      return true;
+    }
     if (req.url.startsWith('/api/istatistik') || req.url.startsWith('/api/ad-stats')) { // (one page for the ads and how the game is played; ad-stats is the old address)
       const u = new URL(req.url, 'http://x');
       if (!this.key || u.searchParams.get('key') !== this.key) { res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('yetkisiz\n'); return true; }
-      const s = { ...this.summary(), installs: this.installs?.() ?? null, play: this.play?.() ?? null };
+      const s = { ...this.summary(), installs: this.installs?.() ?? null, play: this.play?.() ?? null, money: this.money?.summary() ?? null };
       if (u.searchParams.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(s)); return true; }
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' });
       res.end(page(s));
@@ -150,7 +162,7 @@ function installsBlock(i) {
 }
 
 /** The page's tabs: the ads, the players, how far they got and the tasks, where they went and whom they talked to. */
-const TABS = [['reklam', 'Reklamlar'], ['olaylar', 'Son olaylar'], ['oyuncular', 'Oyuncular'], ['bolumler', 'Bölümler ve görevler'], ['yerler', 'Yerler ve kişiler']];
+const TABS = [['reklam', 'Reklamlar'], ['para', 'Para'], ['olaylar', 'Son olaylar'], ['oyuncular', 'Oyuncular'], ['bolumler', 'Bölümler ve görevler'], ['yerler', 'Yerler ve kişiler']];
 
 /** The stats page: refreshes itself every 15 seconds. */
 function page(s) {
@@ -174,6 +186,7 @@ ${table(today)}
 <h2>Son günler</h2><table><tr><th>Gün</th><th>olay</th><th>cihaz</th><th>gösterim</th><th>ödül</th><th>tıklama</th><th>tahmini gelir</th></tr>
 ${s.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.events}</td><td>${d.devices}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'show') + cell(d, f, 'impression'), 0)}</td><td>${cell(d, 'rewarded', 'reward')}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'click'), 0)}</td><td>${esc(money(d.revenue))}</td></tr>`).join('')}</table>
 </section>
+<section class="tab" id="para">${moneyBlock(s.money, s.installs)}</section>
 <section class="tab" id="olaylar">
 <h2>Son olaylar <small>${s.emptyToday ? `boş dönen ${s.emptyToday} istek bugün listede gösterilmiyor` : ''}</small></h2><table><tr><th>Saat</th><th>Reklam</th><th>Olay</th><th>Gelir</th><th>Ülke</th><th>Sürüm</th><th>Cihaz</th></tr>
 ${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>${EV[e.e]}${e.code != null ? ` · ${e.code} ${esc(CODES[e.code] ?? '')}` : ''}</td><td>${e.micros != null ? `${(e.micros / 1e6).toFixed(5)} ${esc(e.cur ?? '')}` : ''}</td><td>${esc(country(e.c))}</td><td>${esc(e.v ?? '')}</td><td>${esc(e.d ?? '')}</td></tr>`).join('')}</table>
@@ -182,6 +195,6 @@ ${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>$
 ${play.players}</section>
 <section class="tab" id="bolumler">${play.progress}</section>
 <section class="tab" id="yerler">${play.places}</section>
-<script>(function(){var ids=['reklam','olaylar','oyuncular','bolumler','yerler'],K='istatistik-sekme';function saved(){try{return localStorage.getItem(K)}catch(e){return null}}function show(){var h=(location.hash||'').slice(1);if(ids.indexOf(h)<0)h=saved();if(ids.indexOf(h)<0)h=ids[0];try{localStorage.setItem(K,h)}catch(e){}ids.forEach(function(i){document.getElementById(i).classList.toggle('on',i===h)});document.querySelectorAll('.tabs a').forEach(function(a){a.classList.toggle('on',a.dataset.tab===h)})}addEventListener('hashchange',show);show();setTimeout(function(){location.reload()},15000)})()</script>
+<script>(function(){var ids=['reklam','para','olaylar','oyuncular','bolumler','yerler'],K='istatistik-sekme';function saved(){try{return localStorage.getItem(K)}catch(e){return null}}function show(){var h=(location.hash||'').slice(1);if(ids.indexOf(h)<0)h=saved();if(ids.indexOf(h)<0)h=ids[0];try{localStorage.setItem(K,h)}catch(e){}ids.forEach(function(i){document.getElementById(i).classList.toggle('on',i===h)});document.querySelectorAll('.tabs a').forEach(function(a){a.classList.toggle('on',a.dataset.tab===h)})}addEventListener('hashchange',show);show();setInterval(function(){var a=document.activeElement;if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'))return;var typed=[].some.call(document.querySelectorAll('input[inputmode]'),function(i){return i.value!==''});if(!typed)location.reload()},15000)})()</script>
 </body></html>`;
 }

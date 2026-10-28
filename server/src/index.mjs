@@ -57,6 +57,7 @@ import { AuditLog } from './AuditLog.js';
 import { ChessScoreFile } from './ChessScoreFile.js';
 import { Moderator } from './Moderator.js';
 import { AdStats } from './AdStats.js';
+import { Money } from './Money.js';
 import { PlayStats } from './PlayStats.js';
 import { Feedback } from './Feedback.js';
 import { Reports } from './Reports.js';
@@ -83,7 +84,7 @@ const chat = new NpcChat({
 
 // live ad numbers from the app (AdMob's own come a day or two late)
 const playStats = new PlayStats({ dir: env.PLAY_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'play') : null), key: env.AD_STATS_KEY ?? '' }); // how the game is played, anonymously: POST /api/play-event · GET /api/stats?key= (same key)
-const adStats = new AdStats({ dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '', installs: () => playStats.installs(), play: () => playStats.summary() }); // (its page shows the downloads too)
+const adStats = new AdStats({ dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '', installs: () => playStats.installs(), play: () => playStats.summary(), money: new Money({ dir: env.MONEY_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'money') : null) }) }); // (its page shows the downloads too)
 playStats.adDevices = () => adStats.devices(); // (the menu's "bugüne kadar": the app's players are in the ad numbers)
 
 // what the players think of the game: once a day, credits for a real opinion

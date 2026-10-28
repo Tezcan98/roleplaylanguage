@@ -477,6 +477,7 @@ body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesso
 .menu-where{margin:-2px 0 0;font:700 14px Nunito,sans-serif;color:var(--muted)}
 .menu-players{margin:2px 0 -4px;font:600 10.5px Nunito,sans-serif;color:var(--muted);opacity:.75;text-align:center}
 .menu-players:empty{display:none}
+.menu-where:has(span:empty){display:none}
 .linkbtn{background:none;border:0;padding:4px 2px;font:800 14px Nunito,sans-serif;color:#8A5A12;text-decoration:underline;cursor:pointer}
 .menu-back{align-self:flex-start}
 .main-menu .profile-line{margin:4px 0 0}

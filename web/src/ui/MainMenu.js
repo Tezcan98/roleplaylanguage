@@ -58,7 +58,7 @@ export class MainMenu {
 
   #whereText() {
     const n = SERVERS.reduce((sum, [id]) => sum + this.servers.count(id), 0);
-    return n ? `🏘️ Köy meydanlarında şu an ${n} kişi var` : '🏘️ Köy meydanında başka oyuncularla buluşursun';
+    return n ? `🏘️ Köy meydanlarında şu an ${n} kişi var` : ''; // (nobody there: no line)
   }
 
   #taps = [];
