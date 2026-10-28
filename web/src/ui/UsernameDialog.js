@@ -18,22 +18,22 @@ export class UsernameDialog {
    * settings; keeping the made-up name). Every line is in Turkish with its meaning in the player's language under it.
    * `note`: why it is asked again ([Turkish, English] or plain Turkish).
    */
-  ask(current = '', check = null, note = '', { title = ['Adın ne?', "What's your name?"], ok: okText = ['Meydana gir', 'Enter the square'], skip: skipText = ['Vazgeç', 'Cancel'], chap = ['Çok oyunculu köy meydanı', 'Multiplayer village square'] } = {}) {
+  ask(current = '', check = null, note = '', { title = ['Adın ne?', "What's your name?"], ok: okText = ['Meydana gir', 'Enter the square'], skip: skipText = ['Vazgeç', 'Cancel'], text = ['Bir kullanıcı adı seç. Diğer oyuncular bunu görecek.', 'Choose a username. Other players will see it.'], chap = ['Çok oyunculu köy meydanı', 'Multiplayer village square'] } = {}) {
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const input = el('input', { attrs: { type: 'text', maxlength: '16', placeholder: withGloss('Kullanıcı adın', 'Username'), autocomplete: 'off', 'aria-label': 'Kullanıcı adı' } });
       input.value = current;
       const err = el('p', { class: 'fb bad', text: Array.isArray(note) ? withGloss(...note) : note });
       const ok = el('button', { class: 'btn', attrs: { type: 'submit' } }, both(okText));
-      const skip = el('button', { class: 'btn alt', attrs: { type: 'button' } }, both(skipText));
+      const skip = skipText && el('button', { class: 'btn alt', attrs: { type: 'button' } }, both(skipText)); // (null: a single button)
       const form = el('form', { class: 'card username-card' }, [
         el('p', { class: 'chap', text: withGloss(...chap) }),
         el('h2', { class: 'ctitle', text: title[0] }),
         el('p', { class: 'cen en-t', text: gloss(title[1]) }),
-        el('p', { class: 'ctext', text: 'Bir kullanıcı adı seç. Diğer oyuncular bunu görecek.' }),
-        el('p', { class: 'cen en-t', text: gloss('Choose a username. Other players will see it.') }),
+        el('p', { class: 'ctext', text: text[0] }),
+        el('p', { class: 'cen en-t', text: gloss(text[1]) }),
         el('div', { class: 'free' }, [input]), err, ok, skip,
-      ].filter((n) => !(n.classList?.contains('en-t') && !n.textContent)));
+      ].filter((n) => n && !(n.classList?.contains('en-t') && !n.textContent)));
       const root = el('div', { class: 'overlay open dim' }, [form]);
       const done = (v) => { root.remove(); pop(); resolve(v); };
       form.addEventListener('submit', async (e) => {
@@ -48,7 +48,7 @@ export class UsernameDialog {
         done(v);
       });
       input.addEventListener('keydown', (e) => e.stopPropagation());
-      skip.onclick = () => done(null);
+      if (skip) skip.onclick = () => done(null);
       this.host.append(root);
       setTimeout(() => input.focus(), 50);
     });

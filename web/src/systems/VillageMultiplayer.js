@@ -249,7 +249,7 @@ export class VillageMultiplayer {
       let name = this.settings.get('username', null);
       if (!this.settings.get('usernameAsked', false) && (!name || this.autoNamed?.(name))) { // never chosen by the player (a new game starts in the square): asked once, the made-up name filled in
         const made = name || this.autoName?.() || '';
-        const picked = await this.usernames.ask(made, (n) => this.#nameFree(n), this.nameNote ?? '', { skip: made ? ['Bu adla devam et', 'Keep this name'] : ['Vazgeç', 'Cancel'] });
+        const picked = await this.usernames.ask(made, (n) => this.#nameFree(n), this.nameNote ?? '', made ? { ok: ['Devam et', 'Continue'], skip: null, text: ['Sana bir ad verdik. Beğendiysen devam et, istersen değiştir.', 'We gave you a name. Keep it, or change it if you like.'] } : { skip: ['Vazgeç', 'Cancel'] }); // (one button: the name in the box is the one used, made up or typed)
         this.nameNote = '';
         this.settings.set('usernameAsked', true);
         name = picked || made || null;
