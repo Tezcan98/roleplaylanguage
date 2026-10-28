@@ -1,7 +1,7 @@
 /**
  * Builds the game's voice library (assets/speech): every fixed line of the game in its
- * speaker's voice, made ONCE by the village server (Gemini voices, Piper for men when Gemini
- * can't) and kept in the repository as small MP3s. The game plays these straight from the
+ * speaker's voice, made ONCE by the village server (Gemini voices only: a line Gemini can't
+ * make today waits for tomorrow — Piper's robot voice is never kept) and kept in the repository as small MP3s. The game plays these straight from the
  * website (services/speech/SpeechRepo.js), so no line ever costs a Gemini call again.
  * Already recorded lines are skipped, so the script can simply be run again (e.g. the next
  * day when Gemini's daily cap stopped it) until everything is there.
@@ -11,6 +11,7 @@
  *   options: --look=boy-modest|boy-strong|girl-covered|girl-open|all  (whose name the family says; default all)
  *            --limit=N   record at most N new lines this run
  *            --who=okuyucu,kardes   only these speakers' lines (e.g. the library's books first)
+ *            --keep-piper   leave the old Piper lines as they are (by default they are made again with Gemini, as the cap allows; needs ffprobe)
  * Needs ffmpeg (WAV → MP3); without it the WAV is kept as is, under the same .mp3 name.
  */
 import { spawnSync } from 'node:child_process';
@@ -73,11 +74,18 @@ const indexFile = `${OUT}index.json`;
 const index = new Set(existsSync(indexFile) ? JSON.parse(readFileSync(indexFile, 'utf8')) : []);
 const voiceOf = (who) => C.VOICES[who] ?? C.VOICES.default;
 
+/** Recorded while Gemini's cap was reached, a man's line was Piper's (22 050 Hz; Gemini's are 24 000): robot-like, and kept for good. Those are made again with Gemini, the old one staying until the new one is there. */
+const isPiper = (key) => { const r = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=sample_rate', '-of', 'csv=p=0', `${OUT}${key}.mp3`], { encoding: 'utf8' }); return r.status === 0 && r.stdout.trim() === '22050'; };
+const redo = !opt['keep-piper'] && spawnSync('ffprobe', ['-version']).status === 0;
 const todo = new Map(); // key → { voice, text }
+let piperLeft = 0;
 for (const [who, text] of lines) {
   const voice = voiceOf(who), key = await speechKey(voice, text);
-  if (!index.has(key) && !todo.has(key)) todo.set(key, { voice, text: speechText(text) });
+  if (todo.has(key)) continue;
+  if (!index.has(key)) todo.set(key, { voice, text: speechText(text) });
+  else if (redo && voice.piper && isPiper(key)) { todo.set(key, { voice, text: speechText(text) }); piperLeft++; }
 }
+if (piperLeft) console.log(`  ${piperLeft} of them are Piper lines to be made again with Gemini`);
 console.log(`${look}: ${lines.length} lines, ${todo.size} not recorded yet`);
 
 let made = 0, state = 'done';
@@ -86,7 +94,7 @@ const ffmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
 if (opt.server) {
   for (const [key, { voice, text }] of todo) {
     if (made >= limit) { state = 'stopped'; break; }
-    const v = serverVoice(voice), f = voice.piper ? `&f=${SHORT[voice.piper] ?? 'fahrettin'}` : '';
+    const v = serverVoice(voice), f = voice.piper ? '&f=none' : ''; // (a man's line: Gemini or nothing — never Piper kept in the library)
     const res = await fetch(`${opt.server}?v=${encodeURIComponent(v)}${f}&t=${encodeURIComponent(text)}`).catch(() => null);
     if (!res?.ok) {
       console.error(`  ${v} "${text.slice(0, 40)}": ${res ? `HTTP ${res.status}` : 'unreachable'}`);

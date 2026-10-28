@@ -81,19 +81,20 @@ export class Tts {
     }
   }
 
-  /** A man's line in his own Gemini voice; Piper (`fallback`) when Gemini can't make it. */
+  /** A man's line in his own Gemini voice; Piper (`fallback`) when Gemini can't make it — or, for `fallback` = 'none' (the voice library's recorder: a Piper line must not be kept for good), a 503. */
   async #man(name, text, ip, fallback) {
     const piper = TTS_VOICES[fallback] ? fallback : 'fahrettin';
-    if (!GEMINI_MEN.has(name)) return this.handle(piper, text, ip);
+    const back = (t) => (fallback === 'none' ? { status: 503, error: 'gemini unavailable' } : this.handle(piper, t, ip));
+    if (!GEMINI_MEN.has(name)) return back(text);
     const t = typeof text === 'string' ? text.normalize('NFC').trim().replace(/\s+/g, ' ') : '';
     if (!t || t.length > MAX_TEXT) return { status: 400, error: 'bad request' };
-    if (!this.gemini || Date.now() < this.geminiPausedUntil) return this.handle(piper, t, ip);
+    if (!this.gemini || Date.now() < this.geminiPausedUntil) return back(t);
     const key = createHash('sha1').update(`gemini:${name}|${t}`).digest('hex');
     const file = join(this.cacheDir, `${key}.wav`);
     if (await stat(file).then(() => true, () => false)) return { status: 200, body: await readFile(file) };
     if (!this.#allow(ip)) return { status: 429, error: 'slow down' };
     if (!this.#inflight.has(key)) {
-      if (!this.#geminiBudget()) return this.handle(piper, t, ip);
+      if (!this.#geminiBudget()) return back(t);
       this.#inflight.set(key, this.#queued(() => this.#gemini(name, t, file)).finally(() => this.#inflight.delete(key)));
     }
     try {
@@ -101,7 +102,7 @@ export class Tts {
       return { status: 200, body: await readFile(file) };
     } catch (e) {
       this.log(`[tts] ${e.message} → piper`);
-      return this.handle(piper, t, ip);
+      return back(t);
     }
   }
 
