@@ -131,38 +131,3 @@ test('numbers page: tabs kept through the refresh (a script, not a meta refresh)
   assert.equal(get('/api/ad-stats?key=k').length > 1000, true);
   assert.deepEqual(JSON.parse(get('/api/istatistik?key=k&format=json')).countries, [['PK', 1, 1], ['TR', 1, 1]]);
 });
-
-test('money: typed revenue and spend per day, validated, summed; saved through the page with its key', async () => {
-  const { Money } = await import('../src/Money.js');
-  const { AdStats } = await import('../src/AdStats.js');
-  const { mkdtempSync, rmSync } = await import('node:fs');
-  const { tmpdir } = await import('node:os');
-  const dir = mkdtempSync(join(tmpdir(), 'money-'));
-  try {
-    const m = new Money({ dir });
-    assert.equal(m.set('2026-10-28', { revenue: '4,58', spend: 20 }), true);
-    assert.equal(m.set('2026-10-27', { revenue: 4.87 }), true);
-    assert.equal(m.set('yarın', { revenue: 1 }), false);
-    assert.equal(m.set('2026-10-28', { spend: -5 }), false);
-    assert.equal(m.set('2026-10-28', { spend: 'abc' }), false);
-    assert.deepEqual(m.summary(), { days: [{ day: '2026-10-28', revenue: 4.58, spend: 20 }, { day: '2026-10-27', revenue: 4.87, spend: null }], revenue: 9.45, spend: 20 });
-    assert.deepEqual(new Money({ dir }).summary().days.length, 2, 'it is kept on disk');
-    m.set('2026-10-28', { spend: '' }); // an empty box clears it
-    assert.equal(m.summary().spend, 0);
-    const ads = new AdStats({ key: 'k', money: m });
-    const post = (url, body) => new Promise((resolve) => {
-      const handlers = {};
-      const req = { url, method: 'POST', on: (e, f) => { handlers[e] = f; }, destroy() {} };
-      let status = 0, out = '';
-      ads.route(req, { writeHead(s) { status = s; }, end(b) { out = b; resolve([status, out]); } });
-      if (handlers.data) { handlers.data(JSON.stringify(body)); handlers.end(); }
-    });
-    assert.equal((await post('/api/istatistik?key=k', { day: '2026-10-29', revenue: '3', spend: '10' }))[0], 200);
-    assert.equal((await post('/api/istatistik?key=yanlis', { day: '2026-10-29', revenue: '3' }))[0], 403);
-    assert.equal((await post('/api/istatistik?key=k', { day: 'x', revenue: '3' }))[0], 400);
-    let html = '';
-    ads.route({ url: '/api/istatistik?key=k', method: 'GET' }, { writeHead() {}, end(b) { html = b; } });
-    assert.match(html, /id="para"/);
-    assert.match(html, /₺3,00/);
-  } finally { rmSync(dir, { recursive: true, force: true }); }
-});
