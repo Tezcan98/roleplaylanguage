@@ -91,7 +91,7 @@ export class PlayStats {
     if (msg.plat === 'app' || msg.plat === 'web') dev.plat = msg.plat;
     if (typeof msg.v === 'string') dev.v = msg.v.slice(0, 16);
     if (/^[a-z]{2}$/.test(String(msg.lang ?? ''))) dev.lang = msg.lang;
-    for (const [k, n] of Object.entries(counts)) if (k in dev.counts || Object.keys(dev.counts).length < 120) dev.counts[k] = (dev.counts[k] ?? 0) + n;
+    for (const [k, n] of Object.entries(counts)) if (k in dev.counts || Object.keys(dev.counts).length < 300) dev.counts[k] = (dev.counts[k] ?? 0) + n;
     this.#devices.set(h, dev); this.#dirty = true;
     if (this.dir) { try { appendFileSync(join(this.dir, `${d}.jsonl`), `${JSON.stringify(batch)}\n`); } catch { /* disk full: the memory still counts */ } }
     return true;
@@ -145,12 +145,16 @@ export class PlayStats {
     const names = {}; for (const v of devs) if (v.ch >= 0 && v.chId) names[v.ch] = v.chId; // (the game says each chapter's id)
     const last = Math.max(-1, ...devs.map((v) => v.ch));
     const reach = Array.from({ length: last + 1 }, (_, i) => ({ i, id: names[i] ?? '', devices: devs.filter((v) => v.ch >= i).length }));
+    // tasks: how many devices did each, and how many times (the game's `q:<task id>` counters)
+    const qs = {};
+    for (const v of devs) for (const [k, n] of Object.entries(v.counts)) if (k.startsWith('q:')) { const q = (qs[k.slice(2)] ??= { id: k.slice(2), devices: 0, times: 0 }); q.devices++; q.times += n; }
+    const quests = Object.values(qs).sort((a, b) => b.devices - a.devices);
     const returned = devs.filter((v) => v.last > v.first).length;
     const spoke = devs.filter((v) => Object.keys(v.counts).some((k) => k === 'chat' || k.startsWith('talk:'))).length;
     return {
       now: new Date().toISOString(), today,
       total: { devices: devs.length, returned, spoke, hours: Math.round(devs.reduce((s, v) => s + v.sec, 0) / 360) / 10, app: devs.filter((v) => v.plat === 'app').length, web: devs.filter((v) => v.plat === 'web').length },
-      days, top, reach,
+      days, top, reach, quests,
     };
   }
 
@@ -215,6 +219,7 @@ ${SINGLES.map(([k, l]) => `<div><b>${n(t.counts[k])}</b>${l}</div>`).join('')}</
 <h2>Son günler</h2><table><tr><th>Gün</th><th>aktif</th><th>yeni</th><th>açılış</th><th>dk</th>${SINGLES.map(([, l]) => `<th>${l}</th>`).join('')}</tr>
 ${s.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${n(d.active)}</td><td>${n(d.new)}</td><td>${n(d.opens)}</td><td>${n(d.minutes)}</td>${SINGLES.map(([k]) => `<td>${n(d.counts[k]) === '0' ? '' : n(d.counts[k])}</td>`).join('')}</tr>`).join('')}</table>
 <h2>Hangi bölüme kadar gidildi <small>o bölüme ulaşan cihaz sayısı</small></h2><table>${s.reach.map((r) => `<tr><td>${r.i + 1}. ${esc(r.id)}</td><td>${n(r.devices)} ${bar(r.devices)}</td></tr>`).join('')}</table>
+<h2>Görevler <small>kaç cihaz yaptı · kaç kez</small></h2><table>${s.quests.slice(0, 60).map((q) => `<tr><td>${esc(q.id)}</td><td>${n(q.devices)} cihaz ${bar(q.devices)} <small>· ${n(q.times)} kez</small></td></tr>`).join('') || '<tr><td>Henüz yok</td></tr>'}</table>
 ${GROUPS.map(([p, title]) => group(p, title)).join('')}
 </body></html>`;
 }

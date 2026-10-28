@@ -107,3 +107,12 @@ test('total with the ad numbers: the app\'s players from those, the browser\'s f
   s.record(batch({ pid: 'cccccccc3333', plat: 'web' })); // a browser: no ads there
   assert.equal(s.online().total, 3);
 });
+
+test('tasks: how many devices did each, and how many times', () => {
+  const s = new PlayStats();
+  s.record(batch({ counts: { 'q:talk-mom': 1, 'q:bucket': 1 } }));
+  s.record(batch({ pid: 'zzzzzzzz9999', counts: { 'q:talk-mom': 1 } }));
+  s.record(batch({ counts: { 'q:bucket': 1 } })); // the first device again
+  const q = Object.fromEntries(s.summary().quests.map((x) => [x.id, [x.devices, x.times]]));
+  assert.deepEqual(q, { 'talk-mom': [2, 2], bucket: [1, 2] });
+});

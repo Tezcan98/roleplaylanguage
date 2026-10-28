@@ -26,7 +26,7 @@ export class Stats {
     on(EV.FREE_ACTION, (d) => this.count(`act:${d.id}`));
     on(EV.HOTSPOT, (d) => this.count(`spot:${d.id}`));
     on(EV.WORD, () => this.count('word'));
-    on(EV.QUEST_DONE, () => this.count('quest'));
+    on(EV.QUEST_DONE, (d) => { this.count('quest'); if (d.quest?.id) this.count(`q:${String(d.quest.id).toLowerCase().replace(/[^a-z0-9:._-]/g, '-').slice(0, 36)}`); }); // (which task: the server counts the devices that did each)
     on(EV.CREDITS, (d) => { if (d.reason && d.reason !== 'dev' && d.reason !== 'spend') this.count(`cr:${d.reason}`); });
     on(EV.CHAPTER, (d) => { const i = chapters.indexOf(d.chapter?.id); if (i > (settings.get('statsCh', -1))) settings.set('statsCh', i); });
     setInterval(() => { if (!document.hidden && modes.is('play')) this.#sec++; }, 1000);
