@@ -355,6 +355,22 @@ effects
     bus.emit(EV.INVENTORY);
   });
 story.setEffects(effects);
+// the first time in the square the recording consent and the username are asked (systems/VillageMultiplayer.js join): the welcome
+// card, the "Annen çağırıyor" card and the quest box wait until those are answered, not sit behind them
+story.beforeCards = () => new Promise((done) => {
+  const asking = () => !!document.querySelector('.card.consent, form.username-card');
+  // the first time in the square (the new game starts there) the two questions are still to come; they come a little after the story's card would
+  const first = world.current?.id === village.locationId && !(settings.get('dataConsent', null)?.v >= CONSENT_VERSION && settings.get('usernameAsked', false));
+  if (!first && !asking()) { done(); return; }
+  document.body.classList.add('story-wait'); // (hides the quest box)
+  if (first) village.join(); // the questions now, not after the cards (enterPlay would ask them then)
+  let seen = false, quiet = 0, waited = 0;
+  const poll = setInterval(() => {
+    if (asking()) { seen = true; quiet = 0; } else quiet++;
+    // answered (0.75 s with no question after one was open), or none came within 8 s (declined, offline…), or at most 40 s
+    if ((seen && quiet >= 3) || (!seen && waited > 32) || ++waited > 160) { clearInterval(poll); document.body.classList.remove('story-wait'); done(); }
+  }, 250);
+});
 
 // --- game money (lira in the bag): shop windows at the grocer's and the greengrocer's ---
 function buyGood(kind, p) {

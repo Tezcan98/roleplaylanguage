@@ -28,6 +28,7 @@ body.tr-only .en-t:not(.def),body.tr-only #dlg .en-btn,.def:empty{display:none!i
 #quest .qo{font-weight:800;font-size:15px}
 #quest .qe{font-size:12px;color:var(--muted);font-weight:700}
 #quest:empty,#quest[hidden]{display:none}
+body.story-wait #quest{visibility:hidden}
 #quest{pointer-events:auto;padding-right:26px}
 /* fold buttons (the task, the map): a round gold chip on the corner with a chevron — up folds, down opens */
 .fold-btn{width:26px;height:26px;padding:0;border-radius:50%;border:2px solid var(--wood);background:var(--gold);box-shadow:0 2px 0 var(--wood2);cursor:pointer;display:flex;align-items:center;justify-content:center;pointer-events:auto;-webkit-tap-highlight-color:transparent}

@@ -67,7 +67,8 @@ export class StoryDirector {
     this.effects?.run(ch.enter);
     this.bus.emit(EV.CHAPTER, { chapter: ch });
     this.bus.emit(EV.QUEST, { quest: this.quest });
-    this.cards.show(ch.intro, () => this.cards.show(ch.call, () => { this.#announce(); onPlay?.(); })); // `call`: what to do now, after the welcome
+    const show = () => this.cards.show(ch.intro, () => this.cards.show(ch.call, () => { this.#announce(); onPlay?.(); })); // `call`: what to do now, after the welcome
+    if (this.beforeCards) this.beforeCards().then(show); else show(); // (the first time in the square: the consent and the name come first)
   }
 
   /** Continue a saved game: same chapter and quest, player at the saved location. */
