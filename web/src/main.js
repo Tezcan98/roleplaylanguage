@@ -134,6 +134,7 @@ import { CinemaView } from './ui/CinemaView.js';
 import { ClipScreen } from './ui/ClipScreen.js';
 import { RatePrompt } from './ui/RatePrompt.js';
 import { FirstSteps } from './systems/FirstSteps.js';
+import { AutoDoor } from './systems/AutoDoor.js';
 import { NeyMusic } from './systems/NeyMusic.js';
 import { BackgroundMusic } from './systems/BackgroundMusic.js';
 import { BookReader } from './ui/BookReader.js';
@@ -356,6 +357,17 @@ effects
     bus.emit(EV.INVENTORY);
   });
 story.setEffects(effects);
+// a new game's "Oğlum, eve gel!" card comes at the player's first touch or key (not at once), the camera close on the park meanwhile
+if (!params.has('debug') || params.has('firststeps')) {
+  story.whenFirstInput = () => new Promise((done) => {
+    const on = (e) => {
+      if (e.target instanceof Element && e.target.closest('.overlay, .card, .iconbtn, .pill')) return; // (a button of a card or the top bar is not the first act)
+      ['pointerdown', 'keydown'].forEach((n) => document.removeEventListener(n, on, true));
+      done();
+    };
+    ['pointerdown', 'keydown'].forEach((n) => document.addEventListener(n, on, true));
+  });
+}
 // the first time in the square the recording consent and the username are asked (systems/VillageMultiplayer.js join): the welcome
 // card, the "Annen çağırıyor" card and the quest box wait until those are answered, not sit behind them
 story.beforeCards = () => new Promise((done) => {
@@ -621,6 +633,7 @@ bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') scooters.leftPlace(); })
 const bicycle = new Bicycle({ world, mf, player, wallet, toasts, vocab, choice: new ChoiceCard(host, modes), onShop: () => shop.open() });
 bicycle.build();
 bus.on(EV.LOCATION, ({ id }) => bicycle.moved(id)); // ridden out of the gate it comes along
+const hotspotUse = new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts, effects, bus, ctx: gameCtx });
 const interactions = new InteractionSystem([
   animals, // pet an animal, get on / off a horse
   bicycle,
@@ -631,7 +644,7 @@ const interactions = new InteractionSystem([
   toys,
   new NpcInteractions({ cast, dialogue, story }),
   new ItemInteractions({ items }),
-  new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts, effects, bus, ctx: gameCtx }),
+  hotspotUse,
 ], modes);
 const actionButton = new ActionButton(host, () => interactions.trigger());
 const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root, { press: true }); // (fires as the finger goes down: with a thumb on the joystick a second tap makes no click on phones)
@@ -645,6 +658,8 @@ input.onKey((e) => {
   else if (['i', 'I'].includes(e.key) && (modes.is('play') || inventoryView.isOpen) && !e.target?.closest?.('input,textarea')) { e.preventDefault(); inventoryView.toggle(); } // the inventory
 });
 const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, player });
+// reaching the way out the arrow shows uses it, as if its button ("Eve dön"…) had been pressed
+const autoDoor = new AutoDoor({ marker, player, interactions: hotspotUse, rules: HOTSPOTS, modes, ctx: gameCtx, enabled: !params.has('debug') || params.has('firststeps') });
 const directions = new DirectionsCard(host, modes, { where: () => marker.describe(camera.yaw) }); // a tap on the task: where to go
 // the round map, top right: people here, the one the task is about blinking (others online in blue); a tap: where to go
 const minimap = new Minimap(host, { world, cast, player, camera, marker, story, settings, others: () => (world.current.id === village.locationId ? village.remotes.visible() : []), onTap: () => directions.open(questPanel.quest) });
@@ -1017,6 +1032,7 @@ function startNew(then, chapter = null) { // chapter: start from there (testers,
     hud.setCredits(wallet.balance); hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setMoney(inventory.count('para'));
     story.startChapter(dayIndex >= 0 ? dayIndex : 0, () => {
       enterPlay();
+      if (dayIndex <= 0 && story.whenFirstInput) camera.zoomTo(0.62); // a new game: close on the park
       then?.(); // (no thought bubble over the player: the day's task is in the quest panel)
     });
   });
@@ -1033,7 +1049,7 @@ function continueGame(then) {
 
 
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
-const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 // frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
 const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };

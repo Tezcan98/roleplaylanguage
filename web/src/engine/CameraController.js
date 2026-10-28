@@ -74,6 +74,8 @@ export class CameraController {
 
   #spread() { const [a, b] = [...this.#pointers.values()]; return Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)); }
   #setZoom(z) { this.#zoom = THREE.MathUtils.clamp(z, 0.5, 1.9); }
+  /** Close in on the player (smaller = nearer; 1 is the usual view): the start of a new game, in the park. Pinching still changes it. */
+  zoomTo(z) { this.#setZoom(z); }
 
   /** Horizontal turn of the view (radians); 0 = looking north as usual. */
   get yaw() { return this.#yaw; }

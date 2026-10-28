@@ -28,6 +28,7 @@ export class QuestMarker {
   #tmp = new THREE.Vector3();
   point = null;
   atDoor = false;
+  doorSpot = null; // the hotspot of the way out the arrow shows (when the target is in another place), else null
 
   constructor({ scene, story, world, cast, items, player }) {
     Object.assign(this, { story, world, cast, items, player });
@@ -72,8 +73,10 @@ export class QuestMarker {
       if (h && loc === here) pos = this.#tmp.copy(h.pos).setY(h.markerY);
     }
     this.atDoor = !pos && !!loc;
+    this.doorSpot = null;
     if (pos || !loc) return pos;
     const door = this.world.exitTowards(loc);
+    this.doorSpot = door ?? null;
     return door ? this.#tmp.copy(door.pos).setY(door.markerY) : null;
   }
 
