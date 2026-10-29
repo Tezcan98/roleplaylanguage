@@ -169,6 +169,26 @@ export class PlayStats {
     return { n: Object.values(by).reduce((a, b) => a + b, 0), countries: Object.entries(by).sort((a, b) => b[1] - a[1]) };
   }
 
+  /**
+   * Who came back, by country (`?`: not known): of the devices that began before today, how many played the next day (`next`)
+   * and how many played on any later day (`later`). The next day is counted for the devices that began in the kept days.
+   * [[country, devices, next, later, devicesForNext]], the biggest first; the first row is everyone (`all`).
+   */
+  #retention() {
+    const today = day(), kept = [...this.#days.keys()].sort()[0] ?? today, rows = {};
+    const after = (d) => new Date(Date.parse(`${d}T12:00:00Z`) + 86400000).toISOString().slice(0, 10);
+    for (const [h, v] of this.#devices) {
+      if (v.first >= today) continue;
+      for (const c of ['all', v.cc || '?']) {
+        const r = (rows[c] ??= [0, 0, 0, 0]);
+        r[0]++; if (v.last > v.first) r[2]++;
+        if (v.first >= kept) { r[3]++; if (this.#days.get(after(v.first))?.devices.has(h)) r[1]++; }
+      }
+    }
+    const list = Object.entries(rows).filter(([c]) => c !== 'all').sort((a, b) => b[1][0] - a[1][0]);
+    return [['all', ...(rows.all ?? [0, 0, 0, 0])], ...list.map(([c, r]) => [c, ...r])];
+  }
+
   summary() {
     const today = day();
     const devs = [...this.#devices.values()];
@@ -193,7 +213,7 @@ export class PlayStats {
     return {
       now: new Date().toISOString(), today,
       total: { devices: devs.length, returned, spoke, hours: Math.round(devs.reduce((s, v) => s + v.sec, 0) / 360) / 10, app: devs.filter((v) => v.plat === 'app').length, web: devs.filter((v) => v.plat === 'web').length },
-      days, top, reach, quests, periods: this.#periods(), playing: this.#playing(),
+      days, top, reach, quests, periods: this.#periods(), playing: this.#playing(), retention: this.#retention(),
     };
   }
 

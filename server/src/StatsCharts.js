@@ -63,10 +63,14 @@ export function numbersBody(s) {
   const visited = sum(p.top, 'loc').map(([k, v]) => [PLACES[k] ?? k, v]);
   const quests = (p.quests ?? []).slice(0, 40).map((q) => [q.id, q.devices]);
   const countries = (s.countries ?? []).slice(0, 10).map(([c, v]) => [countryName(c), v]);
+  const pc = (a, b) => (b ? `%${Math.round((100 * a) / b)}` : '—');
+  const back = `<h2>Geri dönenler <small>oyuna ilk girdiği günden sonra tekrar girenler (bugün ilk giren sayılmaz)</small></h2>
+<table class="back"><tr><th>Ülke</th><th>Oyuncu</th><th>Ertesi gün</th><th>Sonraki günlerde</th></tr>${(p.retention ?? []).map(([c, total, next, later, forNext]) => `<tr${c === 'all' ? ' class="all"' : ''}><td>${c === 'all' ? 'Hepsi' : esc(countryName(c))}</td><td>${n(total)}</td><td>${pc(next, forNext)} <small>${n(next)}</small></td><td>${pc(later, total)} <small>${n(later)}</small></td></tr>`).join('')}</table>`;
   const playing = p.playing ?? { n: 0, countries: [] };
   const now = `<h2>Şu an oyunda <small>son birkaç dakikada oynayan</small></h2><div class="big"><div><b>${n(playing.n)}</b>kişi</div></div>${playing.n ? `<div class="gap">${bars(playing.countries.map(([c, v]) => [countryName(c), v]), { color: '#45a852' })}</div>` : ''}`;
   return `${now}<nav class="periods">${PERIODS.map(([id, label]) => `<button type="button" data-p="${id}">${label}</button>`).join('')}</nav>
 ${PERIODS.map(per).join('')}
+${back}
 <h2>Günlük oyuncu <small>son 14 gün</small></h2>${columns(days, { w: 30 })}
 <h2>Nerede bırakıyorlar? <small>o bölüme kadar gelen oyuncu</small></h2>${bars(reach, { color: '#ba68c8' })}
 <div class="two"><div><h2>En çok konuşulanlar</h2>${bars(people, { color: '#ffb74d' })}</div><div><h2>Gidilen yerler</h2>${bars(visited, { color: '#81c784' })}</div></div>
@@ -80,4 +84,4 @@ export const chartsCss = `h2{font-size:17px;margin:30px 0 8px;font-weight:600}.s
 .bars{max-width:760px;display:flex;flex-direction:column;gap:6px}.brow{display:grid;grid-template-columns:minmax(110px,220px) 1fr minmax(40px,auto);gap:8px;align-items:center;font-size:14px}
 .bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bt{background:#1d2b3c;border-radius:6px;height:12px;overflow:hidden}.bt i{display:block;height:100%;border-radius:6px}.bv{text-align:right}
 .cols{overflow-x:auto;background:#1d2b3c;border-radius:12px;padding:12px;max-width:760px}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 28px;max-width:1000px}
-.gap{margin-top:10px}details{margin-top:26px;max-width:760px}summary{cursor:pointer;color:#9fb0c2}details .bars{margin-top:10px}`;
+.gap{margin-top:10px}.back{border-collapse:collapse;width:100%;max-width:760px;background:#1d2b3c;border-radius:12px;overflow:hidden}.back th,.back td{padding:8px 12px;text-align:right;border-bottom:1px solid #2b3c50}.back th:first-child,.back td:first-child{text-align:left}.back th{color:#9fb0c2;font-weight:500}.back .all td{font-weight:600}details{margin-top:26px;max-width:760px}summary{cursor:pointer;color:#9fb0c2}details .bars{margin-top:10px}`;

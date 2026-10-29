@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PlayStats } from '../src/PlayStats.js';
@@ -171,4 +171,19 @@ test('playing now: who is in the game right now, by country', () => {
   s.record(batch({ pid: 'cccccccc3333' }), '', 'PK');
   s.record(batch({ pid: 'dddddddd4444' })); // no country known
   assert.deepEqual(s.summary().playing, { n: 4, countries: [['TR', 2], ['PK', 1], ['?', 1]] });
+});
+
+test('retention by country: the next day and any later day, among devices that began before today', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ps-'));
+  try {
+    const yday = (k) => new Date(Date.now() - k * 86400000).toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
+    const dev = (first, last, cc) => ({ first, last, ch: 0, chId: '', plat: 'app', v: '', lang: '', cc, sec: 60, opens: 1, counts: {} });
+    writeFileSync(join(dir, 'devices.json'), JSON.stringify({ a: dev(yday(2), yday(1), 'TR'), b: dev(yday(2), yday(2), 'TR'), c: dev(yday(2), yday(0), 'PK'), d: dev(yday(0), yday(0), 'TR') }));
+    writeFileSync(join(dir, `${yday(1)}.jsonl`), `${JSON.stringify({ h: 'a', opens: 1, sec: 60, counts: {} })}\n`); // a played the day after it began
+    writeFileSync(join(dir, `${yday(2)}.jsonl`), `${JSON.stringify({ h: 'b', opens: 1, sec: 60, counts: {} })}\n`);
+    const r = Object.fromEntries(new PlayStats({ dir }).summary().retention.map(([c, ...v]) => [c, v]));
+    assert.deepEqual(r.TR, [2, 1, 1, 2]); // d began today: not counted
+    assert.deepEqual(r.PK, [1, 0, 1, 1]); // c came back later, not the next day
+    assert.deepEqual(r.all, [3, 1, 2, 3]);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });
