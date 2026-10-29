@@ -131,3 +131,16 @@ test('numbers page: tabs kept through the refresh (a script, not a meta refresh)
   assert.equal(get('/api/ad-stats?key=k').length > 1000, true);
   assert.deepEqual(JSON.parse(get('/api/istatistik?key=k&format=json')).countries, [['PK', 1, 1], ['TR', 1, 1]]);
 });
+
+test('numbers page: play time (total, today, per device) and Yusuf Hoca by name', async () => {
+  const { AdStats } = await import('../src/AdStats.js');
+  const s = new PlayStats(), ads = new AdStats({ key: 'k', play: () => s.summary() });
+  s.record(batch({ sec: 3600, counts: { 'talk:imam': 2 } }));
+  s.record(batch({ pid: 'zzzzzzzz9999', sec: 1800, counts: {} }));
+  let html = '';
+  ads.route({ url: '/api/istatistik?key=k', method: 'GET' }, { writeHead() {}, end(b) { html = b; } });
+  assert.match(html, /<b>1,5 saat<\/b>toplam oynanan süre/);
+  assert.match(html, /<b>1,5 saat<\/b>bugün oynanan/);
+  assert.match(html, /<b>45 dk<\/b>cihaz başına ortalama/);
+  assert.match(html, /Yusuf Hoca \(imam\)/);
+});

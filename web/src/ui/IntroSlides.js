@@ -7,7 +7,7 @@ import { gloss, glossDir, glossLang, withGloss, turkishOnly } from '../i18n/Glos
  */
 export const SLIDES = [
   { icon: '🏡', title: 'Welcome to your Turkish family!', text: 'Learn Turkish while living with the family in the village: help your mom, listen to grandpa’s tales, and go to school.', tr: 'Türk Ailem’e hoş geldin!' },
-  { icon: '🕹️', title: 'Walking and quests', text: 'Walk with the joystick or the WASD keys. Follow the golden arrow, and when the yellow button appears, press it (or E).', tr: 'Yürü, oku takip et, sarı düğmeye bas.' },
+  { icon: '🕹️', title: 'Walking and quests', text: 'Walk with the joystick or the WASD keys. Follow the arrow, and when the yellow button appears, press it (or E).', tr: 'Yürü, oku takip et, sarı düğmeye bas.' },
   { icon: '💬', title: 'Talking', text: 'The Turkish sentence is on top and the translation below it. Pick the answer, or press 🎤 and say it out loud. 🔊 reads the sentence to you.', tr: 'Cevabı seç ya da mikrofona bas ve söyle.' },
   { icon: '🏫', title: 'School practice', text: 'Outside school days, the garden gate takes you to school to practise, free. Your day at home waits until you come back. You start with 100 credits.', tr: 'Bahçe kapısından okula gidip ücretsiz pratik yapabilirsin.' },
   { icon: '؟', title: 'The help button', text: 'The “?” button in the corner explains in your language what to do now, what is in your bag and how to play.', tr: 'Köşedeki ? düğmesi her şeyi senin dilinde anlatır.' },

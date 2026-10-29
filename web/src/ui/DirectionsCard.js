@@ -21,8 +21,8 @@ export class DirectionsCard {
       el('h2', { class: 'ctitle', text: '🧭 Nereye gideceğim?' }),
       quest && el('p', { class: 'ctext', html: `<b>${quest.title}</b><br>${quest.text}` }),
       ...lines.map((t) => el('p', { class: 'ctext', text: t })),
-      d && el('p', { class: 'ctext', text: 'Altın oku takip et. Ekranı parmağınla çevirerek de bakabilirsin.' }),
-      el('p', { class: 'cen en-t', text: gloss('Follow the golden arrow. It shows the way.') }),
+      d && el('p', { class: 'ctext', text: 'Oku takip et. Ekranı parmağınla çevirerek de bakabilirsin.' }),
+      el('p', { class: 'cen en-t', text: gloss('Follow the arrow. It shows the way.') }),
       el('button', { class: 'btn', text: 'Tamam', attrs: { type: 'button' }, on: { click: close } }),
     ].filter(Boolean))]);
     root.addEventListener('click', (e) => { if (e.target === root) close(); });

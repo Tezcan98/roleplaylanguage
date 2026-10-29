@@ -42,8 +42,8 @@ export const STORY = {
       // after the welcome: what to do now (StoryDirector shows it after the intro card)
       call: {
         num: '📣 Annen seni çağırıyor', title: '“Oğlum, eve gel!”',
-        text: 'Annen evde seni bekliyor. Altın oku takip et, eve git ve annenle konuş. İstersen önce biraz meydanı gez, parkta oyna: görevin seni bekler.',
-        en: 'Your mom is waiting for you at home. Follow the golden arrow, go home and talk to her. Or look round the square and play in the park first: your task will wait for you.',
+        text: 'Annen evde seni bekliyor. Oku takip et, eve git ve annenle konuş. İstersen önce biraz meydanı gez, parkta oyna: görevin seni bekler.',
+        en: 'Your mom is waiting for you at home. Follow the arrow, go home and talk to her. Or look round the square and play in the park first: your task will wait for you.',
         button: 'Tamam',
       },
       quests: [

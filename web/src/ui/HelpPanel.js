@@ -35,7 +35,7 @@ export class HelpPanel {
     this.body.replaceChildren(
       section(`🎯 ${gloss('Your task now')}`,
         ...(s.quest ? [!turkishOnly() && p(gloss(s.quest.en), 'big-ar'), tr(`${s.quest.title}: ${s.quest.text}`)] : [p(gloss('No task right now. Walk around and talk to everyone!'))]),
-        p(gloss('Follow the golden arrow ⬇️ above the person or the door. When you get close, a yellow button appears at the bottom: press it (or the E key).'))),
+        p(gloss('Follow the arrow ⬇️ above the person or the door. When you get close, a yellow button appears at the bottom: press it (or the E key).'))),
       section(`🎒 ${gloss('Bag')}`,
         ...(s.bag.length ? s.bag.map(([trName, meaning]) => (turkishOnly() ? el('p', {}, [el('b', { text: trName }), meaning ? ` · ${meaning}` : '']) : el('p', {}, [el('b', { text: meaning }), el('span', { class: 'tr-inline', attrs: { dir: 'ltr' }, text: ` · ${trName}` })]))) : [p(gloss('The bag is empty.'))])),
       section(`🗣️ ${gloss('Talking')}`,

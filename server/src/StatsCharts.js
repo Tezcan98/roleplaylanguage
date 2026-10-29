@@ -10,7 +10,7 @@ const PLACES = { yard: 'Bahçe', house: 'Ev', schoolyard: 'Okul bahçesi', class
 const PEOPLE = {
   anne: 'Anne', baba: 'Baba', dede: 'Dede', nine: 'Nine', kardes: 'Kardeş Ali', zehra: 'Zehra', elif: 'Elif', can: 'Can', ogretmen: 'Öğretmen', bakkal: 'Recep Bakkal', manav: 'Rıza Manav',
   cayci: 'Çaycı', kahveci: 'Kahveci', rifat: 'Rıfat Amca', husnu: 'Hüsnü Amca', kemal: 'Kemal Amca', huseyin: 'Hüseyin Dede', kadir: 'Kadir Amca', aslanbey: 'Aslan Bey', ismail: 'İsmail Dede',
-  seyis: 'Seyis Hamdi', simitci: 'Simitçi Cemal', imam: 'İmam', kantinci: 'Kantinci', defne: 'Defne', ayse: 'Ayşe', emre: 'Emre', mert: 'Mert',
+  seyis: 'Seyis Hamdi', simitci: 'Simitçi Cemal', imam: 'Yusuf Hoca (imam)', kantinci: 'Kantinci', defne: 'Defne', ayse: 'Ayşe', emre: 'Emre', mert: 'Mert',
 };
 
 /** Horizontal bars: rows of [label, value, note?]; the longest bar is the biggest value. */
@@ -44,9 +44,14 @@ export function playBlock(p, countries = []) {
   const acts = sum(p.top, 'act').slice(0, 15);
   const spots = sum(p.top, 'spot').slice(0, 12);
   const pct = (a, b) => (b ? ` <small>%${Math.round((100 * a) / b)}</small>` : '');
+  const hours = (min) => (min / 60).toLocaleString('tr-TR', { maximumFractionDigits: 1 });
+  const todayMin = p.days.find((d) => d.day === p.today)?.minutes ?? 0;
+  const perDevice = t.devices ? Math.round((t.hours * 60) / t.devices) : 0;
   const players = `<small>Anonim sayılar: ne yapıldı tutulur, kimin ne söylediği tutulmaz.</small>
-<div class="big"><div><b>${n(t.devices)}</b>cihaz</div><div><b>${n(t.returned)}${pct(t.returned, t.devices)}</b>başka bir gün geri geldi</div><div><b>${n(t.spoke)}${pct(t.spoke, t.devices)}</b>biriyle konuştu</div><div><b>${n(t.hours)}</b>toplam saat</div><div><b>${n(t.app)}</b>Android · ${n(t.web)} web</div></div>
+<div class="big"><div><b>${n(t.hours)} saat</b>toplam oynanan süre</div><div><b>${hours(todayMin)} saat</b>bugün oynanan</div><div><b>${n(perDevice)} dk</b>cihaz başına ortalama</div></div>
+<div class="big"><div><b>${n(t.devices)}</b>cihaz</div><div><b>${n(t.returned)}${pct(t.returned, t.devices)}</b>başka bir gün geri geldi</div><div><b>${n(t.spoke)}${pct(t.spoke, t.devices)}</b>biriyle konuştu</div><div><b>${n(t.app)}</b>Android · ${n(t.web)} web</div></div>
 <h2>Günlük aktif cihaz <small>son 3 hafta</small></h2>${columns(days.map((d) => ({ day: d.day, v: d.active })))}
+<h2>Günlük oynanan süre <small>saat, tüm cihazlar birlikte</small></h2>${columns(days.map((d) => ({ day: d.day, v: Math.round((d.minutes / 60) * 10) / 10 })), { color: '#4fc3f7' })}
 <h2>Yeni cihaz <small>ilk açılış</small></h2>${columns(days.map((d) => ({ day: d.day, v: d.new })), { color: '#81c784' })}
 <h2>Ülkeler <small>toplam: son 14 günde reklam olayı gönderen cihazlar (her biri bir kez) · yanda bugün kaçı</small></h2>${bars(countries, { color: '#7986cb' })}`;
   const progress = `<h2>Hangi bölüme kadar gidildi <small>o bölüme ulaşan cihaz sayısı: nerede bırakıyorlar</small></h2>${bars(reach, { color: '#ba68c8' })}
