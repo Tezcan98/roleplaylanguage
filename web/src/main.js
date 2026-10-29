@@ -431,7 +431,7 @@ effects.register('free', (id) => free.perform(id));
 const toys = new ToySystem({ world, player, free, tts });
 const yard = world.get('yard');
 // balls are kicked by running into them; the square's two (on its pitch) and the school's are shared online
-toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true });
+toys.add(new Ball(mf, yard, { x: 3, z: 4 }), { action: 'ball', touch: true, quiet: true });
 const schoolBall = toys.add(new Ball(mf, world.get('schoolyard'), { x: 0, z: -2 }), { action: 'ball', touch: true, quiet: true, onKick: (b, kind) => { football.assist(b, kind); village.ballKicked(b); } }); // aim assist, then shared
 const pitchMid = (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2;
 const villageBalls = [{ x: pitchMid, z: SQUARE_PITCH.cz }, { x: pitchMid - 4, z: SQUARE_PITCH.cz - 2 }]
