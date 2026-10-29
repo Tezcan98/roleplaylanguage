@@ -928,7 +928,9 @@ const introFirst = async () => {
 const setup = new CharacterSetup(host, { modes, settings, villageServer });
 // a player standing still for a long while (in the game, no card open): a banner ad, gone at the first step
 const IDLE_BANNER = CONFIG.ads.idleBannerSeconds; // s (set on the server: config/remote.js)
-const PLACE_BANNER = 20; // s: a banner stays this long after going to another place (house, yard, school, the square)
+const PLACE_BANNER = 7; // s: a banner stays this long after going to another place (house, yard, school, the square)
+const PLACE_BANNER_GAP = 150_000; // ms: at most once in this long (in and out of a door is not a new banner each time: AdMob counts that as made-up impressions)
+let placeBannerAt = -Infinity;
 const adClock = el('div', { class: 'ad-clock', attrs: { hidden: '', 'aria-live': 'off' } }); // the seconds left of the place-change banner, so the player knows it goes away
 host.append(adClock);
 const idleAd = {
@@ -944,7 +946,10 @@ const idleAd = {
     if (!adClock.hidden) { const t = `${ui('Reklam', 'Ad')} · ${left} ${ui('sn', 's')}`; if (adClock.textContent !== t) adClock.textContent = t; }
   },
 };
-bus.on(EV.LOCATION, () => { if (!menu.isOpen) idleAd.hold = PLACE_BANNER; }); // (a place changed: the banner for the next 20 seconds)
+bus.on(EV.LOCATION, () => { // (a place changed: the banner for a few seconds, not more often than PLACE_BANNER_GAP)
+  if (menu.isOpen || performance.now() - placeBannerAt < PLACE_BANNER_GAP) return;
+  placeBannerAt = performance.now(); idleAd.hold = PLACE_BANNER;
+});
 const menu = new MainMenu(host, {
   settings, confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onBanner: (on) => { if (on && !wallet.adFree) ads.showBanner(); else ads.hideBanner(); }, // a banner on the square's menu (none with ad-free)
