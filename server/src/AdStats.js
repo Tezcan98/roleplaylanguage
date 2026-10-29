@@ -1,7 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { playBlock, chartsCss } from './StatsCharts.js';
+import { numbersBody, chartsCss } from './StatsCharts.js';
 
 /**
  * Live ad numbers from the Android app (AdMob shows them a day or two late): every ad shown,
@@ -128,60 +128,24 @@ export class AdStats {
   }
 }
 
-const NAMES = { interstitial: 'Geçiş reklamı', rewarded: 'Ödüllü video', banner: 'Banner' };
-/** AdMob's error codes (LoadAdError / AdError). */
-const CODES = { 0: 'iç hata', 1: 'geçersiz istek', 2: 'ağ hatası', 3: 'reklam yok (no fill)', 8: 'uygulama kimliği', 9: 'aracılıkta reklam yok', 11: 'zaten gösteriliyor' };
-const EV = { load: 'yüklendi', empty: 'boş döndü', show: 'gösterildi', impression: 'gösterim', paid: 'gelirli gösterim', reward: 'ödül verildi', click: 'tıklandı', dismiss: 'kapatıldı', fail: 'hata' };
-/** Of the requests that came back, how many brought an ad (only once the app reports its loads too). */
-const fill = (d, f) => { const ok = d?.counts[f]?.load ?? 0, empty = d?.counts[f]?.empty ?? 0; return ok + empty ? `%${Math.round((100 * ok) / (ok + empty))}` : '—'; };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const REGIONS = new Intl.DisplayNames(['tr'], { type: 'region' });
-/** "TR" → "Türkiye" (the name in Turkish; the code itself when it is not a country). */
-const country = (c) => { if (!c) return ''; try { return REGIONS.of(c) ?? c; } catch { return c; } };
-const money = (r) => Object.entries(r).map(([c, v]) => `${v.toFixed(4)} ${c}`).join(' + ') || '—';
+const NUMBERS_JS = `(function(){var P='istatistik-donem',C='istatistik-ulke';function get(k){try{return localStorage.getItem(k)}catch(e){return null}}function put(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function show(){var p=get(P),c=get(C);var pers=document.querySelectorAll('.per');if(!document.querySelector('.per[data-p="'+p+'"]'))p='today';
+document.querySelectorAll('.periods button').forEach(function(b){b.classList.toggle('on',b.dataset.p===p)});
+pers.forEach(function(e){e.classList.toggle('on',e.dataset.p===p);var has=e.querySelector('.hist[data-c="'+c+'"]');e.querySelectorAll('.hist').forEach(function(h){h.classList.toggle('on',h.dataset.c===(has?c:'all'))})});
+document.querySelectorAll('.ulke').forEach(function(s){s.value=has0(c)?c:'all'})}
+function has0(c){return !!document.querySelector('.hist[data-c="'+c+'"]')}
+document.querySelectorAll('.periods button').forEach(function(b){b.onclick=function(){put(P,b.dataset.p);show()}});
+document.querySelectorAll('.ulke').forEach(function(s){s.onchange=function(){put(C,s.value);show()}});show();setTimeout(function(){location.reload()},30000)})()`;
 
-/** The download counter: every device's first game opened (PlayStats.js), today and the last days. */
-function installsBlock(i) {
-  if (!i) return '';
-  const today = i.days[0] ?? { app: 0, web: 0 };
-  return `<h2>İndirmeler <small>bir cihazın oyunu ilk açışı · ${i.since ? `${esc(i.since)} tarihinden beri` : 'henüz kayıt yok'}</small></h2>
-<div class="big"><div><b>${i.total}</b>toplam</div><div><b>${i.app}</b>uygulama (Android)</div><div><b>${i.web}</b>web</div><div><b>${today.app + today.web}</b>bugün</div></div>
-<table><tr><th>Gün</th><th>uygulama</th><th>web</th><th>toplam</th></tr>${i.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.app || ''}</td><td>${d.web || ''}</td><td>${d.app + d.web || ''}</td></tr>`).join('')}</table>`;
-}
-
-/** The page's tabs: the ads, the players, how far they got and the tasks, where they went and whom they talked to. */
-const TABS = [['reklam', 'Reklamlar'], ['olaylar', 'Son olaylar'], ['oyuncular', 'Oyuncular'], ['bolumler', 'Bölümler ve görevler'], ['yerler', 'Yerler ve kişiler']];
-
-/** The stats page: refreshes itself every 15 seconds. */
+/** The numbers page (one calm page, StatsCharts.js `numbersBody`); it reloads itself, keeping the chosen period and country. */
 function page(s) {
-  const today = s.days[0];
-  const play = playBlock(s.play, s.countries.map(([c, v, bugun]) => [country(c) || c, v, `bugün ${bugun}`]));
-  const cell = (d, f, e) => d?.counts[f]?.[e] ?? 0;
-  const table = (d) => `<table><tr><th></th>${Object.values(EV).map((e) => `<th>${e}</th>`).join('')}<th>doluluk</th></tr>${[...FORMATS].map((f) => `<tr><td>${NAMES[f]}</td>${Object.keys(EV).map((e) => `<td>${cell(d, f, e) || ''}</td>`).join('')}<td>${fill(d, f)}</td></tr>`).join('')}</table>
-<small>“Boş döndü”: AdMob o istekte reklam vermedi (no fill). Oyuncu bunu görmez — banner kısa süre sonra yeniden ister, arada bizim afişimiz durur; geçiş reklamında hikâye reklamsız devam eder. “Hata” yalnızca gerçek hatalar. Doluluk: gelen isteklerin yüzde kaçı reklamla döndü (uygulamanın yeni sürümüyle sayılır).</small>`;
-  const time = (t) => new Date(t).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul' });
-  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>İstatistik · canlı</title>
-<style>body{font:15px system-ui,sans-serif;margin:16px;background:#14202e;color:#e8eef5}h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:22px 0 8px}small{color:#9fb0c2}
-table{border-collapse:collapse;width:100%;max-width:900px;background:#1d2b3c;border-radius:10px;overflow:hidden}th,td{padding:7px 9px;border-bottom:1px solid #2b3c50;text-align:right}th:first-child,td:first-child{text-align:left}th{color:#9fb0c2;font-weight:600}
-.big{display:flex;gap:12px;flex-wrap:wrap}.big div{background:#1d2b3c;border-radius:12px;padding:10px 14px}.big b{display:block;font-size:24px;color:#ffd54a}${chartsCss}</style></head><body>
-<h1>İstatistik · canlı</h1><small>Uygulamadan anlık · AdMob'un kesin rakamları 1–2 gün sonra · her 15 sn yenilenir (seçili sekme kalır) · ${esc(time(s.now))}</small>
-<nav class="tabs">${TABS.map(([id, label]) => `<a href="#${id}" data-tab="${id}">${label}</a>`).join('')}</nav>
-<section class="tab" id="reklam">
-<h2>Bugün (${esc(today?.day ?? '—')})</h2>
-<div class="big"><div><b>${today?.events ?? 0}</b>olay</div><div><b>${today?.devices ?? 0}</b>cihaz</div><div><b>${esc(money(today?.revenue ?? {}))}</b>tahmini gelir</div>
-<div><b>${[...FORMATS].reduce((n, f) => n + cell(today, f, 'click'), 0)}</b>tıklama (banner)</div></div>
-${table(today)}
-<h2>Son günler</h2><table><tr><th>Gün</th><th>olay</th><th>cihaz</th><th>gösterim</th><th>ödül</th><th>tıklama</th><th>tahmini gelir</th></tr>
-${s.days.map((d) => `<tr><td>${esc(d.day)}</td><td>${d.events}</td><td>${d.devices}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'show') + cell(d, f, 'impression'), 0)}</td><td>${cell(d, 'rewarded', 'reward')}</td><td>${[...FORMATS].reduce((n, f) => n + cell(d, f, 'click'), 0)}</td><td>${esc(money(d.revenue))}</td></tr>`).join('')}</table>
-</section>
-<section class="tab" id="olaylar">
-<h2>Son olaylar <small>${s.emptyToday ? `boş dönen ${s.emptyToday} istek bugün listede gösterilmiyor` : ''}</small></h2><table><tr><th>Saat</th><th>Reklam</th><th>Olay</th><th>Gelir</th><th>Ülke</th><th>Sürüm</th><th>Cihaz</th></tr>
-${s.latest.map((e) => `<tr><td>${esc(time(e.t))}</td><td>${NAMES[e.f]}</td><td>${EV[e.e]}${e.code != null ? ` · ${e.code} ${esc(CODES[e.code] ?? '')}` : ''}</td><td>${e.micros != null ? `${(e.micros / 1e6).toFixed(5)} ${esc(e.cur ?? '')}` : ''}</td><td>${esc(country(e.c))}</td><td>${esc(e.v ?? '')}</td><td>${esc(e.d ?? '')}</td></tr>`).join('')}</table>
-</section>
-<section class="tab" id="oyuncular">${installsBlock(s.installs)}
-${play.players}</section>
-<section class="tab" id="bolumler">${play.progress}</section>
-<section class="tab" id="yerler">${play.places}</section>
-<script>(function(){var ids=['reklam','olaylar','oyuncular','bolumler','yerler'],K='istatistik-sekme';function saved(){try{return localStorage.getItem(K)}catch(e){return null}}function show(){var h=(location.hash||'').slice(1);if(ids.indexOf(h)<0)h=saved();if(ids.indexOf(h)<0)h=ids[0];try{localStorage.setItem(K,h)}catch(e){}ids.forEach(function(i){document.getElementById(i).classList.toggle('on',i===h)});document.querySelectorAll('.tabs a').forEach(function(a){a.classList.toggle('on',a.dataset.tab===h)})}addEventListener('hashchange',show);show();setTimeout(function(){location.reload()},15000)})()</script>
+  const time = new Date(s.now).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' });
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>İstatistik</title>
+<style>body{font:15px/1.5 system-ui,sans-serif;margin:16px auto;padding:0 16px;max-width:1000px;background:#14202e;color:#e8eef5}h1{font-size:22px;margin:0 0 2px;font-weight:600}small{color:#9fb0c2;font-weight:400}
+.big{display:flex;gap:12px;flex-wrap:wrap}.big div{background:#1d2b3c;border-radius:12px;padding:12px 18px;min-width:120px}.big b{display:block;font-size:26px;color:#ffd54a;font-weight:600}${chartsCss}</style></head><body>
+<h1>Türk Ailem · İstatistik</h1><small>Anonim sayılar · her 30 saniyede yenilenir · ${esc(time)}</small>
+${numbersBody(s)}
+<script>${NUMBERS_JS}</script>
 </body></html>`;
 }

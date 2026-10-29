@@ -65,12 +65,11 @@ test('downloads: a device\'s first game opened, by app / web, today and the days
   assert.deepEqual([i.total, i.app, i.web, i.days.length], [2, 1, 1, 3]);
   assert.deepEqual(i.days[0], { day: i.since, app: 1, web: 1 });
   const { AdStats } = await import('../src/AdStats.js');
-  const ads = new AdStats({ key: 'k', installs: () => s.installs() });
-  ads.record({ e: 'show', f: 'banner' }, '1.2.3.4', 'TR');
+  const ads = new AdStats({ key: 'k', installs: () => s.installs(), play: () => s.summary() });
+  ads.record({ e: 'show', f: 'banner', pid: 'aaaaaaaa1111' }, '1.2.3.4', 'TR');
   let html = '';
   ads.route({ url: '/api/ad-stats?key=k', method: 'GET' }, { writeHead() {}, end(b) { html = b; } });
-  assert.match(html, /İndirmeler/);
-  assert.match(html, /<td>Türkiye<\/td>/, 'the country by name, not "TR"');
+  assert.match(html, /Türkiye/, 'the country by name, not "TR"');
 });
 
 test('ad page: an empty request (no fill) is counted apart, not listed as an error; loads give the fill rate', async () => {
@@ -128,6 +127,7 @@ test('numbers page: tabs kept through the refresh (a script, not a meta refresh)
   assert.doesNotMatch(html, /http-equiv="refresh"/);
   assert.match(html, /localStorage/);
   assert.match(html, /location\.reload\(\)/);
+  assert.doesNotMatch(html, /tahmini gelir|Reklamlar/, 'no earnings on the page');
   assert.equal(get('/api/ad-stats?key=k').length > 1000, true);
   assert.deepEqual(JSON.parse(get('/api/istatistik?key=k&format=json')).countries, [['PK', 1, 1], ['TR', 1, 1]]);
 });
@@ -139,8 +139,27 @@ test('numbers page: play time (total, today, per device) and Yusuf Hoca by name'
   s.record(batch({ pid: 'zzzzzzzz9999', sec: 1800, counts: {} }));
   let html = '';
   ads.route({ url: '/api/istatistik?key=k', method: 'GET' }, { writeHead() {}, end(b) { html = b; } });
-  assert.match(html, /<b>1,5 saat<\/b>toplam oynanan süre/);
-  assert.match(html, /<b>1,5 saat<\/b>bugün oynanan/);
-  assert.match(html, /<b>45 dk<\/b>cihaz başına ortalama/);
+  assert.match(html, /data-p="today"><div class="big"><div><b>2<\/b>oyuncu<\/div><div><b>2<\/b>yeni oyuncu<\/div><div><b>1,5 saat<\/b>oynanan süre<\/div><div><b>45 dk<\/b>kişi başı ortalama/);
   assert.match(html, /Yusuf Hoca \(imam\)/);
+});
+
+test('play time chart: people per length of play, per period, per country', () => {
+  const s = new PlayStats();
+  s.record(batch({ sec: 30 }), '', 'TR'); // under a minute
+  s.record(batch({ pid: 'zzzzzzzz9999', sec: 240 }), '', 'TR'); // 3–5
+  s.record(batch({ pid: 'yyyyyyyy8888', sec: 3000 }), '', 'PK');
+  s.record(batch({ pid: 'yyyyyyyy8888', sec: 600 }), '', 'PK'); // 3600 in all: over 30
+  const t = s.summary().periods.today;
+  assert.deepEqual(t.hist.all, [1, 0, 0, 1, 0, 0, 1]);
+  assert.deepEqual(t.hist.TR, [1, 0, 0, 1, 0, 0, 0]);
+  assert.deepEqual(t.hist.PK, [0, 0, 0, 0, 0, 0, 1]);
+  assert.deepEqual([t.devices, t.new, t.minutes, t.played], [3, 3, 65, 3]);
+  assert.equal(s.summary().periods.yesterday.devices, 0);
+  assert.deepEqual(s.summary().periods.total.people, { all: 3, TR: 2, PK: 1 });
+});
+
+test('play time chart: a device without a known country is counted as "?"; junk country is ignored', () => {
+  const s = new PlayStats();
+  s.record(batch({ sec: 90 }), '', 'tr<'); // not two capital letters
+  assert.deepEqual(s.summary().periods.week.hist['?'], [0, 1, 0, 0, 0, 0, 0]);
 });

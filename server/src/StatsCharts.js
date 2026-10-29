@@ -20,48 +20,62 @@ export function bars(rows, { color = '#4fc3f7', max = null } = {}) {
   return `<div class="bars">${rows.map(([label, v, note]) => `<div class="brow"><span class="bl">${esc(label)}</span><span class="bt"><i style="width:${Math.max(1, Math.round((100 * v) / top))}%;background:${color}"></i></span><span class="bv">${n(v)}${note ? ` <small>${esc(note)}</small>` : ''}</span></div>`).join('')}</div>`;
 }
 
-/** Columns over the days (oldest first), one number each: an inline SVG. */
-export function columns(days, { color = '#ffd54a', height = 110 } = {}) {
-  if (!days.length) return '';
-  const w = 28, gap = 4, top = Math.max(1, ...days.map((d) => d.v)), W = days.length * (w + gap);
+/** Columns, oldest first: items of { label, v, tip? } — an inline SVG; `w` is a column's width. */
+export function columns(items, { color = '#ffd54a', height = 120, w = 28 } = {}) {
+  if (!items.length) return '';
+  const gap = 4, top = Math.max(1, ...items.map((d) => d.v)), W = items.length * (w + gap);
   const bar = (d, i) => {
-    const h = Math.round(((height - 22) * d.v) / top), x = i * (w + gap);
-    return `<g><rect x="${x}" y="${height - 14 - h}" width="${w}" height="${h}" rx="3" fill="${color}"><title>${esc(d.day)}: ${d.v}</title></rect>${d.v ? `<text x="${x + w / 2}" y="${height - 17 - h}" text-anchor="middle" font-size="10" fill="#e8eef5">${d.v}</text>` : ''}<text x="${x + w / 2}" y="${height - 2}" text-anchor="middle" font-size="9" fill="#9fb0c2">${esc(d.day.slice(8))}</text></g>`;
+    const h = Math.round(((height - 24) * d.v) / top), x = i * (w + gap);
+    return `<g><rect x="${x}" y="${height - 16 - h}" width="${w}" height="${Math.max(h, d.v ? 2 : 0)}" rx="3" fill="${color}"><title>${esc(d.tip ?? d.label)}: ${d.v}</title></rect>${d.v ? `<text x="${x + w / 2}" y="${height - 19 - h}" text-anchor="middle" font-size="11" fill="#e8eef5">${d.v}</text>` : ''}<text x="${x + w / 2}" y="${height - 3}" text-anchor="middle" font-size="10" fill="#9fb0c2">${esc(d.label)}</text></g>`;
   };
-  return `<div class="cols"><svg viewBox="0 0 ${W} ${height}" width="${Math.max(W, 280)}" height="${height}" role="img" aria-label="günlük">${days.map(bar).join('')}</svg></div>`;
+  return `<div class="cols"><svg viewBox="0 0 ${W} ${height}" width="${Math.max(W, 260)}" height="${height}" role="img">${items.map(bar).join('')}</svg></div>`;
 }
 
 const sum = (top, prefix) => Object.entries(top).filter(([k]) => k.startsWith(`${prefix}:`)).map(([k, v]) => [k.slice(prefix.length + 1), v]).sort((a, b) => b[1] - a[1]);
 
-/** The tabs' contents — who played (`players`), how far they got and the tasks (`progress`), what they did (`places`); '' for each when there are no play numbers. */
-export function playBlock(p, countries = []) {
-  if (!p) return { players: '', progress: '', places: '' };
-  const t = p.total, days = [...p.days].reverse().slice(-21); // 3 weeks, oldest first
+const REGIONS = new Intl.DisplayNames(['tr'], { type: 'region' });
+/** "TR" → "Türkiye" (`?`: not known). */
+export const countryName = (c) => { if (!c || c === '?') return 'Bilinmiyor'; try { return REGIONS.of(c) ?? c; } catch { return c; } };
+
+const PERIODS = [['today', 'Bugün'], ['yesterday', 'Dün'], ['week', 'Son 7 gün'], ['total', 'Toplam']];
+const LENGTHS = ['<1', '1–2', '2–3', '3–5', '5–10', '10–30', '30+']; // minutes, as PlayStats.js PLAY_BUCKETS
+const span = (min) => (min >= 60 ? `${(min / 60).toLocaleString('tr-TR', { maximumFractionDigits: 1 })} saat` : `${n(min)} dk`);
+
+/**
+ * The numbers page's body, calm and simple: a period (today / yesterday / last 7 days / total) with four numbers and how long
+ * people played (a country can be picked), then the days, where people stop, whom they talk to. `s.play` is PlayStats.summary();
+ * '' when there are no play numbers.
+ */
+export function numbersBody(s) {
+  const p = s.play;
+  if (!p) return '<p>Henüz oyun verisi yok.</p>';
+  const known = Object.entries(p.periods.total.people).filter(([c]) => c !== 'all').sort((a, b) => b[1] - a[1]).map(([c]) => c);
+  const picker = `<label class="pick">Ülke <select class="ulke"><option value="all">Hepsi</option>${known.map((c) => `<option value="${esc(c)}">${esc(countryName(c))}</option>`).join('')}</select></label>`;
+  const per = ([id]) => {
+    const d = p.periods[id], avg = d.played ? Math.round(d.minutes / d.played) : 0;
+    const charts = ['all', ...known].map((c) => `<div class="hist" data-c="${esc(c)}"><p class="sub">${n(d.people[c] ?? 0)} kişi oynadı</p>${columns((d.hist[c] ?? LENGTHS.map(() => 0)).map((v, i) => ({ label: LENGTHS[i], v })), { color: '#4fc3f7', height: 150, w: 44 })}</div>`).join('');
+    return `<section class="per" data-p="${id}"><div class="big"><div><b>${n(d.devices)}</b>oyuncu</div><div><b>${n(d.new)}</b>yeni oyuncu</div><div><b>${span(d.minutes)}</b>oynanan süre</div><div><b>${n(avg)} dk</b>kişi başı ortalama</div></div>
+<h2>Ne kadar oynadılar?</h2><p class="sub">Alt: oynama süresi (dakika) · yan: kaç kişi</p>${picker}${charts}</section>`;
+  };
+  const days = [...p.days].reverse().slice(-14).map((d) => ({ label: d.day.slice(8), tip: d.day, v: d.active }));
   const reach = p.reach.map((r) => [`${r.i + 1}. ${r.id || 'bölüm'}`, r.devices]);
-  const quests = (p.quests ?? []).slice(0, 40).map((q) => [q.id, q.devices, `${n(q.times)} kez`]);
+  const people = sum(p.top, 'talk').slice(0, 8).map(([k, v]) => [PEOPLE[k] ?? k, v]);
   const visited = sum(p.top, 'loc').map(([k, v]) => [PLACES[k] ?? k, v]);
-  const people = sum(p.top, 'talk').slice(0, 20).map(([k, v]) => [PEOPLE[k] ?? k, v]);
-  const acts = sum(p.top, 'act').slice(0, 15);
-  const spots = sum(p.top, 'spot').slice(0, 12);
-  const pct = (a, b) => (b ? ` <small>%${Math.round((100 * a) / b)}</small>` : '');
-  const hours = (min) => (min / 60).toLocaleString('tr-TR', { maximumFractionDigits: 1 });
-  const todayMin = p.days.find((d) => d.day === p.today)?.minutes ?? 0;
-  const perDevice = t.devices ? Math.round((t.hours * 60) / t.devices) : 0;
-  const players = `<small>Anonim sayılar: ne yapıldı tutulur, kimin ne söylediği tutulmaz.</small>
-<div class="big"><div><b>${n(t.hours)} saat</b>toplam oynanan süre</div><div><b>${hours(todayMin)} saat</b>bugün oynanan</div><div><b>${n(perDevice)} dk</b>cihaz başına ortalama</div></div>
-<div class="big"><div><b>${n(t.devices)}</b>cihaz</div><div><b>${n(t.returned)}${pct(t.returned, t.devices)}</b>başka bir gün geri geldi</div><div><b>${n(t.spoke)}${pct(t.spoke, t.devices)}</b>biriyle konuştu</div><div><b>${n(t.app)}</b>Android · ${n(t.web)} web</div></div>
-<h2>Günlük aktif cihaz <small>son 3 hafta</small></h2>${columns(days.map((d) => ({ day: d.day, v: d.active })))}
-<h2>Günlük oynanan süre <small>saat, tüm cihazlar birlikte</small></h2>${columns(days.map((d) => ({ day: d.day, v: Math.round((d.minutes / 60) * 10) / 10 })), { color: '#4fc3f7' })}
-<h2>Yeni cihaz <small>ilk açılış</small></h2>${columns(days.map((d) => ({ day: d.day, v: d.new })), { color: '#81c784' })}
-<h2>Ülkeler <small>toplam: son 14 günde reklam olayı gönderen cihazlar (her biri bir kez) · yanda bugün kaçı</small></h2>${bars(countries, { color: '#7986cb' })}`;
-  const progress = `<h2>Hangi bölüme kadar gidildi <small>o bölüme ulaşan cihaz sayısı: nerede bırakıyorlar</small></h2>${bars(reach, { color: '#ba68c8' })}
-<h2>Görevler <small>kaç cihaz yaptı · kaç kez (en çok yapılandan)</small></h2>${bars(quests, { color: '#4db6ac' })}`;
-  const places = `<div class="two"><div><h2>Gidilen mekânlar <small>kez</small></h2>${bars(visited)}</div><div><h2>Konuşulan karakterler <small>kez</small></h2>${bars(people, { color: '#ffb74d' })}</div></div>
-<div class="two"><div><h2>Yapılan etkinlikler</h2>${bars(acts, { color: '#f06292' })}</div><div><h2>Kullanılan yerler ve nesneler</h2>${bars(spots, { color: '#90a4ae' })}</div></div>`;
-  return { players, progress, places };
+  const quests = (p.quests ?? []).slice(0, 40).map((q) => [q.id, q.devices]);
+  const countries = (s.countries ?? []).slice(0, 10).map(([c, v]) => [countryName(c), v]);
+  return `<nav class="periods">${PERIODS.map(([id, label]) => `<button type="button" data-p="${id}">${label}</button>`).join('')}</nav>
+${PERIODS.map(per).join('')}
+<h2>Günlük oyuncu <small>son 14 gün</small></h2>${columns(days, { w: 30 })}
+<h2>Nerede bırakıyorlar? <small>o bölüme kadar gelen oyuncu</small></h2>${bars(reach, { color: '#ba68c8' })}
+<div class="two"><div><h2>En çok konuşulanlar</h2>${bars(people, { color: '#ffb74d' })}</div><div><h2>Gidilen yerler</h2>${bars(visited, { color: '#81c784' })}</div></div>
+<details><summary>Görevleri yapan oyuncu sayısı</summary>${bars(quests, { color: '#4db6ac' })}</details>
+<details><summary>Hangi ülkeden <small>son 14 günde uygulamadan bağlanan cihaz</small></summary>${bars(countries, { color: '#7986cb' })}</details>`;
 }
 
-export const chartsCss = `.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 4px;position:sticky;top:0;background:#14202e;padding:8px 0;z-index:2}.tabs a{padding:8px 14px;border-radius:999px;background:#1d2b3c;color:#e8eef5;text-decoration:none;font-weight:600;font-size:14px}.tabs a.on{background:#ffd54a;color:#14202e}.tab{display:none}.tab.on{display:block}
-.bars{max-width:900px;display:flex;flex-direction:column;gap:4px}.brow{display:grid;grid-template-columns:minmax(110px,230px) 1fr minmax(60px,auto);gap:8px;align-items:center;font-size:14px}
-.bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bt{background:#1d2b3c;border-radius:6px;height:14px;overflow:hidden}.bt i{display:block;height:100%;border-radius:6px}.bv{text-align:right}
-.cols{overflow-x:auto;background:#1d2b3c;border-radius:10px;padding:8px 10px;max-width:900px}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:0 24px;max-width:1200px}`;
+export const chartsCss = `h2{font-size:17px;margin:30px 0 8px;font-weight:600}.sub{color:#9fb0c2;margin:0 0 8px;font-size:13px}
+.periods{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}.periods button,.pick select{font:inherit;padding:8px 16px;border-radius:999px;border:0;background:#1d2b3c;color:#e8eef5;cursor:pointer}.periods button.on{background:#ffd54a;color:#14202e;font-weight:600}.pick{display:block;margin:0 0 10px;color:#9fb0c2}.pick select{padding:6px 12px;margin-left:6px}
+.per{display:none}.per.on{display:block}.hist{display:none}.hist.on{display:block}
+.bars{max-width:760px;display:flex;flex-direction:column;gap:6px}.brow{display:grid;grid-template-columns:minmax(110px,220px) 1fr minmax(40px,auto);gap:8px;align-items:center;font-size:14px}
+.bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bt{background:#1d2b3c;border-radius:6px;height:12px;overflow:hidden}.bt i{display:block;height:100%;border-radius:6px}.bv{text-align:right}
+.cols{overflow-x:auto;background:#1d2b3c;border-radius:12px;padding:12px;max-width:760px}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 28px;max-width:1000px}
+details{margin-top:26px;max-width:760px}summary{cursor:pointer;color:#9fb0c2}details .bars{margin-top:10px}`;

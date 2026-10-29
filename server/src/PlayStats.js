@@ -19,12 +19,14 @@ const NOW_MS = 150_000; // "playing now": a batch in the last 2.5 minutes (the g
 const PER_MINUTE = 20; // batches per IP and minute
 const MAX_KEYS = 40; // counters in one batch
 const MAX_NAMES = 400; // different counter names in a day (junk can't grow it)
+/** The upper edges (minutes) of the groups of the play-time chart: under 1, 1–2, 2–3, 3–5, 5–10, 10–30, over 30. */
+export const PLAY_BUCKETS = [1, 2, 3, 5, 10, 30, Infinity];
 const KEY = /^[a-z0-9:._-]{1,40}$/;
 const day = (t = Date.now()) => new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
 
 export class PlayStats {
-  #days = new Map(); // day → { devices: Set, opens, sec, counts, names }
-  #devices = new Map(); // hash → { first, last, ch, chId, plat, v, lang, sec, opens, counts }
+  #days = new Map(); // day → { devices: Map(hash → seconds that day), opens, sec, counts, names }
+  #devices = new Map(); // hash → { first, last, ch, chId, plat, v, lang, cc, sec, opens, counts }
   #hits = new Map();
   #seen = new Map(); // hash → when its last batch came (for "playing now")
   /** () → how many devices ever sent an ad event (AdStats.js): the app's players, counted there since before these numbers (index.mjs sets it). */
@@ -43,7 +45,7 @@ export class PlayStats {
 
   #bucket(d) {
     if (!this.#days.has(d)) {
-      this.#days.set(d, { devices: new Set(), opens: 0, sec: 0, counts: {}, names: 0 });
+      this.#days.set(d, { devices: new Map(), opens: 0, sec: 0, counts: {}, names: 0 });
       for (const k of [...this.#days.keys()].sort().slice(0, -DAYS)) this.#days.delete(k);
     }
     return this.#days.get(d);
@@ -61,7 +63,7 @@ export class PlayStats {
   /** Adds one clean batch ({ h, opens, sec, counts }) to a day's numbers. */
   #tally(d, b) {
     const t = this.#bucket(d);
-    t.devices.add(b.h); t.opens += b.opens ?? 0; t.sec += b.sec ?? 0;
+    t.devices.set(b.h, (t.devices.get(b.h) ?? 0) + (b.sec ?? 0)); t.opens += b.opens ?? 0; t.sec += b.sec ?? 0;
     for (const [k, n] of Object.entries(b.counts ?? {})) {
       if (!(k in t.counts)) { if (t.names >= MAX_NAMES) continue; t.names++; }
       t.counts[k] = (t.counts[k] ?? 0) + n;
@@ -69,7 +71,7 @@ export class PlayStats {
   }
 
   /** One batch from the game; false when it is not one or comes too often. */
-  record(msg, ip = '') {
+  record(msg, ip = '', country = '') {
     const now = Date.now(), hit = this.#hits.get(ip) ?? { n: 0, at: now };
     if (now - hit.at > 60000) { hit.n = 0; hit.at = now; }
     if (++hit.n > PER_MINUTE) return false;
@@ -91,6 +93,7 @@ export class PlayStats {
     if (msg.plat === 'app' || msg.plat === 'web') dev.plat = msg.plat;
     if (typeof msg.v === 'string') dev.v = msg.v.slice(0, 16);
     if (/^[a-z]{2}$/.test(String(msg.lang ?? ''))) dev.lang = msg.lang;
+    if (/^[A-Z]{2}$/.test(country)) dev.cc = country; // (the coarse country the request came from; nothing finer)
     for (const [k, n] of Object.entries(counts)) if (k in dev.counts || Object.keys(dev.counts).length < 300) dev.counts[k] = (dev.counts[k] ?? 0) + n;
     this.#devices.set(h, dev); this.#dirty = true;
     if (this.dir) { try { appendFileSync(join(this.dir, `${d}.jsonl`), `${JSON.stringify(batch)}\n`); } catch { /* disk full: the memory still counts */ } }
@@ -130,6 +133,35 @@ export class PlayStats {
     return { since, total: devs.length, app: devs.filter((v) => plat(v) === 'app').length, web: devs.filter((v) => plat(v) === 'web').length, days: list };
   }
 
+  /**
+   * Today, yesterday, the last 7 days and all time: players, new players, minutes played, and how long people played —
+   * the people per length of play (PLAY_BUCKETS), for all and for each country. `?` is a device whose country is not known.
+   */
+  #periods() {
+    const t = Date.now(), d0 = day(t), week = Array.from({ length: 7 }, (_, k) => day(t - k * 86400000));
+    const sumDays = (list) => { const m = new Map(); for (const d of list) for (const [h, sec] of this.#days.get(d)?.devices ?? []) m.set(h, (m.get(h) ?? 0) + sec); return m; };
+    const total = new Map([...this.#devices].map(([h, v]) => [h, v.sec]));
+    const make = (m, isNew) => {
+      const hist = { all: PLAY_BUCKETS.map(() => 0) }, people = { all: 0 };
+      let sec = 0, devices = 0, fresh = 0;
+      for (const [h, s] of m) {
+        const dev = this.#devices.get(h), cc = dev?.cc || '?';
+        devices++; if (dev && isNew(dev)) fresh++;
+        if (s <= 0) continue;
+        sec += s; people.all++; people[cc] = (people[cc] ?? 0) + 1;
+        const k = PLAY_BUCKETS.findIndex((b) => s < b * 60);
+        hist.all[k]++; (hist[cc] ??= PLAY_BUCKETS.map(() => 0))[k]++;
+      }
+      return { devices, new: fresh, minutes: Math.round(sec / 60), played: people.all, people, hist };
+    };
+    return {
+      today: make(sumDays([d0]), (v) => v.first === d0),
+      yesterday: make(sumDays([week[1]]), (v) => v.first === week[1]),
+      week: make(sumDays(week), (v) => v.first >= week[6]),
+      total: make(total, () => true),
+    };
+  }
+
   summary() {
     const today = day();
     const devs = [...this.#devices.values()];
@@ -154,7 +186,7 @@ export class PlayStats {
     return {
       now: new Date().toISOString(), today,
       total: { devices: devs.length, returned, spoke, hours: Math.round(devs.reduce((s, v) => s + v.sec, 0) / 360) / 10, app: devs.filter((v) => v.plat === 'app').length, web: devs.filter((v) => v.plat === 'web').length },
-      days, top, reach, quests,
+      days, top, reach, quests, periods: this.#periods(),
     };
   }
 
@@ -170,7 +202,7 @@ export class PlayStats {
       req.on('data', (c) => { body += c; if (body.length > 4096) req.destroy(); });
       req.on('end', () => {
         let msg = null; try { msg = JSON.parse(body); } catch { /* not JSON */ }
-        res.writeHead(this.record(msg, clientIp(req)) ? 204 : 400, { 'Cache-Control': 'no-store' }); res.end();
+        res.writeHead(this.record(msg, clientIp(req), String(req.headers['x-country'] ?? '').toUpperCase()) ? 204 : 400, { 'Cache-Control': 'no-store' }); res.end();
       });
       return true;
     }
