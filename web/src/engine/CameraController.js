@@ -5,6 +5,8 @@ const RAY = new THREE.Raycaster();
 const UI_GESTURE_BLOCKERS = '#joy, #act, #shot, button, input, textarea, select, .overlay, .card, .ptt, .callbar';
 /** How far the camera starts (× the normal distance): a little further back, the place around you shows (close up it was hard to play). */
 export const START_ZOOM = 1.2;
+/** The camera beside two people talking outdoors: how far (m, wide screen / phone upright) and how high — far enough that the place around them shows. */
+const TALK_DIST = { wide: 7, portrait: 9, y: 3.8 };
 /** Views the C key steps through: distance factor, and straight from above. */
 const VIEWS = [{ k: 1 }, { k: 0.62 }, { k: 1.55 }, { k: 1.25, top: true }];
 
@@ -151,10 +153,10 @@ export class CameraController {
     const key = `${partner.id ?? ''}|${location.id}`;
     if (this.#talk.key === key) return this.#talk.view;
     const N = partner.position, mid = new THREE.Vector3((P.x + N.x) / 2, 1.3, (P.z + N.z) / 2);
-    const side = new THREE.Vector3(N.z - P.z, 0, -(N.x - P.x)).normalize(), dd = portrait ? 6 : 4.5;
+    const side = new THREE.Vector3(N.z - P.z, 0, -(N.x - P.x)).normalize(), dd = portrait ? TALK_DIST.portrait : TALK_DIST.wide;
     const walls = location.group.children.find((c) => c.name === 'static');
     const clear = (sign) => {
-      const to = mid.clone().addScaledVector(side, dd * sign).setY(2.6), dir = to.clone().sub(mid), len = dir.length();
+      const to = mid.clone().addScaledVector(side, dd * sign).setY(TALK_DIST.y), dir = to.clone().sub(mid), len = dir.length();
       if (!walls) return true;
       RAY.set(mid, dir.normalize()); RAY.far = len;
       return RAY.intersectObject(walls, true).length === 0;
@@ -197,7 +199,7 @@ export class CameraController {
         const N = partner.position;
         const mx = (P.x + N.x) / 2;
         const mz = (P.z + N.z) / 2;
-        this.#pos.set(mx, 3.6 * k, mz + 5 * k);
+        this.#pos.set(mx, 4.6 * k, Math.min(mz + 6.6 * k, maxZ)); // (further back than before: close up, nothing of the room showed; not through the wall)
         this.#look.lerp(this.#tmp.set(mx, 1.1, mz), 0.08);
       } else {
         this.#pos.set(P.x * 0.7, 7.2 * k, Math.min(P.z + 7.5 * k, maxZ));
@@ -207,9 +209,9 @@ export class CameraController {
       const N = partner.position;
       const mid = this.#tmp.copy(P).add(N).multiplyScalar(0.5);
       const side = new THREE.Vector3(N.z - P.z, 0, -(N.x - P.x)).normalize();
-      const dd = portrait ? 6 : 4.5;
+      const dd = portrait ? TALK_DIST.portrait : TALK_DIST.wide;
       this.#pos.copy(mid).addScaledVector(side, dd * this.#talk.sign);
-      this.#pos.y = 2.6;
+      this.#pos.y = TALK_DIST.y;
       this.#look.lerp(new THREE.Vector3(mid.x, portrait ? 0.6 : 1.3, mid.z), 0.08);
     } else {
       const view = VIEWS[this.#view], k = (portrait ? 1.45 : 1) * view.k * this.#zoom;

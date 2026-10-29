@@ -55,7 +55,7 @@ export const HOTSPOTS = {
   ...Object.fromEntries(Array.from({ length: KAHVE_SEATS }, (_, i) => i + 1).map((n) => [`village.kahve${n}`, { label: 'Kahvehanede otur', use: [`sit:kahve${n}`, 'free:village_coffee'], available: (c) => !c.seated }])),
   ...Object.fromEntries(Array.from({ length: READ_SEATS }, (_, i) => i + 1).map((n) => [`village.kitap${n}`, { label: 'Otur, kitap oku', use: [`sit:kitap${n}`, 'free:village_read', 'library-read'], available: (c) => !c.seated }])),
   // the open-air cinema's chairs: a film on the screen (systems/Cinema.js)
-  ...Object.fromEntries(Array.from({ length: CINEMA_SEATS }, (_, i) => i + 1).map((n) => [`village.sinema${n}`, { label: 'Sinemada otur', use: [`sit:sinema${n}`, 'free:village_cinema', 'cinema'], available: (c) => !c.seated }])),
+  ...Object.fromEntries(Array.from({ length: CINEMA_SEATS }, (_, i) => i + 1).map((n) => [`village.sinema${n}`, { label: 'Sinemada otur', use: [`sit:sinema${n}`, 'cinema'], available: (c) => !c.seated }])),
   // under a pitch's score board: back to 0 - 0 (for everyone there)
   'village.scoreReset': { label: 'Skoru sıfırla', use: ['score-reset'] },
   'school.scoreReset': { label: 'Skoru sıfırla', use: ['score-reset'] },

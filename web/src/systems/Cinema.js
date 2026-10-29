@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { CINEMA } from '../world/locations/VillageSquare.js';
-import { gloss, turkishOnly } from '../i18n/Gloss.js';
+import { gloss, ui, turkishOnly } from '../i18n/Gloss.js';
 
 /**
  * Köy sineması (the village's open-air cinema): sit on one of the open-air cinema's chairs and a film plays on the screen, the
@@ -52,7 +52,7 @@ export class Cinema {
   }
 
   #comingSoon() {
-    this.toasts.show('🎬 Sinemacı henüz gelmedi. Filmler yakında başlayacak!', "The projectionist isn't here yet. Films are coming soon!");
+    this.toasts.show(`🎬 ${ui('Sinemacı henüz gelmedi. Filmler yakında başlayacak!', "The projectionist isn't here yet. Films are coming soon!")}`); // one line, in the player's own language
   }
 
   stop() {
