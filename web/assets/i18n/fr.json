@@ -2924,5 +2924,17 @@
  "ending, suffix": "terminaison, suffixe",
  "vowel": "voyelle",
  "yes": "oui",
- "no": "non"
+ "no": "non",
+ "At home there ___ milk. (there is no milk)": "À la maison il ___ de lait. (il n'y a pas de lait)",
+ "Bye! (to the one leaving) Goodbye! (said by the one leaving)": "Au revoir ! (à celui qui part) Salut ! (dit par celui qui part)",
+ "Hello! My name is Ali.": "Bonjour ! Je m'appelle Ali.",
+ "How are you? — I am fine, thank you.": "Comment ça va ? — Ça va bien, merci.",
+ "I did not understand. Can you say it again?": "Je n'ai pas compris. Tu peux répéter ?",
+ "If something is there we say “var”, if not “yok”.": "Si une chose est là, on dit « var » ; sinon « yok ».",
+ "Is there tea? — Yes, there is.": "Il y a du thé ? — Oui, il y en a.",
+ "There is a book in my bag.": "Il y a un livre dans mon sac.",
+ "There is no milk at home.": "Il n'y a pas de lait à la maison.",
+ "What is this? — This is a book.": "Qu'est-ce que c'est ? — C'est un livre.",
+ "You did not understand something. What do you say?": "Tu n'as pas compris quelque chose. Que dis-tu ?",
+ "to understand": "comprendre"
 }

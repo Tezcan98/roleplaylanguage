@@ -2924,5 +2924,17 @@
  "ending, suffix": "terminación, sufijo",
  "vowel": "vocal",
  "yes": "sí",
- "no": "no"
+ "no": "no",
+ "At home there ___ milk. (there is no milk)": "En casa ___ leche. (no hay leche)",
+ "Bye! (to the one leaving) Goodbye! (said by the one leaving)": "¡Adiós! (al que se va) ¡Hasta luego! (lo dice el que se va)",
+ "Hello! My name is Ali.": "¡Hola! Me llamo Ali.",
+ "How are you? — I am fine, thank you.": "¿Cómo estás? — Estoy bien, gracias.",
+ "I did not understand. Can you say it again?": "No entendí. ¿Puedes repetirlo?",
+ "If something is there we say “var”, if not “yok”.": "Si algo está, decimos «var»; si no, «yok».",
+ "Is there tea? — Yes, there is.": "¿Hay té? — Sí, hay.",
+ "There is a book in my bag.": "Hay un libro en mi mochila.",
+ "There is no milk at home.": "No hay leche en casa.",
+ "What is this? — This is a book.": "¿Qué es esto? — Esto es un libro.",
+ "You did not understand something. What do you say?": "No entendiste algo. ¿Qué dices?",
+ "to understand": "entender"
 }

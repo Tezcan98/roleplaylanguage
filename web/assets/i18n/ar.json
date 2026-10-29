@@ -2925,5 +2925,17 @@
  "ending, suffix": "نهاية، لاحقة",
  "vowel": "حرف علة",
  "yes": "نعم",
- "no": "لا"
+ "no": "لا",
+ "At home there ___ milk. (there is no milk)": "في البيت ___ حليب. (لا يوجد حليب)",
+ "Bye! (to the one leaving) Goodbye! (said by the one leaving)": "مع السلامة! (للمغادر) إلى اللقاء! (يقولها المغادر)",
+ "Hello! My name is Ali.": "مرحبًا! اسمي علي.",
+ "How are you? — I am fine, thank you.": "كيف حالك؟ — أنا بخير، شكرًا.",
+ "I did not understand. Can you say it again?": "لم أفهم. هل تعيدها من فضلك؟",
+ "If something is there we say “var”, if not “yok”.": "إذا كان الشيء موجودًا نقول «var»، وإن لم يكن نقول «yok».",
+ "Is there tea? — Yes, there is.": "هل يوجد شاي؟ — نعم، يوجد.",
+ "There is a book in my bag.": "في حقيبتي كتاب.",
+ "There is no milk at home.": "لا يوجد حليب في البيت.",
+ "What is this? — This is a book.": "ما هذا؟ — هذا كتاب.",
+ "You did not understand something. What do you say?": "لم تفهم شيئًا. ماذا تقول؟",
+ "to understand": "أن يفهم"
 }

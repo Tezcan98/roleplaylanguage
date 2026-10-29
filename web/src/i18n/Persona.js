@@ -7,10 +7,10 @@
 let gender = 'boy';
 /** The class teacher, picked at random once per device: name + gender (content says "Zeynep", a woman). */
 export const TEACHERS = {
-  f: [['Zeynep', 'زينب', 'زینب'], ['Merve', 'مروة', 'مروہ'], ['Esra', 'إسراء', 'اسراء'], ['Hatice', 'خديجة', 'خدیجہ']],
-  m: [['Murat', 'مراد', 'مراد'], ['Mustafa', 'مصطفى', 'مصطفیٰ'], ['Ömer', 'عمر', 'عمر'], ['Yusuf', 'يوسف', 'یوسف']],
+  f: [['Zeynep', 'زينب', 'زینب', 'ज़ेयनेप'], ['Merve', 'مروة', 'مروہ', 'मेरवे'], ['Esra', 'إسراء', 'اسراء', 'एस्रा'], ['Hatice', 'خديجة', 'خدیجہ', 'हातिजे']],
+  m: [['Murat', 'مراد', 'مراد', 'मुरात'], ['Mustafa', 'مصطفى', 'مصطفیٰ', 'मुस्तफ़ा'], ['Ömer', 'عمر', 'عمر', 'ओमेर'], ['Yusuf', 'يوسف', 'یوسف', 'यूसुफ़']],
 };
-let teacher = { gender: 'f', name: 'Zeynep', ar: 'زينب', ur: 'زینب' };
+let teacher = { gender: 'f', name: 'Zeynep', ar: 'زينب', ur: 'زینب', hi: 'ज़ेयनेप' };
 export const teacherInfo = () => teacher;
 /** "f:Merve" (saved setting) → teacher; anything unknown picks one at random. */
 export function setTeacher(key) {
@@ -18,7 +18,7 @@ export function setTeacher(key) {
   const list = TEACHERS[g];
   const hit = list?.find(([n]) => n === name);
   const [gg, row] = hit ? [g, hit] : (() => { const k = Math.random() < 0.5 ? 'f' : 'm'; return [k, TEACHERS[k][(Math.random() * 4) | 0]]; })();
-  teacher = { gender: gg, name: row[0], ar: row[1], ur: row[2] };
+  teacher = { gender: gg, name: row[0], ar: row[1], ur: row[2], hi: row[3] };
   return `${gg}:${row[0]}`;
 }
 const teacherSwaps = () => {
@@ -29,6 +29,7 @@ const teacherSwaps = () => {
     tr: {
       ar: [[/زينب/g, teacher.ar], ...(male ? [[/معلمتكم/g, 'معلمكم'], [/معلمتي/g, 'معلمي'], [/معلمتك/g, 'معلمك'], [/المعلمة/g, 'المعلم'], [/معلمة/g, 'معلم'], [/تشير/g, 'يشير']] : [])],
       ur: [[/زینب/g, teacher.ur], ...(male ? [[/استانی جی/g, 'استاد جی'], [/استانی/g, 'استاد'], [/کرتی ہیں/g, 'کرتے ہیں'], [/پوچھتی ہوں/g, 'پوچھتا ہوں'], [/کروں گی/g, 'کروں گا']] : [])],
+      hi: [[/ज़ेयनेप/g, teacher.hi]], // (the Hindi texts say "टीचर" for the teacher: no gender to change)
       es: [[/\bZeynep\b/g, teacher.name], ...(male ? [[/vuestra maestra/g, 'vuestro maestro'], [/la maestra/g, 'el maestro'], [/tu maestra/g, 'tu maestro'], [/[Mm]aestra/g, (m) => (m[0] === 'M' ? 'Maestro' : 'maestro')], [/señala/g, 'señala']] : [])],
       fr: [[/\bZeynep\b/g, teacher.name], ...(male ? [[/votre maîtresse/g, 'votre maître'], [/ta maîtresse/g, 'ton maître'], [/la maîtresse/g, 'le maître'], [/[Mm]aîtresse/g, (m) => (m[0] === 'M' ? 'Maître' : 'maître')], [/elle montre/g, 'il montre']] : [])],
       en: [],
@@ -51,6 +52,7 @@ function sourceRules() {
 const TRANSLATED = { // what the source swaps become in each gloss language
   ar: [[/يا بنيّ?/g, 'يا بنتي'], [/ابني/g, 'ابنتي'], [/أخي الكبير/g, 'أختي الكبيرة'], [/يا أخي/g, 'يا أختي']],
   ur: [[/بیٹا/g, 'بیٹی'], [/بیٹے/g, 'بیٹی'], [/بھائی جان/g, 'آپی'], [/بڑے بھائی/g, 'بڑی بہن']],
+  hi: [[/बेटा/g, 'बेटी'], [/बेटे/g, 'बेटी'], [/बड़े भैया/g, 'बड़ी दीदी'], [/भैया/g, 'दीदी']],
   es: [[/\bhijo\b/g, 'hija'], [/\bHijo\b/g, 'Hija'], [/hermano mayor/g, 'hermana mayor'], [/Hermano mayor/g, 'Hermana mayor'], [/¡Hermano([!,])/g, '¡Hermana$1']], // (the little brother calling: "¡Hermano!")
   fr: [[/mon fils/g, 'ma fille'], [/Mon fils/g, 'Ma fille'], [/\bfils\b/g, 'fille'], [/grand frère/g, 'grande sœur'], [/Grand frère/g, 'Grande sœur']],
   en: [],

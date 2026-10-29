@@ -25,6 +25,14 @@
       "scale": 1.15
     },
     {
+      "code": "hi",
+      "name": "हिन्दी",
+      "short": "हि",
+      "dir": "ltr",
+      "font": "Noto Sans Devanagari",
+      "scale": 1.1
+    },
+    {
       "code": "es",
       "name": "Español",
       "short": "ES",

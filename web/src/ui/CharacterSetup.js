@@ -1,5 +1,6 @@
 import { el } from './dom.js';
 import { gloss, loadGlossLang, glossLanguages } from '../i18n/Gloss.js';
+import { defaultGlossLang } from '../i18n/Region.js';
 
 /** The four characters to pick from: [gender, look] — shown full length in HD (the shop's pictures of their 3D bodies), no names. */
 export const CHARACTERS = [
@@ -27,7 +28,7 @@ export class CharacterSetup {
   /** The saved profile (defaults for anything not chosen yet). */
   profile() {
     const s = this.settings;
-    return { lang: s.get('glossLang', 'ar'), gender: s.get('gender', 'boy'), look: characterOf(s.get('gender', 'boy'), s.get('look', ''))[1] };
+    return { lang: s.get('glossLang', defaultGlossLang()), gender: s.get('gender', 'boy'), look: characterOf(s.get('gender', 'boy'), s.get('look', ''))[1] };
   }
   get done() { return !!this.settings.get('profileDone', false); }
 

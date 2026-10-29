@@ -152,6 +152,8 @@ import { MarketView } from './ui/MarketView.js';
 import { CHORE_PAY } from './content/goods.js';
 import { DialogueView } from './ui/DialogueView.js';
 
+import { defaultGlossLang } from './i18n/Region.js';
+import { HindiNews } from './ui/HindiNews.js';
 import { gloss, wordNote, loadGlossLang, glossLang, meaning, example, withGloss } from './i18n/Gloss.js';
 import { man } from './content/characters.js';
 import { schoolDay } from './content/hotspots.js';
@@ -186,9 +188,9 @@ if (native) await updateGate(nativeKit.App); // a newer build: downloaded and st
 if (!settings.get('qualityLow', false)) { settings.set('quality', 'low'); settings.set('qualityLow', true); }
 const quality = params.get('quality') ?? settings.get('quality', 'low');
 // on our own site the address carries the language: anadoluailesi.com.tr/oyun/en/ → meanings in English (kept as the player's choice)
-const pathLang = location.pathname.match(/\/oyun\/(ar|ur|en|es|fr|tr)(?:\/|$)/)?.[1]; // tr: "Sadece Türkçe" (no other language)
+const pathLang = location.pathname.match(/\/oyun\/(ar|ur|hi|en|es|fr|tr)(?:\/|$)/)?.[1]; // tr: "Sadece Türkçe" (no other language)
 if (pathLang && !params.has('gloss')) settings.set('glossLang', pathLang);
-await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', 'ar')); // meanings in Arabic by default (assets/i18n/)
+await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', defaultGlossLang())); // meanings in Arabic by default (Hindi from India; assets/i18n/)
 document.title = withGloss('Türk Ailem', 'My Turkish Family'); // the tab: the name in the player's language too
 const fullscreenBtn = setupLandscape(); // ⛶ in the HUD
 // from the share message's iPhone link (anadoluailesi.com.tr/ios → /oyun/?ios): how to put the game on the home screen, at once
@@ -954,7 +956,7 @@ const menu = new MainMenu(host, {
 });
 /** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
 async function editProfile({ cancellable = true } = {}) {
-  const before = { lang: settings.get('glossLang', 'ar'), gender: playerGender(), look: settings.get('look', '') };
+  const before = { lang: settings.get('glossLang', defaultGlossLang()), gender: playerGender(), look: settings.get('look', '') };
   const p = await setup.open({ cancellable });
   if (p && (p.lang !== before.lang || p.gender !== before.gender || p.look !== before.look)) { location.reload(); return; }
   menu.show();
@@ -1126,6 +1128,7 @@ async function offerAppUpdate() {
   });
   if (go) location.href = CONFIG.update.store; // (the app opens Google Play for it)
 }
+if (setup.done && !params.has('debug') && !params.has('nointro')) setTimeout(() => new HindiNews(host, { settings, modes, currentLang: () => glossLang() }).maybe(), 1200); // (Hindi came: once, for players from India)
 if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 1500);
 
 // Debug handle for automated play-throughs: open with ?debug

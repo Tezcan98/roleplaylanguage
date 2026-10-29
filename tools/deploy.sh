@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Publishes the promo site (site/) and the game (web/ built into dist/) on anadoluailesi.com.tr:
 #   https://anadoluailesi.com.tr/            the promo site
-#   https://anadoluailesi.com.tr/oyun/<dil>/ the game (tr, en, ar, ur, es, fr: the language of the meanings)
+#   https://anadoluailesi.com.tr/oyun/<dil>/ the game (tr, en, ar, ur, hi, es, fr: the language of the meanings)
 # Server: tezcan@31.77.63.14, folder /var/www/anadoluailesi.com.tr, nginx file sites-available/anadoluailesi.com.tr
 # (server/deploy/nginx-anadoluailesi.conf; tools/move-to-anadoluailesi.sh moved them from the old sehem2 names once). Usage: tools/deploy.sh
 set -euo pipefail

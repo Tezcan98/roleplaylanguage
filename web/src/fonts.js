@@ -10,3 +10,5 @@ import '@fontsource/noto-naskh-arabic/500.css';
 import '@fontsource/noto-naskh-arabic/700.css';
 import '@fontsource/noto-nastaliq-urdu/500.css';
 import '@fontsource/noto-nastaliq-urdu/700.css';
+import '@fontsource/noto-sans-devanagari/500.css';
+import '@fontsource/noto-sans-devanagari/700.css';
