@@ -163,3 +163,12 @@ test('play time chart: a device without a known country is counted as "?"; junk 
   s.record(batch({ sec: 90 }), '', 'tr<'); // not two capital letters
   assert.deepEqual(s.summary().periods.week.hist['?'], [0, 1, 0, 0, 0, 0, 0]);
 });
+
+test('playing now: who is in the game right now, by country', () => {
+  const s = new PlayStats();
+  s.record(batch({ pid: 'aaaaaaaa1111' }), '', 'TR');
+  s.record(batch({ pid: 'bbbbbbbb2222' }), '', 'TR');
+  s.record(batch({ pid: 'cccccccc3333' }), '', 'PK');
+  s.record(batch({ pid: 'dddddddd4444' })); // no country known
+  assert.deepEqual(s.summary().playing, { n: 4, countries: [['TR', 2], ['PK', 1], ['?', 1]] });
+});

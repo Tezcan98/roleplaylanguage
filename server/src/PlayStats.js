@@ -162,6 +162,13 @@ export class PlayStats {
     };
   }
 
+  /** Who is playing right now (a batch in the last few minutes), by country: { n, countries: [[country, people]] }. */
+  #playing(t = Date.now()) {
+    const by = {};
+    for (const [h, at] of this.#seen) if (t - at <= NOW_MS) { const cc = this.#devices.get(h)?.cc || '?'; by[cc] = (by[cc] ?? 0) + 1; }
+    return { n: Object.values(by).reduce((a, b) => a + b, 0), countries: Object.entries(by).sort((a, b) => b[1] - a[1]) };
+  }
+
   summary() {
     const today = day();
     const devs = [...this.#devices.values()];
@@ -186,7 +193,7 @@ export class PlayStats {
     return {
       now: new Date().toISOString(), today,
       total: { devices: devs.length, returned, spoke, hours: Math.round(devs.reduce((s, v) => s + v.sec, 0) / 360) / 10, app: devs.filter((v) => v.plat === 'app').length, web: devs.filter((v) => v.plat === 'web').length },
-      days, top, reach, quests, periods: this.#periods(),
+      days, top, reach, quests, periods: this.#periods(), playing: this.#playing(),
     };
   }
 

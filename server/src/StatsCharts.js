@@ -25,7 +25,7 @@ export function columns(items, { color = '#ffd54a', height = 120, w = 28 } = {})
   if (!items.length) return '';
   const gap = 4, top = Math.max(1, ...items.map((d) => d.v)), W = items.length * (w + gap);
   const bar = (d, i) => {
-    const h = Math.round(((height - 24) * d.v) / top), x = i * (w + gap);
+    const h = Math.round(((height - 36) * d.v) / top), x = i * (w + gap);
     return `<g><rect x="${x}" y="${height - 16 - h}" width="${w}" height="${Math.max(h, d.v ? 2 : 0)}" rx="3" fill="${color}"><title>${esc(d.tip ?? d.label)}: ${d.v}</title></rect>${d.v ? `<text x="${x + w / 2}" y="${height - 19 - h}" text-anchor="middle" font-size="11" fill="#e8eef5">${d.v}</text>` : ''}<text x="${x + w / 2}" y="${height - 3}" text-anchor="middle" font-size="10" fill="#9fb0c2">${esc(d.label)}</text></g>`;
   };
   return `<div class="cols"><svg viewBox="0 0 ${W} ${height}" width="${Math.max(W, 260)}" height="${height}" role="img">${items.map(bar).join('')}</svg></div>`;
@@ -63,7 +63,9 @@ export function numbersBody(s) {
   const visited = sum(p.top, 'loc').map(([k, v]) => [PLACES[k] ?? k, v]);
   const quests = (p.quests ?? []).slice(0, 40).map((q) => [q.id, q.devices]);
   const countries = (s.countries ?? []).slice(0, 10).map(([c, v]) => [countryName(c), v]);
-  return `<nav class="periods">${PERIODS.map(([id, label]) => `<button type="button" data-p="${id}">${label}</button>`).join('')}</nav>
+  const playing = p.playing ?? { n: 0, countries: [] };
+  const now = `<h2>Şu an oyunda <small>son birkaç dakikada oynayan</small></h2><div class="big"><div><b>${n(playing.n)}</b>kişi</div></div>${playing.n ? `<div class="gap">${bars(playing.countries.map(([c, v]) => [countryName(c), v]), { color: '#45a852' })}</div>` : ''}`;
+  return `${now}<nav class="periods">${PERIODS.map(([id, label]) => `<button type="button" data-p="${id}">${label}</button>`).join('')}</nav>
 ${PERIODS.map(per).join('')}
 <h2>Günlük oyuncu <small>son 14 gün</small></h2>${columns(days, { w: 30 })}
 <h2>Nerede bırakıyorlar? <small>o bölüme kadar gelen oyuncu</small></h2>${bars(reach, { color: '#ba68c8' })}
@@ -78,4 +80,4 @@ export const chartsCss = `h2{font-size:17px;margin:30px 0 8px;font-weight:600}.s
 .bars{max-width:760px;display:flex;flex-direction:column;gap:6px}.brow{display:grid;grid-template-columns:minmax(110px,220px) 1fr minmax(40px,auto);gap:8px;align-items:center;font-size:14px}
 .bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bt{background:#1d2b3c;border-radius:6px;height:12px;overflow:hidden}.bt i{display:block;height:100%;border-radius:6px}.bv{text-align:right}
 .cols{overflow-x:auto;background:#1d2b3c;border-radius:12px;padding:12px;max-width:760px}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 28px;max-width:1000px}
-details{margin-top:26px;max-width:760px}summary{cursor:pointer;color:#9fb0c2}details .bars{margin-top:10px}`;
+.gap{margin-top:10px}details{margin-top:26px;max-width:760px}summary{cursor:pointer;color:#9fb0c2}details .bars{margin-top:10px}`;
