@@ -15,7 +15,7 @@ import { RenderContext } from './engine/RenderContext.js';
 import { TextureFactory } from './engine/TextureFactory.js';
 import { MeshFactory } from './engine/MeshFactory.js';
 import { ModelLibrary, PropFactory } from './engine/ModelLibrary.js';
-import { CameraController } from './engine/CameraController.js';
+import { CameraController, START_ZOOM } from './engine/CameraController.js';
 import { PostFX } from './engine/PostFX.js';
 import { SkyDome } from './engine/SkyDome.js';
 import { Fireflies } from './engine/Fireflies.js';
@@ -1047,7 +1047,7 @@ function startNew(then, chapter = null) { // chapter: start from there (testers,
     hud.setCredits(wallet.balance); hud.setWords(vocab.size); hud.setBag(inventory.size); hud.setMoney(inventory.count('para'));
     story.startChapter(dayIndex >= 0 ? dayIndex : 0, () => {
       enterPlay();
-      if (dayIndex <= 0 && story.whenFirstInput) camera.zoomTo(0.62); // a new game: close on the park
+      if (dayIndex <= 0) camera.zoomTo(START_ZOOM); // a new game: a little further back (the close view of the park stayed for the whole game)
       then?.(); // (no thought bubble over the player: the day's task is in the quest panel)
     });
   });

@@ -3,6 +3,8 @@ import * as THREE from 'three';
 const RAY = new THREE.Raycaster();
 
 const UI_GESTURE_BLOCKERS = '#joy, #act, #shot, button, input, textarea, select, .overlay, .card, .ptt, .callbar';
+/** How far the camera starts (× the normal distance): a little further back, the place around you shows (close up it was hard to play). */
+export const START_ZOOM = 1.2;
 /** Views the C key steps through: distance factor, and straight from above. */
 const VIEWS = [{ k: 1 }, { k: 0.62 }, { k: 1.55 }, { k: 1.25, top: true }];
 
@@ -20,7 +22,7 @@ export class CameraController {
   #pinch = 0;
   #yaw = 0;
   #pitch = 0;
-  #zoom = 1;
+  #zoom = START_ZOOM;
   #view = 0;
 
   constructor(ctx) {
