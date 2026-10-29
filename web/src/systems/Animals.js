@@ -6,8 +6,8 @@ import { HORSES } from '../world/locations/VillageSquare.js';
 /**
  * Farm animals (Quaternius "Farm Animals", CC0 — assets/models/animal_*.glb): a cow and sheep
  * grazing in the yard, and horses tied up on the village square that you can
- * ride (others see you on horseback). Animals wander a little round their spot; going near a free horse offers "Ata bin" (no pet buttons)
- * and on one "Attan in".
+ * ride (others see you on horseback). Animals wander a little round their spot; going near one shows its name
+ * ("🐑 koyun": a tap gives its meaning), near a free horse "Ata bin", on one "Attan in".
  */
 export const HERD = [
   { kind: 'cow', where: 'yard', x: 14, z: -10, rot: -2.2, roam: 4 },
@@ -23,10 +23,10 @@ export const HERD = [
  * `pace`: the speed (m/s) each clip was made for — played faster or slower to match the real speed.
  */
 const KINDS = {
-  horse: { height: 1.8, tr: 'at', en: 'horse', pet: 'Atı sev', seat: 1.28, pace: { walk: 1.0, run: 4.2 }, hands: [new THREE.Vector3(0.13, 1.5, 0.42), new THREE.Vector3(-0.13, 1.5, 0.42)] }, // hands: on the reins above the withers
-  cow: { height: 1.5, tr: 'inek', en: 'cow', pet: 'İneği sev' },
-  sheep: { height: 0.95, tr: 'koyun', en: 'sheep', pet: 'Koyunu sev' },
-  dog: { height: 0.65, tr: 'köpek', en: 'dog', pet: 'Köpeği sev' },
+  horse: { height: 1.8, tr: 'at', en: 'horse', pet: '🐴 at', seat: 1.28, pace: { walk: 1.0, run: 4.2 }, hands: [new THREE.Vector3(0.13, 1.5, 0.42), new THREE.Vector3(-0.13, 1.5, 0.42)] }, // hands: on the reins above the withers
+  cow: { height: 1.5, tr: 'inek', en: 'cow', pet: '🐄 inek' },
+  sheep: { height: 0.95, tr: 'koyun', en: 'sheep', pet: '🐑 koyun' },
+  dog: { height: 0.65, tr: 'köpek', en: 'dog', pet: '🐕 köpek' },
 };
 /** Chores with an animal during a quest (content/addons/ciftlik.js): the action next to it and what it does. */
 const TASKS = {
@@ -140,10 +140,10 @@ export class Animals {
     if (task && this.story?.quest?.id === task.quest) return { label: task.label, dist: d, priority: 2, run: () => this.#chore(task) };
     if (a.def.ride) {
       const mine = this.#rent?.horse === a;
-      if (!mine && this.#rent) return null; // one horse at a time
+      if (!mine && this.#rent) return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) }; // one horse at a time
       return { label: mine ? `Ata bin · ${this.#left()} kaldı` : `Ata bin · ${RIDE_SECONDS / 60} dk · ${RIDE_PRICE} kredi`, dist: d, priority: 1, run: () => this.ride(a) };
     }
-    return null; // (no "pet it" buttons: only the chores and the rides)
+    return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) }; // (its name, "🐑 koyun": a tap shows what it means; no "pet it")
   }
 
   #chore(task) {

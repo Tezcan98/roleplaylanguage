@@ -40,8 +40,8 @@ export const FREE_ACTIONS = {
     words: [['top', 'ball'], ['vurmak', 'to kick / hit'], ['gol', 'goal']],
   },
   cat: {
-    label: 'Kediyi sev', think: 'Kedi mırlıyor. Çok mutlu.', say: 'Kediyi sevdim.', minutes: 3,
-    words: [['kedi', 'cat'], ['sevmek', 'to love / to pet'], ['mutlu', 'happy']],
+    label: '🐈 kedi', think: 'Kedi mırlıyor. Çok mutlu.', say: 'Bu bir kedi.', minutes: 3,
+    words: [['kedi', 'cat'], ['mutlu', 'happy']],
   },
   make_tea: {
     again: 'Çay daha yeni demlendi.', // (said instead when done again within the hour)

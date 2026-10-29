@@ -1,4 +1,4 @@
-import { gloss, turkishOnly } from './Gloss.js';
+import { gloss, glossLang, turkishOnly } from './Gloss.js';
 
 /**
  * What an action button says in the player's own language (the Turkish stays small under it): someone who
@@ -20,11 +20,37 @@ const EN = {
 };
 const TALK = / ile konuş$/;
 
+/**
+ * The people's names on the buttons ("Baba ile konuş" → "Talk to dad"), in each language: the family words translated,
+ * the names in the language's own letters (Arabic, Urdu, Hindi), never Latin letters inside them. [en, ar, ur, hi, es, fr].
+ */
+const PEOPLE = {
+  Anne: ['mom', 'أمي', 'امی', 'माँ', 'mamá', 'maman'], Baba: ['dad', 'أبي', 'ابو', 'पापा', 'papá', 'papa'],
+  Dede: ['grandpa', 'جدي', 'دادا جان', 'दादाजी', 'el abuelo', 'papi'], Nine: ['grandma', 'جدتي', 'دادی جان', 'दादी', 'la abuela', 'mamie'],
+  Ali: ['Ali', 'علي', 'علی', 'अली', 'Ali', 'Ali'], Öğretmen: ['the teacher', 'المعلمة', 'استانی جی', 'टीचर', 'la maestra', 'la maîtresse'],
+  Bakkal: ['the grocer', 'البقال', 'دکاندار', 'किराने वाले', 'el tendero', "l'épicier"], Manav: ['the greengrocer', 'بائع الخضار', 'سبزی والے', 'सब्ज़ी वाले', 'el frutero', 'le marchand de légumes'],
+  Çaycı: ['the tea maker', 'بائع الشاي', 'چائے والے', 'चाय वाले', 'el del té', 'le marchand de thé'],
+  Elif: ['Elif', 'إليف', 'ایلف', 'एलिफ़', 'Elif', 'Elif'], Can: ['Can', 'جان', 'جان', 'जान', 'Can', 'Can'], Zehra: ['Zehra', 'زهراء', 'زہرا', 'ज़ेहरा', 'Zehra', 'Zehra'],
+  Hüseyin: ['Uncle Hüseyin', 'العم حسين', 'حسین چچا', 'हुसेयिन चचा', 'el tío Hüseyin', 'oncle Hüseyin'], Kadir: ['Uncle Kadir', 'العم قادر', 'قادر چچا', 'कादिर चचा', 'el tío Kadir', 'oncle Kadir'],
+  Hüsnü: ['Uncle Hüsnü', 'العم حسني', 'حسنی چچا', 'हुस्नू चचा', 'el tío Hüsnü', 'oncle Hüsnü'], Kemal: ['Uncle Kemal', 'العم كمال', 'کمال چچا', 'केमाल चचा', 'el tío Kemal', 'oncle Kemal'],
+  Rıfat: ['Uncle Rıfat', 'العم رفعت', 'رفعت چچا', 'रिफ़ात चचा', 'el tío Rıfat', 'oncle Rıfat'], Cemil: ['master Cemil', 'الأسطى جميل', 'استاد جمیل', 'उस्ताद जमील', 'el maestro Cemil', 'maître Cemil'],
+  'Aslan Bey': ['Aslan Bey', 'أصلان بك', 'اصلان بے', 'अस्लान बे', 'Aslan Bey', 'Aslan Bey'], 'İsmail Dede': ['Grandpa İsmail', 'الجد إسماعيل', 'اسماعیل دادا', 'इस्माइल दादा', 'el abuelo İsmail', 'papi İsmail'],
+  'Hasan Amca': ['Uncle Hasan', 'العم حسن', 'حسن چچا', 'हसन चचा', 'el tío Hasan', 'oncle Hasan'], 'Hamdi Amca': ['Uncle Hamdi', 'العم حمدي', 'حمدی چچا', 'हम्दी चचा', 'el tío Hamdi', 'oncle Hamdi'],
+  'Cemal Abi': ['Cemal', 'الأخ جمال', 'جمال بھائی', 'जेमाल भैया', 'Cemal', 'Cemal'], 'Yusuf Hoca': ['Yusuf Hoca', 'الشيخ يوسف', 'یوسف حافظ صاحب', 'यूसुफ़ हॉजा', 'el imam Yusuf', "l'imam Yusuf"],
+  Defne: ['Defne', 'دفنه', 'دفنے', 'देफ़्ने', 'Defne', 'Defne'], Ayşe: ['Ayşe', 'عائشة', 'عائشہ', 'आयशे', 'Ayşe', 'Ayşe'], Emre: ['Emre', 'أمره', 'امرے', 'एमरे', 'Emre', 'Emre'], Mert: ['Mert', 'مرت', 'مرت', 'मेर्त', 'Mert', 'Mert'],
+};
+const COLUMN = { en: 0, ar: 1, ur: 2, hi: 3, es: 4, fr: 5 };
+/** A person's name as the meaning language writes it ('' when it has none: then the Turkish name stays). */
+export function personName(tr) {
+  const row = PEOPLE[tr], k = COLUMN[glossLang()];
+  return row && k != null ? row[k] : '';
+}
+
 /** { main, sub }: the button's text in the player's language, and the Turkish small under it ('' when it is not needed). */
 export function actionText(label) {
   if (turkishOnly()) return { main: label, sub: '' };
   let en = EN[label], vars;
-  if (!en && TALK.test(label)) { en = 'Talk to {name}'; vars = { name: label.replace(TALK, '') }; }
+  if (!en && TALK.test(label)) { const who = label.replace(TALK, ''); en = 'Talk to {name}'; vars = { name: personName(who) || who }; }
   const main = en ? gloss(en, vars) : '';
   return main && main !== label ? { main, sub: label } : { main: label, sub: '' };
 }

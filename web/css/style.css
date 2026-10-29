@@ -825,3 +825,6 @@ body.menu #run{display:none!important}
   .card.consent .consent-act{flex:none;width:min(250px,38%);justify-content:center;gap:10px}
   .card.consent .consent-act .btn{min-height:46px;font-size:17px}
 }
+/* the seconds left of the banner after a place change (main.js idleAd), just above it */
+.ad-clock{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--banner-h,60px) + 6px);background:rgba(20,32,46,.78);color:#fff;font:700 13px Nunito,sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;z-index:5}
+.ad-clock[hidden]{display:none}
