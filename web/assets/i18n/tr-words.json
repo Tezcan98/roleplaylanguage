@@ -595,5 +595,9 @@
  "tahterevalli": "Uzun bir tahtanın iki ucuna oturup inip çıktığımız oyuncak",
  "yakalamak": "Kaçan birini tutmak",
  "yukarı": "Üst tarafa doğru",
- "yüksek": "Yerden çok yukarıda olan"
+ "yüksek": "Yerden çok yukarıda olan",
+ "fiil": "Yapılan işi anlatan sözcük: gelmek, yemek",
+ "cümle": "Bir düşünceyi anlatan sözcükler dizisi",
+ "ek": "Sözcüğün sonuna gelen küçük parça: -ler, -de",
+ "ünlü": "a, e, ı, i, o, ö, u, ü harfleri"
 }

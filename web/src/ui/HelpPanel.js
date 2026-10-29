@@ -33,6 +33,13 @@ export class HelpPanel {
     this.body.lang = glossLang();
 
     this.body.replaceChildren(
+      section(`🚀 ${gloss('Start here')}`,
+        p(gloss('1. Walk with the joystick in the corner (or the WASD / arrow keys).')),
+        p(gloss('2. A big arrow shows where to go: over a person, a door or a thing.')),
+        p(gloss('3. When you are close, a yellow button appears at the bottom. Press it.')),
+        p(gloss('4. People talk Turkish: read the line, listen to it, and tap your answer. The meaning is shown under it.')),
+        p(gloss('5. Stuck? Tap your task in the top left corner: it tells you where to go. The “?” button is always here.')),
+        p(gloss('6. In the school book, “Unit 0: The basic rules” explains how Turkish works.'))),
       section(`🎯 ${gloss('Your task now')}`,
         ...(s.quest ? [!turkishOnly() && p(gloss(s.quest.en), 'big-ar'), tr(`${s.quest.title}: ${s.quest.text}`)] : [p(gloss('No task right now. Walk around and talk to everyone!'))]),
         p(gloss('Follow the arrow ⬇️ above the person or the door. When you get close, a yellow button appears at the bottom: press it (or the E key).'))),

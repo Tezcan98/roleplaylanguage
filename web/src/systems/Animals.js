@@ -6,8 +6,8 @@ import { HORSES } from '../world/locations/VillageSquare.js';
 /**
  * Farm animals (Quaternius "Farm Animals", CC0 — assets/models/animal_*.glb): a cow and sheep
  * grazing in the yard, and horses tied up on the village square that you can
- * ride (others see you on horseback). Animals wander a little round their spot; going near one
- * offers to pet it (its name: "inek · cow"), near a free horse "Ata bin", on one "Attan in".
+ * ride (others see you on horseback). Animals wander a little round their spot; going near a free horse offers "Ata bin" (no pet buttons)
+ * and on one "Attan in".
  */
 export const HERD = [
   { kind: 'cow', where: 'yard', x: 14, z: -10, rot: -2.2, roam: 4 },
@@ -140,10 +140,10 @@ export class Animals {
     if (task && this.story?.quest?.id === task.quest) return { label: task.label, dist: d, priority: 2, run: () => this.#chore(task) };
     if (a.def.ride) {
       const mine = this.#rent?.horse === a;
-      if (!mine && this.#rent) return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) }; // one horse at a time
+      if (!mine && this.#rent) return null; // one horse at a time
       return { label: mine ? `Ata bin · ${this.#left()} kaldı` : `Ata bin · ${RIDE_SECONDS / 60} dk · ${RIDE_PRICE} kredi`, dist: d, priority: 1, run: () => this.ride(a) };
     }
-    return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) };
+    return null; // (no "pet it" buttons: only the chores and the rides)
   }
 
   #chore(task) {

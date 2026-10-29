@@ -59,7 +59,7 @@ export class ToySystem {
     const here = this.world.current;
     let best = null;
     for (const t of this.toys) {
-      if (t.touch || t.toy.location !== here) continue;
+      if (t.touch || !t.onUse || t.toy.location !== here) continue; // (no button on a toy with no use: the cat just wanders)
       const d = dist(t.toy.position, pos);
       if (d < t.range && (!best || d < best.dist)) {
         best = { label: this.free.label(t.action), dist: d, run: () => { t.onUse(t.toy); this.free.perform(t.action); } };

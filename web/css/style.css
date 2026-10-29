@@ -74,6 +74,8 @@ body.has-map #toasts{top:calc(env(safe-area-inset-top,0px) + 32px + var(--hud-h,
 #act-left{position:absolute;left:24px;max-width:calc(100vw - 150px);bottom:calc(env(safe-area-inset-bottom,0px) + 28px + 160px + 12px);pointer-events:auto;background:var(--gold);color:var(--ink);border:3px solid var(--wood);border-radius:18px;padding:0 18px;min-height:56px;font:700 17px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)} /* "… ile sesli sohbet et": on the left above the joystick, away from the right-hand buttons */
 #act-left[hidden]{display:none}
 #act:active,#act-left:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
+.act-tr{display:block;font:600 12px Nunito,sans-serif;opacity:.75;margin-top:1px}
+#act,.act-alt{line-height:1.15}
 #act[hidden],#joy[hidden],#run[hidden]{display:none}
 /* other things within reach: smaller buttons stacked above the action button */
 #act-more{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 122px);display:flex;flex-direction:column-reverse;align-items:flex-end;gap:8px;pointer-events:none}

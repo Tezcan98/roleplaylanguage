@@ -1,4 +1,5 @@
 import { el } from './dom.js';
+import { actionText } from '../i18n/ActionLabels.js';
 
 /**
  * The action button (the most important thing you can do here) and, above it, smaller buttons
@@ -24,14 +25,22 @@ export class ActionButton {
     if (a && this.leftBtn.textContent !== a.label) this.leftBtn.textContent = a.label;
   }
 
+  /** The button's text: the label in the player's language, the Turkish small under it. */
+  static fill(btn, label) {
+    if (btn.dataset.label === label) return;
+    btn.dataset.label = label;
+    const { main, sub } = actionText(label);
+    btn.replaceChildren(main, ...(sub ? [el('small', { class: 'act-tr', text: sub })] : []));
+  }
+
   /** @param action the main one  @param others [{ label, run }] */
   show(action, others = []) {
     this.root.hidden = !action;
-    if (action && this.root.textContent !== action.label) this.root.textContent = action.label;
+    if (action) ActionButton.fill(this.root, action.label);
     const list = action ? others : [], key = list.map((a) => a.label).join('|');
     if (key === this.#key) { this.#runs = list.map((a) => a.run); return; }
     this.#key = key; this.#runs = list.map((a) => a.run);
-    this.more.replaceChildren(...list.map((a, i) => el('button', { class: 'act-alt', text: a.label, attrs: { type: 'button' }, on: { click: () => this.#runs[i]?.() } })));
+    this.more.replaceChildren(...list.map((a, i) => { const b = el('button', { class: 'act-alt', attrs: { type: 'button' }, on: { click: () => this.#runs[i]?.() } }); ActionButton.fill(b, a.label); return b; }));
   }
 
   #runs = [];

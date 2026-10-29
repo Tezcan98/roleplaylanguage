@@ -439,7 +439,7 @@ input.onKey((e) => { if (modes.is('play') && (e.key === 'f' || e.key === 'F')) t
 // C: another camera view (normal, close, far, from above)
 const VIEW_NAMES = [['Normal görünüm', gloss('Normal view')], ['Yakın görünüm', gloss('Close view')], ['Uzak görünüm', gloss('Far view')], ['Yukarıdan görünüm', gloss('View from above')]];
 input.onKey((e) => { if (modes.is('play') && (e.key === 'c' || e.key === 'C')) { const [tr, en] = VIEW_NAMES[camera.cycleView()]; toasts.show(`🎥 ${tr}`, en); } });
-toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5, onUse: (c) => c.pet() }); // no spoken "miyav": a person's voice meowing sounds silly
+toys.add(new Cat(mf, yard, { x: [-6, 14], z: [-2, 18] }), { action: 'cat', range: 1.5 }); // (no "pet the cat" button) no spoken "miyav": a person's voice meowing sounds silly
 
 // --- school: credits, ads, multiplayer lesson ---
 const lessons = new LessonController({
@@ -926,15 +926,18 @@ const introFirst = async () => {
 const setup = new CharacterSetup(host, { modes, settings, villageServer });
 // a player standing still for a long while (in the game, no card open): a banner ad, gone at the first step
 const IDLE_BANNER = CONFIG.ads.idleBannerSeconds; // s (set on the server: config/remote.js)
+const PLACE_BANNER = 20; // s: a banner stays this long after going to another place (house, yard, school, the square)
 const idleAd = {
-  idle: 0, on: false,
+  idle: 0, on: false, hold: 0,
   update(dt) {
-    if (menu.isOpen) { this.idle = 0; this.on = false; return; } // the menu decides its own banner
+    if (menu.isOpen) { this.idle = 0; this.on = false; this.hold = 0; return; } // the menu decides its own banner
     this.idle = modes.is('play') && !player.moving ? this.idle + dt : 0;
-    const want = this.idle > IDLE_BANNER && !wallet.adFree;
+    if (this.hold > 0) this.hold -= dt;
+    const want = (this.idle > IDLE_BANNER || this.hold > 0) && !wallet.adFree;
     if (want !== this.on) { this.on = want; if (want) ads.showBanner(); else ads.hideBanner(); }
   },
 };
+bus.on(EV.LOCATION, () => { if (!menu.isOpen) idleAd.hold = PLACE_BANNER; }); // (a place changed: the banner for the next 20 seconds)
 const menu = new MainMenu(host, {
   settings, confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onBanner: (on) => { if (on && !wallet.adFree) ads.showBanner(); else ads.hideBanner(); }, // a banner on the square's menu (none with ad-free)

@@ -98,7 +98,7 @@ export default {
       ],
     },
   },
-  voices: { kardes: man('Fenrir', M2) },
+  voices: { kardes: { ...man('Fenrir', M2), pitch: 1.2 } }, // (a six-year-old: the library's deep voice played a little higher and faster)
   castAll: { kardes: ['house', 'start', 'roam'] },
   dialogues: { kardes: { start: (ctx) => (ctx.flag('met-kardes') ? nextTalk(ctx) : 'hello'), nodes: nodes() } },
 };

@@ -6,6 +6,63 @@
 export const TEXTBOOK = {
   units: [
     {
+      id: 'u0', title: 'Ünite 0: Temel kurallar', titleEn: 'Unit 0: The basic rules', reward: 2,
+      pages: [
+        {
+          type: 'read', title: 'Cümle sırası',
+          lines: [
+            ['Türkçede fiil, cümlenin sonunda gelir.', 'In Turkish the verb comes at the end of the sentence.'],
+            ['Ali kitap okuyor.', 'Ali is reading a book.'],
+            ['Anne çay yapıyor.', 'Mom is making tea.'],
+            ['Ben ekmek yiyorum.', 'I am eating bread.'],
+            ['Türkçede “o” hem erkek hem kadın için kullanılır.', 'Turkish has no he / she: “o” is used for both.'],
+          ],
+          words: [['fiil', 'verb'], ['cümle', 'sentence']],
+        },
+        {
+          type: 'read', title: 'Çoğul: -ler / -lar',
+          lines: [
+            ['Birden çok şey için -ler veya -lar eklenir.', 'For more than one thing, -ler or -lar is added.'],
+            ['Ev, evler. Kitap, kitaplar.', 'House, houses. Book, books.'],
+            ['Sayıdan sonra çoğul eki gelmez: iki kitap.', 'After a number there is no plural ending: two books.'],
+          ],
+          words: [['çoğul', 'plural'], ['ek', 'ending, suffix']],
+        },
+        {
+          type: 'read', title: 'Ünlü uyumu',
+          lines: [
+            ['İnce ünlüden sonra -ler, kalın ünlüden sonra -lar gelir.', 'After a front vowel (e, i, ö, ü) comes -ler; after a back vowel (a, ı, o, u) comes -lar.'],
+            ['Ev, evler. Okul, okullar.', 'House, houses. School, schools.'],
+            ['Aynı kural -de / -da için de geçerli: evde, okulda.', 'The same rule works for -de / -da: at home, at school.'],
+            ['Ben evdeyim. Ali okulda.', 'I am at home. Ali is at school.'],
+          ],
+          words: [['ünlü', 'vowel'], ['kural', 'rule']],
+        },
+        {
+          type: 'read', title: 'Soru ve olumsuz',
+          lines: [
+            ['Evet / hayır sorusu için mi, mı, mu, mü kullanılır.', 'For a yes / no question, mi, mı, mu or mü is used.'],
+            ['Çay içiyor musun?', 'Are you drinking tea?'],
+            ['“Değil” demek için fiile -me veya -ma eklenir.', 'To say “not”, -me or -ma is added to the verb.'],
+            ['Hayır, içmiyorum.', 'No, I am not drinking.'],
+          ],
+          words: [['soru', 'question'], ['evet', 'yes'], ['hayır', 'no']],
+        },
+        { type: 'exercise', title: 'Soru 1', activity: 'choice', say: 'Hangi cümle doğru?', en: 'Which sentence is right?', hint: 'Fiil sonda.',
+          options: [{ tr: 'Ali kitap okuyor.', en: '' }, { tr: 'Ali okuyor kitap.', en: '', wrong: true }, { tr: 'Okuyor Ali kitap.', en: '', wrong: true }] },
+        { type: 'exercise', title: 'Soru 2', activity: 'order', say: 'Cümleyi kur.', en: 'Build the sentence.', answer: 'Anne çay yapıyor.', answerEn: 'Mom is making tea.' },
+        { type: 'exercise', title: 'Soru 3', activity: 'choice', say: 'Boşluğu doldur: “Ev___ büyük.”', en: 'Fill the gap: “The houses are big.”', hint: 'ev: e ince ünlüdür.',
+          options: [{ tr: 'ler', en: '' }, { tr: 'lar', en: '', wrong: true }, { tr: 'de', en: '', wrong: true }] },
+        { type: 'exercise', title: 'Soru 4', activity: 'choice', say: 'Boşluğu doldur: “Okul___ çocuklar var.”', en: 'Fill the gap: “There are children at school.”', hint: 'okul: o ve u kalın ünlüdür.',
+          options: [{ tr: 'da', en: '' }, { tr: 'de', en: '', wrong: true }, { tr: 'lar', en: '', wrong: true }] },
+        { type: 'exercise', title: 'Soru 5', activity: 'choice', say: 'Hangisi bir soru?', en: 'Which one is a question?', hint: 'mi, mı, mu, mü ara.',
+          options: [{ tr: 'Çay içiyor musun?', en: '' }, { tr: 'Çay içiyorsun.', en: '', wrong: true }, { tr: 'Çay içmiyorum.', en: '', wrong: true }] },
+        { type: 'exercise', title: 'Soru 6', activity: 'choice', say: 'Hangisi doğru?', en: 'Which one is right?', hint: 'Sayıdan sonra çoğul eki gelmez.',
+          options: [{ tr: 'iki kitap', en: '' }, { tr: 'iki kitaplar', en: '', wrong: true }, { tr: 'iki kitapler', en: '', wrong: true }] },
+        { type: 'exercise', title: 'Soru 7', activity: 'speak', say: 'Sesli söyle:', en: 'Say it out loud:', expect: ['Ben evdeyim'], show: 'Ben evdeyim.' },
+      ],
+    },
+    {
       id: 'u1', title: 'Ünite 1: Ailem', titleEn: 'Unit 1: My family',
       pages: [
         {

@@ -507,7 +507,7 @@ try {
 
   // --- textbook units ------------------------------------------------------------------
   const units = await ev(() => window.__game.textbook.book.units.filter((u) => !u.locked && u.pages.length).length);
-  check('textbook has 6 open units', units === 6, String(units));
+  check('textbook has 7 open units (the basic rules first)', units === 7, String(units));
   const credits0 = await ev(() => window.__game.wallet.balance);
   await ev(() => window.__game.textbook.open('u2')); await sleep(300);
   for (let i = 0; i < 40 && !(await ev(() => !!window.__game.dialogue.ctx.state.flags['homework-u2'])); i++) {

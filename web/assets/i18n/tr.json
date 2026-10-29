@@ -64,5 +64,12 @@
  "midnight": "Gecenin tam ortası, saat on iki",
  "how much?": "Bir şeyin fiyatını sorarken söylenir",
  "where?": "Bir şeyin yerini sorarken söylenir",
- "who?": "Bir kişiyi sorarken söylenir"
+ "who?": "Bir kişiyi sorarken söylenir",
+ "Start here": "Buradan başla",
+ "1. Walk with the joystick in the corner (or the WASD / arrow keys).": "1. Köşedeki çubukla yürü (ya da WASD / ok tuşlarıyla).",
+ "2. A big arrow shows where to go: over a person, a door or a thing.": "2. Büyük bir ok nereye gideceğini gösterir: bir kişinin, kapının ya da eşyanın üstünde.",
+ "3. When you are close, a yellow button appears at the bottom. Press it.": "3. Yaklaşınca altta sarı bir düğme çıkar. Ona bas.",
+ "4. People talk Turkish: read the line, listen to it, and tap your answer. The meaning is shown under it.": "4. İnsanlar Türkçe konuşur: cümleyi oku, dinle ve cevabına dokun.",
+ "5. Stuck? Tap your task in the top left corner: it tells you where to go. The “?” button is always here.": "5. Takıldın mı? Sol üstteki göreve dokun: nereye gideceğini söyler. “?” düğmesi hep burada.",
+ "6. In the school book, “Unit 0: The basic rules” explains how Turkish works.": "6. Okul kitabındaki “Ünite 0: Temel kurallar” Türkçenin nasıl çalıştığını anlatır."
 }
