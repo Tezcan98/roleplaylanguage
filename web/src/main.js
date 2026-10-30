@@ -512,6 +512,7 @@ const chess = new ChessGame({
   host, mf, square: world.get('village'), net: villageNet, vocab, toasts, player, world, view: null, choice: new ChoiceCard(host, modes), // ("Maçı bırakıyor musun?")
   // İsmail Dede announces the games: a bubble over his head (no voice)
   onSay: (line) => {
+    if (document.body.classList.contains('chess-focus')) return; // (a game of mine: nothing over the board, the result comes as a card)
     const dede = cast.get('ismail');
     if (dede?.location === 'village' && world.current.id === 'village' && Math.hypot(player.position.x - dede.position.x, player.position.z - dede.position.z) < 10) labels.bubble(dede, line, null, 5); // only near: bubbles from afar covered the screen
   },
@@ -544,6 +545,7 @@ world.get('village').animated.push(() => {
   world.get('village').animated.push(() => {
     const mine = chess.myColor, near = Math.hypot(player.position.x - CHESS.cx, player.position.z - CHESS.cz) < 9;
     setView(mine && chess.state?.phase === 'playing' && near && !dialogue.talking ? mine : null);
+    document.body.classList.toggle('chess-focus', !!mine && chess.state?.phase === 'playing' && near); // a game of mine: the screen is the board (no notes, no task panel, no talk around)
   });
   bus.on(EV.LOCATION, () => setView(null)); // left the square (the view stays with the board)
 }
@@ -568,7 +570,7 @@ const ambientSpeak = (text, who) => {
   };
   tts.speak(text, { speaker: who, volume: near });
 };
-const talk = new TalkAreas({ world, player, cast, labels, speak: ambientSpeak });
+const talk = new TalkAreas({ world, player, cast, labels, speak: ambientSpeak, quiet: () => document.body.classList.contains('chess-focus') });
 village.ptt.onType = (text) => village.say(text); // typed instead of spoken (no speech-to-text on this device)
 // the open library: borrow a book, read it sitting on a bench
 const library = new Library({
@@ -593,7 +595,6 @@ const music = new BackgroundMusic({
   world, muted: () => musicLevel() <= 0, volume: musicLevel,
   duck: () => (modes.is('dialogue') || village.group.zone || village.voice.inCall || library.reading || cinema.watching ? 0.3 : 1) * (1 - ney.level),
 });
-chess.onMove = (m) => talk.chessMoved(m);
 effects
   .register('chess-ask', (color, clock) => chess.ask(color, clock !== 'untimed'))
   .register('chess-dede', (color, clock) => chess.playDede(color || 'w', clock !== 'untimed'))

@@ -34,6 +34,7 @@ try {
   await playDede('Süreli');
   check('Dede plays you, with a clock', !!(await waitFor(() => ev(() => window.__game.chess.state.phase === 'playing' && window.__game.chess.myColor === 'w'), 6000)), JSON.stringify(await ev(() => ({ p: window.__game.chess.state.phase, c: window.__game.chess.myColor, t: window.__game.chess.state.timed }))));
   check('…modes: play (nothing in the way)', await ev(() => window.__game.modes.is('play')), await ev(() => window.__game.modes.current ?? ''));
+  check('a game of mine: no notes, no task panel on the screen', await ev(() => document.body.classList.contains('chess-focus') && getComputedStyle(document.getElementById('toasts')).display === 'none' && getComputedStyle(document.getElementById('quest')).display === 'none'));
   await stand('e2'); await sleep(500);
   check('standing on the e2 pawn offers to take it', (await act()).includes('taşını al'), await act());
   await page.keyboard.press('e'); await sleep(400);

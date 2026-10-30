@@ -270,8 +270,9 @@ try {
   await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq d6 0 2', last: { from: 'd7', to: 'd5', san: 'd5' } }); });
   await sleep(300);
   await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/ppp1pppp/8/3P4/8/8/PPPP1PPP/RNBQKBNR b KQkq - 0 2', last: { from: 'e4', to: 'd5', san: 'exd5' } }); });
-  const comment = await waitFor(() => ev(() => [...document.querySelectorAll('.bubble')].map((b) => b.textContent).find((t) => t.includes('Piyonu aldı'))), 12000); // (CI machines are slow)
-  check('…İsmail Dede comments on the moves', !!comment, comment || '');
+  await sleep(2500);
+  const comment = await ev(() => [...document.querySelectorAll('.bubble')].map((b) => b.textContent).find((t) => t.includes('Piyonu aldı')));
+  check('…İsmail Dede does not comment on every move (it was noise)', !comment, comment || '');
   await ev(() => { const c = window.__game.chess; c.applyServer({ ...c.state, v: 2, fen: 'rnbqkbnr/ppp2ppp/8/1B1pp3/4P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 3', last: { from: 'f1', to: 'b5', san: 'Bb5+' } }); });
   check('check: the king’s square glows red', await ev(() => window.__game.world.get('village').chessPieces.children.some((m) => m.isPointLight && m.color.r > 0.9)));
   await ev(() => window.__game.player.sit(false));

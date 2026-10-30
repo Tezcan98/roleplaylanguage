@@ -829,3 +829,5 @@ body.menu #run{display:none!important}
 /* the seconds left of the banner after a place change (main.js idleAd), just above it */
 .ad-clock{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--banner-h,60px) + 6px);background:rgba(20,32,46,.78);color:#fff;font:700 13px Nunito,sans-serif;padding:3px 10px;border-radius:999px;pointer-events:none;z-index:5}
 .ad-clock[hidden]{display:none}
+/* a chess game of yours (main.js chess-focus): the board alone — no notes on the right, no task panel, no speech bubbles */
+body.chess-focus #toasts,body.chess-focus #quest,body.chess-focus .home-note,body.chess-focus .rate-prompt,body.chess-focus .bubble{display:none!important}
