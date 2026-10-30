@@ -20,7 +20,7 @@ const CLOCK = 10 * 60_000; // per player, as on the server
 const POINTS = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
 const pointsOf = (g) => { const o = { w: 0, b: 0 }; for (const p of g.board().flat()) if (p) o[p.color] += POINTS[p.type]; return o; };
 const PAUSE = 6000;       // offline: the result stays on the board this long
-const SLOW = 0.32;        // walking speed on the board with a piece in hand (or on my turn): ~1.7 m/s, a square and a half a second
+const SLOW = 0.55;        // walking speed on the board with a piece in hand (or on my turn): ~2.9 m/s, about two and a half squares a second (0.32 was too slow)
 const DEDE = { id: 'dede', name: 'İsmail Dede', ai: true };
 const COLOR = { w: 'beyaz', b: 'siyah' };
 
@@ -413,7 +413,7 @@ export class ChessGame {
 
   /**
    * How fast to walk here (PlayerController `slow`): a square is 1.1 m and a walk crosses five a
-   * second — with a piece in hand, or on the board on my turn, a third of that, to stop where meant.
+   * second — with a piece in hand, or on the board on my turn, a little over half of that, to stop where meant.
    */
   get slowFactor() {
     const p = this.player?.position;
