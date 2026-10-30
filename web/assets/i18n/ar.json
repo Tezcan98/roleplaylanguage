@@ -2945,5 +2945,9 @@
  "Shall we play with a clock or without? With a clock everyone has ten minutes.": "هل نلعب بوقت محدد أم بلا وقت؟ مع الوقت لكل واحد عشر دقائق.",
  "time (limit)": "مدة (وقت محدد)",
  "with a time limit": "بوقت محدد",
- "without a time limit": "بلا وقت محدد"
+ "without a time limit": "بلا وقت محدد",
+ "Congratulations, you won! A gift from İsmail Dede: 5 credits": "مبروك، لقد فزت! هدية من الجد إسماعيل: 5 أرصدة",
+ "Congratulations, you won!": "مبروك، لقد فزت!",
+ "You lost. Next time!": "خسرت. في المرة القادمة!",
+ "Draw!": "تعادل!"
 }

@@ -753,7 +753,12 @@ async function fullAd() {
 }
 // story mode: a full-screen ad between two days (not with ad-free mode)
 // a game of chess of mine is over: a full-screen ad, once the result has been seen
-chess.onResult = ({ win, text, en }) => cards.show({ num: 'Satranç', title: win ? '🏆 Tebrikler, kazandın!' : win === false ? 'Kaybettin' : 'Berabere', text, en: win ? 'Congratulations, you won!' : en, button: 'Tamam' }); // (played on the board on the ground: the result, big)
+const CHESS_PRIZE = 5; // credits for beating İsmail Dede
+chess.onResult = ({ win, vsDede, text, en }) => {
+  const prize = win && vsDede ? CHESS_PRIZE : 0;
+  if (prize) wallet.add(prize, 'reward');
+  cards.show({ num: 'Satranç', title: win ? '🏆 Tebrikler, kazandın!' : win === false ? 'Kaybettin' : 'Berabere', text: prize ? `${text} İsmail Dede'den hediye: +${prize} kredi 🪙` : text, en: win ? (prize ? 'Congratulations, you won! A gift from İsmail Dede: 5 credits' : 'Congratulations, you won!') : en, button: 'Tamam' });
+}; // (played on the board on the ground: the result, big)
 chess.onGameOver = () => { if (!wallet.adFree && CONFIG.ads.afterChess) setTimeout(() => fullAd(), 3000); };
 story.beforeNewDay = () => (wallet.adFree || !CONFIG.ads.betweenDays ? Promise.resolve() : fullAd());
 // going through a door or a gate (home, yard, square, school): now and then a full-screen ad, as you

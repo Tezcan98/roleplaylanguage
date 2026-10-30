@@ -175,7 +175,7 @@ export class ChessGame {
       const win = st.result?.winner, pts = st.result?.points;
       const tr = !win ? 'Berabere!' : win === mine ? '🏆 Kazandın!' : 'Kaybettin. Bir dahakine!';
       this.toasts.show(pts ? `${tr} · ${pts[mine]} – ${pts[mine === 'w' ? 'b' : 'w']} puan` : tr, !win ? 'Draw!' : win === mine ? 'You won!' : 'You lost. Next time!');
-      this.onResult?.({ win: !win ? null : win === mine, text: tr, en: !win ? 'Draw!' : win === mine ? 'You won!' : 'You lost. Next time!', reason: st.result?.reason }); // (main.js: a card, big)
+      this.onResult?.({ win: !win ? null : win === mine, vsDede: !!before.seats?.[mine === 'w' ? 'b' : 'w']?.ai, text: tr, en: !win ? 'Draw!' : win === mine ? 'You won!' : 'You lost. Next time!', reason: st.result?.reason }); // (main.js: a card, big)
       this.onGameOver?.(); // (main.js: a full-screen ad after a game of mine)
     }
     if (st.fen !== before?.fen) this.#render3D(st.fen, st.last);

@@ -2944,5 +2944,9 @@
  "Shall we play with a clock or without? With a clock everyone has ten minutes.": "On joue avec une pendule ou sans ? Avec, chacun a dix minutes.",
  "time (limit)": "temps (limite)",
  "with a time limit": "avec limite de temps",
- "without a time limit": "sans limite de temps"
+ "without a time limit": "sans limite de temps",
+ "Congratulations, you won! A gift from İsmail Dede: 5 credits": "Bravo, tu as gagné ! Un cadeau de papi İsmail : 5 crédits",
+ "Congratulations, you won!": "Bravo, tu as gagné !",
+ "You lost. Next time!": "Tu as perdu. La prochaine fois !",
+ "Draw!": "Match nul !"
 }

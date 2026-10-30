@@ -2392,5 +2392,9 @@
  "Shall we play with a clock or without? With a clock everyone has ten minutes.": "समय के साथ खेलें या बिना समय के? समय के साथ हर किसी के पास दस मिनट होते हैं।",
  "time (limit)": "समय (सीमा)",
  "with a time limit": "समय सीमा के साथ",
- "without a time limit": "बिना समय सीमा"
+ "without a time limit": "बिना समय सीमा",
+ "Congratulations, you won! A gift from İsmail Dede: 5 credits": "बधाई हो, तुम जीत गए! इस्माइल दादा की ओर से तोहफ़ा: 5 क्रेडिट",
+ "Congratulations, you won!": "बधाई हो, तुम जीत गए!",
+ "You lost. Next time!": "तुम हार गए। अगली बार!",
+ "Draw!": "बराबरी!"
 }
