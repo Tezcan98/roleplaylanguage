@@ -9,6 +9,7 @@ function dedeStart(ctx) {
   const me = ctx.chess?.me;
   if (!me) return 'i1';
   if (me.color && me.drawOfferedToMe) return 'drawOffered';
+  if (me.color && me.phase === 'over') return 'justOver'; // (the game is finished: the board is about to be free, not "waiting for an opponent")
   if (me.color) return me.phase === 'playing' ? 'playing' : 'waiting';
   if (me.inLine) return 'inLine';
   if (me.phase === 'playing' || me.phase === 'over') return 'busy';
@@ -53,6 +54,7 @@ export default {
           { tr: 'Süreli oynayalım.', en: "Let's play with a clock.", next: 'vsDede', do: ['chess-dede:w'] },
           { tr: 'Süresiz oynayalım.', en: "Let's play without a clock.", next: 'vsDede', do: ['chess-dede:w:untimed'] },
         ] },
+      justOver: { say: 'Maç yeni bitti evlat. Birkaç saniye sonra tahta boşalır, o zaman yeni bir oyun kurarız.', en: 'The game has just ended, child. In a few seconds the board is free and we can start a new game.', options: [{ tr: 'Tamam, Dede.', en: 'Okay, Dede.' }] },
       half: { say: 'Bir oyuncu bekliyor. Karşısına geçmek ister misin?', en: 'A player is waiting. Would you like to play against them?',
         options: [
           { tr: 'Evet, ben oynarım!', en: 'Yes, I will play!', next: 'seated', do: ['chess-ask:free'] },
