@@ -82,7 +82,11 @@ export class CameraController {
   zoomTo(z) { this.#setZoom(z); }
 
   /** Horizontal turn of the view (radians); 0 = looking north as usual. */
-  get yaw() { return this.#yaw; }
+  get yaw() {
+    // a fixed view (the chess board seen from black's side…): "up" is away from the camera there too, not north
+    if (this.fixed) { const fx = this.fixed.look.x - this.fixed.pos.x, fz = this.fixed.look.z - this.fixed.pos.z; if (Math.hypot(fx, fz) > 0.5) return Math.atan2(fx, -fz); }
+    return this.#yaw;
+  }
 
   /** Next view: normal → close → far → from above (C key). Returns its index. */
   cycleView() {

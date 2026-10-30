@@ -32,10 +32,26 @@ export default {
       i1: { say: 'Hoş geldin evlat! Bu tahta benden sorulur. Beyaz mı olmak istersin, siyah mı? İstersen benimle de oynarsın.', en: 'Welcome, child! This board is in my charge. Do you want to be white or black? If you like, you can play with me too.',
         words: [['satranç', 'chess'], ['beyaz', 'white'], ['siyah', 'black'], ['tahta', 'board']],
         options: [
-          { tr: 'Beyaz olmak istiyorum.', en: 'I want to be white.', next: 'seated', do: ['chess-ask:w'] },
-          { tr: 'Siyah olmak istiyorum.', en: 'I want to be black.', next: 'seated', do: ['chess-ask:b'] },
-          { tr: 'Seninle oynamak istiyorum, Dede.', en: 'I want to play with you, Dede.', next: 'vsDede', do: ['chess-dede:w'] },
+          { tr: 'Beyaz olmak istiyorum.', en: 'I want to be white.', next: 'clockW' },
+          { tr: 'Siyah olmak istiyorum.', en: 'I want to be black.', next: 'clockB' },
+          { tr: 'Seninle oynamak istiyorum, Dede.', en: 'I want to play with you, Dede.', next: 'clockDede' },
           { tr: 'Sonra gelirim.', en: "I'll come later." },
+        ] },
+      // timed or not: ten minutes each, or no clock (the first one seated chooses)
+      clockW: { say: 'Süreli mi oynayalım, süresiz mi? Süreliyse herkesin on dakikası olur.', en: 'Shall we play with a clock or without? With a clock everyone has ten minutes.', words: [['süre', 'time (limit)'], ['süreli', 'with a time limit'], ['süresiz', 'without a time limit']],
+        options: [
+          { tr: 'Süreli oynayalım.', en: "Let's play with a clock.", next: 'seated', do: ['chess-ask:w'] },
+          { tr: 'Süresiz oynayalım.', en: "Let's play without a clock.", next: 'seated', do: ['chess-ask:w:untimed'] },
+        ] },
+      clockB: { say: 'Süreli mi oynayalım, süresiz mi? Süreliyse herkesin on dakikası olur.', en: 'Shall we play with a clock or without? With a clock everyone has ten minutes.',
+        options: [
+          { tr: 'Süreli oynayalım.', en: "Let's play with a clock.", next: 'seated', do: ['chess-ask:b'] },
+          { tr: 'Süresiz oynayalım.', en: "Let's play without a clock.", next: 'seated', do: ['chess-ask:b:untimed'] },
+        ] },
+      clockDede: { say: 'Süreli mi oynayalım, süresiz mi? Süreliyse herkesin on dakikası olur.', en: 'Shall we play with a clock or without? With a clock everyone has ten minutes.',
+        options: [
+          { tr: 'Süreli oynayalım.', en: "Let's play with a clock.", next: 'vsDede', do: ['chess-dede:w'] },
+          { tr: 'Süresiz oynayalım.', en: "Let's play without a clock.", next: 'vsDede', do: ['chess-dede:w:untimed'] },
         ] },
       half: { say: 'Bir oyuncu bekliyor. Karşısına geçmek ister misin?', en: 'A player is waiting. Would you like to play against them?',
         options: [

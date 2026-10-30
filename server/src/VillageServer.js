@@ -72,7 +72,7 @@ const IDLE = 45000;                         // ms without any message from a pag
  *                                         100 ms frames had speech in them — a piece with less than SPOKEN is not kept (older games send none)
  *   { type: 'report', to, reason? }       report a player in this room ("Şikayet et"; Reports.js)
  *   { type: 'jump' }                      my horse jumped (relayed: { type: 'jump', id })
- *   { type: 'chess-ask', color } | { type: 'chess-dede', color? } | { type: 'chess-leave' } | { type: 'chess-resign' }
+ *   { type: 'chess-ask', color, timed? } | { type: 'chess-dede', color?, timed? } (timed false: no clocks) | { type: 'chess-leave' } | { type: 'chess-resign' }
  *   | { type: 'chess-move', from, to, promotion? }
  *   { type: 'dama-open', n, npc? } | { type: 'dama-sit', n } | { type: 'dama-move', n, from, to } | { type: 'dama-again', n } | { type: 'dama-leave' }
  *                                         the kahvehane's dama tables (DamaTables): a board put on table n (npc: a villager plays
@@ -283,8 +283,8 @@ export class VillageServer {
       }
       case 'chess-ask': case 'chess-sit': case 'chess-dede': case 'chess-leave': case 'chess-stand': case 'chess-resign': case 'chess-move': {
         const t = this.#table(c.room);
-        const ok = msg.type === 'chess-ask' || msg.type === 'chess-sit' ? t.ask(c, msg.color)
-          : msg.type === 'chess-dede' ? t.askDede(c, msg.color)
+        const ok = msg.type === 'chess-ask' || msg.type === 'chess-sit' ? t.ask(c, msg.color, msg.timed !== false)
+          : msg.type === 'chess-dede' ? t.askDede(c, msg.color, msg.timed !== false)
             : msg.type === 'chess-leave' || msg.type === 'chess-stand' ? t.leave(c.id)
               : msg.type === 'chess-resign' ? t.resign(c.id)
                 : t.move(c.id, msg);

@@ -600,5 +600,8 @@
  "cümle": "Bir düşünceyi anlatan sözcükler dizisi",
  "ek": "Sözcüğün sonuna gelen küçük parça: -ler, -de",
  "ünlü": "a, e, ı, i, o, ö, u, ü harfleri",
- "anlamak": "Söyleneni kafada çözmek"
+ "anlamak": "Söyleneni kafada çözmek",
+ "süre": "Bir işe ayrılan zaman",
+ "süreli": "Zamanı sınırlı olan",
+ "süresiz": "Zaman sınırı olmayan"
 }

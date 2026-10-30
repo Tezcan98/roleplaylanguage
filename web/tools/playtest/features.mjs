@@ -196,26 +196,18 @@ try {
   await page.keyboard.press('e'); await sleep(500);
   const dedeOpts = await ev(() => [...document.querySelectorAll('#dlg .choice')].map((c) => c.textContent));
   check('…Dede asks: white, black, or play with him', dedeOpts.some((t) => t.includes('Beyaz')) && dedeOpts.some((t) => t.includes('Siyah')) && dedeOpts.some((t) => t.includes('Seninle oynamak')), JSON.stringify(dedeOpts));
-  await ev(() => [...document.querySelectorAll('#dlg .choice')].find((c) => c.textContent.includes('Beyaz'))?.click());
+  await ev(() => [...document.querySelectorAll('#dlg .choice')].find((c) => c.textContent.includes('Beyaz'))?.click()); await sleep(300);
+  await ev(() => [...document.querySelectorAll('#dlg .choice')].find((c) => c.textContent.includes('Süreli'))?.click()); // (then: with a clock or without)
   check('…“Beyaz olmak istiyorum”: Dede gives you the white seat', !!(await waitFor(() => ev(() => window.__game.chess.myColor === 'w'), 5000)));
   await ev(() => window.__game.dialogue.close?.());
   await ev(() => window.__game.chess.leave());
   await waitFor(() => ev(() => window.__game.chess.state.phase === 'idle'), 5000);
   await ev(() => window.__game.dialogue.open('ismail')); await sleep(400);
-  await ev(() => [...document.querySelectorAll('#dlg .choice')].find((c) => c.textContent.includes('Seninle oynamak'))?.click());
-  check('chess: Dede plays you on a free board', !!(await waitFor(() => ev(() => window.__game.chess.state.phase === 'playing' && window.__game.chess.myColor === 'w'), 5000)));
-  // the board on screen (a phone can hardly walk the pieces): it comes up by itself, tap a pawn, then its square
-  check('…the board comes up on screen with whose turn it is (the bar at the top waits behind it)', !!(await waitFor(() => page.$('.chess.open'), 4000)) && (await ev(() => document.querySelector('.chess.open .chess-status').textContent)).includes('sen beyaz') && (await ev(() => document.querySelector('.chess-bar').hidden)));
-  await ev(() => window.__game.dialogue.close?.()); await sleep(300);
-  await page.click('.chess.open .chess-board [data-sq="e2"]'); await sleep(200);
-  const lit = await ev(() => [...document.querySelectorAll('.chess.open .chess-board .sq.to')].map((b) => b.dataset.sq).sort().join(','));
-  check('chess board: a tap on the e2 pawn lights e3 and e4', lit === 'e3,e4', lit);
-  await page.click('.chess.open .chess-board [data-sq="e4"]');
-  const fen1 = await waitFor(() => ev(() => { const f = window.__game.chess.state.fen; return f.includes('4P3') && f.split(' ')[1] === 'w' ? f : null; }), 8000);
-  check('…a tap on e4 plays it, Dede answers on the board', !!fen1, fen1 || await ev(() => window.__game.chess.state.fen));
-  await page.click('.chess.open .iconbtn'); await sleep(300);
-  check('…closing the board keeps the game; the bar (clock, turn) opens it again', !(await page.$('.chess.open')) && (await ev(() => window.__game.chess.state.phase)) === 'playing' && (await ev(() => document.querySelector('.chess-bar').textContent)).includes('Sen beyaz') && !!(await (async () => { await page.click('.chess-bar'); return waitFor(() => page.$('.chess.open'), 2000); })()));
-  await page.click('.chess.open .iconbtn'); await sleep(300);
+  await ev(() => [...document.querySelectorAll('#dlg .choice')].find((c) => c.textContent.includes('Seninle oynamak'))?.click()); await sleep(300);
+  await ev(() => [...document.querySelectorAll('#dlg .choice')].find((c) => c.textContent.includes('Süresiz'))?.click());
+  check('chess: Dede plays you on a free board, without a clock when you ask', !!(await waitFor(() => ev(() => window.__game.chess.state.phase === 'playing' && window.__game.chess.myColor === 'w' && window.__game.chess.state.timed === false), 5000)));
+  await ev(() => window.__game.dialogue.close?.()); await sleep(600);
+  check('…no board on screen: the game is played on the ground', !(await page.$('.chess.open')));
   // on foot, on the square's own board
   await stand('d2'); await sleep(400);
   check('chess: on your turn, standing on a pawn offers to take it', (await act()).includes('piyon taşını al'), await act());
@@ -232,6 +224,9 @@ try {
   await ev(() => window.__game.player.position.set(-15 + 7, 0, 15)); await sleep(600);
   check('chess: walking off the board puts the piece back, the game stays yours', (await ev((sq) => window.__game.chess.game.get(sq)?.color === 'w', from)) && (await ev(() => window.__game.chess.myColor)) === 'w' && (await ev(() => window.__game.chess.state.phase)) === 'playing');
   await ev(() => window.__game.chess.resign());
+  const resultCard = await waitFor(() => page.$('.story-card.open'), 4000);
+  check('chess: the result comes as a card (big, not a small note)', !!resultCard && (await ev(() => document.querySelector('.story-card.open .ctitle')?.textContent)) === 'Kaybettin', await ev(() => document.querySelector('.story-card.open .ctitle')?.textContent));
+  await page.click('.story-card.open .btn'); await sleep(300);
 
   // --- the square's fenced pitch, the tea garden and the chess benches ------------------
   const sqBalls = () => ev(() => window.__game.toys.toys.filter((t) => t.toy.location.id === 'village' && t.action === 'ball').map((t) => t.toy));

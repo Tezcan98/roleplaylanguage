@@ -2938,5 +2938,11 @@
  "You did not understand something. What do you say?": "تمہیں کچھ سمجھ نہیں آیا۔ تم کیا کہو گے؟",
  "to understand": "سمجھنا",
  "Ad": "اشتہار",
- "s": "سیکنڈ"
+ "s": "سیکنڈ",
+ "Let's play with a clock.": "وقت کے ساتھ کھیلتے ہیں۔",
+ "Let's play without a clock.": "بغیر وقت کے کھیلتے ہیں۔",
+ "Shall we play with a clock or without? With a clock everyone has ten minutes.": "وقت کے ساتھ کھیلیں یا بغیر وقت کے؟ وقت کے ساتھ ہر ایک کے پاس دس منٹ ہوں گے۔",
+ "time (limit)": "وقت (حد)",
+ "with a time limit": "وقت کی حد کے ساتھ",
+ "without a time limit": "بغیر وقت کی حد"
 }

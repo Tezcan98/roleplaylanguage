@@ -2938,5 +2938,11 @@
  "You did not understand something. What do you say?": "Tu n'as pas compris quelque chose. Que dis-tu ?",
  "to understand": "comprendre",
  "Ad": "Pub",
- "s": "s"
+ "s": "s",
+ "Let's play with a clock.": "Jouons avec une pendule.",
+ "Let's play without a clock.": "Jouons sans pendule.",
+ "Shall we play with a clock or without? With a clock everyone has ten minutes.": "On joue avec une pendule ou sans ? Avec, chacun a dix minutes.",
+ "time (limit)": "temps (limite)",
+ "with a time limit": "avec limite de temps",
+ "without a time limit": "sans limite de temps"
 }

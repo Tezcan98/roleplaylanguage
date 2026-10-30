@@ -101,14 +101,15 @@ export class ChessGame {
 
   // --- actions (from the on-screen board) ----------------------------------------
 
-  ask(color) {
+  /** `timed`: a 10-minute clock each, or none ("süresiz"); the first one seated chooses. */
+  ask(color, timed = true) {
     this.#learnWords();
     if (color === 'free') color = this.state?.seats?.w ? 'b' : 'w'; // the empty seat opposite the waiting player
-    if (this.online) { this.net.send({ type: this.state.legacy ? 'chess-sit' : 'chess-ask', color }); return; }
+    if (this.online) { this.net.send({ type: this.state.legacy ? 'chess-sit' : 'chess-ask', color, timed }); return; }
     // nobody else here: Dede takes the other colour
-    this.#localStart(color);
+    this.#localStart(color, timed);
   }
-  playDede(color = 'w') { this.#learnWords(); if (this.online) this.net.send({ type: 'chess-dede', color }); else this.#localStart(color); }
+  playDede(color = 'w', timed = true) { this.#learnWords(); if (this.online) this.net.send({ type: 'chess-dede', color, timed }); else this.#localStart(color, timed); }
   leave() { if (this.online) this.net.send({ type: this.state.legacy ? 'chess-stand' : 'chess-leave' }); }
   resign() {
     if (this.online) { this.net.send({ type: 'chess-resign' }); return; }
@@ -151,7 +152,7 @@ export class ChessGame {
     let turn = st.phase === 'waiting' ? 'rakip bekleniyor' : myTurn ? (g.isCheck() ? 'Şah! Sıra sende' : 'Sıra sende') : 'Rakibin oynuyor';
     const clock = (c) => mmss(Math.max(0, (st.clocks?.[c] ?? CLOCK) - (st.running === c ? since : 0)));
     const theirs = mine === 'w' ? 'b' : 'w';
-    this.bar.textContent = `♟ Sen ${COLOR[mine]} ⏱ ${clock(mine)} · Rakip ⏱ ${clock(theirs)} · ${turn}`;
+    this.bar.textContent = st.timed === false ? `♟ Sen ${COLOR[mine]} · süresiz · ${turn}` : `♟ Sen ${COLOR[mine]} ⏱ ${clock(mine)} · Rakip ⏱ ${clock(theirs)} · ${turn}`;
     if (this.view?.isOpen) this.view.setClocks(`⏱ Sen ${clock(mine)} · Rakip ${clock(theirs)}`);
   }
 
@@ -174,6 +175,7 @@ export class ChessGame {
       const win = st.result?.winner, pts = st.result?.points;
       const tr = !win ? 'Berabere!' : win === mine ? '🏆 Kazandın!' : 'Kaybettin. Bir dahakine!';
       this.toasts.show(pts ? `${tr} · ${pts[mine]} – ${pts[mine === 'w' ? 'b' : 'w']} puan` : tr, !win ? 'Draw!' : win === mine ? 'You won!' : 'You lost. Next time!');
+      this.onResult?.({ win: !win ? null : win === mine, text: tr, en: !win ? 'Draw!' : win === mine ? 'You won!' : 'You lost. Next time!', reason: st.result?.reason }); // (main.js: a card, big)
       this.onGameOver?.(); // (main.js: a full-screen ad after a game of mine)
     }
     if (st.fen !== before?.fen) this.#render3D(st.fen, st.last);
@@ -208,8 +210,8 @@ export class ChessGame {
       return 'Berabere! İkiniz de iyi oynadınız.';
     }
     if (b.phase === 'playing' && a?.phase !== 'playing') {
-      if (b.seats.w?.ai || b.seats.b?.ai) return `Haydi bakalım! Ben ${b.seats.w?.ai ? 'beyazım' : 'siyahım'}, sen ${b.seats.w?.ai ? 'siyahsın' : 'beyazsın'}. Herkese on dakika.`;
-      return `Beyaz ${name('w')}, siyah ${name('b')}. Herkese on dakika. Başlayın!`;
+      if (b.seats.w?.ai || b.seats.b?.ai) return `Haydi bakalım! Ben ${b.seats.w?.ai ? 'beyazım' : 'siyahım'}, sen ${b.seats.w?.ai ? 'siyahsın' : 'beyazsın'}. ${b.timed === false ? 'Süre yok, acele etme.' : 'Herkese on dakika.'}`;
+      return `Beyaz ${name('w')}, siyah ${name('b')}. ${b.timed === false ? 'Süre yok.' : 'Herkese on dakika.'} Başlayın!`;
     }
     if (b.draw?.offer && b.draw.offer !== a?.draw?.offer) return `${name(b.draw.offer)} beraberlik teklif ediyor. ${name(b.draw.offer === 'w' ? 'b' : 'w')}, kabul edersen bana söyle.`;
     if (b.draw?.declined && b.draw.declined !== a?.draw?.declined) {
@@ -227,7 +229,7 @@ export class ChessGame {
 
   // --- offline: you and Dede --------------------------------------------------------
 
-  #resetLocal() { this.#local = { game: new Chess(), phase: 'idle', mine: null, last: null, result: null, turnAt: 0, startedAt: 0, clocks: { w: CLOCK, b: CLOCK }, draw: { offer: null, declined: null } }; }
+  #resetLocal() { this.#local = { game: new Chess(), phase: 'idle', mine: null, last: null, result: null, turnAt: 0, startedAt: 0, clocks: { w: CLOCK, b: CLOCK }, timed: true, draw: { offer: null, declined: null } }; }
 
   #localState() {
     const L = this.#local, me = { id: 'me', name: 'Sen' };
@@ -235,15 +237,15 @@ export class ChessGame {
     const now = Date.now(), playing = L.phase === 'playing';
     return {
       phase: L.phase, fen: L.game.fen(), turn: L.game.turn(), last: L.last, result: L.result, seats, queue: [], scores: this.#localScores(), draw: { ...L.draw },
-      clocks: { ...L.clocks, ...(playing ? { [L.game.turn()]: Math.max(0, L.clocks[L.game.turn()] - (now - L.turnAt)) } : {}) },
-      running: playing ? L.game.turn() : null,
+      clocks: L.timed ? { ...L.clocks, ...(playing ? { [L.game.turn()]: Math.max(0, L.clocks[L.game.turn()] - (now - L.turnAt)) } : {}) } : null,
+      timed: L.timed, running: playing && L.timed ? L.game.turn() : null,
     };
   }
 
-  #localStart(color) {
+  #localStart(color, timed = true) {
     if (this.#local.phase === 'playing' || this.#local.phase === 'over') return;
     this.#resetLocal();
-    Object.assign(this.#local, { phase: 'playing', mine: color === 'b' ? 'b' : 'w', turnAt: Date.now(), startedAt: Date.now() });
+    Object.assign(this.#local, { phase: 'playing', mine: color === 'b' ? 'b' : 'w', turnAt: Date.now(), startedAt: Date.now(), timed: timed !== false });
     this.#apply(this.#localState());
     clearInterval(this.#timer);
     this.#timer = setInterval(() => this.#localTick(), 500);
@@ -273,7 +275,7 @@ export class ChessGame {
     if (this.online || L.phase !== 'playing') return;
     const now = Date.now();
     const turn = L.game.turn();
-    if (L.clocks[turn] - (now - L.turnAt) <= 0) { // time is up: the points decide
+    if (L.timed && L.clocks[turn] - (now - L.turnAt) <= 0) { // time is up: the points decide
       L.clocks[turn] = 0;
       const pts = pointsOf(L.game);
       this.#localFinish(pts.w > pts.b ? 'w' : pts.b > pts.w ? 'b' : null, 'points', pts);

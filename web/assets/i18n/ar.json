@@ -2939,5 +2939,11 @@
  "You did not understand something. What do you say?": "لم تفهم شيئًا. ماذا تقول؟",
  "to understand": "أن يفهم",
  "Ad": "إعلان",
- "s": "ث"
+ "s": "ث",
+ "Let's play with a clock.": "لنلعب بوقت محدد.",
+ "Let's play without a clock.": "لنلعب بلا وقت.",
+ "Shall we play with a clock or without? With a clock everyone has ten minutes.": "هل نلعب بوقت محدد أم بلا وقت؟ مع الوقت لكل واحد عشر دقائق.",
+ "time (limit)": "مدة (وقت محدد)",
+ "with a time limit": "بوقت محدد",
+ "without a time limit": "بلا وقت محدد"
 }

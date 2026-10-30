@@ -104,3 +104,19 @@ test('Dede mates when he can and does not give his queen away', () => {
   const hang = new Chess('4k3/8/8/3p4/8/8/8/3QK3 w - - 0 1');
   for (let i = 0; i < 10; i++) assert.notEqual(dedeMove(hang).to, 'd4', 'the queen would be taken on d4');
 });
+
+test('a game without a clock: no time runs out, the state says so; the first one seated chooses', async () => {
+  const { ChessTable } = await import('../src/ChessTable.js');
+  let t = 0;
+  const table = new ChessTable({ now: () => t });
+  table.ask({ id: 'a', name: 'A' }, 'w', false);
+  table.ask({ id: 'b', name: 'B' }, 'b', true);
+  assert.equal(table.phase, 'playing');
+  assert.equal(table.state().timed, false);
+  assert.equal(table.state().clocks, null);
+  t += 60 * 60_000; table.tick();
+  assert.equal(table.phase, 'playing', 'an hour later still playing');
+  const dede = new ChessTable({ now: () => t });
+  dede.askDede({ id: 'c', name: 'C' }, 'w', false);
+  assert.equal(dede.state().timed, false);
+});

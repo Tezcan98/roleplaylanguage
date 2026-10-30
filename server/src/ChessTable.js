@@ -5,7 +5,8 @@
  * whoever asks while a game is on waits in his line for the next one. Only the two
  * players move; walking away from the board changes nothing (a dropped connection gets a
  * grace period to come back under the same name, then the game is lost).
- * Each player has a 10-minute clock. When someone's time runs out, Dede counts the pieces on
+ * Each player has a 10-minute clock, or none: whoever takes the first seat (or asks Dede for a game) says "süreli" or "süresiz".
+ * With a clock: When someone's time runs out, Dede counts the pieces on
  * the board (pawn 1, knight and bishop 3, rook 5, queen 9): more points wins, equal is a draw.
  * A game against Dede himself gives way to people who are waiting. Either player can offer a draw through
  * Dede; the other accepts or declines (Dede himself accepts when the position is about even).
@@ -68,29 +69,31 @@ export class ChessTable {
     this.overAt = 0;
     this.waitingSince = 0; // someone is in the line while Dede plays
     this.aiAt = 0;
+    this.timed = true;     // false: no clocks this game (the first seated player's choice)
   }
 
   get playing() { return this.phase === 'playing'; }
   #seatOf(id) { return ['w', 'b'].find((c) => this.seats[c]?.id === id) ?? null; }
 
   /** Tell Dede "I'll be white / black". Returns whether anything changed. */
-  ask(player, color) {
+  ask(player, color, timed = true) {
     if (!['w', 'b'].includes(color) || !player?.id) return false;
     if (this.#seatOf(player.id)) {
       if (this.playing || this.phase === 'over') return false;
       this.leave(player.id); // changing her mind before the start
     }
     this.queue = this.queue.filter((q) => q.id !== player.id);
-    this.queue.push({ id: player.id, name: player.name, color });
+    this.queue.push({ id: player.id, name: player.name, color, timed: timed !== false });
     if (this.playing && this.seats.b?.ai && !this.waitingSince) this.waitingSince = this.now();
     this.#fill();
     return true;
   }
 
   /** "Dede, benimle oynar mısın?" — only when the board is free and nobody is waiting. */
-  askDede(player, color = 'w') {
+  askDede(player, color = 'w', timed = true) {
     if (!player?.id || this.phase !== 'idle' || this.queue.length) return false;
     const mine = color === 'b' ? 'b' : 'w';
+    this.timed = timed !== false;
     this.seats[mine] = { id: player.id, name: player.name };
     this.seats[other(mine)] = { ...DEDE };
     this.#start();
@@ -181,7 +184,7 @@ export class ChessTable {
     }
     if (!this.playing) return false;
     const turn = this.game.turn();
-    if (this.clocks[turn] - (now - this.turnAt) <= 0) { // time is up: the points on the board decide
+    if (this.timed && this.clocks[turn] - (now - this.turnAt) <= 0) { // time is up: the points on the board decide
       this.clocks[turn] = 0;
       const pts = points(this.game);
       this.#finish(pts.w > pts.b ? 'w' : pts.b > pts.w ? 'b' : null, 'points', pts);
@@ -217,7 +220,7 @@ export class ChessTable {
     for (const c of ['w', 'b']) {
       if (this.seats[c]) continue;
       const i = this.queue.findIndex((q) => q.color === c && q.id !== this.seats[other(c)]?.id);
-      if (i >= 0) { const [q] = this.queue.splice(i, 1); this.seats[c] = { id: q.id, name: q.name }; }
+      if (i >= 0) { const [q] = this.queue.splice(i, 1); if (!this.seats[other(c)]) this.timed = q.timed !== false; this.seats[c] = { id: q.id, name: q.name }; } // (the first one seated chooses the clock)
     }
     if (this.seats.w && this.seats.b) this.#start();
     else this.phase = this.seats.w || this.seats.b ? 'waiting' : 'idle';
@@ -263,7 +266,7 @@ export class ChessTable {
   state() {
     const g = this.game, now = this.now();
     const clocks = { ...this.clocks };
-    if (this.playing) clocks[g.turn()] = Math.max(0, clocks[g.turn()] - (now - this.turnAt));
+    if (this.playing && this.timed) clocks[g.turn()] = Math.max(0, clocks[g.turn()] - (now - this.turnAt));
     const seat = (s) => (s ? { id: s.id, name: s.name, ...(s.ai ? { ai: true } : {}), ...(s.gone ? { gone: true } : {}) } : null);
     return {
       type: 'chess', v: 2, phase: this.phase, fen: g.fen(), turn: g.turn(), check: g.isCheck(), last: this.last,
@@ -271,7 +274,7 @@ export class ChessTable {
       over: this.phase === 'over' ? (this.result.reason === 'mate' ? 'checkmate' : this.result.winner ? 'won' : 'draw') : null,
       result: this.result, seats: { w: seat(this.seats.w), b: seat(this.seats.b) },
       queue: this.queue.map(({ id, name, color }) => ({ id, name, color })),
-      clocks, running: this.playing ? g.turn() : null, draw: { ...this.draw },
+      clocks: this.timed ? clocks : null, timed: this.timed, running: this.playing && this.timed ? g.turn() : null, draw: { ...this.draw },
       scores: this.board(),
     };
   }

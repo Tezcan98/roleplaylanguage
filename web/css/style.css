@@ -444,6 +444,7 @@ html[data-gloss-scale] #dlg .en{font-size:calc(var(--gloss-scale) * 16px)}
 .house-banner small{display:block;font-weight:700;font-size:11px;color:#D9C7A3}
 .house-banner .hb-go{font-size:26px;color:var(--gold)}
 body.banner-on .overlay.main-menu{padding-bottom:calc(env(safe-area-inset-bottom,0px) + var(--banner-h,64px) + 16px)} /* a banner ad at the bottom: the menu stays above it with a gap */
+body.banner-on .overlay.main-menu .card{max-height:calc(100dvh - var(--banner-h,64px) - 24px - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px))} /* …and never taller than the room above it (a short landscape screen, the S22: it went under the banner and off the top); it scrolls instead */
 body.in-lesson .hud,body.in-lesson #quest,body.in-lesson .help-btn,body.in-lesson #toasts{display:none!important}
 @media (orientation:landscape) and (max-height:520px){.classroom .cls-q{font-size:17px}.classroom .cls-main{padding:8px;gap:5px}}
 .pill.clock:empty{display:none} /* no clock online (the story is paused) */

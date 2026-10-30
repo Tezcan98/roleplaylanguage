@@ -66,7 +66,6 @@ import { Bicycle, bikeMount } from './systems/Bicycle.js';
 import { Scooters, scooterMount } from './systems/Scooter.js';
 import { KahveCirak } from './systems/KahveCirak.js';
 import { DamaView } from './ui/DamaView.js';
-import { ChessView } from './ui/ChessView.js';
 import { DamaClub } from './systems/DamaClub.js';
 import { HalayDance } from './systems/HalayDance.js';
 import { el } from './ui/dom.js';
@@ -510,7 +509,7 @@ playerHd();
 
 // --- giant chess on the square: online the server's board (İsmail Dede runs it), offline Dede plays you ---
 const chess = new ChessGame({
-  host, mf, square: world.get('village'), net: villageNet, vocab, toasts, player, world, view: new ChessView(host, { modes }), choice: new ChoiceCard(host, modes), // ("Maçı bırakıyor musun?")
+  host, mf, square: world.get('village'), net: villageNet, vocab, toasts, player, world, view: null, choice: new ChoiceCard(host, modes), // ("Maçı bırakıyor musun?")
   // İsmail Dede announces the games: a bubble over his head (no voice)
   onSay: (line) => {
     const dede = cast.get('ismail');
@@ -596,8 +595,8 @@ const music = new BackgroundMusic({
 });
 chess.onMove = (m) => talk.chessMoved(m);
 effects
-  .register('chess-ask', (color) => chess.ask(color))
-  .register('chess-dede', (color) => chess.playDede(color || 'w'))
+  .register('chess-ask', (color, clock) => chess.ask(color, clock !== 'untimed'))
+  .register('chess-dede', (color, clock) => chess.playDede(color || 'w', clock !== 'untimed'))
   .register('chess-leave', () => chess.leave())
   .register('chess-resign', () => chess.resign())
   .register('chess-draw', () => chess.offerDraw())
@@ -754,6 +753,7 @@ async function fullAd() {
 }
 // story mode: a full-screen ad between two days (not with ad-free mode)
 // a game of chess of mine is over: a full-screen ad, once the result has been seen
+chess.onResult = ({ win, text, en }) => cards.show({ num: 'Satranç', title: win ? '🏆 Tebrikler, kazandın!' : win === false ? 'Kaybettin' : 'Berabere', text, en: win ? 'Congratulations, you won!' : en, button: 'Tamam' }); // (played on the board on the ground: the result, big)
 chess.onGameOver = () => { if (!wallet.adFree && CONFIG.ads.afterChess) setTimeout(() => fullAd(), 3000); };
 story.beforeNewDay = () => (wallet.adFree || !CONFIG.ads.betweenDays ? Promise.resolve() : fullAd());
 // going through a door or a gate (home, yard, square, school): now and then a full-screen ad, as you

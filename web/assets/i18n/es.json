@@ -2938,5 +2938,11 @@
  "You did not understand something. What do you say?": "No entendiste algo. ¿Qué dices?",
  "to understand": "entender",
  "Ad": "Anuncio",
- "s": "s"
+ "s": "s",
+ "Let's play with a clock.": "Juguemos con reloj.",
+ "Let's play without a clock.": "Juguemos sin reloj.",
+ "Shall we play with a clock or without? With a clock everyone has ten minutes.": "¿Jugamos con reloj o sin él? Con reloj, cada uno tiene diez minutos.",
+ "time (limit)": "tiempo (límite)",
+ "with a time limit": "con límite de tiempo",
+ "without a time limit": "sin límite de tiempo"
 }
