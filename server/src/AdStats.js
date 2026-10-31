@@ -1,7 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { numbersBody, chartsCss } from './StatsCharts.js';
+import { numbersBody, firstMinutesBody, chartsCss } from './StatsCharts.js';
 
 /**
  * Live ad numbers from the Android app (AdMob shows them a day or two late): every ad shown,
@@ -116,12 +116,12 @@ export class AdStats {
       return true;
     }
     if (req.url.startsWith('/api/istatistik') || req.url.startsWith('/api/ad-stats')) { // (one page for the ads and how the game is played; ad-stats is the old address)
-      const u = new URL(req.url, 'http://x');
+      const u = new URL(req.url, 'http://x'), key = u.searchParams.get('key');
       if (!this.key || u.searchParams.get('key') !== this.key) { res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }); res.end('yetkisiz\n'); return true; }
       const s = { ...this.summary(), installs: this.installs?.() ?? null, play: this.play?.() ?? null };
       if (u.searchParams.get('format') === 'json') { res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(s)); return true; }
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' });
-      res.end(page(s));
+      res.end(u.searchParams.get('sayfa') === 'ilk' ? firstPage(s, key) : page(s, key));
       return true;
     }
     return false;
@@ -139,7 +139,8 @@ document.querySelectorAll('.periods button').forEach(function(b){b.onclick=funct
 document.querySelectorAll('.ulke').forEach(function(s){s.onchange=function(){put(C,s.value);show()}});show();setTimeout(function(){location.reload()},30000)})()`;
 
 /** The numbers page (one calm page, StatsCharts.js `numbersBody`); it reloads itself, keeping the chosen period and country. */
-function page(s) {
+function page(s, key = '') {
+  s.keyQuery = `key=${encodeURIComponent(key)}`;
   const time = new Date(s.now).toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' });
   return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>İstatistik</title>
 <style>body{font:15px/1.5 system-ui,sans-serif;margin:16px auto;padding:0 16px;max-width:1000px;background:#14202e;color:#e8eef5}h1{font-size:22px;margin:0 0 2px;font-weight:600}small{color:#9fb0c2;font-weight:400}
@@ -147,5 +148,14 @@ function page(s) {
 <h1>Türk Ailem · İstatistik</h1><small>Anonim sayılar · her 30 saniyede yenilenir · ${esc(time)}</small>
 ${numbersBody(s)}
 <script>${NUMBERS_JS}</script>
+</body></html>`;
+}
+
+/** The first-minutes sub-page (StatsCharts.js `firstMinutesBody`): a button on the numbers page leads here. */
+function firstPage(s, key) {
+  return `<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>İlk dakikalar</title>
+<style>body{font:15px/1.5 system-ui,sans-serif;margin:16px auto;padding:0 16px;max-width:1000px;background:#14202e;color:#e8eef5}h1{font-size:22px;margin:0 0 2px;font-weight:600}small{color:#9fb0c2;font-weight:400}${chartsCss}</style></head><body>
+<p class="subnav"><a href="?key=${encodeURIComponent(key)}">← İstatistik</a></p><h1>İlk dakikalar</h1>
+${firstMinutesBody(s)}
 </body></html>`;
 }

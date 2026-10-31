@@ -200,3 +200,16 @@ test('first minutes: the steps reached, seconds per screen, idle share and where
   assert.equal(f.idle, 50);
   assert.deepEqual(f.stops, [['play:talk-mom', 1], ['setup', 1]]);
 });
+
+test('first-minutes sub-page: a button on the numbers page leads to it; steps, drop, screens, countries', async () => {
+  const { AdStats } = await import('../src/AdStats.js');
+  const s = new PlayStats(), ads = new AdStats({ key: 'k', play: () => s.summary() });
+  s.record(batch({ pid: 'aaaaaaaa1111', sec: 30, counts: { 'fn:setup': 1, 'fn:play': 1, 'fn:move': 1, 'scr:setup': 20, 'scr:play': 30 }, at: { scr: 'play', q: 'talk-mom', loc: 'yard' } }), '', 'TR');
+  s.record(batch({ pid: 'bbbbbbbb2222', sec: 0, counts: { 'fn:setup': 1, 'scr:setup': 40 }, at: { scr: 'setup', q: '', loc: '' } }), '', 'IN');
+  const get = (url) => { let b = ''; ads.route({ url, method: 'GET' }, { writeHead() {}, end(x) { b = x; } }); return b; };
+  const main = get('/api/istatistik?key=k');
+  assert.match(main, /href="\?key=k&amp;sayfa=ilk"/);
+  const sub = get('/api/istatistik?key=k&sayfa=ilk');
+  assert.match(sub, /İlk dakikalar/); assert.match(sub, /Oyuna girdi/); assert.match(sub, /Bu adıma ulaşmayan/); assert.match(sub, /1 \(%50\)/);
+  assert.match(sub, /Türkiye/); assert.match(sub, /Hindistan/); assert.match(sub, /talk-mom/);
+});

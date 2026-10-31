@@ -68,16 +68,12 @@ export function numbersBody(s) {
 <table class="back"><tr><th>Ülke</th><th>Oyuncu</th><th>Ertesi gün</th><th>Sonraki günlerde</th></tr>${(p.retention ?? []).map(([c, total, next, later, forNext]) => `<tr${c === 'all' ? ' class="all"' : ''}><td>${c === 'all' ? 'Hepsi' : esc(countryName(c))}</td><td>${n(total)}</td><td>${pc(next, forNext)} <small>${n(next)}</small></td><td>${pc(later, total)} <small>${n(later)}</small></td></tr>`).join('')}</table>`;
   const playing = p.playing ?? { n: 0, countries: [] };
   const now = `<h2>Şu an oyunda <small>son birkaç dakikada oynayan</small></h2><div class="big"><div><b>${n(playing.n)}</b>kişi</div></div>${playing.n ? `<div class="gap">${bars(playing.countries.map(([c, v]) => [countryName(c), v]), { color: '#45a852' })}</div>` : ''}`;
-  const fmin = p.firstMinutes ?? { devices: 0, steps: {}, screens: {}, idle: 0, stops: [] };
-  const STEP = [['setup', 'Dil / karakter ekranını gördü'], ['menu', 'Ana menüyü gördü'], ['intro', 'Tanıtımı gördü'], ['card', 'Bir hikâye kartı gördü'], ['play', 'Oyuna girdi'], ['move', 'İlk adımı attı'], ['talk', 'Biriyle konuştu']];
-  const SCR = { setup: 'dil / karakter', menu: 'ana menü', intro: 'tanıtım', card: 'hikâye kartı', talk: 'konuşma', play: 'oyunda', other: 'diğer' };
-  const first = fmin.devices ? `<h2>İlk dakikalar <small>${n(fmin.devices)} cihaz · ölçüm 31 Ekim 2026'dan beri, yeni sürümle gelenler</small></h2>
-<p class="sub">Kaç cihaz her adıma ulaştı:</p>${bars(STEP.map(([k, l]) => [l, fmin.steps[k] ?? 0]), { color: '#4fc3f7', max: fmin.devices })}
-<p class="sub">Bir ekranda ortalama kaç saniye geçirdiler: ${Object.entries(fmin.screens).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${SCR[k] ?? k} ${n(v)} sn`).join(' · ') || '—'}</p>
-<p class="sub">Oyundayken yerinde durdukları süre: %${fmin.idle}</p>
-<p class="sub">En son nerede görüldüler (bıraktıkları yer):</p>${bars(fmin.stops.slice(0, 12).map(([k, v]) => [k.startsWith('play:') ? `oyunda · ${k.slice(5)}` : (SCR[k] ?? k), v]), { color: '#ffb74d' })}` : '';
-  return `${now}${first}<nav class="periods">${PERIODS.map(([id, label]) => `<button type="button" data-p="${id}">${label}</button>`).join('')}</nav>
+  const fmin = p.firstMinutes ?? { devices: 0, steps: {} };
+  const reached = (k) => fmin.steps[k] ?? 0;
+  const first = `<a class="goto" href="?${s.keyQuery}&amp;sayfa=ilk"><b>İlk dakikalar →</b><span>${fmin.devices ? `${n(fmin.devices)} cihaz ölçüldü · oyuna giren ${n(reached('play'))} · ilk adımı atan ${n(reached('move'))}` : 'ölçüm başladı, veri birikiyor'}</span></a>`;
+  return `${now}<nav class="periods">${PERIODS.map(([id, label]) => `<button type="button" data-p="${id}">${label}</button>`).join('')}</nav>
 ${PERIODS.map(per).join('')}
+${first}
 ${back}
 <h2>Günlük oyuncu <small>son 14 gün</small></h2>${columns(days, { w: 30 })}
 <h2>Nerede bırakıyorlar? <small>o bölüme kadar gelen oyuncu</small></h2>${bars(reach, { color: '#ba68c8' })}
@@ -92,4 +88,31 @@ export const chartsCss = `h2{font-size:17px;margin:30px 0 8px;font-weight:600}.s
 .bars{max-width:760px;display:flex;flex-direction:column;gap:6px}.brow{display:grid;grid-template-columns:minmax(110px,220px) 1fr minmax(40px,auto);gap:8px;align-items:center;font-size:14px}
 .bl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bt{background:#1d2b3c;border-radius:6px;height:12px;overflow:hidden}.bt i{display:block;height:100%;border-radius:6px}.bv{text-align:right}
 .cols{overflow-x:auto;background:#1d2b3c;border-radius:12px;padding:12px;max-width:760px}.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 28px;max-width:1000px}
-.gap{margin-top:10px}.back{border-collapse:collapse;width:100%;max-width:760px;background:#1d2b3c;border-radius:12px;overflow:hidden}.back th,.back td{padding:8px 12px;text-align:right;border-bottom:1px solid #2b3c50}.back th:first-child,.back td:first-child{text-align:left}.back th{color:#9fb0c2;font-weight:500}.back .all td{font-weight:600}details{margin-top:26px;max-width:760px}summary{cursor:pointer;color:#9fb0c2}details .bars{margin-top:10px}`;
+.gap{margin-top:10px}.goto{display:block;max-width:760px;margin:26px 0 0;padding:14px 18px;background:#1d2b3c;border-radius:12px;color:#e8eef5;text-decoration:none}.goto b{display:block;font-size:17px;color:#ffd54a}.goto span{color:#9fb0c2;font-size:13px}.subnav{margin:6px 0 0}.subnav a{color:#ffd54a}.back{border-collapse:collapse;width:100%;max-width:760px;background:#1d2b3c;border-radius:12px;overflow:hidden}.back th,.back td{padding:8px 12px;text-align:right;border-bottom:1px solid #2b3c50}.back th:first-child,.back td:first-child{text-align:left}.back th{color:#9fb0c2;font-weight:500}.back .all td{font-weight:600}details{margin-top:26px;max-width:760px}summary{cursor:pointer;color:#9fb0c2}details .bars{margin-top:10px}`;
+
+
+const STEPS = [['setup', 'Dil / karakter ekranını gördü'], ['menu', 'Ana menüyü gördü'], ['intro', 'Tanıtımı gördü'], ['card', 'Bir hikâye kartı gördü'], ['play', 'Oyuna girdi'], ['move', 'İlk adımı attı'], ['talk', 'Biriyle konuştu']];
+const SCREENS = { setup: 'dil / karakter', menu: 'ana menü', intro: 'tanıtım', card: 'hikâye kartı', talk: 'konuşma', play: 'oyunda', other: 'diğer' };
+
+/** The "first minutes" page: where players stop, step by step, with the drop at each step and the same by country and by language. */
+export function firstMinutesBody(s) {
+  const f = s.play?.firstMinutes;
+  if (!f?.devices) return '<p class="sub">Ölçüm 31 Ekim 2026\'da başladı; yeni sürümü açan oyuncularla veri birikiyor.</p>';
+  const pct = (a, b) => (b ? `%${Math.round((100 * a) / b)}` : '—');
+  const rows = STEPS.map(([k, label]) => {
+    const v = f.steps[k] ?? 0; // (the steps are not a strict line: the menu, the slides or a card can be skipped, so the loss is counted against all)
+    return `<tr><td>${label}</td><td>${n(v)}</td><td>${pct(v, f.devices)}</td><td>${n(f.devices - v)} (${pct(f.devices - v, f.devices)})</td></tr>`;
+  }).join('');
+  const screens = Object.keys(f.screens).sort((a, b) => f.screens[b] - f.screens[a]).map((k) => `<tr><td>${SCREENS[k] ?? k}</td><td>${n(f.medians[k] ?? 0)} sn</td><td>${n(f.screens[k])} sn</td></tr>`).join('');
+  const stops = f.stops.map(([k, v]) => [k.startsWith('play:') ? `oyunda · ${k.slice(5)}` : (SCREENS[k] ?? k), v]);
+  const group = (list, name) => list.map(([k, g]) => `<tr><td>${esc(name(k))}</td><td>${n(g.devices)}</td><td>${pct(g.steps.play ?? 0, g.devices)}</td><td>${pct(g.steps.move ?? 0, g.devices)}</td><td>${pct(g.steps.talk ?? 0, g.devices)}</td></tr>`).join('');
+  const head = '<tr><th></th><th>Cihaz</th><th>Oyuna girdi</th><th>İlk adım</th><th>Konuştu</th></tr>';
+  return `<p class="sub">${n(f.devices)} cihaz ölçüldü. Oyundayken yerinde durdukları süre: %${f.idle}.</p>
+<h2>Adım adım <small>kaç cihaz hangi adıma ulaştı</small></h2>
+<table class="back"><tr><th>Adım</th><th>Cihaz</th><th>Tümü içinde</th><th>Bu adıma ulaşmayan</th></tr>${rows}</table>
+<h2>Ekranda geçirdikleri süre <small>ortanca ve ortalama, cihaz başına</small></h2>
+<table class="back"><tr><th>Ekran</th><th>Ortanca</th><th>Ortalama</th></tr>${screens}</table>
+<h2>En son nerede görüldüler <small>bıraktıkları yer (görev adı ya da ekran)</small></h2>${bars(stops.slice(0, 25), { color: '#ffb74d' })}
+<h2>Ülkeye göre <small>her adımda yüzde</small></h2><table class="back">${head}${group(f.byCountry, (k) => countryName(k))}</table>
+<h2>Oyun diline göre</h2><table class="back">${head}${group(f.byLang, (k) => (k === '?' ? 'Bilinmiyor' : k))}</table>`;
+}

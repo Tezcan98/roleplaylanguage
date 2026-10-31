@@ -198,18 +198,23 @@ export class PlayStats {
    */
   #firstMinutes() {
     const devs = [...this.#devices.values()].filter((v) => v.at || Object.keys(v.counts).some((k) => k.startsWith('fn:') || k.startsWith('scr:')));
-    const steps = {}, secs = {}, stops = {};
+    const steps = {}, secs = {}, stops = {}, by = { country: {}, lang: {} }, per = {};
     let idle = 0, play = 0;
+    const bump = (group, key, v) => { const g = (by[group][key || '?'] ??= { devices: 0, steps: {} }); g.devices++; for (const k of Object.keys(v.counts)) if (k.startsWith('fn:')) g.steps[k.slice(3)] = (g.steps[k.slice(3)] ?? 0) + 1; };
     for (const v of devs) {
       for (const [k, n] of Object.entries(v.counts)) {
         if (k.startsWith('fn:')) steps[k.slice(3)] = (steps[k.slice(3)] ?? 0) + 1;
-        else if (k.startsWith('scr:')) secs[k.slice(4)] = (secs[k.slice(4)] ?? 0) + n;
+        else if (k.startsWith('scr:')) { secs[k.slice(4)] = (secs[k.slice(4)] ?? 0) + n; (per[k.slice(4)] ??= []).push(n); }
       }
       idle += v.counts.idle ?? 0; play += v.counts['scr:play'] ?? 0;
       if (v.at) { const key = v.at.scr === 'play' ? `play:${v.at.q || v.at.loc || '?'}` : v.at.scr; stops[key] = (stops[key] ?? 0) + 1; }
+      bump('country', v.cc, v); bump('lang', v.lang, v);
     }
-    const screens = Object.fromEntries(Object.entries(secs).map(([k, n]) => [k, Math.round(n / Math.max(1, devs.filter((v) => (v.counts[`scr:${k}`] ?? 0) > 0).length))]));
-    return { devices: devs.length, steps, screens, idle: play ? Math.round((100 * idle) / play) : 0, stops: Object.entries(stops).sort((a, b) => b[1] - a[1]) };
+    const median = (a) => { const s2 = [...a].sort((x, y) => x - y); return s2.length ? s2[Math.floor(s2.length / 2)] : 0; };
+    const screens = Object.fromEntries(Object.entries(secs).map(([k, n]) => [k, Math.round(n / Math.max(1, per[k].length))]));
+    const medians = Object.fromEntries(Object.entries(per).map(([k, a]) => [k, median(a)]));
+    const top = (o) => Object.entries(o).sort((x, y) => y[1].devices - x[1].devices).slice(0, 10);
+    return { devices: devs.length, steps, screens, medians, idle: play ? Math.round((100 * idle) / play) : 0, stops: Object.entries(stops).sort((x, y) => y[1] - x[1]), byCountry: top(by.country), byLang: top(by.lang) };
   }
 
   summary() {
