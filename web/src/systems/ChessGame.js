@@ -4,7 +4,7 @@ import { Chess } from 'chess.js';
 import { chessSquare, CHESS } from '../world/locations/VillageSquare.js';
 import { el } from '../ui/dom.js';
 import { playerName } from '../i18n/Persona.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, ui } from '../i18n/Gloss.js';
 
 /** Offline score board (you and Dede): real games only, kept on the device. */
 const LOCAL_SCORES = 'chessScores';
@@ -149,10 +149,11 @@ export class ChessGame {
     const g = this.game, since = Date.now() - st.at;
     const mmss = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, '0')}`;
     const myTurn = st.phase === 'playing' && g.turn() === mine;
-    let turn = st.phase === 'waiting' ? 'rakip bekleniyor' : myTurn ? (g.isCheck() ? 'Şah! Sıra sende' : 'Sıra sende') : 'Rakibin oynuyor';
+    let turn = st.phase === 'waiting' ? ui('rakip bekleniyor', 'Waiting for an opponent') : myTurn ? (g.isCheck() ? ui('Şah! Sıra sende', 'Check! Your turn') : ui('Sıra sende', 'Your turn')) : ui('Rakibin oynuyor', 'Your opponent is playing');
     const clock = (c) => mmss(Math.max(0, (st.clocks?.[c] ?? CLOCK) - (st.running === c ? since : 0)));
     const theirs = mine === 'w' ? 'b' : 'w';
-    this.bar.textContent = st.timed === false ? `♟ Sen ${COLOR[mine]} · süresiz · ${turn}` : `♟ Sen ${COLOR[mine]} ⏱ ${clock(mine)} · Rakip ⏱ ${clock(theirs)} · ${turn}`;
+    const me = ui(`Sen ${COLOR[mine]}`, mine === 'w' ? 'You: white' : 'You: black');
+    this.bar.textContent = st.timed === false ? `♟ ${me} · ${ui('süresiz', 'no clock')} · ${turn}` : `♟ ${me} ⏱ ${clock(mine)} · ${ui('Rakip', 'Opponent')} ⏱ ${clock(theirs)} · ${turn}`;
     if (this.view?.isOpen) this.view.setClocks(`⏱ Sen ${clock(mine)} · Rakip ${clock(theirs)}`);
   }
 

@@ -2951,5 +2951,16 @@
  "You lost. Next time!": "خسرت. في المرة القادمة!",
  "Draw!": "تعادل!",
  "The game has just ended, child. In a few seconds the board is free and we can start a new game.": "انتهت المباراة للتو يا بني. بعد ثوانٍ تُفرَّغ الرقعة ونبدأ لعبة جديدة.",
- "Okay, Dede.": "حسنًا يا جدي."
+ "Okay, Dede.": "حسنًا يا جدي.",
+ "Take the {piece}": "خذ {piece}",
+ "Move the {piece} to {sq}": "حرّك {piece} إلى {sq}",
+ "Ask İsmail Dede": "اسأل الجد إسماعيل",
+ "Put the piece back": "أعد القطعة إلى مكانها",
+ "Waiting for an opponent": "بانتظار الخصم",
+ "Check! Your turn": "كش! دورك",
+ "Your opponent is playing": "الخصم يلعب",
+ "You: white": "أنت: الأبيض",
+ "You: black": "أنت: الأسود",
+ "no clock": "بلا وقت",
+ "Opponent": "الخصم"
 }

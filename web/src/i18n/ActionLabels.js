@@ -16,7 +16,7 @@ const EN = {
   'Salıncakta sallan': 'Swing on the swing', 'Kaydıraktan kay': 'Go down the slide', 'Tahterevalliye bin': 'Ride the seesaw', 'Bisiklete bin': 'Ride the bicycle', 'Bisikletten in': 'Get off the bicycle',
   'Banka otur': 'Sit on the bench', 'Bankta otur': 'Sit on the bench', 'Banka otur, maçı izle': 'Sit on the bench and watch the match', 'Kahvehanede otur': 'Sit in the coffeehouse', 'Çay bahçesinde otur': 'Sit in the tea garden',
   'Sinemada otur': 'Sit in the cinema', 'Camiye bak': 'Look at the mosque', 'Raflara bak': 'Look at the shelves', 'Bakkalın tezgahına bak': 'Look at the grocer’s counter', 'Alışveriş yap': 'Go shopping', 'Meyve sebze al': 'Buy fruit and vegetables',
-  'Dama al': 'Take a draughts board', 'Skoru sıfırla': 'Reset the score', 'İneği sağ': 'Milk the cow', 'Koyunlara saman ver': 'Give hay to the sheep',
+  'Dama al': 'Take a draughts board', 'İsmail Dede’ye sor': 'Ask İsmail Dede', 'Taşı yerine bırak': 'Put the piece back', 'Skoru sıfırla': 'Reset the score', 'İneği sağ': 'Milk the cow', 'Koyunlara saman ver': 'Give hay to the sheep',
 };
 const TALK = / ile konuş$/;
 
@@ -46,10 +46,17 @@ export function personName(tr) {
   return row && k != null ? row[k] : '';
 }
 
+/** The chess board's buttons (systems/ChessGame.js find): the piece's name stays Turkish only in the small line. */
+const PIECE_EN = { şah: 'king', vezir: 'queen', kale: 'rook', fil: 'bishop', at: 'knight', piyon: 'pawn' };
+const CHESS = [
+  [/^(şah|vezir|kale|fil|at|piyon) taşını al$/, (m) => ['Take the {piece}', { piece: gloss(PIECE_EN[m[1]]) }]],
+  [/^(şah|vezir|kale|fil|at|piyon): ([a-h][1-8]) karesine oyna$/, (m) => ['Move the {piece} to {sq}', { piece: gloss(PIECE_EN[m[1]]), sq: m[2] }]],
+];
 /** { main, sub }: the button's text in the player's language, and the Turkish small under it ('' when it is not needed). */
 export function actionText(label) {
   if (turkishOnly()) return { main: label, sub: '' };
   let en = EN[label], vars;
+  if (!en) for (const [re, f] of CHESS) { const m = re.exec(label); if (m) [en, vars] = f(m); }
   if (!en && TALK.test(label)) { const who = label.replace(TALK, ''); en = 'Talk to {name}'; vars = { name: personName(who) || who }; }
   const main = en ? gloss(en, vars) : '';
   return main && main !== label ? { main, sub: label } : { main: label, sub: '' };

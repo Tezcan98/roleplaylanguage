@@ -2950,5 +2950,16 @@
  "You lost. Next time!": "Tu as perdu. La prochaine fois !",
  "Draw!": "Match nul !",
  "The game has just ended, child. In a few seconds the board is free and we can start a new game.": "La partie vient de finir, mon enfant. Dans quelques secondes le plateau est libre et on en commence une autre.",
- "Okay, Dede.": "D'accord, papi."
+ "Okay, Dede.": "D'accord, papi.",
+ "Take the {piece}": "Prends le {piece}",
+ "Move the {piece} to {sq}": "Joue le {piece} en {sq}",
+ "Ask İsmail Dede": "Demande à papi İsmail",
+ "Put the piece back": "Remets la pièce",
+ "Waiting for an opponent": "On attend un adversaire",
+ "Check! Your turn": "Échec ! À toi",
+ "Your opponent is playing": "Ton adversaire joue",
+ "You: white": "Toi : blancs",
+ "You: black": "Toi : noirs",
+ "no clock": "sans pendule",
+ "Opponent": "Adversaire"
 }

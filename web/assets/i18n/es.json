@@ -2950,5 +2950,16 @@
  "You lost. Next time!": "Has perdido. ¡La próxima vez!",
  "Draw!": "¡Empate!",
  "The game has just ended, child. In a few seconds the board is free and we can start a new game.": "La partida acaba de terminar, hijo. En unos segundos el tablero queda libre y empezamos otra.",
- "Okay, Dede.": "Vale, abuelo."
+ "Okay, Dede.": "Vale, abuelo.",
+ "Take the {piece}": "Coge el {piece}",
+ "Move the {piece} to {sq}": "Mueve el {piece} a {sq}",
+ "Ask İsmail Dede": "Pregunta al abuelo İsmail",
+ "Put the piece back": "Devuelve la pieza",
+ "Waiting for an opponent": "Esperando rival",
+ "Check! Your turn": "¡Jaque! Tu turno",
+ "Your opponent is playing": "Juega tu rival",
+ "You: white": "Tú: blancas",
+ "You: black": "Tú: negras",
+ "no clock": "sin reloj",
+ "Opponent": "Rival"
 }
