@@ -982,6 +982,7 @@ async function editProfile({ cancellable = true } = {}) {
 // how the game is played, anonymously: counts only (server/src/PlayStats.js; the privacy policy says so)
 const stats = new Stats({
   bus, settings, modes, chapters: STORY.chapters.map((c) => c.id), native, lang: () => glossLang(), version: () => appVersion,
+  analytics: native && nativeKit.FirebaseAnalytics ? (e) => nativeKit.FirebaseAnalytics.logEvent({ name: e.name, params: e.params ?? {} }) : null,
   probe: () => ({
     scr: document.querySelector('.overlay.setup.open') ? 'setup' : menu.isOpen ? 'menu' : document.querySelector('.overlay.intro.open') ? 'intro' : document.querySelector('.overlay.story-card.open') ? 'card' : dialogue.talking ? 'talk' : modes.is('play') ? 'play' : 'other',
     q: story.quest?.id, loc: world.current?.id, moving: !!player.moving,

@@ -17,23 +17,43 @@ export class Stats {
 
   /** @param {{ bus, settings, modes, chapters: string[], native: boolean, lang: () => string, version: () => string, post: (url, body) => Promise<boolean> }} o */
   /** `probe()` → { scr, q, loc, moving }: which screen the player is on (setup, menu, intro, card, talk, play, other), the task, the place, whether they are walking — for where players stop. */
-  constructor({ bus, settings, modes, chapters, native, lang, version, post, probe = null, enabled = true }) {
-    Object.assign(this, { bus, settings, modes, chapters, native, lang, version, post, probe });
+  constructor({ bus, settings, modes, chapters, native, lang, version, post, probe = null, analytics = null, enabled = true }) {
+    Object.assign(this, { bus, settings, modes, chapters, native, lang, version, post, probe, analytics });
     if (!enabled) return;
     if (!settings.get('deviceId')) settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (as the square and the ad numbers make it: one per device)
     const on = (ev, fn) => bus.on(ev, (d) => { try { fn(d ?? {}); } catch { /* never in the game's way */ } });
     on(EV.LOCATION, (d) => this.count(`loc:${d.id}`));
-    on(EV.DIALOGUE_OPEN, (d) => this.count(`talk:${d.npc}`));
+    on(EV.DIALOGUE_OPEN, (d) => { this.count(`talk:${d.npc}`); this.#log('first_talk'); });
     on(EV.FREE_ACTION, (d) => this.count(`act:${d.id}`));
     on(EV.HOTSPOT, (d) => this.count(`spot:${d.id}`));
     on(EV.WORD, () => this.count('word'));
     on(EV.QUEST_DONE, (d) => { this.count('quest'); if (d.quest?.id) this.count(`q:${String(d.quest.id).toLowerCase().replace(/[^a-z0-9:._-]/g, '-').slice(0, 36)}`); }); // (which task: the server counts the devices that did each)
     on(EV.CREDITS, (d) => { if (d.reason && d.reason !== 'dev' && d.reason !== 'spend') this.count(`cr:${d.reason}`); });
     on(EV.CHAPTER, (d) => { const i = chapters.indexOf(d.chapter?.id); if (i > (settings.get('statsCh', -1))) settings.set('statsCh', i); });
-    setInterval(() => { if (!document.hidden && modes.is('play')) this.#sec++; this.#watch(); }, 1000);
+    setInterval(() => { if (!document.hidden && modes.is('play')) { this.#sec++; this.#total(); } this.#watch(); }, 1000);
     setInterval(() => this.flush(), EVERY);
     addEventListener('pagehide', () => this.flush());
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.flush(); });
+  }
+
+  /**
+   * Google Analytics for Firebase (the app only): a few events the Google Ads campaign can aim at — "played 1 / 3 / 5 / 10 minutes in all"
+   * and the first talk. Each once per device; nothing about what anyone said.
+   */
+  #log(name) {
+    const sent = this.settings.get('fbEvents', {});
+    if (sent[name]) return;
+    sent[name] = 1; this.settings.set('fbEvents', sent);
+    try { Promise.resolve(this.analytics?.({ name })).catch(() => {}); } catch { /* never in the game's way */ }
+  }
+
+  #played = null; // seconds played in all, kept in the settings every ten seconds
+
+  #total() {
+    this.#played ??= this.settings.get('fbPlaySec', 0);
+    this.#played++;
+    if (this.#played % 10 === 0) this.settings.set('fbPlaySec', this.#played);
+    for (const [min, name] of [[1, 'play_1min'], [3, 'play_3min'], [5, 'play_5min'], [10, 'play_10min']]) if (this.#played >= min * 60) this.#log(name);
   }
 
   #at = null; // the last place seen: { scr, q, loc }

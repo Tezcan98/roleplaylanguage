@@ -16,7 +16,8 @@ export async function loadNativeAdapters() {
     import('@capacitor/core'),
   ]);
   const PlayGames = registerPlugin('PlayGames'); // mobile/android: PlayGamesPlugin.java
-  return { App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider, LocalNotifications, NativePurchases, PURCHASE_TYPE, PlayGames };
+  const FirebaseAnalytics = registerPlugin('FirebaseAnalytics'); // @capacitor-firebase/analytics (an app built before it: every call just fails and is ignored)
+  return { FirebaseAnalytics, App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider, LocalNotifications, NativePurchases, PURCHASE_TYPE, PlayGames };
 }
 
 /**
