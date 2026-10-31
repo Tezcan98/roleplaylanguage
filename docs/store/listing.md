@@ -11,21 +11,21 @@ Ekran görüntüleri `web/tools/promo/shots.mjs` ile oyunun kendisinden çekilir
 
 | Dil | Mağaza başlığı | Telefonda |
 |---|---|---|
-| Türkçe | Türk Ailem: Dil ve Sosyalleşme | Türk Ailem |
+| Türkçe | Türk Ailem: Türkçe Öğren | Türk Ailem |
 | İngilizce | Turkish Family: Learn Turkish | My Turkish Family |
 | Arapça | عائلتي التركية: تعلم التركية | عائلتي التركية |
 | Urduca | میرا ترک خاندان: ترکی سیکھیں | میرا ترک خاندان |
 | İspanyolca | Familia turca: aprende turco | Mi familia turca |
-| Fransızca | Ma famille turque | Ma famille turque |
+| Fransızca | Apprendre le turc: Ma famille | Ma famille turque |
 | Rusça | Турецкая семья: учим турецкий | Моя турецкая семья |
 
-**Uygulama adı:** Türk Ailem: Dil ve Sosyalleşme
+**Uygulama adı:** Türk Ailem: Türkçe Öğren
 
-**Kısa açıklama:** Çocuklar için dil gelişim ve sosyalleşme oyunu: köyde yaşa, konuş, arkadaş edin.
+**Kısa açıklama:** Türk bir aileyle köyde yaşa, konuş, oyna: Türkçeyi oyunla öğren.
 
 **Tam açıklama:**
 
-Türk Ailem, çocukların dil gelişimini ve sosyalleşmesini destekleyen hikâyeli bir 3D köy oyunu. Bir Türk ailesinin evinde yaşarsın: annen kahvaltıyı hazırlar, deden masal anlatır, kardeşin seninle oynamak ister. Konuştukça kelimelerin çoğalır; parkta ve köy meydanında yeni arkadaşlar edinirsin.
+Türk Ailem, Türkçe öğrenmek isteyen herkes için hikâyeli bir 3D köy oyunu. Bir Türk ailesinin evinde yaşarsın: annen kahvaltıyı hazırlar, deden masal anlatır, kardeşin seninle oynamak ister. Konuştukça kelimelerin çoğalır; parkta ve köy meydanında yeni arkadaşlar edinirsin.
 
 🏡 Bir aileyle yaşa
 Kahvaltıda sofraya otur, bakkaldan ekmek al, bahçeyi sula, ineği sağ, koyunlara saman ver, ödevini yap. Her gün yeni görevler, yeni kelimeler.
@@ -46,7 +46,7 @@ Köy meydanında ata bin, bahçede bisiklet sürmeyi öğren, okul kantininde to
 Öğrendiğin her kelime defterine yazılır; kelime pratiğiyle tekrar edersin.
 
 🌍 Anlamlar senin dilinde
-Türkçe cümlelerin anlamı İngilizce, Arapça, Urduca, İspanyolca veya Fransızca olarak altında yazar.
+Türkçe cümlelerin anlamı İngilizce, Arapça, Urduca, Hintçe, İspanyolca veya Fransızca olarak altında yazar.
 
 👥 Meydanda yeni arkadaşlarla buluş
 Köy meydanında başka oyuncularla yazılı konuşursun; birebir sesli sohbet yalnızca iki taraf da kabul ederse açılır. Güvenliğin için yazılı konuşmalar şifreli olarak 90 gün saklanır.
@@ -160,3 +160,36 @@ The game is free to play with ads and optional in-app purchases (credits, the 3D
 تحدّث كتابةً مع لاعبين آخرين في ساحة القرية؛ والمحادثة الصوتية الفردية لا تُفتح إلا بموافقة الطرفين. ولسلامتك تُحفظ المحادثات المكتوبة مشفّرة لمدة 90 يومًا.
 
 اللعبة مجانية، وفيها إعلانات ومشتريات اختيارية داخل التطبيق (رصيد، شخصية ثلاثية الأبعاد، ملابس). تحتاج ساحة القرية الجماعية وأصوات الشخصيات والمحادثة الحرة إلى اتصال بالإنترنت.
+
+## hi-IN
+
+**ऐप का नाम:** Turkish Family: तुर्की सीखें
+
+**संक्षिप्त विवरण:** तुर्की परिवार के साथ गाँव में रहें, बात करें और खेल-खेल में तुर्की सीखें।
+
+**पूरा विवरण:**
+
+Turkish Family (मेरा तुर्की परिवार) एक कहानी वाला 3D गाँव का खेल है, जिसमें आप एक तुर्की परिवार के घर में रहकर तुर्की भाषा सीखते हैं। माँ नाश्ता बनाती हैं, दादाजी कहानियाँ सुनाते हैं, छोटा भाई आपके साथ खेलना चाहता है। जितना बोलेंगे, उतने शब्द बढ़ेंगे; पार्क और गाँव के चौक में नए दोस्त भी मिलेंगे।
+
+🏡 एक परिवार के साथ रहें
+नाश्ते की मेज़ पर बैठें, दुकान से रोटी लाएँ, बगीचे में पानी दें, गाय का दूध निकालें, भेड़ों को भूसा दें, होमवर्क करें। हर दिन नए काम और नए शब्द।
+
+🏫 स्कूल में कदम-दर-कदम पाठ
+अध्यापिका और सहपाठियों के साथ A1 स्तर से शुरू होने वाले पाठ: अभिवादन, संख्याएँ, दिशाएँ, योजनाएँ, दोस्ती। गलत जवाब पर अध्यापिका सही जवाब बताती हैं।
+
+🗣️ बोलिए, खेल आपको सुनता है
+समर्थित फ़ोन पर वाक्य ज़ोर से बोलें; खेल आपको समझता है। हर किरदार की अपनी आवाज़ है।
+
+🌍 मतलब आपकी भाषा में
+हर तुर्की वाक्य के नीचे उसका मतलब हिन्दी में लिखा होता है (अंग्रेज़ी, अरबी, उर्दू, स्पेनिश और फ़्रेंच में भी)।
+
+📒 शब्दों की कॉपी
+जो भी शब्द सीखते हैं वह आपकी कॉपी में लिख जाता है; शब्द-अभ्यास से दोहराएँ।
+
+🐴 गाँव घूमिए
+चौक में घोड़े की सवारी करें, साइकिल चलाना सीखें, स्कूल की कैंटीन से टोस्ट लें, किराने और सब्ज़ी की दुकान पर तुर्की लीरा से खरीदारी करें, चाय की दुकान पर चाय माँगें, इस्माइल दादा के साथ विशाल शतरंज खेलें।
+
+👥 चौक में नए दोस्तों से मिलें
+चौक में दूसरे खिलाड़ियों से लिखकर बात करें; आमने-सामने की आवाज़ वाली चैट तभी चालू होती है जब दोनों राज़ी हों। सुरक्षा के लिए लिखी हुई बातचीत एन्क्रिप्टेड रूप में 90 दिन रखी जाती है।
+
+खेल मुफ़्त है; इसमें विज्ञापन और वैकल्पिक इन-ऐप खरीदारी (क्रेडिट, 3D किरदार, कपड़े) हैं। मल्टीप्लेयर, किरदारों की आवाज़ और खुली बातचीत के लिए इंटरनेट चाहिए।
