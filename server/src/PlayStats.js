@@ -93,6 +93,8 @@ export class PlayStats {
     if (msg.plat === 'app' || msg.plat === 'web') dev.plat = msg.plat;
     if (typeof msg.v === 'string') dev.v = msg.v.slice(0, 16);
     if (/^[a-z]{2}$/.test(String(msg.lang ?? ''))) dev.lang = msg.lang;
+    const at = msg.at; // the last place seen: the screen, the task, the place (where players stop)
+    if (at && /^(setup|menu|intro|card|talk|play|other)$/.test(String(at.scr)) && /^[a-z0-9-]{0,30}$/.test(String(at.q ?? '')) && /^[a-z]{0,12}$/.test(String(at.loc ?? ''))) dev.at = { scr: at.scr, q: at.q ?? '', loc: at.loc ?? '' };
     if (/^[A-Z]{2}$/.test(country)) dev.cc = country; // (the coarse country the request came from; nothing finer)
     for (const [k, n] of Object.entries(counts)) if (k in dev.counts || Object.keys(dev.counts).length < 300) dev.counts[k] = (dev.counts[k] ?? 0) + n;
     this.#devices.set(h, dev); this.#dirty = true;
@@ -189,6 +191,27 @@ export class PlayStats {
     return [['all', ...(rows.all ?? [0, 0, 0, 0])], ...list.map(([c, r]) => [c, ...r])];
   }
 
+  /**
+   * The first minutes, from the devices that report them (a version from 2026-10-31 on): how many reached each step the first time
+   * (`fn:` counters), the average seconds on each screen, the share of the game time spent standing still, and where each device
+   * was last seen — the screen, or in the game the task: where players stop. { devices, steps, screens, idle, stops }
+   */
+  #firstMinutes() {
+    const devs = [...this.#devices.values()].filter((v) => v.at || Object.keys(v.counts).some((k) => k.startsWith('fn:') || k.startsWith('scr:')));
+    const steps = {}, secs = {}, stops = {};
+    let idle = 0, play = 0;
+    for (const v of devs) {
+      for (const [k, n] of Object.entries(v.counts)) {
+        if (k.startsWith('fn:')) steps[k.slice(3)] = (steps[k.slice(3)] ?? 0) + 1;
+        else if (k.startsWith('scr:')) secs[k.slice(4)] = (secs[k.slice(4)] ?? 0) + n;
+      }
+      idle += v.counts.idle ?? 0; play += v.counts['scr:play'] ?? 0;
+      if (v.at) { const key = v.at.scr === 'play' ? `play:${v.at.q || v.at.loc || '?'}` : v.at.scr; stops[key] = (stops[key] ?? 0) + 1; }
+    }
+    const screens = Object.fromEntries(Object.entries(secs).map(([k, n]) => [k, Math.round(n / Math.max(1, devs.filter((v) => (v.counts[`scr:${k}`] ?? 0) > 0).length))]));
+    return { devices: devs.length, steps, screens, idle: play ? Math.round((100 * idle) / play) : 0, stops: Object.entries(stops).sort((a, b) => b[1] - a[1]) };
+  }
+
   summary() {
     const today = day();
     const devs = [...this.#devices.values()];
@@ -213,7 +236,7 @@ export class PlayStats {
     return {
       now: new Date().toISOString(), today,
       total: { devices: devs.length, returned, spoke, hours: Math.round(devs.reduce((s, v) => s + v.sec, 0) / 360) / 10, app: devs.filter((v) => v.plat === 'app').length, web: devs.filter((v) => v.plat === 'web').length },
-      days, top, reach, quests, periods: this.#periods(), playing: this.#playing(), retention: this.#retention(),
+      days, top, reach, quests, periods: this.#periods(), playing: this.#playing(), retention: this.#retention(), firstMinutes: this.#firstMinutes(),
     };
   }
 

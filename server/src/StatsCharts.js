@@ -68,7 +68,15 @@ export function numbersBody(s) {
 <table class="back"><tr><th>Ülke</th><th>Oyuncu</th><th>Ertesi gün</th><th>Sonraki günlerde</th></tr>${(p.retention ?? []).map(([c, total, next, later, forNext]) => `<tr${c === 'all' ? ' class="all"' : ''}><td>${c === 'all' ? 'Hepsi' : esc(countryName(c))}</td><td>${n(total)}</td><td>${pc(next, forNext)} <small>${n(next)}</small></td><td>${pc(later, total)} <small>${n(later)}</small></td></tr>`).join('')}</table>`;
   const playing = p.playing ?? { n: 0, countries: [] };
   const now = `<h2>Şu an oyunda <small>son birkaç dakikada oynayan</small></h2><div class="big"><div><b>${n(playing.n)}</b>kişi</div></div>${playing.n ? `<div class="gap">${bars(playing.countries.map(([c, v]) => [countryName(c), v]), { color: '#45a852' })}</div>` : ''}`;
-  return `${now}<nav class="periods">${PERIODS.map(([id, label]) => `<button type="button" data-p="${id}">${label}</button>`).join('')}</nav>
+  const fmin = p.firstMinutes ?? { devices: 0, steps: {}, screens: {}, idle: 0, stops: [] };
+  const STEP = [['setup', 'Dil / karakter ekranını gördü'], ['menu', 'Ana menüyü gördü'], ['intro', 'Tanıtımı gördü'], ['card', 'Bir hikâye kartı gördü'], ['play', 'Oyuna girdi'], ['move', 'İlk adımı attı'], ['talk', 'Biriyle konuştu']];
+  const SCR = { setup: 'dil / karakter', menu: 'ana menü', intro: 'tanıtım', card: 'hikâye kartı', talk: 'konuşma', play: 'oyunda', other: 'diğer' };
+  const first = fmin.devices ? `<h2>İlk dakikalar <small>${n(fmin.devices)} cihaz · ölçüm 31 Ekim 2026'dan beri, yeni sürümle gelenler</small></h2>
+<p class="sub">Kaç cihaz her adıma ulaştı:</p>${bars(STEP.map(([k, l]) => [l, fmin.steps[k] ?? 0]), { color: '#4fc3f7', max: fmin.devices })}
+<p class="sub">Bir ekranda ortalama kaç saniye geçirdiler: ${Object.entries(fmin.screens).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${SCR[k] ?? k} ${n(v)} sn`).join(' · ') || '—'}</p>
+<p class="sub">Oyundayken yerinde durdukları süre: %${fmin.idle}</p>
+<p class="sub">En son nerede görüldüler (bıraktıkları yer):</p>${bars(fmin.stops.slice(0, 12).map(([k, v]) => [k.startsWith('play:') ? `oyunda · ${k.slice(5)}` : (SCR[k] ?? k), v]), { color: '#ffb74d' })}` : '';
+  return `${now}${first}<nav class="periods">${PERIODS.map(([id, label]) => `<button type="button" data-p="${id}">${label}</button>`).join('')}</nav>
 ${PERIODS.map(per).join('')}
 ${back}
 <h2>Günlük oyuncu <small>son 14 gün</small></h2>${columns(days, { w: 30 })}

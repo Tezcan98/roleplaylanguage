@@ -980,6 +980,10 @@ async function editProfile({ cancellable = true } = {}) {
 // how the game is played, anonymously: counts only (server/src/PlayStats.js; the privacy policy says so)
 const stats = new Stats({
   bus, settings, modes, chapters: STORY.chapters.map((c) => c.id), native, lang: () => glossLang(), version: () => appVersion,
+  probe: () => ({
+    scr: document.querySelector('.overlay.setup.open') ? 'setup' : menu.isOpen ? 'menu' : document.querySelector('.overlay.intro.open') ? 'intro' : document.querySelector('.overlay.story-card.open') ? 'card' : dialogue.talking ? 'talk' : modes.is('play') ? 'play' : 'other',
+    q: story.quest?.id, loc: world.current?.id, moving: !!player.moving,
+  }),
   enabled: !params.has('debug') && !params.has('nointro') && !params.has('fakemic') && (native || !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)), // (the app's own pages come from https://localhost too: only a dev server's are left out)
   post: async (url, body) => {
     if (native) { const { CapacitorHttp } = await import('@capacitor/core'); const r = await CapacitorHttp.post({ url, headers: { 'Content-Type': 'application/json' }, data: body }); return r.status === 204; }

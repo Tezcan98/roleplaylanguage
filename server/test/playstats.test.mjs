@@ -187,3 +187,16 @@ test('retention by country: the next day and any later day, among devices that b
     assert.deepEqual(r.all, [3, 1, 2, 3]);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+test('first minutes: the steps reached, seconds per screen, idle share and where devices were last seen', () => {
+  const s = new PlayStats();
+  s.record(batch({ pid: 'aaaaaaaa1111', sec: 30, counts: { 'fn:setup': 1, 'fn:play': 1, 'scr:setup': 20, 'scr:play': 30, idle: 15 }, at: { scr: 'play', q: 'talk-mom', loc: 'yard' } }));
+  s.record(batch({ pid: 'bbbbbbbb2222', sec: 0, counts: { 'fn:setup': 1, 'scr:setup': 40 }, at: { scr: 'setup', q: '', loc: '' } }));
+  s.record(batch({ pid: 'cccccccc3333', at: { scr: 'bad<script>' } })); // junk is dropped
+  const f = s.summary().firstMinutes;
+  assert.equal(f.devices, 2);
+  assert.deepEqual([f.steps.setup, f.steps.play], [2, 1]);
+  assert.equal(f.screens.setup, 30);
+  assert.equal(f.idle, 50);
+  assert.deepEqual(f.stops, [['play:talk-mom', 1], ['setup', 1]]);
+});
