@@ -49,11 +49,11 @@ const span = (min) => (min >= 60 ? `${(min / 60).toLocaleString('tr-TR', { maxim
 export function numbersBody(s) {
   const p = s.play;
   if (!p) return '<p>Henüz oyun verisi yok.</p>';
-  const known = Object.entries(p.periods.total.people).filter(([c]) => c !== 'all').sort((a, b) => b[1] - a[1]).map(([c]) => c);
-  const picker = `<label class="pick">Ülke <select class="ulke"><option value="all">Hepsi</option>${known.map((c) => `<option value="${esc(c)}">${esc(countryName(c))}</option>`).join('')}</select></label>`;
   const per = ([id]) => {
     const d = p.periods[id], avg = d.played ? Math.round(d.minutes / d.played) : 0;
-    const charts = ['all', ...known].map((c) => `<div class="hist" data-c="${esc(c)}"><p class="sub">${n(d.people[c] ?? 0)} kişi oynadı</p>${columns((d.hist[c] ?? LENGTHS.map(() => 0)).map((v, i) => ({ label: LENGTHS[i], v })), { color: '#4fc3f7', height: 150, w: 44 })}</div>`).join('');
+    const here = Object.entries(d.people).filter(([c, v]) => c !== 'all' && v > 0).sort((x, y) => y[1] - x[1]).map(([c]) => c); // (only the countries with people in this period)
+    const picker = `<label class="pick">Ülke <select class="ulke"><option value="all">Hepsi</option>${here.map((c) => `<option value="${esc(c)}">${esc(countryName(c))}</option>`).join('')}</select></label>`;
+    const charts = ['all', ...here].map((c) => `<div class="hist" data-c="${esc(c)}"><p class="sub">${n(d.people[c] ?? 0)} kişi oynadı</p>${columns((d.hist[c] ?? LENGTHS.map(() => 0)).map((v, i) => ({ label: LENGTHS[i], v })), { color: '#4fc3f7', height: 150, w: 44 })}</div>`).join('');
     return `<section class="per" data-p="${id}"><div class="big"><div><b>${n(d.devices)}</b>oyuncu</div><div><b>${n(d.new)}</b>yeni oyuncu</div><div><b>${span(d.minutes)}</b>oynanan süre</div><div><b>${n(avg)} dk</b>kişi başı ortalama</div></div>
 <h2>Ne kadar oynadılar?</h2><p class="sub">Alt: oynama süresi (dakika) · yan: kaç kişi</p>${picker}${charts}</section>`;
   };
