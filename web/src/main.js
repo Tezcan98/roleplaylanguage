@@ -928,8 +928,7 @@ village.ptt.status.hidden = true;
 // the first time, the introduction comes before the story (skip with ?nointro)
 const introFirst = async () => {
   if (settings.get('introSeen', false) || params.has('nointro')) return;
-  await intro.show();
-  settings.set('introSeen', true);
+  settings.set('introSeen', true); // (seven slides before the first step lost players: the slides stay in the menu and the help; "Start here" in the help says the same in six lines)
 };
 const setup = new CharacterSetup(host, { modes, settings, villageServer });
 // a player standing still for a long while (in the game, no card open): a banner ad, gone at the first step
@@ -974,7 +973,10 @@ const menu = new MainMenu(host, {
 async function editProfile({ cancellable = true } = {}) {
   const before = { lang: settings.get('glossLang', defaultGlossLang()), gender: playerGender(), look: settings.get('look', '') };
   const p = await setup.open({ cancellable });
+  const first = !cancellable && !!p; // the very first launch: after the character, straight into the game (no menu to tap through)
+  if (first) { try { sessionStorage.setItem('autoNew', '1'); } catch { /* ignore */ } }
   if (p && (p.lang !== before.lang || p.gender !== before.gender || p.look !== before.look)) { location.reload(); return; }
+  if (first) { try { sessionStorage.removeItem('autoNew'); } catch { /* ignore */ } introFirst().then(() => startNew()); return; }
   menu.show();
 }
 // how the game is played, anonymously: counts only (server/src/PlayStats.js; the privacy policy says so)
@@ -1000,7 +1002,10 @@ else {
   // back from changing the outfit: straight on where you were
   let again = false;
   try { again = sessionStorage.getItem('autoContinue') === '1'; sessionStorage.removeItem('autoContinue'); } catch { /* ignore */ }
-  if (again && saved) { menu.hide(); continueGame(); } else offerDaily();
+  let auto = false;
+  try { auto = sessionStorage.getItem('autoNew') === '1'; sessionStorage.removeItem('autoNew'); } catch { /* ignore */ }
+  if (auto && !saved) { menu.hide(); introFirst().then(() => startNew()); } // (just made the character and the page reloaded: on into the game)
+  else if (again && saved) { menu.hide(); continueGame(); } else offerDaily();
 }
 if (native) scheduleDailyReminder(nativeKit.LocalNotifications); // keep tomorrow's reminder
 // Play Games sign-in (silent for Play Games users): the player id goes with what they write, for the safety log
@@ -1153,4 +1158,4 @@ if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { cinema, ratePrompt, firstSteps, parkPlay, feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { menu, cinema, ratePrompt, firstSteps, parkPlay, feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

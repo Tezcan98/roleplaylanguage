@@ -35,9 +35,14 @@ try {
   await page.click('.setup button[data-char="girl-covered"]');
   await Promise.all([page.waitForNavigation({ timeout: 30000 }), page.click('.setup button:has-text("Başla")')]);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
-  const profile = await page.textContent('.main-menu .profile-line');
-  const pic = await page.getAttribute('.main-menu .profile-line img', 'src');
-  check('after setup the menu shows the profile (her picture, the language)', profile.includes('Español') && /hd_casual_covered/.test(pic ?? ''), `${profile} ${pic}`);
+  // the very first launch goes straight on into the game: no menu to tap, no seven introduction slides
+  const started = await waitFor(() => ev(() => window.__game.story.chapter?.id === 'd1-morning'), 20000);
+  check('after setup the game starts by itself (no menu, no introduction slides)', !!started && !(await page.$('.overlay.intro.open')), String(started));
+  await ev(() => { document.querySelectorAll('.overlay.story-card.open .btn').forEach((b) => b.click()); });
+  await ev(() => window.__game.menu?.show?.()); await sleep(300);
+  const profile = await page.textContent('.main-menu .profile-line').catch(() => '');
+  const pic = await page.getAttribute('.main-menu .profile-line img', 'src').catch(() => '');
+  check('the menu still shows the profile (her picture, the language)', profile.includes('Español') && /hd_casual_covered/.test(pic ?? ''), `${profile} ${pic}`);
   check('no setup the second time', !(await page.$('.overlay.open.setup')));
 
   // --- girl: texts rewritten, look -----------------------------------------------------
