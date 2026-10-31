@@ -1,12 +1,12 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 /** Free conversation box inside the dialogue sheet: type or say a line, send. */
 export class NpcChatBox {
   constructor(slot, { onSend, onMic, canListen }) {
-    this.input = el('input', { class: 'chat-in', attrs: { type: 'text', maxlength: '200', placeholder: 'Türkçe yaz…', 'aria-label': 'Mesaj' } });
-    this.send = el('button', { class: 'chipbtn primary', text: 'Gönder', attrs: { type: 'button' } });
-    this.mic = canListen && el('button', { class: 'chipbtn', text: '🎙️ Söyle', attrs: { type: 'button' } });
+    this.input = el('input', { class: 'chat-in', attrs: { type: 'text', maxlength: '200', placeholder: withGloss('Türkçe yaz…', 'Write in Turkish…'), 'aria-label': 'Mesaj' } });
+    this.send = el('button', { class: 'chipbtn primary', text: withGloss('Gönder', 'Send'), attrs: { type: 'button' } });
+    this.mic = canListen && el('button', { class: 'chipbtn', text: withGloss('🎙️ Söyle', '🎙️ Say it'), attrs: { type: 'button' } });
     this.note = el('p', { class: 'note en-t', text: gloss('Talk freely in Turkish. The answer is read aloud; tap the speaker to hear it again. Chats are kept encrypted for 90 days for safety.') });
     const go = () => { const t = this.input.value.trim(); if (t && !this.waiting) onSend(t); };
     this.send.onclick = go;
@@ -20,7 +20,7 @@ export class NpcChatBox {
   busy(on) {
     this.waiting = on;
     [this.send, this.mic].forEach((b) => { if (b) b.disabled = on; });
-    this.send.textContent = on ? '…' : 'Gönder';
+    this.send.textContent = on ? '…' : withGloss('Gönder', 'Send');
     if (!on) this.input.focus();
   }
   clear() { this.input.value = ''; }

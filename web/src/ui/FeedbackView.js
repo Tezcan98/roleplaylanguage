@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 const DAY = 86_400_000;
 const MIN = 15, MAX = 1200;
@@ -19,7 +19,7 @@ export class FeedbackView {
     Object.assign(this, { modes, settings, post, onCredits, info });
     this.body = el('div', { class: 'feedback-body' });
     this.root = el('div', { class: 'overlay dim feedback' }, [el('div', { class: 'card' }, [
-      el('h2', { class: 'ctitle', text: '💬 Oyunu nasıl buldun?' }),
+      el('h2', { class: 'ctitle', text: withGloss('💬 Oyunu nasıl buldun?', '💬 How do you like the game?') }),
       el('p', { class: 'cen en-t', text: gloss('How do you like the game?') }),
       this.body,
     ])]);
@@ -39,9 +39,9 @@ export class FeedbackView {
   close() { this.root.classList.remove('open'); this.#pop?.(); this.#pop = null; }
 
   #form() {
-    const text = el('textarea', { attrs: { maxlength: String(MAX), rows: '5', placeholder: 'Görüşünü buraya yaz…', 'aria-label': 'Görüşün' } });
+    const text = el('textarea', { attrs: { maxlength: String(MAX), rows: '5', placeholder: withGloss('Görüşünü buraya yaz…', 'Write your opinion here…'), 'aria-label': 'Görüşün' } });
     const count = el('small', { class: 'fb-count', text: `0/${MAX}` });
-    const send = el('button', { class: 'btn', text: 'Gönder', attrs: { type: 'button', disabled: '' } });
+    const send = el('button', { class: 'btn', text: withGloss('Gönder', 'Send'), attrs: { type: 'button', disabled: '' } });
     const status = el('p', { class: 'fb-status' });
     text.addEventListener('input', () => { const n = text.value.trim().length; count.textContent = `${n}/${MAX}`; send.disabled = n < MIN; });
     send.onclick = () => this.#send(text.value.trim(), send, status);
@@ -79,7 +79,7 @@ export class FeedbackView {
     this.body.replaceChildren(
       el('p', { class: 'ctext', text: tr }),
       el('p', { class: 'cen en-t', text: meaning }),
-      el('button', { class: 'btn', text: 'Tamam', attrs: { type: 'button' }, on: { click: () => this.close() } }),
+      el('button', { class: 'btn', text: withGloss('Tamam', 'OK'), attrs: { type: 'button' }, on: { click: () => this.close() } }),
     );
   }
 

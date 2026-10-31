@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss, meaning } from '../i18n/Gloss.js';
+import { gloss, meaning, withGloss } from '../i18n/Gloss.js';
 
 /** A book open in your hands: one page at a time, Turkish with its meaning and the book's words. */
 export class BookReader {
@@ -14,7 +14,7 @@ export class BookReader {
     this.words = el('div', { class: 'words' });
     this.pageNo = el('span', { class: 'book-page' });
     this.prev = el('button', { class: 'btn alt sm', text: '◀', attrs: { type: 'button', 'aria-label': 'Önceki sayfa' }, on: { click: () => this.#go(-1) } });
-    this.next = el('button', { class: 'btn sm', text: 'Sonraki ▶', attrs: { type: 'button' }, on: { click: () => this.#go(1) } });
+    this.next = el('button', { class: 'btn sm', text: withGloss('Sonraki ▶', 'Next ▶'), attrs: { type: 'button' }, on: { click: () => this.#go(1) } });
     this.root = el('div', { class: 'overlay dim book' }, [el('div', { class: 'card' }, [
       el('div', { class: 'book-head' }, [
         el('div', {}, [this.title, this.author]),
@@ -59,6 +59,6 @@ export class BookReader {
     this.words.replaceChildren(...(this.page === last ? b.words : []).map(([tr, en]) => el('span', { class: 'word' }, [`${tr} `, el('span', { text: meaning(tr, en) && `= ${meaning(tr, en)}` })])));
     this.pageNo.textContent = `${this.page + 1} / ${b.pages.length}`; // read quietly: 🔊 reads the page aloud on request
     this.prev.disabled = this.page === 0;
-    this.next.textContent = this.page === last ? 'Bitir ✓' : 'Sonraki ▶';
+    this.next.textContent = this.page === last ? 'Bitir ✓' : withGloss('Sonraki ▶', 'Next ▶');
   }
 }

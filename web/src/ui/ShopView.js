@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 import { SHOP, FOODS, outfitPicture } from '../content/shop.js';
 import { PACKS, SELL_PACKS } from '../services/monetization/Billing.js';
 import { AD_REWARD, SHARE_REWARD } from '../services/monetization/CreditWallet.js';
@@ -70,7 +70,7 @@ export class ShopView {
       sub ? el('small', { class: subTr ? 'shop-sub' : 'shop-sub en-t', text: sub }) : null, action,
     ].filter(Boolean));
     const btn = (text, cls, fn, disabled = false) => el('button', { class: `shop-btn ${cls}`, text, attrs: { type: 'button', ...(disabled ? { disabled: '' } : {}) }, on: { click: fn } });
-    // spending credits: "Emin misin?" first (what it is, how much)
+    // spending credits: withGloss('Emin misin?', 'Are you sure?') first (what it is, how much)
     const price = (n, fn, what) => { const b = btn(` ${n}`, 'buy', async () => { if (await this.#confirm(what, n)) fn(); }, w.balance < n); b.prepend(coin()); return b; };
 
     this.tabs.replaceChildren(...TABS.map(([id, icon, tr, en]) => el('button', {
@@ -166,15 +166,15 @@ export class ShopView {
     if (this.#taps.length >= 5 && this.onCode) { this.#taps = []; this.onCode(); }
   }
 
-  /** "Emin misin?" over the shop: resolves true for "Evet, al". */
+  /** withGloss('Emin misin?', 'Are you sure?') over the shop: resolves true for "Evet, al". */
   #confirm(what, n) {
     return new Promise((resolve) => {
       const done = (ok) => { box.remove(); resolve(ok); };
       const yes = el('button', { class: 'shop-btn buy yes', attrs: { type: 'button' }, on: { click: () => done(true) } }, [coin(), ` ${n} · Evet, al`]);
       const box = el('div', { class: 'shop-confirm', attrs: { role: 'dialog', 'aria-modal': 'true' }, on: { click: (e) => { if (e.target === box) done(false); } } }, [el('div', { class: 'shop-confirm-card' }, [
-        el('b', { text: 'Emin misin?' }),
+        el('b', { text: withGloss('Emin misin?', 'Are you sure?') }),
         el('p', {}, [`${what} için `, coin(), ` ${n} altın harcanacak.`, el('small', { class: 'en-t', text: ` · ${gloss('Are you sure? This spends your gold.')}` })]),
-        el('div', { class: 'shop-confirm-btns' }, [el('button', { class: 'shop-btn no', text: 'Vazgeç', attrs: { type: 'button' }, on: { click: () => done(false) } }), yes]),
+        el('div', { class: 'shop-confirm-btns' }, [el('button', { class: 'shop-btn no', text: withGloss('Vazgeç', 'Cancel'), attrs: { type: 'button' }, on: { click: () => done(false) } }), yes]),
       ])]);
       this.root.append(box);
       yes.focus();

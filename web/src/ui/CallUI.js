@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 const svg = (body) => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
 const SLASH = '<path d="M3 3l18 18"/>';
@@ -19,9 +19,9 @@ export class CallUI {
     this.name = el('span');
     this.micBtn = el('button', { class: 'chipbtn icon', attrs: { type: 'button' } });
     this.speakerBtn = el('button', { class: 'chipbtn icon', attrs: { type: 'button' } });
-    this.endBtn = el('button', { class: 'chipbtn danger', text: 'Bitir', attrs: { type: 'button' } });
-    this.reportBtn = el('button', { class: 'chipbtn', text: '🚩', attrs: { type: 'button', title: 'Şikayet et', 'aria-label': 'Şikayet et' } });
-    this.bar = el('div', { class: 'callbar' }, [el('span', { class: 'live', text: '● SESLİ' }), this.name, this.micBtn, this.speakerBtn, this.reportBtn, this.endBtn]);
+    this.endBtn = el('button', { class: 'chipbtn danger', text: withGloss('Bitir', 'End'), attrs: { type: 'button' } });
+    this.reportBtn = el('button', { class: 'chipbtn', text: '🚩', attrs: { type: 'button', title: withGloss('Şikayet et', 'Report'), 'aria-label': withGloss('Şikayet et', 'Report') } });
+    this.bar = el('div', { class: 'callbar' }, [el('span', { class: 'live', text: withGloss('● SESLİ', '● VOICE') }), this.name, this.micBtn, this.speakerBtn, this.reportBtn, this.endBtn]);
     this.bar.hidden = true;
     host.append(this.bar);
   }
@@ -44,7 +44,7 @@ export class CallUI {
       const no = el('button', { class: 'btn alt', text: 'Reddet', attrs: { type: 'button' } });
       const block = el('button', { class: 'linkbtn', text: '🚫 Engelle', attrs: { type: 'button' } });
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card' }, [
-        el('p', { class: 'chap', text: 'Sesli sohbet isteği' }),
+        el('p', { class: 'chap', text: withGloss('Sesli sohbet isteği', 'Voice chat request') }),
         el('h2', { class: 'ctitle', text: join ? `${fromName} sohbetinize katılmak istiyor` : others.length ? `${fromName} seni sohbete çağırıyor` : `${fromName} seninle konuşmak istiyor` }),
         ...(others.length ? [el('p', { class: 'note', text: `Sohbette: ${others.join(', ')}` })] : []),
         el('p', { class: 'cen en-t', text: join ? gloss('{name} wants to join your voice chat', { name: fromName }) : others.length ? gloss('{name} invites you to a voice chat', { name: fromName }) : gloss('{name} wants to voice chat with you', { name: fromName }) }),

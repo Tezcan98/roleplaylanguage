@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 /** Name tags only for those this close (m): a crowd far away needs none. */
 const NAMES_WITHIN = 30;
@@ -18,7 +18,7 @@ export class LabelLayer {
     host.append(this.root);
     this.thinkUntil = 0;
     this.bubbles = new Map();
-    this.mic = el('div', { class: 'label q', text: '🎙️ konuşuyorsun', style: { display: 'none' } });
+    this.mic = el('div', { class: 'label q', text: withGloss('🎙️ konuşuyorsun', '🎙️ you are talking'), style: { display: 'none' } });
     this.root.append(this.mic);
   }
 

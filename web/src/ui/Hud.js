@@ -1,3 +1,4 @@
+import { withGloss } from '../i18n/Gloss.js';
 import { el } from './dom.js';
 import { coin } from './coin.js';
 
@@ -9,13 +10,13 @@ export class Hud {
     this.bag = el('b', { text: '0' });
     this.money = el('b', { text: '0' });
     this.credits = el('b', { text: '0' });
-    this.textbook = el('button', { class: 'pill', text: '📘 Kitap', attrs: { type: 'button' }, on: { click: onBookOpen } });
+    this.textbook = el('button', { class: 'pill', text: withGloss('📘 Kitap', '📘 Book'), attrs: { type: 'button' }, on: { click: onBookOpen } });
     this.textbook.hidden = true;
     const hud = el('div', { class: 'hud' }, [
       el('div', { class: 'grp' }, [
         el('button', { class: 'pill', attrs: { type: 'button' }, on: { click: onBook } }, ['Defter ', this.words]),
         this.textbook,
-        el('button', { class: 'pill credits-btn', attrs: { type: 'button', title: 'Dükkan · krediler' }, on: { click: () => onShop?.() } }, [coin(), ' ', this.credits]), // the shop
+        el('button', { class: 'pill credits-btn', attrs: { type: 'button', title: withGloss('Dükkan · krediler', 'Shop · credits') }, on: { click: () => onShop?.() } }, [coin(), ' ', this.credits]), // the shop
         el('button', { class: 'pill money', attrs: { type: 'button', title: 'Paran · game money' }, on: { click: onBag } }, ['💰 ', this.money, ' ₺']), // game money: lira in the bag
       ]),
       el('div', { class: 'grp' }, [

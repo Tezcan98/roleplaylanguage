@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss, ui, glossDir } from '../i18n/Gloss.js';
+import { gloss, ui, glossDir, withGloss } from '../i18n/Gloss.js';
 
 /**
  * The cinema's panel under the screen (systems/Cinema.js): the film's name and how far it is, then
@@ -16,8 +16,8 @@ export class CinemaView {
     this.shown = el('div', { class: 'cin-shown' });
     this.again = el('button', { class: 'btn alt sm', text: '🔁', attrs: { type: 'button', 'aria-label': 'Tekrar dinle' }, on: { click: () => this.onAgain?.(false) } });
     this.slow = el('button', { class: 'btn alt sm', text: '🐢', attrs: { type: 'button', 'aria-label': 'Yavaş dinle' }, on: { click: () => this.onAgain?.(true) } });
-    this.next = el('button', { class: 'btn sm', text: 'Sonraki ▶', attrs: { type: 'button' }, on: { click: () => this.onNext?.() } });
-    this.other = el('button', { class: 'btn sm', text: 'Başka film ▶', attrs: { type: 'button' }, on: { click: () => this.onOther?.() } });
+    this.next = el('button', { class: 'btn sm', text: withGloss('Sonraki ▶', 'Next ▶'), attrs: { type: 'button' }, on: { click: () => this.onNext?.() } });
+    this.other = el('button', { class: 'btn sm', text: withGloss('Başka film ▶', 'Another film ▶'), attrs: { type: 'button' }, on: { click: () => this.onOther?.() } });
     this.controls = el('div', { class: 'cin-controls' }, [this.again, this.slow, this.next, this.other]);
     this.root = el('div', { class: 'cinema-panel', attrs: { role: 'dialog', 'aria-label': 'Sinema' } }, [
       el('div', { class: 'cin-head' }, [this.title, this.count,
@@ -86,7 +86,7 @@ export class CinemaView {
     this.prompt.hidden = true;
     this.shown.replaceChildren(...shown); this.shown.hidden = false;
     this.again.hidden = this.slow.hidden = false;
-    this.next.hidden = false; this.next.textContent = i + 1 >= n ? 'Bitir ✓' : 'Sonraki ▶';
+    this.next.hidden = false; this.next.textContent = i + 1 >= n ? 'Bitir ✓' : withGloss('Sonraki ▶', 'Next ▶');
   }
 
   end(film, right, n, credit, good) {

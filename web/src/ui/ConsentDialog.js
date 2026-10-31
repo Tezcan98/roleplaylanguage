@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 /** Raised when what is kept or how it is used changes: everyone is asked again. */
 export const CONSENT_VERSION = 2; // 2: push-to-talk voice is kept too
@@ -16,14 +16,14 @@ export class ConsentDialog {
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const tick = el('input', { attrs: { type: 'checkbox' } });
-      const yes = el('button', { class: 'btn', text: 'Kabul et ve gir', attrs: { type: 'button', disabled: '' } });
-      const no = el('button', { class: 'btn alt', text: 'Kabul etmiyorum', attrs: { type: 'button' } });
+      const yes = el('button', { class: 'btn', text: withGloss('Kabul et ve gir', 'Accept and enter'), attrs: { type: 'button', disabled: '' } });
+      const no = el('button', { class: 'btn alt', text: withGloss('Kabul etmiyorum', 'I do not accept'), attrs: { type: 'button' } });
       tick.addEventListener('change', () => { yes.disabled = !tick.checked; });
       const item = (tr, en) => el('li', {}, [el('span', { text: tr }), el('small', { class: 'en-t', text: en })]);
       // what is kept (scrolls) and the tick with the buttons (always in sight: side by side on a phone held sideways)
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card consent' }, [el('div', { class: 'consent-text' }, [
-        el('p', { class: 'chap', text: 'Köy meydanı · gerçek oyuncular' }),
-        el('h2', { class: 'ctitle', text: 'Girmeden önce' }),
+        el('p', { class: 'chap', text: withGloss('Köy meydanı · gerçek oyuncular', 'Village square · real players') }),
+        el('h2', { class: 'ctitle', text: withGloss('Girmeden önce', 'Before you enter') }),
         el('p', { class: 'cen en-t', text: gloss('Before you go in') }),
         el('ul', {}, [
           item('Köy meydanında yazdıkların şifreli olarak 90 gün saklanır.', gloss('What you write in the square is kept encrypted for 90 days.')),
@@ -33,7 +33,7 @@ export class ConsentDialog {
         ]),
         el('p', { class: 'note' }, [
           '18 yaşından küçüksen bunu anne-babanla birlikte oku. Ayrıntılar: ',
-          el('a', { text: 'Gizlilik politikası', attrs: { href: PRIVACY_URL, target: '_blank', rel: 'noopener' } }),
+          el('a', { text: withGloss('Gizlilik politikası', 'Privacy policy'), attrs: { href: PRIVACY_URL, target: '_blank', rel: 'noopener' } }),
         ]),
       ]), el('div', { class: 'consent-act' }, [
         el('label', { class: 'consent-tick' }, [tick, el('span', { text: 'Okudum, kayıt tutulmasını ve bu şekilde işlenmesini kabul ediyorum.' })]),

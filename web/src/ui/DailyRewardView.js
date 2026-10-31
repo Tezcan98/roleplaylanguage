@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 import { DAILY } from '../services/monetization/CreditWallet.js';
 
 /** "Günlük ödül": the 7-day strip (today lit), and a button to take today's credits — or, with a rewarded video, twice as many. */
@@ -18,7 +18,7 @@ export class DailyRewardView {
         el('small', { text: `${i + 1}. gün` }), el('b', { text: `+${n}` }),
       ])));
       const root = el('div', { class: 'overlay open dim daily' }, [el('div', { class: 'card' }, [
-        el('h2', { class: 'ctitle', text: '🎁 Günlük ödül' }),
+        el('h2', { class: 'ctitle', text: withGloss('🎁 Günlük ödül', '🎁 Daily reward') }),
         el('p', { class: 'ctext', text: d.day > 1 ? `${d.day} gündür her gün geliyorsun. Aferin!` : 'Hoş geldin! Her gün gelirsen ödül büyür.' }),
         el('p', { class: 'cen en-t', text: gloss('Come every day: the reward grows.') }),
         strip,

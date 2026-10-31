@@ -1,3 +1,4 @@
+import { withGloss } from '../i18n/Gloss.js';
 import { el } from './dom.js';
 
 /** The hidden "Kod" card (testers, the developer: five quick taps on the shop's "Altın" tab): a box for a code; what it did, or "Geçersiz kod". */
@@ -23,8 +24,8 @@ export class CodeCard {
     const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card code-card' }, [
       el('h2', { class: 'ctitle', text: '🔑 Kod' }),
       input, said,
-      el('button', { class: 'btn', text: 'Tamam', attrs: { type: 'button' }, on: { click: go } }),
-      el('button', { class: 'btn alt', text: 'Kapat', attrs: { type: 'button' }, on: { click: close } }),
+      el('button', { class: 'btn', text: withGloss('Tamam', 'OK'), attrs: { type: 'button' }, on: { click: go } }),
+      el('button', { class: 'btn alt', text: withGloss('Kapat', 'Close'), attrs: { type: 'button' }, on: { click: close } }),
     ])]);
     root.addEventListener('click', (e) => { if (e.target === root) close(); });
     this.host.append(root);

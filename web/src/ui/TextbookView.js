@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss, glossLang, meaning, hintText, turkishOnly } from '../i18n/Gloss.js';
+import { gloss, glossLang, meaning, hintText, turkishOnly, withGloss } from '../i18n/Gloss.js';
 
 /** Book-shaped overlay; the controller fills the page body and wires navigation. */
 export class TextbookView {
@@ -7,8 +7,8 @@ export class TextbookView {
     this.title = el('h2');
     this.body = el('div', { class: 'tb-body' });
     this.page = el('span', { class: 'pg' });
-    this.prev = el('button', { class: 'chipbtn', text: '‹ Geri', attrs: { type: 'button' }, on: { click: onPrev } });
-    this.next = el('button', { class: 'chipbtn primary', text: 'İleri ›', attrs: { type: 'button' }, on: { click: onNext } });
+    this.prev = el('button', { class: 'chipbtn', text: withGloss('‹ Geri', '‹ Back'), attrs: { type: 'button' }, on: { click: onPrev } });
+    this.next = el('button', { class: 'chipbtn primary', text: withGloss('İleri ›', 'Next ›'), attrs: { type: 'button' }, on: { click: onNext } });
     this.root = el('div', { class: 'overlay dim' }, [el('div', { class: 'textbook' }, [
       el('div', { class: 'tb-head' }, [this.title, el('button', { class: 'iconbtn', html: ICONS.close, attrs: { type: 'button', 'aria-label': 'Kitabı kapat' }, on: { click: onClose } })]),
       this.body,
@@ -27,12 +27,12 @@ export class TextbookView {
     this.prev.hidden = !prev;
     this.next.hidden = !next;
     this.next.disabled = next === 'locked';
-    this.next.textContent = nextLabel ?? 'İleri ›';
+    this.next.textContent = nextLabel ?? withGloss('İleri ›', 'Next ›');
     this.body.replaceChildren();
   }
 
   units(units, status, onPick) {
-    this.body.append(el('h3', { text: 'İçindekiler' }), el('div', { class: 'tb-units' }, units.map((u) => el('button', {
+    this.body.append(el('h3', { text: withGloss('İçindekiler', 'Contents') }), el('div', { class: 'tb-units' }, units.map((u) => el('button', {
       class: 'unit', attrs: { type: 'button', ...(u.locked ? { disabled: '' } : {}) }, on: { click: () => onPick(u) },
     }, [el('span', {}, [u.title, el('br'), el('small', { class: 'en-t', text: gloss(u.titleEn) })]), el('span', { class: `st ${status(u) === 'done' ? 'done' : ''}`, text: u.locked ? 'Yakında' : status(u) === 'done' ? '✓ Bitti' : 'Ödev' })]))));
   }

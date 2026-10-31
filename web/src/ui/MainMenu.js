@@ -99,21 +99,21 @@ export class MainMenu {
       voice.checked = s.get('neuralVoices', true);
       voice.addEventListener('change', () => s.set('neuralVoices', voice.checked));
       const quality = el('select', { attrs: { id: 'quality' } }, [
-        el('option', { text: 'Yüksek (güçlü ekran kartı)', attrs: { value: 'high' } }),
-        el('option', { text: 'Orta (bilgisayar)', attrs: { value: 'medium' } }),
-        el('option', { text: 'Düşük (telefon)', attrs: { value: 'low' } }),
+        el('option', { text: ui('Yüksek (güçlü ekran kartı)', 'High (strong graphics card)'), attrs: { value: 'high' } }),
+        el('option', { text: ui('Orta (bilgisayar)', 'Medium (computer)'), attrs: { value: 'medium' } }),
+        el('option', { text: ui('Düşük (telefon)', 'Low (phone)'), attrs: { value: 'low' } }),
       ]);
       quality.value = s.get('quality', 'low');
       quality.addEventListener('change', async () => { if (quality.value !== 'low' && !(await this.confirmQuality?.())) { quality.value = s.get('quality', 'low'); return; } s.set('quality', quality.value); location.reload(); });
       body = [
         back,
-        el('h2', { class: 'ctitle', text: '⚙️ Ayarlar', on: { click: () => this.#testerTap() } }),
+        el('h2', { class: 'ctitle', text: `⚙️ ${ui('Ayarlar', 'Settings')}`, on: { click: () => this.#testerTap() } }),
         // start the story from any day (testers only: five taps on the title, as in the game's ⚙️)
         this.onStartAt && s.get('testerMode', false) && this.#chapterPicker(go),
         btn('Nasıl oynanır?', 'btn alt', () => this.onHelp?.()),
         save && btn('Yeni oyun (baştan başla)', 'btn alt', go(this.onStart)),
-        el('label', { class: 'toggle' }, [voice, el('span', { text: 'Doğal Türkçe sesler' })]),
-        el('label', { class: 'toggle' }, [el('span', { text: 'Görüntü kalitesi:' }), quality]),
+        el('label', { class: 'toggle' }, [voice, el('span', { text: ui('Doğal Türkçe sesler', 'Natural Turkish voices') })]),
+        el('label', { class: 'toggle' }, [el('span', { text: ui('Görüntü kalitesi:', 'Picture quality:') }), quality]),
       ];
     } else {
       const pic = characterPicture(s.get('gender', 'boy'), s.get('look', ''));
@@ -122,18 +122,18 @@ export class MainMenu {
         el('div', { class: 'menu-top' }, [
           fullscreenPossible() && el('button', { class: 'iconbtn light', html: fullscreenIcon(), attrs: { type: 'button', 'aria-label': 'Tam ekran', title: 'Tam ekran' }, on: { click: () => goFullscreen().finally(() => this.show()) } }), // iPhone: the home-screen guide
           el('button', { class: 'iconbtn light', html: COIN_HTML, attrs: { type: 'button', 'aria-label': 'Dükkan', title: 'Dükkan · krediler' }, on: { click: () => this.onShop?.() } }),
-          btn('⚙️', 'iconbtn light', () => this.show('settings'), { 'aria-label': 'Ayarlar', title: 'Ayarlar' }),
+          btn('⚙️', 'iconbtn light', () => this.show('settings'), { 'aria-label': ui('Ayarlar', 'Settings'), title: ui('Ayarlar', 'Settings') }),
           this.onCode && s.get('devCodes', false) && btn('🔑', 'iconbtn light', () => this.onCode(), { 'aria-label': 'Kod', title: 'Kod' }), // the developer's (five taps on the shop's "Altın" tab)
         ].filter(Boolean)),
         el('h1', { class: 'big', text: 'Türk Ailem' }),
         el('p', { class: 'brand-meaning en-t', text: gloss('My Turkish Family') }), // the name in the player's own language (Türk + aile + -m)
-        el('p', { class: 'sub', text: 'Köyde yaşa, konuş, arkadaş edin.' }),
-        btn(save ? '▶ Devam et' : '▶ Hikayeye başla', 'btn menu-main', go(() => { this.settings.set('firstBannerSeen', true); (save ? this.onContinue : this.onStart)(); })), // (every menu before the first game carries the banner)
+        el('p', { class: 'sub', text: ui('Köyde yaşa, konuş, arkadaş edin.', 'Live in the village, talk and make friends.') }),
+        btn(save ? `▶ ${ui('Devam et', 'Continue')}` : `▶ ${ui('Hikayeye başla', 'Start the story')}`, 'btn menu-main', go(() => { this.settings.set('firstBannerSeen', true); (save ? this.onContinue : this.onStart)(); })), // (every menu before the first game carries the banner)
         el('p', { class: 'menu-where' }, [this.#where]),
-        canInstall() && el('button', { class: 'btn alt menu-install', text: '📲 Uygulama olarak yükle (hep tam ekran)', attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),
+        canInstall() && el('button', { class: 'btn alt menu-install', text: `📲 ${ui('Uygulama olarak yükle (hep tam ekran)', 'Install as an app (always full screen)')}`, attrs: { type: 'button' }, on: { click: () => installApp().finally(() => this.show()) } }),
         el('div', { class: 'profile-line' }, [
           el('span', { class: 'profile-who' }, [el('img', { class: 'profile-pic', attrs: { src: pic, alt: '' } }), glossInfo().name]),
-          btn('Değiştir', 'chipbtn', () => this.onProfile()),
+          btn(ui('Değiştir', 'Change'), 'chipbtn', () => this.onProfile()),
         ]),
         canRate() && el('button', { class: 'chipbtn menu-rate', attrs: { type: 'button' }, on: { click: () => openStore(this.settings) } }, ['⭐ Bize destek ol: puan ver', ...(ui('', 'Support us: rate the game') ? [el('small', { class: 'en-t' }, [' · ', el('bdi', { text: ui('', 'Support us: rate the game') })])] : [])]), // (no reward: Google Play forbids rewarding ratings)
         (this.#playersEl = el('p', { class: 'menu-players', text: this.#playersText() })), // small, at the very bottom

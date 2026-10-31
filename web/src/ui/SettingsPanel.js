@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 /** Line icons (the same stroke as the close and speaker ones). */
 const icon = (paths) => `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
@@ -108,8 +108,8 @@ export class SettingsPanel {
         slider('voices', I.voices, 'Karakterler', 'Characters speak out loud'),
         slider('music', I.music, 'Müzik', 'Music'),
       ]),
-      el('div', { class: 'set-group set-row' }, [el('span', { class: 'set-ico', html: I.picture }), el('span', { class: 'vol-name', text: 'Görüntü' }), quality]),
-      el('div', { class: 'set-group set-row' }, [el('span', { class: 'set-ico', html: I.speed }), el('span', { class: 'vol-name', text: 'Kare hızı' }), fps]),
+      el('div', { class: 'set-group set-row' }, [el('span', { class: 'set-ico', html: I.picture }), el('span', { class: 'vol-name', text: withGloss('Görüntü', 'Picture') }), quality]),
+      el('div', { class: 'set-group set-row' }, [el('span', { class: 'set-ico', html: I.speed }), el('span', { class: 'vol-name', text: withGloss('Kare hızı', 'Frame rate') }), fps]),
       el('div', { class: 'set-tiles' }, [
         tile(I.help, 'Nasıl oynanır', '', () => this.onHelp?.()),
         this.onFeedback && tile(I.feedback, 'Yorum yaz', '+20 kredi', () => this.onFeedback()),

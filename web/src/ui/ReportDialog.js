@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 /** Why a player is reported (sent to the server as `id`). */
 export const REPORT_REASONS = [
@@ -24,11 +24,11 @@ export class ReportDialog {
     return new Promise((resolve) => {
       const pop = this.modes.push('overlay');
       const body = el('div', { class: 'report-list' });
-      const title = el('h2', { class: 'ctitle', text: 'Kimi şikayet ediyorsun?' });
+      const title = el('h2', { class: 'ctitle', text: withGloss('Kimi şikayet ediyorsun?', 'Who are you reporting?') });
       const en = el('p', { class: 'cen en-t', text: gloss('Who are you reporting?') });
-      const cancel = el('button', { class: 'linkbtn', text: 'Vazgeç', attrs: { type: 'button' } });
+      const cancel = el('button', { class: 'linkbtn', text: withGloss('Vazgeç', 'Cancel'), attrs: { type: 'button' } });
       const root = el('div', { class: 'overlay open dim' }, [el('div', { class: 'card report' }, [
-        el('p', { class: 'chap', text: '🚩 Şikayet et' }), title, en, body,
+        el('p', { class: 'chap', text: withGloss('🚩 Şikayet et', '🚩 Report') }), title, en, body,
         el('p', { class: 'note', text: 'Son 10 dakikada yazdıkları ve sesli söyledikleri incelenir. Kimin şikayet ettiği söylenmez.' }),
         cancel,
       ])]);

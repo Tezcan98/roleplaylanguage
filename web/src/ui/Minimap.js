@@ -1,3 +1,4 @@
+import { withGloss } from '../i18n/Gloss.js';
 import { el } from './dom.js';
 
 /** At most this many metres from the player to the map's edge (outdoors); a room fits in whole. */
@@ -17,7 +18,7 @@ export class Minimap {
   constructor(host, { world, cast, player, camera, marker, story, settings = null, others = () => [], onTap = null }) {
     Object.assign(this, { world, cast, player, camera, marker, story, settings, others });
     this.canvas = el('canvas', { attrs: { 'aria-hidden': 'true' } });
-    this.map = el('button', { class: 'minimap', attrs: { type: 'button', title: 'Harita · nereye gideceğim?', 'aria-label': 'Harita: nereye gideceğim?' }, on: { click: () => onTap?.() } }, [this.canvas]);
+    this.map = el('button', { class: 'minimap', attrs: { type: 'button', title: withGloss('Harita · nereye gideceğim?', 'Map · where do I go?'), 'aria-label': 'Harita: nereye gideceğim?' }, on: { click: () => onTap?.() } }, [this.canvas]);
     this.toggle = el('button', { class: 'fold-btn', attrs: { type: 'button' }, on: { click: () => this.setCollapsed(!this.collapsed) } });
     this.root = el('div', { class: 'minimap-wrap' }, [this.map, this.toggle]);
     host.append(this.root);

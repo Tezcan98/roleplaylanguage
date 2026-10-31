@@ -1,6 +1,6 @@
 import { Chess } from 'chess.js';
 import { el, ICONS } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
 const NAMES = { k: 'şah', q: 'vezir', r: 'kale', b: 'fil', n: 'at', p: 'piyon' };
@@ -20,7 +20,7 @@ export class ChessView {
 
   constructor(host, { modes, onMove = () => {} }) {
     Object.assign(this, { modes, onMove });
-    this.title = el('h2', { class: 'ctitle', text: 'Satranç' });
+    this.title = el('h2', { class: 'ctitle', text: withGloss('Satranç', 'Chess') });
     this.board = el('div', { class: 'chess-board', attrs: { role: 'grid' } });
     this.status = el('p', { class: 'chess-status' });
     this.clocks = el('p', { class: 'chess-clocks' });

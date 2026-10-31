@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss, meaning, ui } from '../i18n/Gloss.js';
+import { gloss, meaning, ui, withGloss } from '../i18n/Gloss.js';
 
 /** Lesson overlay: the teacher's presentation, practice, then questions with a live feed and scoreboard. */
 export class ClassroomView {
@@ -14,7 +14,7 @@ export class ClassroomView {
     this.status = el('p', { class: 'fb' });
     this.feed = el('div');
     this.scores = el('ul');
-    this.live = el('span', { class: 'live', text: '● CANLI' });
+    this.live = el('span', { class: 'live', text: withGloss('● CANLI', '● LIVE') });
     this.root = el('div', { class: 'classroom' }, [el('div', { class: 'cls' }, [
       el('div', { class: 'cls-main' }, [
         el('div', { class: 'listen-row', style: { alignItems: 'center', justifyContent: 'space-between' } }, [

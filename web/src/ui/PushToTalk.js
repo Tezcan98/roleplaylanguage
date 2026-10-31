@@ -1,5 +1,5 @@
 import { el } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 
 const MIC = '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 
@@ -23,7 +23,7 @@ export class PushToTalk {
     this.btn = el('button', { class: 'ptt', html: `${MIC}<span>${LABEL.idle}</span>`, attrs: { type: 'button', 'aria-label': 'Konuşmak için dokun, bitirmek için tekrar dokun (T)' } });
     this.status = el('button', { class: 'pill online', attrs: { type: 'button' }, on: { click: () => (this.offline ? this.onRetry?.() : this.onRooms?.()) } }); // a tap: "Meydan seç" (another city's square) — offline: try again
     // "Şikayet et", next to who is online in the top bar (main.js puts both there)
-    this.reportBtn = el('button', { class: 'pill report', text: '🚩 Şikayet et', attrs: { type: 'button', title: 'Bir oyuncuyu şikayet et', 'aria-label': 'Şikayet et' }, on: { click: () => this.onReport?.() } });
+    this.reportBtn = el('button', { class: 'pill report', text: withGloss('🚩 Şikayet et', '🚩 Report'), attrs: { type: 'button', title: withGloss('Bir oyuncuyu şikayet et', 'Report a player'), 'aria-label': 'Şikayet et' }, on: { click: () => this.onReport?.() } });
     this.reportBtn.hidden = true;
     this.zone = el('div', { class: 'pill zone-note' });
     this.zone.hidden = true;
@@ -33,8 +33,8 @@ export class PushToTalk {
     // on the left, under the task: alone in the square (offline: a tap connects; online: a tap picks another city)
     this.alone = el('button', { class: 'alone-note', attrs: { type: 'button', hidden: '' }, on: { click: () => (this.offline ? this.onRetry?.() : this.onRooms?.()) } });
     host.append(this.alone);
-    this.input = el('input', { class: 'ptt-input', attrs: { type: 'text', maxlength: '140', placeholder: 'Türkçe yaz…', enterkeyhint: 'send', 'aria-label': 'Mesaj' } });
-    this.typeBox = el('form', { class: 'ptt-type' }, [this.input, el('button', { class: 'chipbtn primary', text: 'Gönder', attrs: { type: 'submit' } })]);
+    this.input = el('input', { class: 'ptt-input', attrs: { type: 'text', maxlength: '140', placeholder: withGloss('Türkçe yaz…', 'Write in Turkish…'), enterkeyhint: 'send', 'aria-label': 'Mesaj' } });
+    this.typeBox = el('form', { class: 'ptt-type' }, [this.input, el('button', { class: 'chipbtn primary', text: withGloss('Gönder', 'Send'), attrs: { type: 'submit' } })]);
     this.typeBox.hidden = true;
     this.root.append(this.typeBox);
     this.typeBox.addEventListener('submit', (e) => { e.preventDefault(); const t = this.input.value.trim(); this.input.value = ''; this.typeBox.hidden = true; if (t) this.onType?.(t); });

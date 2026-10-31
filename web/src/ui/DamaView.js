@@ -1,5 +1,5 @@
 import { el, ICONS } from './dom.js';
-import { gloss } from '../i18n/Gloss.js';
+import { gloss, withGloss } from '../i18n/Gloss.js';
 import { legalMoves, count, SIZE } from '../systems/DamaRules.js';
 
 const STEP = 240; // ms per jump when a take of several pieces is shown
@@ -41,8 +41,8 @@ export class DamaView {
     this.status = el('div', { class: 'dama-status' });
     this.line = el('div', { class: 'dama-line' });
     this.score = el('div', { class: 'dama-score' });
-    this.again = el('button', { class: 'btn', text: 'Yeni oyun', attrs: { type: 'button' }, on: { click: () => this.onAgain() } });
-    this.npcBtn = el('button', { class: 'btn primary', text: 'Rıfat Amca ile oyna', attrs: { type: 'button' }, on: { click: () => this.onNpc() } });
+    this.again = el('button', { class: 'btn', text: withGloss('Yeni oyun', 'New game'), attrs: { type: 'button' }, on: { click: () => this.onAgain() } });
+    this.npcBtn = el('button', { class: 'btn primary', text: withGloss('Rıfat Amca ile oyna', 'Play with Uncle Rıfat'), attrs: { type: 'button' }, on: { click: () => this.onNpc() } });
     this.root = el('div', { class: 'overlay dim dama' }, [el('div', { class: 'card' }, [
       el('div', { class: 'dama-head' }, [
         this.title,
