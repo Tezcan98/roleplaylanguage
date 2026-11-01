@@ -34,8 +34,8 @@ export class PlayStats {
   #dirty = false;
   #timer = null;
 
-  constructor({ dir = null, key = '' } = {}) {
-    this.dir = dir; this.key = key;
+  constructor({ dir = null, key = '', ignore = null } = {}) {
+    this.dir = dir; this.key = key; this.ignore = ignore;
     if (dir) {
       mkdirSync(dir, { recursive: true });
       this.#load();
@@ -72,6 +72,7 @@ export class PlayStats {
 
   /** One batch from the game; false when it is not one or comes too often. */
   record(msg, ip = '', country = '') {
+    if (this.ignore?.has(ip)) return true; // the developer's own connection: answered, not counted
     const now = Date.now(), hit = this.#hits.get(ip) ?? { n: 0, at: now };
     if (now - hit.at > 60000) { hit.n = 0; hit.at = now; }
     if (++hit.n > PER_MINUTE) return false;

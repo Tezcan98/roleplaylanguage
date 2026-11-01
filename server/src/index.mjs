@@ -59,6 +59,7 @@ import { ChessScoreFile } from './ChessScoreFile.js';
 import { Moderator } from './Moderator.js';
 import { AdStats } from './AdStats.js';
 import { PlayStats } from './PlayStats.js';
+import { IgnoreIps } from './IgnoreIps.js';
 import { Feedback } from './Feedback.js';
 import { Reports } from './Reports.js';
 import { Mailer } from './Mailer.js';
@@ -83,8 +84,9 @@ const chat = new NpcChat({
 });
 
 // live ad numbers from the app (AdMob's own come a day or two late)
-const playStats = new PlayStats({ dir: env.PLAY_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'play') : null), key: env.AD_STATS_KEY ?? '' }); // how the game is played, anonymously: POST /api/play-event · GET /api/stats?key= (same key)
-const adStats = new AdStats({ dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '', installs: () => playStats.installs(), play: () => playStats.summary() }); // (its page shows the downloads too)
+const ignoreIps = new IgnoreIps(env.STATS_IGNORE_IPS || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'stats-ignore-ips.txt') : '')); // the developer's own addresses: not counted in the play and ad numbers
+const playStats = new PlayStats({ ignore: ignoreIps, dir: env.PLAY_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'play') : null), key: env.AD_STATS_KEY ?? '' }); // how the game is played, anonymously: POST /api/play-event · GET /api/stats?key= (same key)
+const adStats = new AdStats({ ignore: ignoreIps, dir: env.AD_STATS_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'ads') : null), key: env.AD_STATS_KEY ?? '', installs: () => playStats.installs(), play: () => playStats.summary() }); // (its page shows the downloads too)
 playStats.adDevices = () => adStats.devices(); // (the menu's "bugüne kadar": the app's players are in the ad numbers)
 
 // what the players think of the game: once a day, credits for a real opinion

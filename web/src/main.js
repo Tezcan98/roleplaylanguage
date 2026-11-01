@@ -186,9 +186,11 @@ if (native) await updateGate(nativeKit.App); // a newer build: downloaded and st
 // everyone starts on low (phones get hot, battery drains); once for those who had another value saved; medium / high is a choice, asked about (SettingsPanel)
 if (!settings.get('qualityLow', false)) { settings.set('quality', 'low'); settings.set('qualityLow', true); }
 const quality = params.get('quality') ?? settings.get('quality', 'low');
-// on our own site the address carries the language: anadoluailesi.com.tr/oyun/en/ → meanings in English (kept as the player's choice)
-const pathLang = location.pathname.match(/\/oyun\/(ar|ur|hi|en|es|fr|tr)(?:\/|$)/)?.[1]; // tr: "Sadece Türkçe" (no other language)
-if (pathLang && !params.has('gloss')) settings.set('glossLang', pathLang);
+// on our own site the address carries the language: anadoluailesi.com.tr/oyun/en/ → meanings in English, for a first visit. Once the
+// player has picked their language (the setup's first step, `profileDone`) their choice stays: the address used to overwrite it
+// at every load, so someone who opened /oyun/tr/ and picked English was back in Turkish after the next reload
+const pathLang = location.pathname.match(/\/oyun\/(ar|ur|hi|en|es|fr|id|tr)(?:\/|$)/)?.[1]; // tr: "Sadece Türkçe" (no other language)
+if (pathLang && !params.has('gloss') && !settings.get('profileDone', false)) settings.set('glossLang', pathLang);
 await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', defaultGlossLang())); // meanings in the device's language when the game has it (src/i18n/Region.js; assets/i18n/)
 document.title = withGloss('Türk Ailem', 'My Turkish Family'); // the tab: the name in the player's language too
 const fullscreenBtn = setupLandscape(); // ⛶ in the HUD

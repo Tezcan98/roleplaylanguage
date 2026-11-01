@@ -24,10 +24,10 @@ const laundryCount = (c) => c.count('camasir');
 export const STORY = {
   chapters: [
     {
-      // a new game starts at home, mom in the kitchen (the welcome, then mom calls you). It started in the park in the square
-      // for a while, but most new players wandered there and never found home, and the square's recording consent came
-      // before anything else: now the square (and its questions) wait until the player first goes there
-      id: 'd1-morning', day: 1, time: '08:00', location: 'house', spawn: 'morning',
+      // a new game starts in the garden, just outside the front door (the welcome, then mom calls you in). It started in the park
+      // in the square for a while, but most new players wandered there and never found home, and the square's recording consent
+      // came before anything else: now the square (and its questions) wait until the player first goes there
+      id: 'd1-morning', day: 1, time: '08:00', location: 'yard', spawn: 'houseDoor',
       cast: {
         anne: ['house', 'kitchen', 'cook'],
         dede: ['yard', 'garden', 'garden'],
@@ -36,19 +36,19 @@ export const STORY = {
       },
       intro: {
         num: 'Pazar · Bölüm 1', title: 'Türk Ailem’e hoş geldin!',
-        text: 'Bu köyde bir Türk ailesiyle yaşıyorsun: annen, baban, deden, ninen ve küçük kardeşin Ali. Bugün pazar. Sabah oldu, evdesin.',
-        en: 'You live in this village with a Turkish family: your mom, dad, grandpa, grandma and your little brother Ali. Today is Sunday. It is morning and you are at home.',
+        text: 'Bu köyde bir Türk ailesiyle yaşıyorsun: annen, baban, deden, ninen ve küçük kardeşin Ali. Bugün pazar. Sabah oldu, bahçedesin.',
+        en: 'You live in this village with a Turkish family: your mom, dad, grandpa, grandma and your little brother Ali. Today is Sunday. It is morning and you are in the garden.',
         button: 'Devam',
       },
       // after the welcome: what to do now (StoryDirector shows it after the intro card)
       call: {
         num: '📣 Annen seni çağırıyor', title: '“Oğlum, gel bakalım!”',
-        text: 'Annen mutfakta seni bekliyor. Oku takip et, yanına git ve sağ alttaki butona dokun. İstersen kapıdan çıkıp köy meydanına da gidebilirsin: orada gerçek oyuncularla online oynarsın.',
-        en: 'Your mom is waiting for you in the kitchen. Follow the arrow, go to her and tap the button at the bottom right. Or go out the door to the village square: you can play online there with real players.',
+        text: 'Annen seni içeriden çağırıyor. Oku takip et, kapıdan eve gir ve annenle konuş. İstersen bahçe kapısından köy meydanına da gidebilirsin: orada gerçek oyuncularla online oynarsın.',
+        en: 'Your mom is calling you from inside. Follow the arrow, go in through the door and talk to her. Or go out of the garden gate to the village square: you can play online there with real players.',
         button: 'Tamam',
       },
       quests: [
-        { id: 'talk-mom', title: 'Annen çağırıyor', obj: 'Annenle konuş', en: 'Talk to your mom', target: { npc: 'anne' } },
+        { id: 'talk-mom', title: 'Annen çağırıyor', obj: 'Eve gir, annenle konuş', en: 'Go inside and talk to your mom', target: { npc: 'anne' } },
         { id: 'take-jacket', title: 'Mont', obj: 'Montunu al', en: 'Take your jacket (next to the door)', target: { item: 'mont' }, complete: { pick: 'mont' }, minutes: 5 },
         { id: 'go-out', title: 'Dışarısı', obj: 'Kapıdan dışarı çık', en: 'Go out the door', target: { hotspot: 'house.door' }, complete: { enter: 'yard' }, minutes: 2 },
         {

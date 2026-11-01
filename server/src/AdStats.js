@@ -31,8 +31,8 @@ export class AdStats {
   #hits = new Map(); // ip → { n, at }
 
   /** `installs()`: the download counter shown on the page (PlayStats.js `installs()`), or null. `play()`: how the game is played (PlayStats.js `summary()`), shown below the ads. */
-  constructor({ dir = null, key = '', installs = null, play = null } = {}) {
-    this.dir = dir; this.key = key; this.installs = installs; this.play = play;
+  constructor({ dir = null, key = '', installs = null, play = null, ignore = null } = {}) {
+    this.dir = dir; this.key = key; this.installs = installs; this.play = play; this.ignore = ignore;
     if (dir) { mkdirSync(dir, { recursive: true }); this.#load(); }
   }
 
@@ -56,6 +56,7 @@ export class AdStats {
 
   /** One event from the app; false when it is not one or comes too often. */
   record(msg, ip = '', country = '') {
+    if (this.ignore?.has(ip)) return true; // the developer's own connection: answered, not counted
     const now = Date.now(), h = this.#hits.get(ip) ?? { n: 0, at: now };
     if (now - h.at > 60000) { h.n = 0; h.at = now; }
     if (++h.n > PER_MINUTE) return false;
