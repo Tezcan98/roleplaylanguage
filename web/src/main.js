@@ -189,7 +189,7 @@ const quality = params.get('quality') ?? settings.get('quality', 'low');
 // on our own site the address carries the language: anadoluailesi.com.tr/oyun/en/ → meanings in English (kept as the player's choice)
 const pathLang = location.pathname.match(/\/oyun\/(ar|ur|hi|en|es|fr|tr)(?:\/|$)/)?.[1]; // tr: "Sadece Türkçe" (no other language)
 if (pathLang && !params.has('gloss')) settings.set('glossLang', pathLang);
-await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', defaultGlossLang())); // meanings in Arabic by default (Hindi from India; assets/i18n/)
+await loadGlossLang(params.get('gloss') ?? settings.get('glossLang', defaultGlossLang())); // meanings in the device's language when the game has it (src/i18n/Region.js; assets/i18n/)
 document.title = withGloss('Türk Ailem', 'My Turkish Family'); // the tab: the name in the player's language too
 const fullscreenBtn = setupLandscape(); // ⛶ in the HUD
 // from the share message's iPhone link (anadoluailesi.com.tr/ios → /oyun/?ios): how to put the game on the home screen, at once

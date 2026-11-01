@@ -45,6 +45,12 @@
       "dir": "ltr"
     },
     {
+      "code": "id",
+      "name": "Bahasa Indonesia",
+      "short": "ID",
+      "dir": "ltr"
+    },
+    {
       "code": "tr",
       "name": "Sadece Türkçe",
       "short": "TR",
