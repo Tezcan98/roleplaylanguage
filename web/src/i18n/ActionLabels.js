@@ -17,7 +17,24 @@ const EN = {
   'Banka otur': 'Sit on the bench', 'Bankta otur': 'Sit on the bench', 'Banka otur, maçı izle': 'Sit on the bench and watch the match', 'Kahvehanede otur': 'Sit in the coffeehouse', 'Çay bahçesinde otur': 'Sit in the tea garden',
   'Sinemada otur': 'Sit in the cinema', 'Camiye bak': 'Look at the mosque', 'Raflara bak': 'Look at the shelves', 'Bakkalın tezgahına bak': 'Look at the grocer’s counter', 'Alışveriş yap': 'Go shopping', 'Meyve sebze al': 'Buy fruit and vegetables',
   'Dama al': 'Take a draughts board', 'İsmail Dede’ye sor': 'Ask İsmail Dede', 'Taşı yerine bırak': 'Put the piece back', 'Skoru sıfırla': 'Reset the score', 'İneği sağ': 'Milk the cow', 'Koyunlara saman ver': 'Give hay to the sheep',
+  'Kitap al': 'Take a book', 'Kitabı rafa koy': 'Put the book on the shelf', 'Sınıfa gir': 'Go into the classroom', 'Sınıfa gir: pratik': 'Go into the classroom: practice',
+  'Kapı': 'Door', 'Sınıf kapısı': 'Classroom door', 'Okul kapısı': 'School door', 'Kıyafet dükkânı (HD karakter)': 'Clothes shop (HD character)',
+  'Namaza dur': 'Stand for prayer', 'Namazı izle': 'Watch the prayer', 'Kendi bahçen': 'Your own garden', 'İnek': 'Cow', 'Koyunlar': 'Sheep',
+  'Montu al': 'Take the jacket', 'Kovayı al': 'Take the bucket', 'Anahtarı al': 'Take the wrench', 'Domatesi al': 'Pick the tomato', 'Ekmeği al': 'Take the bread',
+  'Çorabı al': 'Take the sock', 'Havluyu al': 'Take the towel', 'Gömleği al': 'Take the shirt', 'Kitabı al': 'Take the book',
+  "Scooter'dan in": 'Get off the scooter', "Scooter'a bin": 'Get on the scooter', 'Bu taş oraya gidemez': 'This piece can’t go there',
+  '🐴 at': '🐴 horse', '🐄 inek': '🐄 cow', '🐑 koyun': '🐑 sheep', '🐕 köpek': '🐕 dog', '🐈 kedi': '🐈 cat',
 };
+/** Buttons with something variable in them (a time, a price, a player's name): [pattern, English, variables]. */
+const PATTERNS = [
+  [/^Attan in · (.+)$/, 'Get off the horse · {time}', (m) => ({ time: m[1] })],
+  [/^Ata bin · (.+) kaldı$/, 'Ride the horse · {time} left', (m) => ({ time: m[1] })],
+  [/^Ata bin · (\d+) dk · (\d+) kredi$/, 'Ride the horse · {min} min · {price} credits', (m) => ({ min: m[1], price: m[2] })],
+  [/^(.+) engelini kaldır$/, 'Unblock {name}', (m) => ({ name: m[1] })],
+  [/^(.+) kişisini sohbete çağır$/, 'Invite {name} to the chat', (m) => ({ name: m[1] })],
+  [/^(.+) ile sesli sohbet et$/, 'Voice chat with {name}', (m) => ({ name: m[1] })],
+  [/^📖 (.+) oku$/, '📖 Read {title}', (m) => ({ title: m[1] })],
+];
 const TALK = / ile konuş$/;
 
 /**
@@ -57,6 +74,7 @@ export function actionText(label) {
   if (turkishOnly()) return { main: label, sub: '' };
   let en = EN[label], vars;
   if (!en) for (const [re, f] of CHESS) { const m = re.exec(label); if (m) [en, vars] = f(m); }
+  if (!en) for (const [re, e, f] of PATTERNS) { const m = re.exec(label); if (m) { en = e; vars = f(m); } }
   if (!en && TALK.test(label)) { const who = label.replace(TALK, ''); en = 'Talk to {name}'; vars = { name: personName(who) || who }; }
   const main = en ? gloss(en, vars) : '';
   return main && main !== label ? { main, sub: label } : { main: label, sub: '' };

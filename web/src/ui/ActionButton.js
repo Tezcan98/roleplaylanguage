@@ -22,7 +22,7 @@ export class ActionButton {
   showLeft(a) {
     this.#leftRun = a?.run ?? null;
     this.leftBtn.hidden = !a;
-    if (a && this.leftBtn.textContent !== a.label) this.leftBtn.textContent = a.label;
+    if (a) ActionButton.fill(this.leftBtn, a.label);
   }
 
   /** The button's text: the label in the player's language, the Turkish small under it. */
