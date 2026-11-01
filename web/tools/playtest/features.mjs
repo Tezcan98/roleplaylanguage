@@ -77,7 +77,7 @@ try {
   const nodeSay = () => ev(() => window.__game.dialogue.node?.say ?? '');
   // --- headscarf: open at home, on outside --------------------------------------------
   const covered = () => ev(() => window.__game.player.covered);
-  await ev(() => window.__game.travel.place('house', 'start', { force: true })); await sleep(700); // (a new game starts in the park: home first)
+  await ev(() => window.__game.travel.place('house', 'start', { force: true })); await sleep(700); // (home first)
   check('covered girl: hair open at home', (await covered()) === false);
   await ev(() => window.__game.travel.place('yard', 'houseDoor', { force: true })); await sleep(700);
   check('…headscarf on outside', (await covered()) === true);
@@ -672,7 +672,7 @@ try {
     await p3.close();
   }
 
-  // --- a new game starts in the park; feedback once a day for credits --------------------
+  // --- a new game starts at home next to mom; the children's park; feedback once a day for credits ---
   {
     const p4 = await (await browser.newContext({ viewport: { width: 1100, height: 700 } })).newPage();
     errors.push(...watchErrors(p4));
@@ -686,9 +686,11 @@ try {
       if (!t) break;
       cards.push(t); await e4(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(600);
     }
-    check('new game: the welcome first, then mom calls you home', cards[0] === 'Türk Ailem’e hoş geldin!' && cards.includes('“Oğlum, eve gel!”'), JSON.stringify(cards));
+    check('new game: the welcome first, then mom calls you (no recording consent before it)', cards[0] === 'Türk Ailem’e hoş geldin!' && cards[1] === '“Oğlum, gel bakalım!”', JSON.stringify(cards));
     const start = await e4(() => { const g = window.__game, p = g.player.position; return { loc: g.world.current.id, x: p.x, z: p.z, q: g.story.quest?.id }; });
-    check('…in the park in the village square, the task: go home to mom', start.loc === 'village' && start.x > -46 && start.x < -32 && start.z > 13 && start.z < 25 && start.q === 'talk-mom', JSON.stringify(start));
+    const mom = await e4(() => { const n = window.__game.cast.get('anne'); return { loc: n?.location, x: n?.position.x, z: n?.position.z }; });
+    check('…at home in the kitchen, mom just ahead, the task: talk to her', start.loc === 'house' && mom.loc === 'house' && Math.hypot(start.x - mom.x, start.z - mom.z) < 3 && start.q === 'talk-mom', JSON.stringify({ start, mom }));
+    await e4(() => window.__game.travel.place('village', 'park', { force: true })); await sleep(1500); // (the park, for the children)
     const kids = await e4(() => ['defne', 'ayse', 'emre', 'mert'].map((k) => { const n = window.__game.cast.get(k); return { k, loc: n?.location, y: n?.position.y }; }));
     check('…children playing in the park (two on the swings)', kids.every((k) => k.loc === 'village') && kids.filter((k) => k.y > 0.1).length >= 2, JSON.stringify(kids));
     const swung = await e4(async () => { const sw = window.__game.world.get('village').swings, a = sw.map((s) => s.group.rotation.x); await new Promise((r) => setTimeout(r, 400)); return sw.map((s, i) => Math.abs(s.group.rotation.x - a[i]) > 0.01); });

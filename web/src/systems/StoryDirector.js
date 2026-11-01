@@ -67,14 +67,9 @@ export class StoryDirector {
     this.effects?.run(ch.enter);
     this.bus.emit(EV.CHAPTER, { chapter: ch });
     this.bus.emit(EV.QUEST, { quest: this.quest });
-    // `call`: what to do now, after the welcome. A new game's first one waits for the player's first touch or key (`whenFirstInput`):
-    // the game is on, the camera close on the park, and "Oğlum, eve gel!" comes when they first act, not before they have looked round
-    const late = i === 0 && ch.call && this.whenFirstInput;
-    const show = () => this.cards.show(ch.intro, () => {
-      if (!late) { this.cards.show(ch.call, () => { this.#announce(); onPlay?.(); }); return; }
-      onPlay?.();
-      this.whenFirstInput().then(() => { if (this.state.chapter === i && this.state.quest === 0) this.cards.show(ch.call, () => this.#announce()); });
-    });
+    // `call`: what to do now, right after the welcome (it waited for the first touch while a new game began in the park; now
+    // the game begins next to mom and a late card would come just as the player taps "talk to mom")
+    const show = () => this.cards.show(ch.intro, () => this.cards.show(ch.call, () => { this.#announce(); onPlay?.(); }));
     if (this.beforeCards) this.beforeCards().then(show); else show(); // (the first time in the square: the consent and the name come first)
   }
 

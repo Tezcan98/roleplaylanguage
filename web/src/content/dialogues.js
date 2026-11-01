@@ -110,9 +110,10 @@ export const DIALOGUES = {
     },
     nodes: {
       // --- Sunday morning ---
-      // you come home from the park: mom called you
-      bored: { say: 'Günaydın oğlum, geldin mi? Parkta eğlendin mi?', en: 'Good morning, son, are you back? Did you have fun in the park?', words: [['günaydın', 'good morning'], ['eğlenmek', 'to have fun']],
-        options: [{ tr: 'Evet, çok eğlendim!', en: 'Yes, I had a lot of fun!', next: 'b2' }, { tr: 'Evet, ama şimdi canım sıkılıyor.', en: "Yes, but now I'm bored.", next: 'b2' }] },
+      // the first talk of a new game: the task is done with the first answer (many left mid-way when it waited for the quiz
+      // at the end, and began again from the start); the rest is mom's advice and a question to practise, not a gate
+      bored: { say: 'Günaydın oğlum! İyi uyudun mu?', en: 'Good morning, son! Did you sleep well?', words: [['günaydın', 'good morning'], ['uyumak', 'to sleep']],
+        options: [{ tr: 'Evet, çok iyi uyudum!', en: 'Yes, I slept very well!', next: 'b2', do: ['quest'] }, { tr: 'Günaydın anne!', en: 'Good morning, mom!', next: 'b2', do: ['quest'] }] },
       b2: { say: 'Deden bahçede, yardıma ihtiyacı var. Git, ona yardım et.', en: 'Grandpa is in the garden, he needs help. Go and help him.', words: [['ihtiyaç', 'need'], ['yardım etmek', 'to help']],
         options: [{ tr: 'Tamam anne!', en: 'Okay mom!', next: 'b3' }, { tr: 'Hava soğuk mu?', en: 'Is it cold?', next: 'b3' }] },
       b3: { say: 'Hava biraz soğuk. Önce montunu giy.', en: "It's a bit cold. Put on your jacket first.", words: [['soğuk', 'cold'], ['mont', 'jacket']],
@@ -122,7 +123,7 @@ export const DIALOGUES = {
       quiz: { say: 'Söyle bakalım: Montun nerede?', en: "Tell me then: where's your jacket?", hint: 'Nerede? → -da / -de: kapının yanında',
         options: [
           { tr: 'Kapının yanına.', en: 'To (beside) the door. — “nerede?” wants -da, not -a', wrong: true },
-          { tr: 'Kapının yanında.', en: 'Next to the door.', next: 'b6', do: ['quest'] },
+          { tr: 'Kapının yanında.', en: 'Next to the door.', next: 'b6' },
           { tr: 'Mutfakta.', en: 'In the kitchen.', wrong: true },
         ] },
       b6: { say: 'Aferin! Hadi, montunu al.', en: 'Well done! Go on, take your jacket.', words: [['aferin', 'well done']], options: [{ tr: 'Tamam anne!', en: 'Okay mom!' }, { tr: 'Hemen alıyorum!', en: "I'm getting it right away!" }] },

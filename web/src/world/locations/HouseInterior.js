@@ -310,6 +310,8 @@ export class HouseInterior extends Location {
     this.hotspot('house.seccade', -2.2, 2.6, 1.2);
 
     this.anchor('start', 0.8, -2.6, 0);
+    this.anchor('morning', 8.0, -1.5, 0); // a new game: in the kitchen, mom at the stove just ahead
+
     this.anchor('sofraGuest', -0.8, 1.7, Math.PI);
     this.anchor('bedside', 9.3, 1.6, -Math.PI / 2);
     this.anchor('door', -12.1, 2.1, Math.PI / 2);

@@ -358,17 +358,6 @@ effects
     bus.emit(EV.INVENTORY);
   });
 story.setEffects(effects);
-// a new game's "Oğlum, eve gel!" card comes at the player's first touch or key (not at once), the camera close on the park meanwhile
-if (!params.has('debug') || params.has('firststeps')) {
-  story.whenFirstInput = () => new Promise((done) => {
-    const on = (e) => {
-      if (e.target instanceof Element && e.target.closest('.overlay, .card, .iconbtn, .pill')) return; // (a button of a card or the top bar is not the first act)
-      ['pointerdown', 'keydown'].forEach((n) => document.removeEventListener(n, on, true));
-      done();
-    };
-    ['pointerdown', 'keydown'].forEach((n) => document.addEventListener(n, on, true));
-  });
-}
 // the first time in the square the recording consent and the username are asked (systems/VillageMultiplayer.js join): the welcome
 // card, the "Annen çağırıyor" card and the quest box wait until those are answered, not sit behind them
 story.beforeCards = () => new Promise((done) => {
@@ -760,7 +749,8 @@ chess.onResult = ({ win, vsDede, text, en }) => {
   if (prize) wallet.add(prize, 'reward');
   cards.show({ num: 'Satranç', title: win ? '🏆 Tebrikler, kazandın!' : win === false ? 'Kaybettin' : 'Berabere', text: prize ? `${text} İsmail Dede'den hediye: +${prize} kredi 🪙` : text, en: win ? (prize ? 'Congratulations, you won! A gift from İsmail Dede: 5 credits' : 'Congratulations, you won!') : en, button: 'Tamam' });
 }; // (played on the board on the ground: the result, big)
-chess.onGameOver = () => { if (!wallet.adFree && CONFIG.ads.afterChess) setTimeout(() => fullAd(), 3000); };
+let chessGames = 0; // (an ad after every `afterChessEvery`-th game, not each one)
+chess.onGameOver = () => { if (!wallet.adFree && CONFIG.ads.afterChess && ++chessGames % Math.max(1, CONFIG.ads.afterChessEvery) === 0) setTimeout(() => fullAd(), 3000); };
 story.beforeNewDay = () => (wallet.adFree || !CONFIG.ads.betweenDays ? Promise.resolve() : fullAd());
 // going through a door or a gate (home, yard, square, school): now and then a full-screen ad, as you
 // leave — said first, never out of the blue in the middle of a place (config.json ads.travelChance),

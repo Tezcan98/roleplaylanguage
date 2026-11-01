@@ -22,7 +22,7 @@ const errors = [];
 const checks = [];
 const check = (name, ok, detail = '') => { checks.push([name, ok]); log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`); };
 
-/** A player: "▶ Hikayeye başla" — a new game starts in the park in the square, among the others (one world, no separate online mode). */
+/** A player: "▶ Hikayeye başla" (a new game starts at home), then out to the park in the square, among the others (one world, no separate online mode). */
 async function player(tag, name, { room = null, pick = null } = {}) {
   const ctx = await browser.newContext({ viewport: { width: 1000, height: 620 }, permissions: ['microphone'] });
   const page = await ctx.newPage();
@@ -32,7 +32,8 @@ async function player(tag, name, { room = null, pick = null } = {}) {
   if (room) await page.evaluate((r) => window.__game.settings.set('serverRegion', r), room);
   if (name) await page.evaluate((n) => window.__game.settings.set('username', n), name); // set in the profile
   await page.click('.main-menu.open .menu-main'); await sleep(1200);
-  await closeCards(page); // the welcome, mom calling: the game starts, in the square
+  await closeCards(page); // the welcome, mom calling: the game starts, at home
+  await page.evaluate(() => window.__game.travel.place('village', 'park', { force: true })); // out to the square: online from here
   // first time online: agree to the recording (the button only after the tick)
   const card = await waitFor(() => page.$('.card.consent'), 20000, 300);
   consentAsked.push(!!card && await page.evaluate(() => document.querySelector('.card.consent .btn').disabled));
@@ -53,7 +54,7 @@ let failed = false;
 try {
   const A = await player('A', 'Ayşe');
   check('before going online: the recording consent is asked, "Kabul et" only after the tick', consentAsked[0] === true && (await A.evaluate(() => window.__game.settings.get('dataConsent')?.v)) >= 1);
-  check('"▶ Hikayeye başla": a new game starts in the village square, online', (await A.evaluate(() => window.__game.world.current.id)) === 'village' && (await A.evaluate(() => window.__game.village.net.connected)));
+  check('"▶ Hikayeye başla", then the village square: online', (await A.evaluate(() => window.__game.world.current.id)) === 'village' && (await A.evaluate(() => window.__game.village.net.connected)));
   const B = await player('B', 'Ayşe'); // same name on purpose
   /** At a talking zone's door: "Gir" (go in) when the card asks (it doesn't once said yes, until leaving the square). */
   const door = async (p) => { const b = await waitFor(() => p.$('.overlay.open button:text-is("Gir")'), 3000); if (b) await b.click(); };

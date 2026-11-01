@@ -12,8 +12,8 @@ const FEEDBACK = { // (in the player's language: ui())
 
 /**
  * Say it out loud. Uses the SpeechEvaluator service (speech-to-text + Turkish detection +
- * answer matching). After a miss a "skip" appears so nobody gets stuck; without a
- * microphone API the player reads aloud and confirms.
+ * answer matching). "Geç" (skip) is there from the start: nobody has to speak to go on (in a bus, at night,
+ * shy); without a microphone API the player reads aloud and confirms.
  * Activities marked `exam: true` are behind the credit / rewarded-ad gate (opt-in, so the
  * story and paid lessons never ask again).
  *
@@ -33,8 +33,7 @@ export class SpeakActivity extends Activity {
       const done = (ok) => resolve({ option: { next: spec.next, do: spec.do }, ok, transcript: lastHeard || target });
       const heard = el('div', { class: 'transcript' });
       const fb = el('div', { class: 'fb' });
-      const skip = el('button', { class: 'chipbtn', text: ui('Geç', 'Skip'), attrs: { type: 'button' }, style: { display: 'none' }, on: { click: () => done(false) } });
-      let misses = 0;
+      const skip = el('button', { class: 'chipbtn', text: ui('Geç', 'Skip'), attrs: { type: 'button' }, on: { click: () => done(false) } });
 
       this.mic = el('button', {
         class: 'mic', html: MIC, attrs: { type: 'button', 'aria-label': ui('Konuş', 'Speak') },
@@ -55,7 +54,6 @@ export class SpeakActivity extends Activity {
               fb.className = 'fb bad';
               fb.textContent = /not-allowed|denied/i.test(e.message) ? ui('Mikrofon izni gerekli.', 'The microphone needs permission.') : ui('Mikrofon çalışmadı, tekrar dene.', "The microphone didn't work. Try again.");
             } finally { this.mic?.classList.remove('rec'); }
-            if (++misses >= 1) skip.style.display = ''; // "Geç" after one miss: nobody gets stuck
           },
         },
       });

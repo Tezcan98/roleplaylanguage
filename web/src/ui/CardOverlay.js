@@ -1,6 +1,9 @@
 import { el } from './dom.js';
 import { gloss } from '../i18n/Gloss.js';
 
+/** The cards' buttons in the player's language too (a small line under the Turkish). */
+const BUTTON_EN = { Devam: 'Continue', Tamam: 'OK', Başla: 'Start' };
+
 /**
  * Chapter / story cards. Blocks input while open. A card asked for while another is open waits
  * for it (the square's first-visit card used to replace the welcome card when the connection came);
@@ -28,7 +31,8 @@ export class CardOverlay {
     this.title.textContent = card.title;
     this.text.textContent = typeof card.text === 'function' ? card.text() : card.text;
     this.en.textContent = gloss(card.en) ?? '';
-    this.btn.textContent = card.button ?? 'Başla';
+    const button = card.button ?? 'Başla', g = BUTTON_EN[button] && gloss(BUTTON_EN[button]);
+    this.btn.replaceChildren(button, ...(g ? [el('small', { class: 'btn-g en-t', text: g, attrs: { dir: 'auto' } })] : []));
     const pop = this.modes.push('card');
     this.root.classList.add('open');
     this.btn.onclick = () => {

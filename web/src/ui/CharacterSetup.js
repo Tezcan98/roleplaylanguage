@@ -49,9 +49,14 @@ export class CharacterSetup {
         on: { click: () => { p.gender = gender; p.look = look; mark(chars, 'char', `${gender}-${look}`); } },
       }, [el('img', { attrs: { src: characterPicture(gender, look), alt: '', draggable: 'false' } })])));
 
-      const save = el('button', { class: 'btn', text: 'Başla', attrs: { type: 'button' } });
-      const next = el('button', { class: 'btn', text: 'Devam ▶', attrs: { type: 'button' } });
-      const back = el('button', { class: 'btn alt', text: '◀ Geri', attrs: { type: 'button' } });
+      // the buttons in the chosen language too, a small line under the Turkish (re-glossed with the other texts)
+      const button = (tr, en, cls = 'btn') => {
+        const n = el('small', { class: 'btn-g en-t', text: gloss(en) ?? '', attrs: { dir: 'auto' } }); texts.push([n, en]);
+        return el('button', { class: cls, attrs: { type: 'button' } }, [tr, n]);
+      };
+      const save = button('Başla', 'Start');
+      const next = button('Devam ▶', 'Continue');
+      const back = button('◀ Geri', 'Back', 'btn alt');
       const cancel = cancellable && el('button', { class: 'btn alt', text: 'Vazgeç', attrs: { type: 'button' } });
       // two steps: first the language of the meanings, then the character
       const langStep = el('div', { class: 'setup-step' }, [

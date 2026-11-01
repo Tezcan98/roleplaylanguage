@@ -75,6 +75,7 @@ body.has-map #toasts{top:calc(env(safe-area-inset-top,0px) + 32px + var(--hud-h,
 #act-left[hidden]{display:none}
 #act:active,#act-left:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
 .act-tr{display:block;font:600 12px Nunito,sans-serif;opacity:.75;margin-top:1px}
+.btn-g{display:block;font:600 13px Nunito,sans-serif;opacity:.8;margin-top:1px}.btn-g:empty{display:none}
 #act,.act-alt{line-height:1.15}
 #act[hidden],#joy[hidden],#run[hidden]{display:none}
 /* other things within reach: smaller buttons stacked above the action button */

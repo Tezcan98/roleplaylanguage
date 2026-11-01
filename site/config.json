@@ -38,8 +38,9 @@
     "menuBannerChance": 1,
     "betweenDays": true,
     "afterChess": true,
+    "afterChessEvery": 2,
     "travelChance": 0.35,
-    "travelGapMinutes": 3
+    "travelGapMinutes": 6
   },
   "sellPacks": false,
   "roomFull": 30,

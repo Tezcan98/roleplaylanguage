@@ -28,8 +28,9 @@ async function player(tag, name) {
   await page.goto(`${server.url}/?debug&consented&nointro&fresh&quality=low&mp=${encodeURIComponent(villageUrl)}`);
   await page.waitForFunction(() => window.__game, null, { timeout: 90000 });
   await page.evaluate(([r, n]) => { const s = window.__game.settings; s.set('serverRegion', r); s.set('serverPicked', true); s.set('username', n); window.__game.village.chosenRoom = true; }, [room, name]); // stay in our own test room (not the busiest one)
-  await page.click('.main-menu.open .menu-main'); await sleep(1200); // "▶ Hikayeye başla": a new game starts in the park in the square
+  await page.click('.main-menu.open .menu-main'); await sleep(1200); // "▶ Hikayeye başla": a new game starts at home
   for (let i = 0; i < 5 && await page.evaluate(() => !!document.querySelector('.overlay.story-card.open')); i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(300); }
+  await page.evaluate(() => window.__game.travel.place('village', 'park', { force: true })); // out to the square
   await waitFor(() => page.evaluate(() => window.__game.village.net.connected), 20000, 300);
   await sleep(600);
   for (let i = 0; i < 5 && await page.evaluate(() => !!document.querySelector('.overlay.story-card.open')); i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn').click()); await sleep(300); }

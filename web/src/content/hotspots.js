@@ -25,7 +25,7 @@ export const HOTSPOTS = {
   'house.door': {
     label: 'Dışarı çık', lockedLabel: 'Kapı', travel: ['yard', 'houseDoor'],
     locked: (c) => {
-      if (c.chapter === 'd1-morning' && !c.reached('go-out')) return ['Önce annenle konuş, montunu al.', 'Talk to mom and get your jacket first.'];
+      // (a new game's first morning: the door is open — the player may go straight out to the square; the tasks wait at home)
       if (c.chapter === 'd2-morning' && !c.reached('go-school')) return ['Önce annene günaydın de, montunu al.', 'Say good morning to mom and take your jacket first.'];
       if (DOOR_LOCKS[c.chapter]) return DOOR_LOCKS[c.chapter];
       if (c.isNight) return ['Gece oldu, dışarı çıkma.', "It's night — stay inside."];
