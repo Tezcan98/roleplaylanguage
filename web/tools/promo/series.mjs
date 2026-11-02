@@ -38,7 +38,96 @@ const FOLLOW = {
 /** The park's corners (world/locations/VillageSquare.js PARK: x −46…−32, z 13…25). */
 const SWING = [-42.3, 15.6];
 
+/** The Turkish flag (red, a white crescent and a five-pointed star), drawn as an SVG for the opening card. */
+const FLAG = (() => {
+  const star = Array.from({ length: 5 }, (_, i) => { const a = Math.PI + i * 0.8 * Math.PI, r = 25; return `${(168 + r * Math.cos(a)).toFixed(1)},${(100 + r * Math.sin(a)).toFixed(1)}`; }).join(' ');
+  return `<svg viewBox="0 0 300 200" width="420" height="280" style="border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.45)"><rect width="300" height="200" fill="#E30A17"/><circle cx="105" cy="100" r="50" fill="#fff"/><circle cx="120" cy="100" r="40" fill="#E30A17"/><polygon points="${star}" fill="#fff"/></svg>`;
+})();
+
+/** Walk the player (and its walking animation) in a straight line from where it stands to [x, z] in `secs` (virtual) seconds. */
+const walkTo = async (kit, page, [x, z], secs) => {
+  const steps = Math.max(1, Math.round(secs * 10));
+  const from = await page.evaluate(() => { const p = window.__game.player.position; return [p.x, p.z]; });
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    await page.evaluate(([fx, fz, x, z, t]) => { const g = window.__game, nx = fx + (x - fx) * t, nz = fz + (z - fz) * t, p = g.player.position; g.player.group.rotation.y = Math.atan2(nx - p.x, nz - p.z); p.set(nx, 0, nz); }, [from[0], from[1], x, z, t]);
+    await kit.sleep(100);
+  }
+};
+const bubble = (page, who, tr, ar) => page.evaluate(([who, tr, ar]) => { const g = window.__game; g.labels.bubble(g.cast.get(who), tr, null, 2.5, ar); }, [who, tr, ar]);
+const garden = async (kit, questId, cam, look, at) => {
+  const page = await start(kit);
+  await page.evaluate(([q, at]) => { const g = window.__game; g.story.state.quest = g.story.questIndex(q); g.items.refresh(); g.cast.move('dede', 'yard', 'garden', 'garden'); g.travel.place('yard', 'houseDoor', { force: true }); g.player.position.set(at[0], 0, at[1]); }, [questId, at]);
+  await kit.sleep(1200);
+  await fixed(page, cam, look);
+  await kit.sleep(900);
+  return page;
+};
+
 export const EPISODES = {
+  // 0 · a hook for Arabic speakers: the flag, "do you have to watch silly series to learn Turkish?", then the garden tasks from far away
+  garden: {
+    scenes: [
+      {
+        name: 'gFlag', seconds: 4.6,
+        setup: async (kit) => { const page = await kit.open(); await page.evaluate(() => document.querySelector('.main-menu')?.classList.remove('open')); await kit.sleep(2000); return page; },
+        act: async (kit, page) => {
+          const q = { tr: 'Türkçe öğrenmek için saçma dizileri izlemek zorunda mısın?', en: 'Do you have to watch silly TV series to learn Turkish?', ar: 'هل يجب أن تشاهد مسلسلات سخيفة لتتعلّم التركية؟' };
+          await kit.card(page, `${FLAG}<h1 dir="auto" style="margin-top:24px;font-size:46px;line-height:1.5">${q[kit.lang] ?? q.tr}</h1>${kit.lang === 'tr' ? '' : `<p dir="auto" style="font-size:28px;opacity:.85">${q.tr}</p>`}`);
+        },
+      },
+      {
+        name: 'gWide', seconds: 4.2,
+        setup: async (kit) => garden(kit, 'bucket', [3.5, 10, 7], [3.5, 0, -6.5], [0.5, -9.4]),
+        act: async (kit, page) => {
+          await kit.big(page, { tr: 'Oynayarak Türkçe öğren', en: 'Learn Turkish while you play', ar: 'تعلّم التركية وأنت تلعب' });
+          await walkTo(kit, page, [6.3, -9.6], 2.4);
+        },
+      },
+      {
+        name: 'gBucket', seconds: 4.8,
+        setup: async (kit) => garden(kit, 'bucket', [5, 11, 9], [6.5, 0, -5], [6.3, -9.6]),
+        act: async (kit, page) => {
+          await kit.big(page, { tr: 'Kovayı bul, dedene götür', en: 'Find the bucket, take it to grandpa', ar: 'ابحث عن الدلو وخذه إلى جدّك' });
+          await page.evaluate(() => { const g = window.__game; g.items.pick(g.items.get('kova')); });
+          await showToasts(page); await showLabels(page);
+          await walkTo(kit, page, [8.2, 0.0], 2.6);
+          await bubble(page, 'dede', 'Aferin evladım!', 'أحسنت يا بنيّ!');
+          await page.evaluate(() => window.__game.story.complete('bucket'));
+        },
+      },
+      {
+        name: 'gWrench', seconds: 4.6,
+        setup: async (kit) => garden(kit, 'wrench', [-4, 13, 17], [-7, 0, 1.5], [-7.6, -3.0]),
+        act: async (kit, page) => {
+          await kit.big(page, { tr: 'Anahtarı bul, babana götür', en: 'Find the wrench, take it to dad', ar: 'ابحث عن المفتاح وخذه إلى أبيك' });
+          await page.evaluate(() => { const g = window.__game; g.items.pick(g.items.get('anahtar')); });
+          await showToasts(page); await showLabels(page);
+          await walkTo(kit, page, [-8.0, 5.9], 2.4);
+          await bubble(page, 'baba', 'Eline sağlık!', 'سلمت يداك!');
+          await page.evaluate(() => window.__game.story.complete('wrench'));
+        },
+      },
+      {
+        name: 'gTomato', seconds: 4.8,
+        setup: async (kit) => garden(kit, 'tomatoes', [8.5, 9, 6], [9, 0, -2], [6.0, -0.5]),
+        act: async (kit, page) => {
+          await kit.big(page, { tr: 'Bahçeden domates topla', en: 'Pick tomatoes in the garden', ar: 'اقطف الطماطم من الحديقة' });
+          await showToasts(page); await showLabels(page);
+          for (const [id, pos] of [['domates0', [6.6, -1.2]], ['domates1', [9.6, -2.9]], ['domates2', [11.4, -1.1]]]) {
+            await walkTo(kit, page, pos, 0.9);
+            await page.evaluate((id) => { const g = window.__game; g.items.pick(g.items.get(id)); }, id);
+          }
+        },
+      },
+      endCard('gEnd'),
+    ],
+    vo: {
+      tr: ['Türkçe öğrenmek için saçma dizileri izlemek zorunda mısın?', 'Oynayarak öğren.', 'Kovayı bul, dedene götür.', 'Anahtarı bul, babana götür.', 'Domates topla.', 'Türk Ailem, Google Play’de ücretsiz.'],
+      en: ['Do you have to watch silly series to learn Turkish?', 'Learn while you play.', 'Find the bucket, take it to grandpa.', 'Find the wrench, take it to dad.', 'Pick tomatoes.', 'My Turkish Family, free on Google Play.'],
+      ar: ['هل يجب أن تشاهد مسلسلات سخيفة لتتعلّم التركية؟', 'تعلّم وأنت تلعب.', 'ابحث عن الدلو وخذه إلى جدّك.', 'أحضر المفتاح لأبيك.', 'اقطف الطماطم.', 'عائلتي التركية، مجانًا على Google Play.'],
+    },
+  },
   // 1 · the park: the slide, the swings, the children to make friends with
   park: {
     scenes: [
