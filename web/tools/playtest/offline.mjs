@@ -28,9 +28,12 @@ try {
   await page.evaluate(() => { const g = window.__game, m = g.cast.get('anne').position; g.player.position.set(m.x, 0, m.z + 0.6); }); await sleep(300); // next to mom, wherever the kitchen is
   await page.keyboard.press('e'); await sleep(800);
   check('dialogue opens', (await page.evaluate(() => window.__game.dialogue.talking)) === 'anne');
-  check('fonts are bundled', await page.evaluate(() => document.fonts.check('700 20px Fredoka') && document.fonts.check("700 16px 'Noto Naskh Arabic'")));
+  check('fonts are bundled', await page.evaluate(async () => { // (loaded on demand from the bundle: Arabic only when Arabic text shows)
+    const [f, a] = await Promise.all([document.fonts.load('700 20px Fredoka', 'Aa'), document.fonts.load("700 16px 'Noto Naskh Arabic'", 'مرحبا')]);
+    return f.length > 0 && a.length > 0 && document.fonts.check('700 20px Fredoka') && document.fonts.check("700 16px 'Noto Naskh Arabic'", 'مرحبا');
+  }));
   check('textures are bundled', (await page.evaluate(() => performance.getEntriesByType('resource').filter((r) => r.name.endsWith('.webp')).length)) > 0);
-  const essential = [...blocked].filter((u) => !/onnxruntime|vits-web|piper|huggingface/.test(u)); // optional neural voices may try the network
+  const essential = [...blocked].filter((u) => !/onnxruntime|vits-web|piper|huggingface|\/api\/(play-event)/.test(u)); // optional neural voices and the anonymous play statistics may try the network (the game works without them)
   check('nothing essential comes from the internet', essential.length === 0, essential.join(', '));
   if (checks.some((x) => !x)) await screenshot(page, 'offline');
 } catch (e) {
