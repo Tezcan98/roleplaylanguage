@@ -11,17 +11,17 @@ const ok = (tr, en, more = {}) => ({ tr, en, ...more });
 /** Each chat: `start` node plus its own nodes; ids are prefixed with the chat id. */
 const CHATS = [
   { id: 'namaz', nodes: {
-    start: { say: 'Gel kuzum, gel otur yanıma. Söyle bakayım, bugün namazını kıldın mı?', en: 'Come my dear, sit by me. Tell me, did you pray today?',
-      words: [['kuzum', 'my dear (lit. my lamb)'], ['namaz kılmak', 'to pray (salah)']],
-      options: [ok('Evet nine, kıldım.', 'Yes grandma, I did.', { next: 'yes' }), ok('Daha kılmadım.', "Not yet.", { next: 'no' })] },
-    yes: { say: 'Maşallah! Allah kabul etsin. Hangi vakti kıldın?', en: 'Mashallah! May Allah accept it. Which prayer did you pray?',
-      words: [['vakit', 'time (of prayer)'], ['kabul etmek', 'to accept']],
-      options: [ok('Sabah namazını.', 'The morning prayer.', { next: 'end' }), ok('Öğle namazını.', 'The noon prayer.', { next: 'end' }), ok('Akşam namazını.', 'The evening prayer.', { next: 'end' })] },
-    no: { say: 'Haydi kuzum, vakit geçmeden kıl. Önce abdestini al, sonra seccadeni ser.', en: 'Come on my dear, pray before the time passes. First make your wudu, then lay out your prayer rug.',
-      words: [['abdest', 'ritual washing (wudu)'], ['seccade', 'prayer rug']],
-      options: [ok('Tamam nine, şimdi kılacağım.', "All right grandma, I'll pray now.", { next: 'end' })] },
-    end: { say: 'Namaz dinin direğidir. Bunu hiç unutma, olur mu?', en: 'Prayer is the pillar of the religion. Never forget that, all right?',
-      words: [['direk', 'pillar']], options: [ok('Unutmam nine.', "I won't forget, grandma.")] },
+    start: { say: 'Gel kuzum, gel otur yanıma. Söyle bakayım, namazından sonra duanı ettin mi?', en: 'Come my dear, sit by me. Tell me, did you make your dua after the prayer?',
+      words: [['kuzum', 'my dear (lit. my lamb)'], ['dua etmek', 'to make dua (supplication)']],
+      options: [ok('Evet nine, ettim.', 'Yes grandma, I did.', { next: 'yes' }), ok('Daha etmedim.', "Not yet.", { next: 'no' })] },
+    yes: { say: 'Maşallah kuzum! Allah kabul etsin. Duanın en güzel meyvesi ne, biliyor musun?', en: 'Mashallah, my dear! May Allah accept it. Do you know what the sweetest fruit of dua is?',
+      words: [['meyve', 'fruit'], ['kabul etmek', 'to accept']],
+      options: [ok('Söyle nine.', 'Tell me, grandma.', { next: 'end' })] },
+    no: { say: 'Haydi kuzum, namazdan sonra ellerini aç, dua et. Duanın en güzel meyvesi ne, biliyor musun?', en: 'Come on my dear, after the prayer open your hands and make dua. Do you know what the sweetest fruit of dua is?',
+      words: [['el açmak', 'to raise the hands (in dua)'], ['meyve', 'fruit']],
+      options: [ok('Söyle nine.', 'Tell me, grandma.', { next: 'end' })] },
+    end: { say: 'Duanın en güzel, en latîf, en leziz, en hazır meyvesi, neticesi şudur ki: Dua eden adam, bilir ki birisi var ki onun sesini dinler, derdine derman yetiştirir, ona merhamet eder. Onun kudret eli her şeye yetişir.', en: 'The most beautiful, most delicate, most delicious, most ready fruit and result of dua is this: the one who makes dua knows that there is One who hears his voice, brings a remedy to his trouble and has mercy on him. His hand of power reaches everything.',
+      words: [['latîf', 'delicate, gentle'], ['derman', 'remedy'], ['merhamet', 'mercy'], ['kudret', 'power']], options: [ok('Amin nine.', 'Amen, grandma.')] },
   } },
   { id: 'sure', nodes: {
     start: { say: 'Hangi sureleri ezbere biliyorsun kuzum? Bir söyle bakayım.', en: 'Which surahs do you know by heart, my dear? Tell me.',
