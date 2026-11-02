@@ -108,7 +108,7 @@ try {
   // --- grandma (nine) ------------------------------------------------------------------
   await talkTo('nine');
   const first = await nodeSay();
-  check('grandma just talks to you: did you pray today?', first.includes('namazını kıldın mı') && !first.includes('nasihat'), first);
+  check('grandma just talks to you: did you make dua after the prayer?', first.includes('duanı ettin mi') && !first.includes('nasihat'), first);
   await drainUi(page);
   check('…a whole little chat', await ev(() => !!window.__game.dialogue.ctx.state.flags['nine-namaz']));
   await talkTo('nine');
@@ -460,8 +460,10 @@ try {
   // dama in the kahvehane with Rıfat Amca (online: someone sitting down opposite — multiplayer.mjs)
   check('Rıfat Amca: "Dama oynamaya var mısın?"', await ev(() => window.__game.dialogue.dialogues.rifat.nodes.r1.options.some((o) => o.next === 'rDama')));
   check('the shelf of dama boards in the kahvehane', await ev(() => window.__game.world.get('village').hotspots.has('village.damaShelf')));
+  await ev(() => { const g = window.__game, h = g.cast.get('rifat').home; g.player.position.set(h.x + 1.2, 0, h.z + 1.2); }); await sleep(300); // (walked over to the kahvehane after the horse football)
+  await waitFor(() => ev(() => window.__game.dama.online), 8000); // (the square connection finishes first: its welcome replaces the tables)
   await ev(() => window.__game.dama.playRifat()); await sleep(600);
-  check('…he comes to a free table and sits opposite; the board on screen, you play white', await ev(() => { const g = window.__game, t = g.dama.mine(), r = g.cast.get('rifat'); return !!t?.black?.npc && t.white.id === g.dama.myId && g.player.seated && document.querySelector('.dama.open') && r.home && Math.hypot(r.home.x - g.player.position.x, r.home.z - g.player.position.z) < 2.2; }));
+  check('…he comes to a free table and sits opposite; the board on screen, you play white', await ev(() => { const g = window.__game, t = g.dama.mine(), r = g.cast.get('rifat'); return !!t?.black?.npc && t.white.id === g.dama.myId && g.player.seated && document.querySelector('.dama.open') && r.home && Math.hypot(r.home.x - g.player.position.x, r.home.z - g.player.position.z) < 2.2; }), JSON.stringify(await ev(() => { const g = window.__game, t = g.dama.mine(), r = g.cast.get('rifat'); return { online: g.dama.online, loc: g.world.current.id, table: t && { n: t.n, black: t.black?.npc, white: t.white?.id === g.dama.myId }, seated: g.player.seated, open: !!document.querySelector('.dama.open'), home: !!r.home, dist: r.home ? Math.hypot(r.home.x - g.player.position.x, r.home.z - g.player.position.z) : null }; })));
   await page.click('.dama.open .dama-board .cell.can'); await sleep(150);
   await page.click('.dama.open .dama-board .cell.to');
   check('…your move, then his (only forward or sideways)', !!await waitFor(() => ev(() => { const t = window.__game.dama.mine(); return t?.turn === 1 && t.board.some((v, i) => v < 0 && ((i / 8) | 0) < 5); }), 6000));
@@ -576,7 +578,7 @@ try {
     check('not enough credits for ad-free mode (100) yet: its button is off (on the gold tab)', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod'))?.querySelector('button').disabled));
     await p2.click('.shop.open .shop-tab:has-text("Kıyafet")'); await sleep(200);
     check('…and not among the outfits', await e2(() => ![...document.querySelectorAll('.shop.open .shop-card')].some((i) => i.textContent.includes('Reklamsız mod'))));
-    check('outfits need the HD character first', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Günlük kıyafet')).querySelector('button').disabled));
+    check('outfits need the HD character first (no price button; only the one-day video try-on)', await e2(() => { const c = [...document.querySelectorAll('.shop.open .shop-card')].find((x) => x.textContent.includes('Günlük kıyafet')); return !c.querySelector('.buy'); }));
     await e2(() => { window.__game.wallet.add(45); window.__game.shop.render(); }); // 101
     await p2.click('.shop.open .shop-card:has-text("HD karakter") button'); await sleep(200);
     check('spending gold asks "Emin misin?" first; "Vazgeç" spends nothing', !!(await p2.$('.shop-confirm')) && (await p2.textContent('.shop-confirm')).includes('40') && await p2.click('.shop-confirm .no').then(() => e2(() => window.__game.wallet.balance === 101 && !document.querySelector('.shop-confirm') && !window.__game.wallet.owns('hd'))));
@@ -584,25 +586,26 @@ try {
     check('the HD character (40 credits): bought and on, in its everyday clothes', (await e2(() => window.__game.wallet.equipped('hd'))) === 'hd' && (await e2(() => window.__game.wallet.balance)) === 61);
     check('…and the villagers on the square are HD for you now', await waitFor(() => e2(() => window.__game.cast.get('manav').hdOn === true), 4000));
     await p2.click('.shop.open .shop-card:has-text("Günlük kıyafet") button'); await p2.click('.shop-confirm .yes'); await sleep(300);
-    check('an outfit (30 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 31);
+    check('an outfit (20 credits, shown as a picture): bought and put on', (await e2(() => window.__game.wallet.equipped('body'))) === 'hd-casual' && (await e2(() => window.__game.wallet.balance)) === 41);
     check('the old golden light is not sold any more (Altın baklava instead)', !(await p2.$('.shop.open .shop-card:has-text("Yıldız Işığı")')));
     await p2.click('.shop.open .shop-tab:has-text("Yiyecek")'); await sleep(200);
     await p2.click('.shop.open .shop-card:has-text("Altın baklava") button'); await p2.click('.shop-confirm .yes'); await sleep(600);
-    check('Altın baklava (25 credits): the golden light for 3 days', (await e2(() => window.__game.wallet.balance)) === 6
+    check('Altın baklava (25 credits): the golden light for 3 days', (await e2(() => window.__game.wallet.balance)) === 16
       && (await e2(() => window.__game.wallet.boostLeft('baklava'))) > 71.9 * 3600000 && await e2(() => window.__game.player.auraShown)
       && (await p2.textContent('.shop.open .shop-card.gold')).includes('2 gün 23 sa kaldı'));
     await p2.click('.shop.open .shop-tab:has-text("Yiyecek")'); await sleep(200);
     check('normal speed before the pepper', (await e2(() => window.__game.controller.boost())) === 1);
     await p2.click('.shop.open .shop-card:has-text("Urfa biberi") button'); await p2.click('.shop-confirm .yes'); await sleep(300);
-    check('Urfa biberi (5 credits): faster (×1.5) for 30 minutes, the time left in the HUD and on its card', (await e2(() => window.__game.wallet.balance)) === 1
+    check('Urfa biberi (5 credits): faster (×1.5) for 30 minutes, the time left in the HUD and on its card', (await e2(() => window.__game.wallet.balance)) === 11
       && (await e2(() => window.__game.controller.boost())) === 1.5 && (await e2(() => window.__game.wallet.boostLeft('pepper'))) > 29 * 60000
       && /🌶️ (30|29):\d\d/.test(await e2(() => document.querySelector('.pill.boost').textContent)) && (await p2.textContent('.shop.open .shop-card.food')).includes('kaldı'));
+    await e2(() => { window.__game.wallet.trySpend(7); window.__game.shop.render(); }); // 4
     check('…not enough credits for a second one: its button is off', await e2(() => document.querySelector('.shop.open .shop-card.food button').disabled));
     await p2.click('.shop.open .shop-tab:has-text("Altın")'); await sleep(200);
     await e2(() => { window.__game.shop.share = async () => true; window.__game.shop.render(); }); // (the share sheet itself is the phone's)
     const before = await e2(() => window.__game.wallet.balance);
     await p2.click('.shop.open .shop-card:has-text("Davet et, kazan") button');
-    check('"Davet et, kazan": +5 credits, then "Yarın yine" (once a day)', !!(await waitFor(() => e2((b) => window.__game.wallet.balance === b + 5, before), 3000)) && await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Paylaş, kazan')).querySelector('button').disabled));
+    check('"Davet et, kazan": +5 credits, then "Yarın yine" (once a day)', !!(await waitFor(() => e2((b) => window.__game.wallet.balance === b + 5, before), 3000)) && await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Davet et, kazan')).querySelector('button').disabled));
     await e2(() => window.__game.shop.close());
     // a full-screen ad between two story days (not within the same day)
     await e2(() => document.querySelector('.main-menu.open .btn')?.click()); await sleep(1500);
