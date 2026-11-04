@@ -26,6 +26,10 @@
 
         </activity>
 
+        <!-- Keep SDK close controls clear of the camera cutout in landscape. -->
+        <activity android:name="com.google.android.gms.ads.AdActivity"
+            android:theme="@style/AdTheme" tools:replace="android:theme" />
+
         <!-- AdMob app id: Google's TEST id until the real one (AdMob → Uygulamalar) is written here -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"

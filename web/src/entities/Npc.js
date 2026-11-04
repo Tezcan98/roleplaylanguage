@@ -107,6 +107,10 @@ export class Npc extends Character {
     const b = this.behavior, route = this.def[b.routeKey ?? 'route'], st = this.roam;
     if (!route?.length) return;
     const stop = route[st.leg % route.length];
+    if (stop.jump && this.canBedJump && !this.canBedJump() && !st.jumping) {
+      st.leg++; st.wait = route[st.leg % route.length].wait ?? 1;
+      return;
+    }
     const dx = stop.x - this.position.x, dz = stop.z - this.position.z, d = Math.hypot(dx, dz);
     if (d > 0.05) {
       const step = Math.min(d, 1.3 * dt);
@@ -118,13 +122,15 @@ export class Npc extends Character {
       st.jumping = false;
       return;
     }
+    if (stop.jump && !st.jumping) { st.wait = 1.5; st.jumpElapsed = 0; }
     st.wait -= dt;
     st.jumping = !!stop.jump;
+    if (stop.jump) st.jumpElapsed += dt;
     if (stop.rot !== undefined) this.turnTo(stop.rot, 0.2);
-    if (stop.jump) { this.position.y = 0.42 + Math.abs(Math.sin(t * 6)) * 0.45; b.jump(this.rig, t); } // on the bed
+    if (stop.jump) { this.position.y = 0.42 + Math.sin(Math.min(1, st.jumpElapsed / 1.5) * Math.PI) * 0.45; b.jump(this.rig, t); } // on the bed
     else if (stop.hop) { this.position.y = Math.abs(Math.sin(t * 6)) * 0.3; b.jump(this.rig, t); } // happy hops on the ground (the park)
     else { this.position.y = 0; this.walk(t, 0); b.poses?.[stop.pose]?.(this.rig, t); }
-    if (st.wait <= 0) { st.leg++; st.wait = route[st.leg % route.length].wait ?? 1 + Math.random() * 2; }
+    if (st.wait <= 0) { if (stop.jump) { this.onBedJump?.(); st.jumping = false; } st.leg++; st.wait = route[st.leg % route.length].wait ?? 1 + Math.random() * 2; }
   }
 
   /**

@@ -832,3 +832,13 @@ body.menu #run{display:none!important}
 .ad-clock[hidden]{display:none}
 /* a chess game of yours (main.js chess-focus): the board alone — no notes on the right, no task panel, no speech bubbles */
 body.chess-focus #toasts,body.chess-focus #quest,body.chess-focus .home-note,body.chess-focus .rate-prompt,body.chess-focus .bubble{display:none!important}
+
+/* Short landscape phones: keep the HUD in one horizontal strip. */
+@media (orientation:landscape) and (max-height:520px){
+  .hud{flex-wrap:nowrap;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;pointer-events:auto;max-width:calc(100% - max(8px,env(safe-area-inset-left)) - max(8px,env(safe-area-inset-right)))}
+  .hud::-webkit-scrollbar{display:none}
+  .hud .grp{flex-wrap:nowrap;flex-shrink:0;align-items:center;gap:4px}
+  .hud .pill{flex-shrink:0;white-space:nowrap;min-height:36px;padding:2px 8px;font-size:12px;gap:4px;border-width:1px}
+  .hud .help-btn,.hud .hud-fs,.hud .report{min-width:36px;min-height:36px;padding:2px 7px;font-size:16px}
+  .hud .pill.zone-note{max-width:180px;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+}

@@ -127,7 +127,7 @@ export class Tts {
   async #gemini(voiceName, text, file) {
     const { key, models, fetch } = this.gemini, keys = [...new Set([key, ...(this.gemini.keys ?? [])])].filter(Boolean);
     const body = JSON.stringify({
-      contents: [{ parts: [{ text }] }],
+      contents: [{ parts: [{ text: `Ana dili Türkçe olan bir konuşmacı gibi, doğal İstanbul Türkçesiyle konuş. Sözcük vurgularını ve cümle ezgisini doğal tut; yabancı aksan kullanma. Sıcak, anlaşılır ve normal konuşma hızında oku. Yalnızca aşağıdaki metni seslendir; açıklama ekleme:\n${text}` }] }],
       generationConfig: { responseModalities: ['AUDIO'], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } } },
     });
     let last = null, wait = 0;

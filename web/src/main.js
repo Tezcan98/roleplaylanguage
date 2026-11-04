@@ -1115,14 +1115,20 @@ function scoldKid(anne = cast.get('anne'), kid = cast.get('kardes')) {
     .then(() => new Promise((r) => setTimeout(r, 350)))
     .then(() => { labels.bubble(kid, 'Tamam anne!', null, 2.5, 'Okay mum!'); tts.speak('Tamam anne!', { speaker: 'kardes' }); });
 }
-let kidScoldAt = -99, kidAskAt = 120;
+const bedKid = cast.get('kardes');
+if (bedKid) {
+  bedKid.canBedJump = () => !state.flags['ali-bed-jumped'];
+  bedKid.onBedJump = () => { state.flags['ali-bed-jumped'] = true; saves.save(state.snapshot()); };
+}
+let kidAskAt = 120;
 const KID_CALLS = [['bu ne? Gel bak!', 'Look, what is this? Come and see!'], ['bak ne buldum!', 'Look what I found!'], ['gel, oynayalım!', 'Come on, let’s play!'], ['sana bir şey soracağım!', 'I want to ask you something!']];
 setInterval(() => {
   const kid = cast.get('kardes');
   if (!kid || kid.location !== 'house' || world.current.id !== 'house' || dialogue.talking || modes.top !== 'play') return;
   const t = game.t, anne = cast.get('anne');
-  if (kid.roam.jumping && anne?.location === 'house' && t - kidScoldAt > 150 && kid.position.distanceTo(player.position) < 8) { // seldom, and only when you are near
-    kidScoldAt = t;
+  if (kid.roam.jumping && anne?.location === 'house' && !state.flags['ali-bed-scolded'] && kid.position.distanceTo(player.position) < 8) { // seldom, and only when you are near
+    state.flags['ali-bed-scolded'] = true;
+    saves.save(state.snapshot());
     scoldKid(anne, kid);
   } else if (t > kidAskAt && kid.position.distanceTo(player.position) < 4.5) {
     kidAskAt = t + 240; // not too often: he is a child, not a teacher
