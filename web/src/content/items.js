@@ -44,7 +44,7 @@ export const ITEMS = [
     })),
   {
     id: 'kitap', kind: 'kitap', tr: 'kitap', en: 'book', verb: 'Kitabı al', location: 'house', pos: [-5.35, 1.12, -2.55],
-    activeIn: ['take-book'], chapters: ['d1-night'], spin: false,
+    activeIn: [], chapters: [], spin: false, // kept for bag metadata; mom packs it automatically
     build: (mf) => mf.group(mf.box(0.08, 0.42, 0.32, 0xE4574A), mf.at(mf.box(0.085, 0.3, 0.2, 0xFFF9EC), 0, 0, 0)),
   },
   {

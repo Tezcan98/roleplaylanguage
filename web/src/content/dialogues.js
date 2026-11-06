@@ -86,7 +86,6 @@ export const DIALOGUES = {
         case 'masal': return 'lm';
         case 'dinner-mom': return 'dm1';
         case 'mom-night': return 'n1';
-        case 'take-book': return 'n3';
         case 'goodnight': return 'gn1';
         case 'sleep': return 'gn3';
         case 'wake': return 'm1';
@@ -192,10 +191,8 @@ export const DIALOGUES = {
       // --- night ---
       n1: { say: 'Saat dokuz buçuk. Yarın okul var!', en: "It's half past nine. There's school tomorrow!", words: [['yarın', 'tomorrow']],
         options: [{ tr: 'Yarın pazartesi mi?', en: 'Is tomorrow Monday?', next: 'n2' }] },
-      n2: { say: 'Evet, pazartesi. Kitabını çantana koy. Kitabın rafta.', en: 'Yes, Monday. Put your book in your bag. Your book is on the shelf.', words: [['çanta', 'bag']],
+      n2: { say: 'Evet, pazartesi. Kitabını çantana koydum.', en: 'Yes, Monday. I put your book in your bag.', words: [['çanta', 'bag']],
         options: [{ tr: 'Tamam anne.', en: 'Okay mom.', do: ['quest'] }] },
-      n3: { say: 'Kitabın rafta, kırmızı kapaklı olan.', en: 'Your book is on the shelf, the one with the red cover.', words: [['kırmızı', 'red'], ['kapak', 'cover']],
-        options: [{ tr: 'Buluyorum.', en: "I'll find it." }] },
       gn1: { ask: 'speak', say: 'Hadi, yatma zamanı. Bana ne diyorsun?', en: 'Come on, bedtime. What do you say to me?', words: [['yatmak', 'to go to bed']],
         expect: ['İyi geceler anne', 'İyi geceler'], show: 'İyi geceler anne!', showEn: 'Good night mom!', next: 'gn2' },
       gn2: { say: 'İyi geceler oğlum. Tatlı rüyalar!', en: 'Good night son. Sweet dreams!', words: [['iyi geceler', 'good night'], ['Allah rahatlık versin', 'sleep well (lit. may God give you rest)']],

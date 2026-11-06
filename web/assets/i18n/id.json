@@ -994,7 +994,7 @@
  "Sit with grandpa and listen to a tale": "Duduk bersama Kakek dan dengarkan dongeng",
  "Six and five! Very good.": "Enam dan lima! Bagus sekali.",
  "Six, seven, eight, nine, ten.": "Enam, tujuh, delapan, sembilan, sepuluh.",
- "Skip": "Lewati",
+ "Skip homework": "Lewati tugas",
  "Skip the explanation": "Lewati penjelasan",
  "Sleeping a lot.": "Banyak tidur.",
  "Slow": "Pelan",
@@ -1541,7 +1541,7 @@
  "Yes, I live here with my family.": "Ya, aku tinggal di sini bersama keluargaku.",
  "Yes, I want to ride!": "Ya, aku mau naik!",
  "Yes, I will play!": "Ya, aku mau main!",
- "Yes, Monday. Put your book in your bag. Your book is on the shelf.": "Ya, Senin. Masukkan bukumu ke tas. Bukumu ada di rak.",
+ "Yes, Monday. I put your book in your bag.": "Ya, Senin. Ibu sudah memasukkan bukumu ke dalam tasmu.",
  "Yes, but now I'm bored.": "Ya, tapi sekarang aku bosan.",
  "Yes, he works in Istanbul. He is a teacher.": "Ya, dia bekerja di Istanbul. Dia seorang guru.",
  "Yes, how did you know?": "Ya, bagaimana kamu tahu?",
@@ -2662,5 +2662,8 @@
  "to entrust": "menyerahkan",
  "means, cause": "sebab, sarana",
  "to rely, to lean on": "bersandar, bergantung",
- "safely, with trust": "dengan aman dan tenang"
+ "safely, with trust": "dengan aman dan tenang",
+ "Watch the full ad to skip this homework.": "Tonton iklan sampai selesai untuk melewati tugas ini.",
+ "Watch an ad and skip homework": "Tonton iklan dan lewati tugas",
+ "Skip": "Lewati"
 }

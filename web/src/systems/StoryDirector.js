@@ -13,6 +13,7 @@ export class StoryDirector {
   #pendingNext = false;
   #started = false;
   #paused = false;
+  #transitioning = false;
 
   constructor({ story, state, bus, time, cast, travel, cards, toasts, fader }) {
     Object.assign(this, { story, state, bus, time, cast, travel, cards, toasts, fader });
@@ -87,6 +88,7 @@ export class StoryDirector {
 
   /** Move to the next chapter once any open conversation has ended. */
   nextChapter() {
+    if (this.#transitioning) return;
     if (this.#talking) { this.#pendingNext = true; return; }
     const i = this.state.chapter + 1;
     if (!this.story.chapters[i]) {
@@ -94,10 +96,23 @@ export class StoryDirector {
       if (o) this.cards.show({ ...o, text: val(o.text, this.ctx) });
       return;
     }
-    const go = () => this.fader.run(() => this.startChapter(i));
-    // a new day: first whatever comes between days (a full-screen ad, unless ad-free)
-    if (this.story.chapters[i].day > this.state.day && this.beforeNewDay) this.beforeNewDay().catch(() => {}).finally(go);
-    else go();
+    this.#transitioning = true;
+    const go = () => this.fader.run(() => {
+      // A gate can finish the last quest by changing chapter, without a separate
+      // quest effect. Count that completion too; already completed quests are null.
+      const ending = this.quest;
+      if (ending && this.state.quest === this.chapter.quests.length - 1) this.bus.emit(EV.QUEST_DONE, { quest: ending });
+      this.#transitioning = false;
+      this.startChapter(i);
+    });
+    const newDay = this.story.chapters[i].day > this.state.day;
+    const betweenDays = () => {
+      if (newDay && this.beforeNewDay) return Promise.resolve().then(() => this.beforeNewDay()).catch(() => {}).then(go);
+      go();
+    };
+    // Sleep is visible before an ad or the following morning's intro.
+    if (newDay && this.beforeSleep) return Promise.resolve().then(() => this.beforeSleep()).catch(() => {}).then(betweenDays);
+    return betweenDays();
   }
 
   complete(id) {

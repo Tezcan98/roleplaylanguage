@@ -976,7 +976,7 @@
  "Sit with grandpa and listen to a tale": "दादाजी के साथ बैठकर कहानी सुनो",
  "Six and five! Very good.": "छह और पाँच! बहुत अच्छे।",
  "Six, seven, eight, nine, ten.": "छह, सात, आठ, नौ, दस।",
- "Skip": "छोड़ो",
+ "Skip homework": "होमवर्क छोड़ें",
  "Skip the explanation": "व्याख्या छोड़ो",
  "Sleeping a lot.": "बहुत सोना।",
  "Slow": "धीमा",
@@ -1517,7 +1517,7 @@
  "Yes, I live here with my family.": "हाँ, मैं यहाँ अपने परिवार के साथ रहता हूँ।",
  "Yes, I want to ride!": "हाँ, मैं सवारी करना चाहता हूँ!",
  "Yes, I will play!": "हाँ, मैं खेलूँगा!",
- "Yes, Monday. Put your book in your bag. Your book is on the shelf.": "हाँ, सोमवार। अपनी किताब बैग में रखो। तुम्हारी किताब शेल्फ़ पर है।",
+ "Yes, Monday. I put your book in your bag.": "हाँ, सोमवार है। मैंने तुम्हारी किताब तुम्हारे बैग में रख दी है।",
  "Yes, but now I'm bored.": "हाँ, पर अब मैं बोर हो रहा हूँ।",
  "Yes, he works in Istanbul. He is a teacher.": "हाँ, वह इस्तांबुल में काम करता है। वह टीचर है।",
  "Yes, how did you know?": "हाँ, तुम्हें कैसे पता चला?",
@@ -2554,5 +2554,8 @@
  "to entrust": "सौंपना",
  "means, cause": "सबब, ज़रिया",
  "to rely, to lean on": "भरोसा करना",
- "safely, with trust": "इत्मीनान से"
+ "safely, with trust": "इत्मीनान से",
+ "Watch the full ad to skip this homework.": "यह होमवर्क छोड़ने के लिए पूरा विज्ञापन देखें।",
+ "Watch an ad and skip homework": "विज्ञापन देखकर होमवर्क छोड़ें",
+ "Skip": "छोड़ें"
 }

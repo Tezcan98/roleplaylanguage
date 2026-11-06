@@ -901,7 +901,7 @@
  "Six eggs are thirty lira.": "ست بيضات بثلاثين ليرة.",
  "Six eggs, please.": "ست بيضات من فضلك.",
  "Six, seven, eight, nine, ten.": "ستة، سبعة، ثمانية، تسعة، عشرة.",
- "Skip": "تخطٍّ",
+ "Skip homework": "تجاوز الواجب",
  "So sweet!": "لطيف جدًا!",
  "So your grandpa sent it… Listen: when you go to Aslan Bey, first say this — “The eagle has returned to its nest.” Your grandpa always used to say that.": "إذن جدك أرسله… اسمع: عندما تذهب إلى أصلان بك قل له أولاً: «عاد النسر إلى عشه». كان جدك يقول ذلك دائماً.",
  "Some questions are not asked, my child. Oh, and one more thing… don’t go to Aslan empty-handed. Get him a tea from Osman the tea maker. He drinks it without sugar.": "بعض الأسئلة لا تُسأل يا بني. آه، وشيء آخر… لا تذهب إلى أصلان خالي اليدين. خذ له شاياً من عثمان صانع الشاي. يشربه بلا سكر.",
@@ -1395,7 +1395,7 @@
  "Yes, I did my homework!": "نعم، كتبت واجبي!",
  "Yes, I want to ride!": "نعم، أريد أن أركب!",
  "Yes, I will play!": "نعم، سألعب!",
- "Yes, Monday. Put your book in your bag. Your book is on the shelf.": "نعم، الاثنين. ضع كتابك في حقيبتك. كتابك على الرف.",
+ "Yes, Monday. I put your book in your bag.": "نعم، يوم الاثنين. وضعت كتابك في حقيبتك.",
  "Yes, a glass of tea please.": "نعم، كأس شاي من فضلك.",
  "Yes, he works in Istanbul. He is a teacher.": "نعم، يعمل في إسطنبول. إنه معلم.",
  "Yes, it’s sunny. Shall we have another tea?": "نعم، الجو مشمس. هل نشرب كوب شاي آخر؟",
@@ -3097,5 +3097,8 @@
  "to entrust": "أن يُسلِّم، أن يستودع",
  "means, cause": "سبب، وسيلة",
  "to rely, to lean on": "أن يعتمد على",
- "safely, with trust": "بأمان وطمأنينة"
+ "safely, with trust": "بأمان وطمأنينة",
+ "Watch the full ad to skip this homework.": "شاهد الإعلان كاملاً لتجاوز هذا الواجب.",
+ "Watch an ad and skip homework": "شاهد إعلانًا وتجاوز الواجب",
+ "Skip": "تجاوز"
 }

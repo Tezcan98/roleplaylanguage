@@ -901,7 +901,7 @@
  "Six eggs are thirty lira.": "چھ انڈے تیس لیرا کے ہیں۔",
  "Six eggs, please.": "چھ انڈے، براہ کرم۔",
  "Six, seven, eight, nine, ten.": "چھ، سات، آٹھ، نو، دس۔",
- "Skip": "چھوڑو",
+ "Skip homework": "ہوم ورک چھوڑیں",
  "So sweet!": "کتنا پیارا!",
  "So your grandpa sent it… Listen: when you go to Aslan Bey, first say this — “The eagle has returned to its nest.” Your grandpa always used to say that.": "تو یہ تمہارے دادا نے بھیجا ہے… سنو: اصلان بے کے پاس جاؤ تو پہلے یہ کہنا — «عقاب اپنے گھونسلے میں لوٹ آیا۔» تمہارے دادا ہمیشہ یہی کہتے تھے۔",
  "Some questions are not asked, my child. Oh, and one more thing… don’t go to Aslan empty-handed. Get him a tea from Osman the tea maker. He drinks it without sugar.": "کچھ سوال پوچھے نہیں جاتے بیٹا۔ اور ہاں… اصلان کے پاس خالی ہاتھ نہ جانا۔ عثمان چائے والے سے اس کے لیے چائے لے لو۔ وہ بغیر چینی پیتا ہے۔",
@@ -1394,7 +1394,7 @@
  "Yes, I did my homework!": "جی ہاں، میں نے ہوم ورک کر لیا!",
  "Yes, I want to ride!": "ہاں، میں سوار ہونا چاہتا ہوں!",
  "Yes, I will play!": "ہاں، میں کھیلوں گا!",
- "Yes, Monday. Put your book in your bag. Your book is on the shelf.": "ہاں، پیر۔ کتاب بستے میں رکھ لو۔ تمہاری کتاب الماری پر ہے۔",
+ "Yes, Monday. I put your book in your bag.": "ہاں، پیر ہے۔ میں نے تمہاری کتاب تمہارے بستے میں رکھ دی ہے۔",
  "Yes, a glass of tea please.": "جی، ایک گلاس چائے براہ کرم۔",
  "Yes, he works in Istanbul. He is a teacher.": "ہاں، وہ استنبول میں کام کرتا ہے۔ وہ استاد ہے۔",
  "Yes, it’s sunny. Shall we have another tea?": "ہاں، دھوپ ہے۔ ایک چائے اور پئیں؟",
@@ -3096,5 +3096,8 @@
  "to entrust": "سپرد کرنا",
  "means, cause": "سبب، ذریعہ",
  "to rely, to lean on": "بھروسا کرنا",
- "safely, with trust": "اطمینان سے"
+ "safely, with trust": "اطمینان سے",
+ "Watch the full ad to skip this homework.": "یہ ہوم ورک چھوڑنے کے لیے پورا اشتہار دیکھیں۔",
+ "Watch an ad and skip homework": "اشتہار دیکھ کر ہوم ورک چھوڑیں",
+ "Skip": "چھوڑیں"
 }

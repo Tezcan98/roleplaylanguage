@@ -120,6 +120,7 @@ import { LabelLayer } from './ui/LabelLayer.js';
 import { Joystick } from './ui/Joystick.js';
 import { ActionButton, ShotButton } from './ui/ActionButton.js';
 import { InventoryView } from './ui/InventoryView.js';
+import { SleepScreen } from './ui/SleepScreen.js';
 import { Fader } from './ui/Fader.js';
 import { CardOverlay } from './ui/CardOverlay.js';
 import { MainMenu } from './ui/MainMenu.js';
@@ -245,6 +246,7 @@ const joystick = new Joystick(host);
 const cards = new CardOverlay(host, modes);
 const list = new ListModal(host, modes);
 const fader = new Fader(host);
+const sleepScreen = new SleepScreen(host, modes);
 
 // --- game model ---
 const inventory = new Inventory(state, bus);
@@ -260,6 +262,7 @@ const npcs = new Map(Object.entries(NPCS).map(([id, def]) => [id, new Npc(id, de
 const cast = new CastDirector({ npcs, world, player });
 const travel = new TravelService({ world, player, cast, camera, fader, state });
 const story = new StoryDirector({ story: STORY, state, bus, time, cast, travel, cards, toasts, fader });
+story.beforeSleep = () => { tts.cancel(); return sleepScreen.show(); };
 const items = new ItemSystem({ defs: ITEMS, names: KIND_NAMES, world, kit, state, inventory, vocab, bus, story });
 const gameCtx = new GameContext({ state, inventory, story, world, time, vocab, player, cast });
 story.setContext(gameCtx);
@@ -324,6 +327,7 @@ dialogue.setContext(gameCtx);
 effects
   .register('quest', (id) => story.complete(id))
   .register('chapter', () => story.nextChapter())
+  .register('school-book', () => { if (!inventory.has('kitap')) inventory.add('kitap'); })
   .register('take', (kind, n) => inventory.remove(kind, n ? Number(n) : Infinity))
   .register('give', (kind, n) => {
     inventory.add(kind, n ? Number(n) : 1);
@@ -443,12 +447,15 @@ const lessons = new LessonController({
   view: new ClassroomView(host, { onReplay: () => lessons.replay() }),
 });
 const textbook = new TextbookController({
+  canSkip: () => wallet.adFree || ads.hasRewarded,
+  skipLabel: () => wallet.adFree ? withGloss('Ödevi geç', 'Skip homework') : withGloss('Ödevi reklamla geç', 'Watch an ad and skip homework'),
+  requestSkip: () => wallet.adFree ? Promise.resolve(true) : ads.showRewarded(),
   book: TEXTBOOK, activities, tts, vocab, state, effects, modes, toasts,
   view: new TextbookView(host, { onClose: () => textbook.close(), onPrev: () => textbook.prev(), onNext: () => textbook.next() }),
 });
 effects
   .register('lesson', (id) => lessons.enter(id || story.chapter?.lessonId || 'l1'))
-  .register('textbook', (unit) => textbook.open(unit))
+  .register('textbook', (unit) => textbook.open(unit || (story.quest?.id === 'homework' ? 'u1' : undefined)))
   .register('school-practice', () => schoolPractice())
   .register('credits', (n) => { wallet.add(Number(n), 'reward'); toasts.show(`+${n} kredi`, gloss('Credits earned')); });
 
@@ -986,6 +993,7 @@ const stats = new Stats({
     return r.status === 204;
   },
 });
+textbook.onProgress = (kind) => stats.count(`textbook:${kind}`);
 village.onStat = (key) => stats.count(key);
 { const open = shop.open.bind(shop); shop.open = (...a) => { stats.count('shop'); return open(...a); }; }
 { const ride = animals.ride.bind(animals); animals.ride = (h) => { stats.count('ride'); return ride(h); }; }

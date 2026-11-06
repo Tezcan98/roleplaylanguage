@@ -901,7 +901,7 @@
  "Six eggs are thirty lira.": "Six œufs coûtent trente livres.",
  "Six eggs, please.": "Six œufs, s'il vous plaît.",
  "Six, seven, eight, nine, ten.": "Six, sept, huit, neuf, dix.",
- "Skip": "Passer",
+ "Skip homework": "Passer le devoir",
  "So sweet!": "Trop mignon !",
  "So your grandpa sent it… Listen: when you go to Aslan Bey, first say this — “The eagle has returned to its nest.” Your grandpa always used to say that.": "C'est donc ton grand-père qui l'envoie… Écoute : quand tu iras voir Aslan Bey, dis-lui d'abord ceci : « L'aigle est revenu à son nid. » Ton grand-père le disait toujours.",
  "Some questions are not asked, my child. Oh, and one more thing… don’t go to Aslan empty-handed. Get him a tea from Osman the tea maker. He drinks it without sugar.": "Certaines questions ne se posent pas, mon enfant. Ah, et autre chose… ne va pas voir Aslan les mains vides. Prends-lui un thé chez Osman. Il le boit sans sucre.",
@@ -1394,7 +1394,7 @@
  "Yes, I did my homework!": "Oui, j’ai fait mes devoirs !",
  "Yes, I want to ride!": "Oui, je veux monter !",
  "Yes, I will play!": "Oui, je joue !",
- "Yes, Monday. Put your book in your bag. Your book is on the shelf.": "Oui, lundi. Mets ton livre dans ton sac. Ton livre est sur l’étagère.",
+ "Yes, Monday. I put your book in your bag.": "Oui, lundi. J’ai mis ton livre dans ton sac.",
  "Yes, a glass of tea please.": "Oui, un verre de thé, s’il te plaît.",
  "Yes, he works in Istanbul. He is a teacher.": "Oui, il travaille à Istanbul. Il est enseignant.",
  "Yes, it’s sunny. Shall we have another tea?": "Oui, il fait soleil. On prend encore un thé ?",
@@ -3096,5 +3096,8 @@
  "to entrust": "confier",
  "means, cause": "moyen, cause",
  "to rely, to lean on": "s’appuyer sur",
- "safely, with trust": "en sécurité, avec confiance"
+ "safely, with trust": "en sécurité, avec confiance",
+ "Watch the full ad to skip this homework.": "Regarde la publicité en entier pour passer ce devoir.",
+ "Watch an ad and skip homework": "Regarder une publicité et passer le devoir",
+ "Skip": "Passer"
 }

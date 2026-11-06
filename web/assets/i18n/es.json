@@ -901,7 +901,7 @@
  "Six eggs are thirty lira.": "Seis huevos cuestan treinta liras.",
  "Six eggs, please.": "Seis huevos, por favor.",
  "Six, seven, eight, nine, ten.": "Seis, siete, ocho, nueve, diez.",
- "Skip": "Saltar",
+ "Skip homework": "Saltar la tarea",
  "So sweet!": "¡Qué mono!",
  "So your grandpa sent it… Listen: when you go to Aslan Bey, first say this — “The eagle has returned to its nest.” Your grandpa always used to say that.": "Así que te lo ha mandado tu abuelo… Escucha: cuando vayas a ver a Aslan Bey, dile primero esto: «El águila ha vuelto a su nido». Tu abuelo siempre lo decía.",
  "Some questions are not asked, my child. Oh, and one more thing… don’t go to Aslan empty-handed. Get him a tea from Osman the tea maker. He drinks it without sugar.": "Algunas preguntas no se hacen, hijo. Ah, y otra cosa… no vayas a ver a Aslan con las manos vacías. Llévale un té de Osman, el del té. Lo toma sin azúcar.",
@@ -1394,7 +1394,7 @@
  "Yes, I did my homework!": "¡Sí, he hecho los deberes!",
  "Yes, I want to ride!": "¡Sí, quiero montar!",
  "Yes, I will play!": "¡Sí, juego yo!",
- "Yes, Monday. Put your book in your bag. Your book is on the shelf.": "Sí, lunes. Mete el libro en la mochila. Tu libro está en la estantería.",
+ "Yes, Monday. I put your book in your bag.": "Sí, lunes. He puesto tu libro en tu mochila.",
  "Yes, a glass of tea please.": "Sí, un vaso de té, por favor.",
  "Yes, he works in Istanbul. He is a teacher.": "Sí, trabaja en Estambul. Es profesor.",
  "Yes, it’s sunny. Shall we have another tea?": "Sí, hace sol. ¿Nos tomamos otro té?",
@@ -3096,5 +3096,8 @@
  "to entrust": "confiar, encomendar",
  "means, cause": "medio, causa",
  "to rely, to lean on": "apoyarse, confiar",
- "safely, with trust": "con seguridad y confianza"
+ "safely, with trust": "con seguridad y confianza",
+ "Watch the full ad to skip this homework.": "Mira el anuncio completo para saltar esta tarea.",
+ "Watch an ad and skip homework": "Ver un anuncio y saltar la tarea",
+ "Skip": "Saltar"
 }

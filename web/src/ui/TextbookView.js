@@ -7,11 +7,12 @@ export class TextbookView {
     this.title = el('h2');
     this.body = el('div', { class: 'tb-body' });
     this.page = el('span', { class: 'pg' });
+    this.skip = el('button', { class: 'chipbtn tb-skip', attrs: { type: 'button', hidden: '' } });
     this.prev = el('button', { class: 'chipbtn', text: withGloss('‹ Geri', '‹ Back'), attrs: { type: 'button' }, on: { click: onPrev } });
     this.next = el('button', { class: 'chipbtn primary', text: withGloss('İleri ›', 'Next ›'), attrs: { type: 'button' }, on: { click: onNext } });
     this.root = el('div', { class: 'overlay dim' }, [el('div', { class: 'textbook' }, [
       el('div', { class: 'tb-head' }, [this.title, el('button', { class: 'iconbtn', html: ICONS.close, attrs: { type: 'button', 'aria-label': 'Kitabı kapat' }, on: { click: onClose } })]),
-      this.body,
+      this.body, this.skip,
       el('div', { class: 'tb-nav' }, [this.prev, this.page, this.next]),
     ])]);
     host.append(this.root);
@@ -22,6 +23,7 @@ export class TextbookView {
   get isOpen() { return this.root.classList.contains('open'); }
 
   frame(title, pageText, { prev, next, nextLabel }) {
+    this.offerSkip(null);
     this.title.textContent = title;
     this.page.textContent = pageText;
     this.prev.hidden = !prev;
@@ -79,6 +81,14 @@ export class TextbookView {
     this.body.append(this.hint, this.slot);
     return this.slot;
   }
+
+  offerSkip(onSkip, label = '') {
+    this.skip.hidden = !onSkip;
+    this.skip.disabled = false;
+    this.skip.textContent = label;
+    this.skip.onclick = onSkip;
+  }
+  skipBusy(on) { this.skip.disabled = on; }
 
   enableNext() { this.next.disabled = false; }
 

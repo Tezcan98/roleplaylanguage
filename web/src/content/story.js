@@ -158,9 +158,10 @@ export const STORY = {
 
     {
       id: 'd1-night', day: 1, time: '21:30', location: 'house', spawn: 'sofraGuest',
+      enter: ['school-book'],
       cast: {
-        anne: ['house', 'kitchen', 'cook'],
-        baba: ['house', 'sedirL', 'watchTv'],
+        anne: ['house', 'sedirL', 'sitBench'],
+        baba: ['house', 'sedirR', 'watchTv'],
         dede: null, // already asleep
         ...VILLAGE_NPCS,
       },
@@ -171,7 +172,6 @@ export const STORY = {
       },
       quests: [
         { id: 'mom-night', title: 'Yarın okul var', obj: 'Annenle konuş', en: 'Talk to mom', target: { npc: 'anne' } },
-        { id: 'take-book', title: 'Kitap', obj: 'Raftan kitabını al', en: 'Take your book from the shelf', target: { item: 'kitap' }, complete: { pick: 'kitap' }, minutes: 5 },
         { id: 'goodnight', title: 'İyi geceler', obj: 'Annene iyi geceler de (sesli)', en: 'Say good night to mom (out loud)', target: { npc: 'anne' }, minutes: 5 },
         { id: 'sleep', title: 'Uyku', obj: 'Yatağına git', en: 'Go to bed', target: { hotspot: 'house.bed' }, complete: { use: 'house.bed' } },
       ],
