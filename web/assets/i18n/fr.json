@@ -3149,18 +3149,5 @@
  "Sow a seed in the marked soil.": "Sème une graine dans la terre indiquée.",
  "Water the marked soil.": "Arrose la terre indiquée.",
  "Harvest the ripe crop.": "Récolte le légume mûr.",
- "Harvested! You can sell your crops at the crate.": "Récolte terminée ! Tu peux vendre tes légumes près de la caisse.",
- "Choose your age range": "Choisis ta tranche d’âge",
- "I am under 18": "J’ai moins de 18 ans",
- "Allow and share": "Autoriser et partager",
- "We do not collect age analysis data from under-18s. Continue without sharing.": "Nous ne recueillons pas de données d’analyse d’âge des moins de 18 ans. Continue sans partager.",
- "Help us improve the game": "Aide-nous à améliorer le jeu",
- "Optionally share your age range. We do not ask for your birth date; your choice does not affect gameplay.": "Tu peux partager ta tranche d’âge si tu le souhaites. Nous ne demandons pas ta date de naissance ; ton choix ne change pas le jeu.",
- "nsSoft stores your age range with this device’s play time, completed tasks and return days on its own server for up to 30 days. Measurement starts after consent. It is not sent to Google or used for ad targeting. Withdraw and delete it in Settings → Age analysis.": "nsSoft conserve ta tranche d’âge avec le temps de jeu, les tâches terminées et les jours de retour de cet appareil sur son propre serveur pendant 30 jours maximum. La mesure commence après ton consentement. Ces données ne sont ni envoyées à Google ni utilisées pour cibler des publicités. Retire ton consentement et supprime-les dans Paramètres → Analyse par âge.",
- "Privacy notice and your rights": "Avis de confidentialité et tes droits",
- "I am 18 or older. I consent to my age range being processed for the described game analysis.": "J’ai 18 ans ou plus. Je consens au traitement de ma tranche d’âge pour l’analyse du jeu décrite.",
- "Withdraw and delete age analysis": "Retirer le consentement et supprimer l’analyse par âge",
- "Continue without sharing": "Continuer sans partager",
- "Close without changes": "Fermer sans modifier",
- "Age analysis": "Analyse par âge"
+ "Harvested! You can sell your crops at the crate.": "Récolte terminée ! Tu peux vendre tes légumes près de la caisse."
 }

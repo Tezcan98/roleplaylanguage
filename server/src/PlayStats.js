@@ -1,5 +1,4 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { recordAge, ageSummary, ageBody, pruneAge } from './AgeStats.js';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 
@@ -90,8 +89,6 @@ export class PlayStats {
     this.#seen.set(h, now);
     this.#tally(d, batch);
     const dev = this.#devices.get(h) ?? { first: d, ch: -1, chId: '', plat: '', v: '', lang: '', sec: 0, opens: 0, counts: {} };
-    const previousAge = dev.age;
-    recordAge(dev, msg.age, now);
     dev.last = d; dev.sec += sec; dev.opens += opens;
     if (Number.isInteger(msg.ch) && msg.ch > dev.ch && msg.ch < 1000) { dev.ch = msg.ch; dev.chId = String(msg.chId ?? '').replace(/[^a-z0-9-]/g, '').slice(0, 30); }
     if (msg.plat === 'app' || msg.plat === 'web') dev.plat = msg.plat;
@@ -103,7 +100,6 @@ export class PlayStats {
     for (const [k, n] of Object.entries(counts)) if (k in dev.counts || Object.keys(dev.counts).length < 300) dev.counts[k] = (dev.counts[k] ?? 0) + n;
     this.#devices.set(h, dev); this.#dirty = true;
     if (this.dir) { try { appendFileSync(join(this.dir, `${d}.jsonl`), `${JSON.stringify(batch)}\n`); } catch { /* disk full: the memory still counts */ } }
-    if (previousAge !== dev.age) this.flush(); // persist grants and withdrawals before acknowledging
     return true;
   }
 
@@ -121,7 +117,6 @@ export class PlayStats {
 
   /** The device table to disk (every minute when it changed). */
   flush() {
-    for (const dev of this.#devices.values()) if (pruneAge(dev)) this.#dirty = true;
     if (!this.dir || !this.#dirty) return;
     this.#dirty = false;
     try { const f = join(this.dir, 'devices.json'); writeFileSync(`${f}.tmp`, JSON.stringify(Object.fromEntries(this.#devices))); renameSync(`${f}.tmp`, f); } catch { this.#dirty = true; }
@@ -224,7 +219,6 @@ export class PlayStats {
   }
 
   summary() {
-    for (const dev of this.#devices.values()) if (pruneAge(dev)) this.#dirty = true;
     const today = day();
     const devs = [...this.#devices.values()];
     const newByDay = {};
@@ -248,7 +242,6 @@ export class PlayStats {
     return {
       now: new Date().toISOString(), today,
       total: { devices: devs.length, returned, spoke, hours: Math.round(devs.reduce((s, v) => s + v.sec, 0) / 360) / 10, app: devs.filter((v) => v.plat === 'app').length, web: devs.filter((v) => v.plat === 'web').length },
-      age: ageSummary(devs),
       days, top, reach, quests, periods: this.#periods(), playing: this.#playing(), retention: this.#retention(), firstMinutes: this.#firstMinutes(),
     };
   }
@@ -305,7 +298,7 @@ function page(s, key) {
 table{border-collapse:collapse;width:100%;max-width:900px;background:#1d2b3c;border-radius:10px;overflow:hidden}th,td{padding:7px 9px;border-bottom:1px solid #2b3c50;text-align:right}th:first-child,td:first-child{text-align:left}th{color:#9fb0c2;font-weight:600}
 .big{display:flex;gap:12px;flex-wrap:wrap}.big div{background:#1d2b3c;border-radius:12px;padding:10px 14px}.big b{display:block;font-size:24px;color:#ffd54a}
 .bar{display:inline-block;width:160px;height:10px;background:#2b3c50;border-radius:5px;vertical-align:middle;margin-left:8px;overflow:hidden}.bar i{display:block;height:100%;background:#45a852}</style></head><body>
-<h1>Oyun istatistikleri</h1>${ageBody(s.age)}<small>Anonim sayılar: kimin ne yazdığı değil, kaç kere yapıldığı · her dakika yenilenir · <a href="/api/ad-stats?key=${encodeURIComponent(key)}">reklam sayıları</a></small>
+<h1>Oyun istatistikleri</h1><small>Anonim sayılar: kimin ne yazdığı değil, kaç kere yapıldığı · her dakika yenilenir · <a href="/api/ad-stats?key=${encodeURIComponent(key)}">reklam sayıları</a></small>
 <h2>Şimdiye kadar</h2>
 <div class="big"><div><b>${n(s.total.devices)}</b>cihaz (oyuncu)</div><div><b>${n(s.total.returned)}</b>ertesi gün(ler) geri gelen</div><div><b>${n(s.total.spoke)}</b>biriyle konuşan</div><div><b>${n(s.total.hours)}</b>saat oynandı</div><div><b>${n(s.total.app)} / ${n(s.total.web)}</b>uygulama / web</div></div>
 <h2>Bugün (${esc(s.today)})</h2>

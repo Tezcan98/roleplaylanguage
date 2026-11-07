@@ -31,8 +31,8 @@ export class SettingsPanel {
   #pop = null;
   #taps = [];
 
-  constructor(host, { modes, settings, confirmQuality = async () => true, onHelp, onMenu, onSound, onAgeAnalysis = null, onFeedback = null, onRename = null, onRooms = null, room = () => '', onStartAt = null, chapters = [], onFps = null }) {
-    Object.assign(this, { modes, settings, confirmQuality, onHelp, onMenu, onSound, onAgeAnalysis, onFeedback, onRename, onRooms, room, onStartAt, chapters, onFps });
+  constructor(host, { modes, settings, confirmQuality = async () => true, onHelp, onMenu, onSound, onFeedback = null, onRename = null, onRooms = null, room = () => '', onStartAt = null, chapters = [], onFps = null }) {
+    Object.assign(this, { modes, settings, confirmQuality, onHelp, onMenu, onSound, onFeedback, onRename, onRooms, room, onStartAt, chapters, onFps });
     this.body = el('div', { class: 'settings-body' });
     const title = el('h2', { class: 'set-title', text: 'Ayarlar', on: { click: () => this.#tap() } });
     this.root = el('div', { class: 'overlay dim settings-panel' }, [el('div', { class: 'card' }, [
@@ -115,7 +115,6 @@ export class SettingsPanel {
         this.onFeedback && tile(I.feedback, 'Yorum yaz', '+20 kredi', () => this.onFeedback()),
         this.onRename && tile(I.user, 'Kullanıcı adı', `@${s.get('username') || '—'}`, () => this.onRename()),
         this.onRooms && tile(I.square, 'Köy meydanı', this.room(), () => this.onRooms()), // another city's square
-        this.onAgeAnalysis && tile(I.user, withGloss('Yaş analizi', 'Age analysis'), '', () => this.onAgeAnalysis()),
         tile(I.home, 'Ana menü', '', () => this.onMenu()),
       ].filter(Boolean)),
     ].filter(Boolean));

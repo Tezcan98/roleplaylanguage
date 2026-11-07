@@ -119,7 +119,6 @@ import { QuestPanel } from './ui/QuestPanel.js';
 import { DirectionsCard } from './ui/DirectionsCard.js';
 import { Minimap } from './ui/Minimap.js';
 import { RoomCard } from './ui/RoomCard.js';
-import { AgeAnalysisDialog } from './ui/AgeAnalysisDialog.js';
 import { Stats } from './services/Stats.js';
 import { Toasts } from './ui/Toasts.js';
 import { LabelLayer } from './ui/LabelLayer.js';
@@ -867,7 +866,6 @@ const settingsPanel = new SettingsPanel(host, {
   modes, settings, onFps: (v) => applyFps(v),
   confirmQuality: () => qualityCard.ask({ title: 'Görüntü kalitesi', text: 'Daha yüksek kalite telefonu ısıtabilir, pili çabuk bitirebilir ve oyunu yavaşlatabilir. Emin misin?', en: gloss('A higher picture quality can heat up the phone, drain the battery faster and slow the game down. Are you sure?'), yes: 'Evet, değiştir', no: 'Vazgeç' }),
   onFeedback: () => feedback.open(),
-  onAgeAnalysis: () => ageDialog.open(),
   onRename: () => village.rename(), // the name others see in the square (asked the first time there)
   onRooms: pickRoom, room: () => SERVERS.find(([id]) => id === settings.get('serverRegion', DEFAULT_SERVER))?.[1] ?? '',
   onStartAt: (i) => startNew(null, i), // test mode (five taps on the title): a new game from any chapter
@@ -1008,7 +1006,6 @@ const menu = new MainMenu(host, {
   onContinue: () => continueGame(),
   onProfile: () => { menu.hide(); editProfile(); },
   onShop: () => shop.open(),
-  onAgeAnalysis: () => ageDialog.open(),
   onCode: () => codeCard.open(), // the 🔑 (once five taps on the shop's "Altın" tab turned it on)
 });
 /** Character setup; language and boy/girl rewrite texts, so those changes reload the page. */
@@ -1036,13 +1033,6 @@ const stats = new Stats({
     return r.status === 204;
   },
 });
-const ageDialog = new AgeAnalysisDialog(host, { settings, modes, onChange: () => stats.ageChanged() });
-// Ask once after active play, away from onboarding, dialogue and other cards. Never block the start.
-let ageAskSeconds = 0;
-setInterval(() => {
-  if (params.has('debug') || params.has('nointro') || document.hidden || !modes.is('play') || menu.isOpen || dialogue.talking || settings.get('ageAnalysis')) return;
-  if (++ageAskSeconds >= 60) ageDialog.open();
-}, 1000);
 textbook.onProgress = (kind) => stats.count(`textbook:${kind}`);
 village.onStat = (key) => stats.count(key);
 { const open = shop.open.bind(shop); shop.open = (...a) => { stats.count('shop'); return open(...a); }; }

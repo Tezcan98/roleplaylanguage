@@ -1,6 +1,6 @@
 # Türk Ailem — Gizlilik Politikası
 
-**Son güncelleme:** 7 Kasım 2026
+**Son güncelleme:** 26 Ekim 2026
 
 Türk Ailem (Google Play'de *Turkish Family: Learn Turkish*, paket `com.anadolu`), **nsSoft** tarafından geliştirilen; Türkçeyi hikâye ve 3D köy yaşamı içinde, konuşarak öğretmeyi amaçlayan bir dil gelişimi ve sosyalleşme oyunudur. Bu metin, uygulamanın hangi verileri kullandığını sade biçimde açıklar.
 
@@ -54,18 +54,6 @@ Oyun ilerlemesi, kelime bilgisi, kredi bakiyesi ve bazı ayarlar cihazdaki **loc
 ## 3a. Anonim oyun istatistikleri
 
 Oyunu geliştirmek için oyunun sunucusu **anonim kullanım sayıları** toplar: oyunun kaç cihazda açıldığı, hangi bölüme kadar gidildiği, ne kadar süre oynandığı ve hangi yerlerin, karakterlerin ve etkinliklerin kaç kez kullanıldığı (ör. "annenle konuşma: 3", "köy meydanında yazılan cümle sayısı: 5"). Bu sayılar **yalnızca sayıdır**: kimin ne yazdığı ya da söylediği, kullanıcı adı, ad, konum, rehber ya da reklam kimliği bu kayda **girmez**. Cihazlar, oyunun kendi ürettiği rastgele cihaz kimliğinin kısaltılmış bir özetiyle ayırt edilir (reklam kimliği değildir, kişiyi tanımlamaz). Günlük sayılar sunucuda 30 gün ayrıntılı tutulur; cihaz başına küçük bir özet (ilk ve son gün, en ileri bölüm, toplam süre) süresiz saklanır ve istek üzerine silinir (bkz. 9. İletişim). Reklam sayıları ayrıca ve yine anonim olarak aynı şekilde sayılır. Bu veriler kimseyle paylaşılmaz ve reklam amacıyla kullanılmaz.
-
-## 3b. İsteğe bağlı yaş aralığı analizi
-
-**Veri sorumlusu nsSoft**, 18 yaş ve üzerindeki oyuncuların ayrı açık rızasıyla yalnızca seçtikleri yaş aralığını (18–24, 25–34, 35–44, 45–54, 55–64, 65+) toplar. Doğum tarihi istenmez. 18 yaş altı seçimi cihaz dışına gönderilmez; yaş paylaşmamak oyunu ve ödülleri etkilemez.
-
-Amaç, yaş gruplarına göre oyunun anlaşılabilirliğini ve görev akışını değerlendirmektir. Yaş aralığı; rastgele cihaz kimliğinin özetiyle ilişkilendirilmiş **yalnızca izin sonrasındaki** oyun süresi, tamamlanan görev/alıştırma sayıları ve oynanan günlerle birlikte oyunun kendi sunucusunda işlenir. Cihazla ilişkilendirildiği için bu kayıt tamamen anonim kabul edilmez. Eski kullanım geçmişine yaş etiketi eklenmez. Yaş bilgisi Google/Firebase, reklam ağları veya diğer oyuncularla paylaşılmaz; kişiselleştirilmiş reklam veya reklam hedeflemesi için kullanılmaz. Reklam amaçlı farklı bir kullanım ayrıca değerlendirilir ve gerektiğinde ayrı izin alınır.
-
-Yaşla ilişkili günlük ölçümler en çok 30 gün saklanır; 30 gün kullanılmayan yaş kaydı silinir. Yaş bilgisi olay günlüklerine yazılmaz. Yetkili yönetim ekranında toplu karşılaştırma yapılır; 10 cihazdan küçük grupların davranış sonuçları gösterilmez. İzin vermeyenler yaş karşılaştırmasına dahil edilmez.
-
-**İznini geri alma ve silme:** Oyun içi Ayarlar → Yaş analizi → “İzni geri al ve yaş analizini sil” seçeneği yerel yaş aralığını hemen kaldırır ve sunucudaki yaş analizini bağlantı sağlandığında siler. İzin geri alma genel oyun istatistiklerinden ayrıdır. Cihaz verilerini silmeden önce bu seçeneği kullanabilirsin; uygulama kaldırılmışsa sunucudaki yaş kaydı son kullanımdan en geç 30 gün sonra silinir.
-
-KVKK kapsamındaki haklarını (veri işlenip işlenmediğini öğrenme, bilgi isteme, düzeltme, silme, aktarılan tarafları öğrenme ve kanundaki diğer haklar) kullanmak için **info@sorexdigital.com** adresine veya [veri silme sayfasına](https://anadoluailesi.com.tr/veri-silme/) başvurabilirsin. Bu aydınlatma, oyundaki isteğe bağlı izin kutusundan ayrıdır.
 
 ## 4. Reklamlar, satın almalar ve bildirimler
 

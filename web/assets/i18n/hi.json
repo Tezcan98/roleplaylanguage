@@ -2607,18 +2607,5 @@
  "Sow a seed in the marked soil.": "निशान वाली मिट्टी में एक बीज बोओ।",
  "Water the marked soil.": "निशान वाली मिट्टी में पानी दो।",
  "Harvest the ripe crop.": "पकी हुई फसल काटो।",
- "Harvested! You can sell your crops at the crate.": "फसल कट गई! तुम अपनी उपज पेटी के पास बेच सकते हो।",
- "Choose your age range": "अपना आयु वर्ग चुनें",
- "I am under 18": "मेरी उम्र 18 साल से कम है",
- "Allow and share": "अनुमति दें और साझा करें",
- "We do not collect age analysis data from under-18s. Continue without sharing.": "हम 18 साल से कम उम्र वालों से आयु विश्लेषण का डेटा नहीं लेते। साझा किए बिना आगे बढ़ें।",
- "Help us improve the game": "खेल को बेहतर बनाने में हमारी मदद करें",
- "Optionally share your age range. We do not ask for your birth date; your choice does not affect gameplay.": "आप चाहें तो अपना आयु वर्ग साझा करें। हम जन्मतिथि नहीं पूछते; आपके चुनाव से खेलने पर असर नहीं होगा।",
- "nsSoft stores your age range with this device’s play time, completed tasks and return days on its own server for up to 30 days. Measurement starts after consent. It is not sent to Google or used for ad targeting. Withdraw and delete it in Settings → Age analysis.": "nsSoft आपके आयु वर्ग को इस डिवाइस के खेलने के समय, पूरे किए गए कार्यों और वापस खेलने के दिनों के साथ अपने सर्वर पर अधिकतम 30 दिन रखता है। मापन सहमति के बाद शुरू होता है। यह डेटा Google को नहीं भेजा जाता और विज्ञापन लक्ष्यीकरण में उपयोग नहीं होता। सेटिंग्स → आयु विश्लेषण में सहमति वापस लेकर इसे मिटा सकते हैं।",
- "Privacy notice and your rights": "गोपनीयता सूचना और आपके अधिकार",
- "I am 18 or older. I consent to my age range being processed for the described game analysis.": "मेरी उम्र 18 साल या अधिक है। मैं बताए गए खेल विश्लेषण के लिए अपने आयु वर्ग के उपयोग की सहमति देता/देती हूँ।",
- "Withdraw and delete age analysis": "सहमति वापस लें और आयु विश्लेषण मिटाएँ",
- "Continue without sharing": "साझा किए बिना आगे बढ़ें",
- "Close without changes": "बिना बदलाव बंद करें",
- "Age analysis": "आयु विश्लेषण"
+ "Harvested! You can sell your crops at the crate.": "फसल कट गई! तुम अपनी उपज पेटी के पास बेच सकते हो।"
 }
