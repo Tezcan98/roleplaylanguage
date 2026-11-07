@@ -60,6 +60,45 @@ const garden = async (kit, questId, cam, look, at, face = null, has = []) => {
   return page;
 };
 
+
+/**
+ * The yard garden (systems/GardenSystem.js, content/gardenLayout.js): nine beds at x 7.15…10.85, z 2.35…5.65,
+ * the hoe at (12.35, 0.6), the watering can at (13, 2.5), the sale crate at (13, 4.15). `beds[i]`: { crop, grown }
+ * (grown 0…1: how far it has grown since watering; null: sown, not watered yet) or { hoed: true }.
+ */
+const GROW_MIN = { bean: 2, tomato: 4, pepper: 6 };
+const farm = async (kit, { at, face, cam, look, beds = [], basket = {}, dede = false }) => {
+  const page = await start(kit);
+  await page.evaluate(([at, face, beds, basket, dede, MIN]) => {
+    const g = window.__game, G = g.garden, f = g.story.state.flags;
+    if (dede) g.cast.move('dede', 'yard', 'garden', 'garden');
+    g.travel.place('yard', 'houseDoor', { force: true });
+    Object.assign(f, { 'farm-seeds-given': true, 'farm-hoed': true, 'farm-planted': true, 'farm-watered': true, 'farm-sown': 3 });
+    for (const [k, n] of [['tohum', 6], ['domates-tohumu', 4], ['biber-tohumu', 4]]) g.inventory.add(k, n);
+    const now = Date.now();
+    G.data.plots.forEach((p, i) => {
+      const b = beds[i] ?? {};
+      Object.assign(p, { hoed: !!(b.hoed || b.crop), crop: b.crop ?? null, plantedAt: b.crop ? now : null,
+        wateredAt: b.crop && b.grown != null ? now - b.grown * MIN[b.crop] * 60000 : null });
+    });
+    G.data.basket = basket;
+    G.refresh();
+    g.player.position.set(at[0], 0, at[1]);
+    if (face) g.player.group.rotation.y = Math.atan2(face[0] - at[0], face[1] - at[1]);
+  }, [at, face, beds, basket, dede, GROW_MIN]);
+  await kit.sleep(1200);
+  await fixed(page, cam, look);
+  await kit.sleep(900);
+  return page;
+};
+/** One garden step with the tool in hand: the player works the beds one after another. */
+const work = (page, kit, tool, beds, crop = 'bean') => (async () => {
+  await page.evaluate(([tool, crop]) => window.__game.gardenWalk.take(tool, crop), [tool, crop]);
+  await kit.sleep(450);
+  for (const i of beds) { await page.evaluate(([i, tool]) => window.__game.gardenWalk.apply(i, tool), [i, tool]); await kit.sleep(1000); }
+})();
+const ALL = (crop, grown) => Array.from({ length: 9 }, () => ({ crop, grown }));
+
 export const EPISODES = {
   // 0 · a hook for Arabic speakers: the flag, "do you have to watch silly series to learn Turkish?", then the garden tasks from far away
   garden: {
@@ -132,6 +171,80 @@ export const EPISODES = {
       tr: ['Türkçe öğrenmek için saçma dizileri izlemek zorunda mısın?', 'Oynayarak öğren.', 'Kovayı bul,', 'dedene götür.', 'Anahtarı bul,', 'babana götür.', 'Bahçeden domates topla.', 'Türk Ailem, Google Play’de ücretsiz.'],
       en: ['Do you have to watch silly series to learn Turkish?', 'Learn while you play.', 'Find the bucket,', 'take it to grandpa.', 'Find the wrench,', 'take it to dad.', 'Pick tomatoes in the garden.', 'My Turkish Family, free on Google Play.'],
       ar: ['هل يجب أن تشاهد مسلسلات سخيفة لتتعلّم التركية؟', 'تعلّم وأنت تلعب.', 'ابحث عن الدلو،', 'وخذه إلى جدّك.', 'ابحث عن المفتاح،', 'وخذه إلى أبيك.', 'اقطف الطماطم من الحديقة.', 'عائلتي التركية، مجانًا على Google Play.'],
+    },
+  },
+  // 0b · the new garden: hoe, sow, water, watch it grow, harvest and sell (Turkish words under the captions)
+  ekim: {
+    scenes: [
+      {
+        name: 'kHook', seconds: 3.8,
+        setup: async (kit) => farm(kit, { dede: true, at: [8.3, 1.5], face: [9, 0.2], cam: [8.7, 2.9, 6.6], look: [8.7, 1.7, 0.9],
+          beds: [{ crop: 'tomato', grown: 1 }, { crop: 'pepper', grown: 1 }, { crop: 'bean', grown: 1 }, { crop: 'bean', grown: 0.6 }, { crop: 'tomato', grown: 0.7 }, { crop: 'pepper', grown: 0.5 }, { crop: 'tomato', grown: 0.3 }, { crop: 'bean', grown: 0.2 }, { crop: 'pepper', grown: 0.25 }] }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Dede sana ekmeyi öğretiyor', 'جدّك يعلّمك الزراعة… بالتركية!');
+          await kit.sleep(400); await showLabels(page);
+          await bubble(page, 'dede', 'Gel evladım, beraber ekelim!', 'تعال يا بنيّ، لنزرع معًا!');
+        },
+      },
+      {
+        name: 'kHoe', seconds: 4.0,
+        setup: async (kit) => farm(kit, { at: [8.08, 1.75], face: [8.08, 3.5], cam: [8.1, 3.3, 5.3], look: [8.1, 0.55, 1.9] }),
+        act: async (kit, page) => { await kit.caption(page, 'Toprağı çapala', 'احرث التربة'); await work(page, kit, 'hoe', [0, 1]); },
+      },
+      {
+        name: 'kSow', seconds: 3.8,
+        setup: async (kit) => farm(kit, { at: [8.08, 1.75], face: [8.08, 3.5], cam: [8.1, 3.3, 5.3], look: [8.1, 0.55, 1.9], beds: [{ hoed: true }, { hoed: true }] }),
+        act: async (kit, page) => { await kit.caption(page, 'Tohum ek', 'ازرع البذور'); await work(page, kit, 'sow', [0, 1]); },
+      },
+      {
+        name: 'kWater', seconds: 3.8,
+        setup: async (kit) => farm(kit, { at: [8.08, 1.75], face: [8.08, 3.5], cam: [8.1, 3.3, 5.3], look: [8.1, 0.55, 1.9], beds: [{ crop: 'bean', grown: null }, { crop: 'bean', grown: null }] }),
+        act: async (kit, page) => { await kit.caption(page, 'Sula', 'اسقِ النباتات'); await work(page, kit, 'water', [0, 1]); },
+      },
+      {
+        name: 'kGrow', seconds: 4.4,
+        setup: async (kit) => farm(kit, { at: [12.2, 6.6], face: [9, 4], cam: [9.0, 5.2, 10.2], look: [9.0, 0.3, 3.9],
+          beds: [...Array(3).fill({ crop: 'bean', grown: 0 }), ...Array(3).fill({ crop: 'tomato', grown: 0 }), ...Array(3).fill({ crop: 'pepper', grown: 0 })] }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Filiz, yaprak, ürün', 'شاهدها تكبر!');
+          for (let k = 1; k <= 16; k++) {
+            await page.evaluate(([prog, MIN]) => {
+              const G = window.__game.garden, now = Date.now();
+              G.data.plots.forEach((p) => { if (p.crop) p.wateredAt = now - prog * MIN[p.crop] * 60000; });
+              G.refresh();
+            }, [Math.min(1, k / 14), GROW_MIN]);
+            await kit.sleep(240);
+          }
+        },
+      },
+      {
+        name: 'kHarvest', seconds: 4.0,
+        setup: async (kit) => farm(kit, { at: [8.08, 3.35], face: [8.08, 4.6], cam: [8.1, 2.8, 8.6], look: [8.1, 0.6, 3.8],
+          beds: [{ crop: 'bean', grown: 1 }, { crop: 'bean', grown: 1 }, { crop: 'bean', grown: 1 }, { crop: 'tomato', grown: 1 }, { crop: 'tomato', grown: 1 }, { crop: 'tomato', grown: 1 }, { crop: 'pepper', grown: 1 }, { crop: 'pepper', grown: 1 }, { crop: 'pepper', grown: 1 }] }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Hasat et', 'احصد محصولك');
+          await kit.sleep(500);
+          for (const i of [3, 4]) { await page.evaluate((i) => window.__game.gardenWalk.apply(i, 'harvest'), i); await kit.sleep(1000); }
+          await showLabels(page);
+          await page.evaluate(() => { const g = window.__game; g.labels.bubble(g.player, 'Domatesler hazır!', null, 2.5, 'الطماطم جاهزة!'); });
+        },
+      },
+      {
+        name: 'kSell', seconds: 3.8,
+        setup: async (kit) => farm(kit, { at: [12.3, 4.7], face: [13, 4.15], cam: [10.6, 2.7, 8.4], look: [12.6, 0.6, 4.2], basket: { tomato: 4, pepper: 2 },
+          beds: [{ crop: 'bean', grown: 0.4 }, { crop: 'bean', grown: 0.4 }, { crop: 'bean', grown: 0.4 }, { hoed: true }, { hoed: true }, { crop: 'tomato', grown: 0.8 }, { crop: 'pepper', grown: 1 }, { crop: 'pepper', grown: 0.6 }, { crop: 'pepper', grown: 0.3 }] }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Sat, yeni tohum al', 'بِع، واشترِ بذورًا جديدة');
+          await kit.sleep(700); await showToasts(page);
+          await page.evaluate(() => { const g = window.__game, v = g.garden.sell(); g.toasts.show(`Hasadını sattın! +${v} bahçe parası.`, 'بعت محصولك!'); });
+        },
+      },
+      endCard('kEnd'),
+    ],
+    vo: {
+      tr: ['Dede sana Türkçe ekmeyi öğretiyor!', 'Toprağı çapala,', 'tohum ek,', 've sula.', 'Bak, nasıl büyüyor!', 'Sonra hasat et,', 'sat ve yeni tohum al.', 'Türk Ailem, Google Play’de ücretsiz.'],
+      en: ['Grandpa teaches you to farm, in Turkish!', 'Hoe the soil,', 'sow the seeds,', 'and water them.', 'Watch them grow!', 'Then harvest,', 'sell, and buy new seeds.', 'My Turkish Family, free on Google Play.'],
+      ar: ['جدّك يعلّمك الزراعة… بالتركية!', 'احرث التربة،', 'ازرع البذور،', 'واسقِها بالماء.', 'شاهدها تكبر!', 'ثم احصد محصولك،', 'بِعه، واشترِ بذورًا جديدة.', 'عائلتي التركية، مجانًا على غوغل بلاي.'],
     },
   },
   // 1 · the park: the slide, the swings, the children to make friends with
@@ -236,7 +349,7 @@ export const EPISODES = {
           await page.evaluate(() => window.__game.dialogue.open('anne', 'quiz')); // "Söyle bakalım: Montun nerede?"
           await kit.sleep(1300);
           await page.evaluate(() => [...document.querySelectorAll('#dlg .choice')].find((b) => b.textContent.includes('yanına.'))?.click()); // the wrong one: the hint (-da / -de)
-          await kit.sleep(1300);
+          await kit.sleep(2300);
           await page.evaluate(() => [...document.querySelectorAll('#dlg .choice')].find((b) => b.textContent.includes('yanında.'))?.click());
         },
       },

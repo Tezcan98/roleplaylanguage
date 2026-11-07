@@ -31,6 +31,9 @@ export async function start(kit) {
   await page.evaluate(() => document.querySelector('.menu-main')?.click());
   await kit.sleep(2000);
   for (let i = 0; i < 6; i++) { await page.evaluate(() => document.querySelector('.overlay.story-card.open .btn, .overlay.open .card .btn')?.click()); await kit.sleep(400); }
+  // (a new game starts in the garden now: the scenes below were written for the park, in the village square)
+  await page.evaluate(() => window.__game.travel.place('village', 'park', { force: true }));
+  await kit.sleep(600);
   await page.evaluate(() => {
     const g = window.__game, w = g.wallet; w.add(500, 'promo');
     for (const it of [{ id: 'hd', slot: 'hd' }, { id: 'hd-casual', slot: 'body' }]) { w.buy({ ...it, price: 0 }); w.equip(it); }
