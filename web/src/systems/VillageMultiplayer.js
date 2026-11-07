@@ -279,8 +279,8 @@ export class VillageMultiplayer {
       if (welcome.chess && here === 'village') this.chess?.applyServer(welcome.chess);
       this.ptt.show(true);
       this.#count();
-      this.toasts.show(`${this.#roomLabel()} köy meydanına hoş geldin, ${welcome.name}!`, 'Bas-konuş: söylediğin yazı olarak görünür · Push-to-talk shows your words as text');
-      if (!this.settings.get('villageIntroSeen', false)) { this.settings.set('villageIntroSeen', true); this.onFirstVisit?.(); }
+      this.toasts.show(here === 'schoolyard' ? `Okul bahçesine hoş geldin, ${welcome.name}!` : `${this.#roomLabel()} köy meydanına hoş geldin, ${welcome.name}!`, 'Bas-konuş: söylediğin yazı olarak görünür · Push-to-talk shows your words as text');
+      if (here === 'village' && !this.settings.get('villageIntroSeen', false)) { this.settings.set('villageIntroSeen', true); this.onFirstVisit?.(); }
       this.#retryDelay = 0;
       this.#suggestBusierRoom();
     } catch (e) {

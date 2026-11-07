@@ -12,8 +12,8 @@ export class TextbookView {
     this.next = el('button', { class: 'chipbtn primary', text: withGloss('İleri ›', 'Next ›'), attrs: { type: 'button' }, on: { click: onNext } });
     this.root = el('div', { class: 'overlay dim' }, [el('div', { class: 'textbook' }, [
       el('div', { class: 'tb-head' }, [this.title, el('button', { class: 'iconbtn', html: ICONS.close, attrs: { type: 'button', 'aria-label': 'Kitabı kapat' }, on: { click: onClose } })]),
-      this.body, this.skip,
-      el('div', { class: 'tb-nav' }, [this.prev, this.page, this.next]),
+      this.body,
+      el('div', { class: 'tb-nav' }, [this.prev, this.page, el('div', { class: 'tb-nav-actions' }, [this.next, this.skip])]),
     ])]);
     host.append(this.root);
   }

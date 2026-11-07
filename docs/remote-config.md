@@ -18,6 +18,7 @@ türde bir değer (sayı yerine yazı, eksi sayı) yok sayılır, koddaki varsay
 | `rides.minutes` | at kiralama süresi (dakika) |
 | `boosts.pepperMinutes`, `boosts.pepperSpeed` | Urfa biberi kaç dakika, kaç kat hızlı (1.5 = %50 daha hızlı) |
 | `boosts.glowDays` | Altın baklava: kaç gün parlarsın (fiyatı `prices.aura`) |
+| `ads.interstitialEvery` | tüm geçiş reklamlarında kaç uygun tetiklemede bir reklam (2: yaklaşık yarısı; ödüllü videoları ve bannerları etkilemez) |
 | `ads.idleBannerSeconds` | kaç saniye kıpırdamayınca banner |
 | `ads.menuBannerChance` | ana menüde banner olasılığı (0–1) |
 | `ads.betweenDays` | hikâyede gün arası geçiş reklamı (true/false) |

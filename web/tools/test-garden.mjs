@@ -15,9 +15,10 @@ function setup(saved) {
  const garden=new GardenSystem({state,inventory,story,bus,vocab:{learn(){}},toasts:{show(){}},world:{get:()=>({setGardenState(){}})},time:state});
  bus.on(EV.FLAG,({name})=>done.push(name));return {state,inventory,story,garden,done};
 }
-test('second morning teaches farming after greeting and before school; first day promises it',()=>{
- const q=STORY.chapters.find(c=>c.id==='d2-morning').quests.map(q=>q.id);
- assert.deepEqual(q.slice(0,6),['wake','farm-seeds','farm-hoe','farm-sow','farm-water','jacket2']);
+test('second day teaches farming after shopping and before the letter; first day promises it',()=>{
+ const q=STORY.chapters.find(c=>c.id==='d2-homework').quests.map(q=>q.id);
+ assert.deepEqual(q.slice(2,8),['buy','farm-seeds','farm-hoe','farm-sow','farm-water','letter']);
+ assert.ok(!STORY.chapters.find(c=>c.id==='d2-morning').quests.some(q=>q.id.startsWith('farm-')));
  assert.match(DIALOGUES.dede.nodes.d3.say,/Yarın/);assert.equal(HOTSPOTS['yard.myGarden'].use[0],'my-garden');
 });
 test('three seeds are granted only once and not on day one',()=>{
@@ -41,7 +42,7 @@ test('paused story and missing inventory cannot advance planting',()=>{
  const a=setup();a.garden.giveSeeds();a.story.paused=true;assert.equal(a.garden.use(),false);a.story.paused=false;a.garden.use();a.story.quest.id='farm-sow';a.inventory.remove('tohum');assert.equal(a.garden.use(),false);
 });
 test('pre-farming save keeps the old morning quest; new saves do not migrate twice',()=>{
- for(const [old,next] of [[0,0],[1,5],[2,6]]){const s=new GameState();s.restore({v:1,storyRevision:2,chapter:5,quest:old});assert.equal(s.quest,next);const r=new GameState();r.restore(s.snapshot());assert.equal(r.quest,next);}
+ for(const [old,next] of [[0,0],[1,1],[2,2]]){const s=new GameState();s.restore({v:1,storyRevision:2,chapter:5,quest:old});assert.equal(s.quest,next);const r=new GameState();r.restore(s.snapshot());assert.equal(r.quest,next);}
  const night=new GameState();night.restore({v:1,chapter:4,quest:3});assert.equal(night.quest,2);
 });
 test('nine world beds show independent soil, water, growth and mature crop varieties',()=>{
@@ -54,13 +55,14 @@ test('nine world beds show independent soil, water, growth and mature crop varie
  yard.setGardenState(f,2,241000);assert.equal(yard.farmVisual.tiles[0].fruits.tomato.visible,true);assert.equal(yard.farmVisual.tiles[0].fruits.bean.visible,false);assert.equal(yard.farmVisual.tiles[0].plant.scale.n,1);
 });
 
-test('real story advances through all four farming quests and returns to school preparation',()=>{
- const state=new GameState();state.day=2;state.chapter=STORY.chapters.findIndex(c=>c.id==='d2-morning');state.quest=1;
+test('real story advances through all four farming quests and unlocks the letter only after watering',()=>{
+ const state=new GameState();state.day=2;state.chapter=STORY.chapters.findIndex(c=>c.id==='d2-homework');state.quest=3;
  const bus=new EventBus(),inventory=new Inventory(state,bus),toasts={show(){}},time={advance(){}};
  const story=new StoryDirector({story:STORY,state,bus,time,toasts});
+ story.setContext({state,flag:k=>!!state.flags[k],has:k=>inventory.has(k)});
  const garden=new GardenSystem({state,inventory,story,bus,vocab:{learn(){}},toasts,world:{get:()=>({setGardenState(){}})},time});
  garden.giveSeeds();story.complete('farm-seeds');assert.equal(story.quest.id,'farm-hoe');
- garden.use();assert.equal(story.quest.id,'farm-sow');garden.use();garden.use();assert.equal(story.quest.id,'farm-sow');garden.use();assert.equal(story.quest.id,'farm-water');garden.use();assert.equal(story.quest.id,'jacket2');assert.equal(inventory.count('tohum'),0);
+ garden.use();assert.equal(story.quest.id,'farm-sow');garden.use();garden.use();assert.equal(story.quest.id,'farm-sow');garden.use();assert.equal(story.quest.id,'farm-water');garden.use();assert.equal(story.quest.id,'letter');assert.equal(inventory.count('tohum'),0);
 });
 
 test('advanced players can complete the garden side quest without completing their main task',()=>{
@@ -140,5 +142,19 @@ test('actual yard geometry keeps all nine dynamic beds and harvest varieties aft
   assert.ok(tile.plant.parent);assert.ok(tile.furrows.children.length);
   const id=plots[i].crop;assert.equal(tile.fruits[id].visible,true);assert.ok(tile.fruits[id].children.length);
   assert.ok(Object.entries(tile.fruits).filter(([kind])=>kind!==id).every(([,g])=>!g.visible));
+ }
+});
+
+test('revision three garden and letter saves migrate once without losing progress',()=>{
+ for(const [chapter,quest,flags,expected]of [[5,2,{},1],[5,5,{},1],[7,3,{},3],[7,3,{'farm-watered':true},7],[7,4,{},8]]){
+  const state=new GameState();state.restore({v:1,storyRevision:3,chapter,quest,flags});assert.equal(state.quest,expected);const again=new GameState();again.restore(state.snapshot());assert.equal(again.quest,expected);
+ }
+});
+test('an old letter save resumes its incomplete lesson; a finished lesson is not repeated',()=>{
+ for(const complete of [false,true]){
+  const state=new GameState();state.restore({v:1,storyRevision:3,day:2,chapter:7,quest:3,flags:{'farm-seeds-given':true,'farm-hoed':true,'farm-sown':1,...(complete?{'farm-planted':true,'farm-watered':true}:{})},inventory:{tohum:2}});
+  const bus=new EventBus(),inventory=new Inventory(state,bus),story=new StoryDirector({story:STORY,state,bus,time:{advance(){}},toasts:{show(){}}});story.setContext({state,flag:k=>!!state.flags[k],has:k=>inventory.has(k)});
+  new GardenSystem({state,inventory,story,bus,vocab:{learn(){}},toasts:{show(){}},world:{get:()=>({setGardenState(){}})},time:state});bus.emit(EV.QUEST,{});
+  assert.equal(story.quest.id,complete?'letter':'farm-sow');assert.equal(inventory.count('tohum'),2);
  }
 });

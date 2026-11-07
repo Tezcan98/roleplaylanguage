@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="430" viewBox="0 0 1120 430">
+<defs>
+ <linearGradient id="paper" x2="0" y2="1"><stop stop-color="#fff8e7"/><stop offset="1" stop-color="#f0dfb5"/></linearGradient>
+ <linearGradient id="green" x2="0" y2="1"><stop stop-color="#638c48"/><stop offset="1" stop-color="#426e34"/></linearGradient>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#ffe4a0"/><stop offset="1" stop-color="#e9b449"/></linearGradient>
+</defs>
+<rect width="1120" height="430" fill="#e9eddf"/>
+<g font-family="DejaVu Sans, sans-serif">
+ <text x="560" y="42" text-anchor="middle" font-size="12" font-weight="700" letter-spacing="2" fill="#778169">TASARIM ÖNİZLEMESİ · OYUNA HENÜZ EKLENMEDİ</text>
+ <rect x="53" y="103" width="1014" height="192" rx="27" fill="#314c2e" opacity=".10"/>
+ <rect x="50" y="90" width="1020" height="194" rx="27" fill="#382b20"/>
+ <rect x="54" y="94" width="1012" height="182" rx="24" fill="url(#paper)" stroke="#dfba69" stroke-width="2"/>
+ <path d="M80 96h85" stroke="#fff8df" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+ <circle cx="150" cy="181" r="63" fill="#e9d6a7" stroke="#d0ac67" stroke-width="2"/>
+ <circle cx="150" cy="181" r="53" fill="#f9edce"/>
+ <g transform="translate(107 144) rotate(-9 45 38)">
+  <rect x="4" y="15" width="76" height="49" rx="8" fill="#f8f2de" stroke="#b99a63" stroke-width="2.5"/>
+  <path d="M6 20l36 27 36-27M7 60l23-18m47 18L54 42" fill="none" stroke="#d3b583" stroke-width="2.5"/>
+  <path d="M42 34C18 18 30 5 42 18C54 5 66 18 42 34" fill="#c7604d" stroke="#a84c3a" stroke-width="1.5"/>
+ </g>
+ <g fill="#e4ad42"><path d="M212 125l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/><path d="M85 227l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/></g>
+ <text x="242" y="134" font-size="11" font-weight="700" letter-spacing="1.6" fill="#9a7844">BİRLİKTE DAHA GÜZEL</text>
+ <text x="240" y="177" font-size="30" font-weight="700" fill="#493523">Arkadaşlarına öner, kazan!</text>
+ <text x="242" y="209" font-size="17" fill="#80704e">Bir arkadaşını köye davet et.</text>
+ <circle cx="253" cy="241" r="11" fill="url(#gold)" stroke="#af7a23" stroke-width="1.5"/>
+ <circle cx="253" cy="241" r="7" fill="none" stroke="#bd8c31"/>
+ <text x="273" y="247" font-size="15" font-weight="700" fill="#8d682a">+5 kredi</text>
+ <text x="351" y="247" font-size="12" fill="#958362">Günde bir kez</text>
+ <rect x="787" y="160" width="207" height="70" rx="17" fill="#314e29"/>
+ <rect x="787" y="154" width="207" height="70" rx="17" fill="url(#green)" stroke="#36582d" stroke-width="2"/>
+ <path d="M809 155h158" stroke="#91af6c" stroke-width="2" stroke-linecap="round"/>
+ <path d="M818 180l20 9-20 9 3-9zM820 189h13" fill="#fff0c5" stroke="#fff0c5" stroke-width="2" stroke-linejoin="round"/>
+ <text x="905" y="197" text-anchor="middle" font-size="23" font-weight="700" fill="#fff4d6">Davet et</text>
+ <circle cx="1034" cy="120" r="22" fill="#e7d7b1" stroke="#c8b184" stroke-width="1.5"/>
+ <path d="M1028 114l12 12m0-12-12 12" stroke="#8a7758" stroke-width="2.7" stroke-linecap="round"/>
+ <text x="560" y="342" text-anchor="middle" font-size="17" font-weight="700" fill="#526146">Küçük, kapatılabilir bir davet kartı</text>
+ <text x="560" y="372" text-anchor="middle" font-size="14" fill="#7a826e">Öneri: güvenli bir anda ara sıra gösterilir; konuşmaları ve görevleri bölmez.</text>
+ <text x="560" y="397" text-anchor="middle" font-size="12" fill="#88917d">Davet et → telefonun paylaşım menüsü · Mevcut paylaşım ödülü: günde bir kez 5 kredi</text>
+</g>
+</svg>

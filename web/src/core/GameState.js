@@ -30,7 +30,7 @@ export class GameState {
 
   snapshot() {
     const { day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table } = this;
-    return structuredClone({ v: 1, storyRevision: 3, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table });
+    return structuredClone({ v: 1, storyRevision: 4, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table });
   }
 
   restore(data) {
@@ -42,6 +42,12 @@ export class GameState {
     if (storyRevision < 2 && this.chapter === 4 && this.quest >= 1) this.quest = Math.max(1, this.quest - 1);
     // Revision 3 inserted four gardening quests after wake in d2-morning.
     if (storyRevision < 3 && this.chapter === 5 && this.quest >= 1) this.quest += 4;
+    // Revision 4 moves the lesson from the morning to after shopping, before the letter.
+    if (storyRevision < 4 && this.chapter === 5) this.quest = this.quest >= 5 ? this.quest - 4 : this.quest >= 1 ? 1 : 0;
+    if (storyRevision < 4 && this.chapter === 7) {
+      if (this.quest > 3 || (this.quest === 3 && this.flags['farm-watered'])) this.quest += 4;
+      // A player currently on the letter first finishes the unfinished garden lesson.
+    }
     // Older night saves may not have collected the book yet. School still needs it.
     if (this.chapter >= 4 && !this.inventory.kitap) this.inventory.kitap = 1;
     return true;

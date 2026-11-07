@@ -1,28 +1,28 @@
 # Bahçe: tasarım ve oyun döngüsü
 
-İkinci gün dedenin öğrettiği, sonrasında tekrar oynanabilen küçük bir tarım oyunu. Avludaki yerleşimle aynı dokuz ekim gözü kullanılır. Görseller `GardenArt.js` içinde özgün vektör çizimleridir; ürünlerin avluda da ayrı 3B büyüme durumları vardır.
+İkinci gün dedenin öğrettiği, sonrasında tekrar oynanabilen küçük bir tarım oyunu. Avludaki yerleşimle aynı dokuz ekim gözü kullanılır. Ayrı ekim ekranı yoktur. Dokuz toprak, malzemeler ve ürünlerin büyümesi doğrudan avluda 3B olarak görünür. `GardenArt.js` yalnızca yeni özellik tanıtımının çizimini sağlar.
 
 ## İncelenen oyunlardan çıkarımlar
 
-- [FarmVille 3 — ekim ve hasat](https://zyngasupport.helpshift.com/hc/en/91-farmville-3/faq/14485-how-do-i-plant-and-harvest-crops/): boş alanı seçme, ürünü alanlara sürükleyerek ekme, büyümeyi bekleme ve araçla hasat. Bizde seçilen araçla dokunma/sürükleme; her gözde okunabilir durum, süre ve büyüme aşaması.
+- [FarmVille 3 — ekim ve hasat](https://zyngasupport.helpshift.com/hc/en/91-farmville-3/faq/14485-how-do-i-plant-and-harvest-crops/): boş alanı seçme, ürünü alanlara sürükleyerek ekme, büyümeyi bekleme ve araçla hasat. Bizde malzemeyi yanına yürüyerek alma ve tek bir toprağın yanında mevcut eylem düğmesine basma; her toprakta ayrı büyüme aşaması.
 - [Hay Day](https://supercell.com/en/games/hayday/) ve [resmî para rehberi](https://support.supercell.com/hay-day/en/articles/coins-diamonds.html): ürün satışı yeni üretimi besleyen bir döngü. Bizde hasat sepeti → bahçe parası → yeni tohum. Ana hikâyenin alışveriş parasıyla karışmaz.
 - [Stardew Valley — sulama](https://stardewvalleywiki.com/Watering_Cans): susuz ürünün gelişiminin durması anlaşılır bir bakım kuralı. Bizde can suyu büyümeyi başlatır; oyuncu oyundan çıkınca gelişim sürer ve ürün solmaz. Günlük bakım zorunluluğu eklenmedi.
 
-Bu oyunların varlıkları kopyalanmadı. Ahşap çerçeveli toprak, sıcak krem panel, adaçayı yeşili araç seçimi, çizilmiş ürünler ve sakin yaprak hareketleri köy ortamına uyarlandı.
+Bu oyunların varlıkları kopyalanmadı. Ahşap çerçeveli topraklar, çapa, sulama kabı, renkleri ürüne göre değişen tohum torbaları, hasat sepeti ve satış kasası avluda yer alır.
 
 ## İlk ders
 
-İlk gün dede yarın ekmeyi öğreteceğini söyler. İkinci gün üç fasulye tohumu verir. Oyuncu öndeki üç gözü tek tek çapalar, her birine tohum eker ve sular. Aktif ders aracını arayüz seçer; kalan altı göz ders tamamlanınca açılır. Ders okul hazırlığına geri döner; hasadı beklemek zorunlu değildir.
+İlk gün dede yarın ekmeyi öğreteceğini söyler. İkinci gün ekmek ve süt alışverişinden sonra üç fasulye tohumu verir. Dede bahçenin yanında bekler; çapa hareketiyle gösterir. Oyuncu öndeki üç gözü tek tek çapalar, her birine tohum eker ve sular. Oyuncu her aşamanın malzemesini bahçenin kenarından alır; kalan altı göz ders tamamlanınca açılır. Çapalama, ekim ve sulama bitince mektup görevi açılır; hasadı beklemek zorunlu değildir.
 
-İlerlemiş kayıtlar ana görevlerine dokunmadan dededen aynı dersi yan görev olarak alabilir. Eski sabah görevi indeksleri ve kısmi ekimler korunur. Tohum hediyesi tekrar alınamaz.
+İlerlemiş kayıtlar ana görevlerine dokunmadan dededen aynı dersi yan görev olarak alabilir. Eski sabah görevi indeksleri ve kısmi ekimler korunur. Revizyon 4, eski mektup kaydında tamamlanmamış bahçeyi önceye alır; bitmiş ders tekrarlanmaz. Tohum hediyesi tekrar alınamaz.
 
 ## Tekrar oynama
 
 1. Çapa ile boş toprağı hazırla.
-2. Tohumlukta ürünü seç, hazır göze ek.
+2. Bahçenin önündeki tohum torbasını al, hazır toprağın yanına gidip tohumu ek.
 3. Can suyu ver. Sayaç gerçek zamanla çalışır ve kayıt sonrası devam eder.
 4. Filiz → yapraklanma → olgun ürün. Sepet aracı yalnızca olgun ürünü toplar.
-5. Sepeti sat, istediğin yeni tohumları al ve yeniden ek.
+5. Bahçenin sağındaki boş kasada ürünleri sat, tohum torbalarından yeni tohum al ve yeniden ek.
 
 | Ürün | Süre | Tohum bedeli | Hasat | Sepet değeri |
 |---|---:|---:|---:|---:|
@@ -46,13 +46,13 @@ Bildirim planlama ve izin/iptal davranışı sahte yerel adaptörle test edildi;
 
 ## Telefon ve erişilebilirlik
 
-Yatayda solda tarla, sağda kaydırılabilir tohumluk, altta araçlar. Kısa ekranlarda başlık ve araç çubuğu küçülür; araçlar ve kapat düğmesi en az 44 px kalır. Güvenli ekran kenarları hesaba katılır. Klavye, Escape ile kapatma, odak sınırı ve azaltılmış hareket tercihi desteklenir.
+Ayrı menü, araç çubuğu veya ekim penceresi açılmaz. Oyuncu joystick/WASD ile yürür; telefonun mevcut eylem düğmesi veya E ile malzemeyi alıp bir toprağa işlem yapar. Yakındaki işlem yapılabilir toprak altın bir halka ile işaretlenir. Avludan ayrılınca malzeme bırakılır.
 
 ## Doğrulama
 
-26 bahçe, bildirim ve sürüm tanıtımı testi: gerçek görev yöneticisi, eski kayıt geçişi, yan görev, tek tek ekim, sulama, çevrimdışı büyüme, erken/tekrar hasat, tohum tüketimi, sepet satışı, para sınırı ve statik birleştirme sonrası gerçek 3B tarhlar. İçerik/çeviri kontrolü ve üretim derlemesi çalıştırıldı.
+32 bahçe, bildirim, avlu etkileşimi ve sürüm tanıtımı testi: gerçek görev yöneticisi, eski kayıt geçişi, yan görev, tek tek ekim, sulama, çevrimdışı büyüme, erken/tekrar hasat, tohum tüketimi, sepet satışı, para sınırı ve statik birleştirme sonrası gerçek 3B tarhlar. İçerik/çeviri kontrolü ve üretim derlemesi çalıştırıldı.
 
-Çizimlerin statik [önizlemesi](previews/garden-art.svg) gözle incelendi. Bu dosya oyun ekran görüntüsü değildir. Tarayıcı erişimi Work ayarlarında kapalı olduğundan arayüzün cihazda görünümü ve dokunma/sürükleme etkileşimi henüz görsel olarak doğrulanamadı. Yayın öncesi S22 boyutunda bu kontrol tamamlanmalıdır.
+Çizimlerin statik [önizlemesi](previews/garden-art.svg) gözle incelendi. Bu dosya oyun ekran görüntüsü değildir. Tarayıcı erişimi Work ayarlarında kapalı olduğundan avludaki malzemelerin cihazda görünümü ve yürüyerek eylem etkileşimi henüz görsel olarak doğrulanamadı. Yayın öncesi S22 boyutunda bu kontrol tamamlanmalıdır.
 
 ## İlk girişte sürüm tanıtımı
 

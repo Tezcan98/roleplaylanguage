@@ -12,7 +12,13 @@ export class GardenSystem {
     Object.assign(this, { state, inventory, story, bus, vocab, toasts, world, time, now });
     this.listeners = new Set();
     for (const ev of [EV.CHAPTER, EV.LOCATION, EV.FLAG]) bus.on(ev, () => this.refresh());
+    bus.on(EV.QUEST, () => this.resumeLesson());
     this.refresh();
+  }
+  resumeLesson() {
+    const completed = { 'farm-seeds': 'farm-seeds-given', 'farm-hoe': 'farm-hoed', 'farm-sow': 'farm-planted', 'farm-water': 'farm-watered' };
+    const id = this.story.quest?.id;
+    if (completed[id] && this.state.flags[completed[id]]) this.story.complete?.(id);
   }
   get data() {
     const f = this.state.flags;

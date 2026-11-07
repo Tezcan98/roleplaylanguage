@@ -6,7 +6,7 @@
     "hd": 40,
     "outfit": 20,
     "aura": 25,
-    "adFree": 100,
+    "adFree": 300,
     "pepper": 5
   },
   "rewards": {
@@ -40,7 +40,8 @@
     "afterChess": true,
     "afterChessEvery": 2,
     "travelChance": 0.35,
-    "travelGapMinutes": 6
+    "travelGapMinutes": 6,
+    "interstitialEvery": 2
   },
   "sellPacks": false,
   "roomFull": 30,

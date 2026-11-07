@@ -9,7 +9,7 @@ export class TextbookController {
   #pop = null;
   #skipping = false;
 
-  constructor({ book, view, activities, tts, vocab, state, effects, modes, toasts, canSkip = () => false, skipLabel = () => 'Ödevi reklamla geç', requestSkip = null }) {
+  constructor({ book, view, activities, tts, vocab, state, effects, modes, toasts, canSkip = () => false, skipLabel = () => 'Ödevi atla', requestSkip = null }) {
     Object.assign(this, { book, view, activities, tts, vocab, state, effects, modes, toasts, canSkip, skipLabel, requestSkip });
     this.unit = null;
     this.page = -1;

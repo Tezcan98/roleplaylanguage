@@ -16,9 +16,9 @@ export class ListenActivity extends ChoiceActivity {
     ]);
     this.prompt = el('p', { class: 'act-prompt', text: spec.prompt ? uiPrompt(spec.prompt) : ui('Ne dedi? Dinle ve seç.', 'What did they say? Listen and choose.') });
     container.append(this.prompt, this.bar);
-    setTimeout(() => play(), 250);
+    this.autoplay = setTimeout(() => play(), 250);
     return super.mount(container, spec);
   }
 
-  destroy() { this.bar?.remove(); this.prompt?.remove(); super.destroy(); }
+  destroy() { clearTimeout(this.autoplay); this.bar?.remove(); this.prompt?.remove(); super.destroy(); }
 }

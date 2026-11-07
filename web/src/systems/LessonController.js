@@ -62,8 +62,8 @@ export class LessonController {
     if (this.run !== run) return;
     if (lesson.intro) {
       this.view.teacherLine(lesson.intro.say, lesson.intro.en, 'Soru-cevap');
-      this.tts.speak(lesson.intro.say, { speaker: 'ogretmen' });
-      await wait(2200);
+      await this.tts.speak(lesson.intro.say, { speaker: 'ogretmen' });
+      await wait(800);
       if (this.run !== run) return;
     }
     this.#questions(lesson);
@@ -116,16 +116,7 @@ export class LessonController {
     const session = this.active = this.sessionFactory(lesson, this.bots);
     session.on('roster', ({ students }) => this.view.open(students, students.length));
     session.on('question', (q) => this.#ask(session, q));
-    session.on('answer', (a) => {
-      this.view.answer(a, me.id);
-      if (a.studentId !== me.id) {
-        this.labels.bubble(this.cast.get(a.studentId), a.text, a.correct ? 'ok' : 'bad');
-        this.tts.speak(a.text, { speaker: a.studentId });
-        if (!a.correct) setTimeout(() => { if (this.active === session) this.#correct(a.studentId); }, 1800); // the teacher puts it right
-        // a classmate just took their turn: move on to the next question
-        if (this.current?.turnStudentId === a.studentId) setTimeout(() => { if (this.active === session) session.next(); }, a.correct ? 2500 : 5600);
-      }
-    });
+    session.on('answer', (a) => this.#answer(session, a, me.id));
     session.on('scores', ({ scores }) => this.view.scoresUpdate(scores, me.id));
     session.on('end', ({ scores }) => {
       this.view.scoresUpdate(scores, me.id);
@@ -133,6 +124,33 @@ export class LessonController {
       this.tts.speak('Aferin çocuklar! Bugünkü ders bitti.', { speaker: 'ogretmen' });
     });
     await session.join(me);
+  }
+
+  async #answer(session, a, playerId) {
+    const q = this.current;
+    if (a.studentId === playerId || !q || this.answering === q) return;
+    this.answering = q;
+    const live = () => this.active === session && this.current === q;
+    await this.#waitForQuestion();
+    if (!live()) return;
+    await wait(650);
+    if (!live()) return;
+    this.view.answer(a, playerId);
+    this.labels.bubble(this.cast.get(a.studentId), a.text, a.correct ? 'ok' : 'bad');
+    await this.tts.speak(a.text, { speaker: a.studentId });
+    if (!live()) return;
+    if (!a.correct) {
+      await wait(850);
+      if (!live()) return;
+      await this.#correct(a.studentId);
+    }
+    await wait(1300);
+    if (live() && q.turnStudentId === a.studentId) session.next();
+  }
+
+  async #waitForQuestion() {
+    let speech;
+    do { speech = this.questionSpeech; await speech; } while (speech !== this.questionSpeech);
   }
 
   async #ask(session, q) {
@@ -144,14 +162,19 @@ export class LessonController {
     this.current = q;
     // the player's own name would make the line new for every player (her voice is made once per sentence): she says the question only
     this.spoken = q.turnStudentId === 'ahmet' && q.who ? said.slice(q.who.length + 2).replace(/^./, (c) => c.toLocaleUpperCase('tr-TR')) : said;
-    this.tts.speak(this.spoken, { speaker: 'ogretmen' });
+    this.questionSpeech = this.tts.speak(this.spoken, { speaker: 'ogretmen' });
     this.labels.bubble(this.cast.get('ogretmen'), said, null, 4, q.en);
     this.#activity?.destroy();
+    await this.#waitForQuestion();
+    if (this.active !== session || this.current !== q) return;
+    await wait(650);
+    if (this.active !== session || this.current !== q) return;
 
     if (q.turnStudentId !== 'ahmet') {
       const student = this.cast.get(q.turnStudentId);
       const name = student?.name ?? q.turnStudentId;
-      this.view.status_(`${name} konuşuyor…`, 'ok');
+      this.view.status_(`${name} düşünüyor…`, 'ok');
+      session.ready?.(q.index);
       return;
     }
 
@@ -163,8 +186,14 @@ export class LessonController {
     if (this.active !== session || this.current !== q) return;
     session.submit(q.index, { text: res.transcript, correct: res.ok });
     this.view.status_(res.ok ? 'Doğru! Sıradaki öğrenci geliyor…' : 'Tekrar deneyebilirsin; sıra ilerliyor…', res.ok ? 'ok' : 'bad');
-    if (!res.ok) this.#correct('ahmet');
-    setTimeout(() => { if (this.active === session) session.next(); }, res.ok ? 2500 : 5000);
+    this.view.answer({ studentId: 'ahmet', text: res.transcript, correct: res.ok }, 'ahmet');
+    if (!res.ok) {
+      await wait(850);
+      if (this.active !== session || this.current !== q) return;
+      await this.#correct('ahmet');
+    }
+    await wait(1300);
+    if (this.active === session && this.current === q) session.next();
   }
 
   /**
@@ -172,19 +201,21 @@ export class LessonController {
    * For the player she says only "Hayır, doğrusu şöyle:" out loud (the right sentence may hold the
    * player's own name: a new voice line for every player) — the whole of it is in her bubble.
    */
-  #correct(studentId) {
+  async #correct(studentId) {
     const q = this.current;
     if (!q) return;
     const mine = studentId === 'ahmet', name = mine ? playerName() : this.cast.get(studentId)?.name ?? '';
     const right = mine ? String(q.hint ?? q.botAnswers?.[0] ?? '').replace('{name}', '…') : String(q.botAnswers?.[0] ?? q.hint ?? '').replace('{name}', name); // (mine: "Benim adım …" — their own name)
     if (!right) return;
     const said = mine ? 'Hayır, doğrusu şöyle:' : `Hayır, ${name}. Doğrusu: ${right}`;
-    this.tts.speak(said, { speaker: 'ogretmen' });
+    const speech = this.tts.speak(said, { speaker: 'ogretmen' });
     this.labels.bubble(this.cast.get('ogretmen'), mine ? `${said} ${right}` : said, null, 4.5, `Not quite. The right answer: “${right}”`);
+    await speech;
   }
 
   #finish(lesson) {
     this.run = null;
+    this.tts.cancel();
     this.active?.leave();
     this.active = null;
     this.#activity?.destroy();
@@ -198,5 +229,7 @@ export class LessonController {
     this.effects.run([`flag:lesson-${lesson.id}`, ...(lesson.after ?? [])]);
   }
 
-  replay() { if (this.current) this.tts.speak(this.spoken ?? this.current.q, { speaker: 'ogretmen' }); }
+  replay() {
+    if (this.current && this.answering !== this.current) this.questionSpeech = this.tts.speak(this.spoken ?? this.current.q, { speaker: 'ogretmen' });
+  }
 }

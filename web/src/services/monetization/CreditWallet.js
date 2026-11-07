@@ -9,7 +9,9 @@ export const AD_REWARD = CONFIG.rewards.video;
 export const SHARE_REWARD = CONFIG.rewards.share;
 /** Daily reward by how many days in a row you came: day 1 → 3, … day 7 and on → 10. */
 export const DAILY = CONFIG.rewards.daily;
-/** An outfit tried on for a rewarded video: this long (a day). */
+/** HD welcome gift: thirty days, granted once. */
+export const HD_WELCOME_MS = 30 * 24 * 60 * 60 * 1000;
+/** An outfit tried on for a rewarded video: one day. */
 export const TRIAL_MS = 24 * 60 * 60 * 1000;
 
 const today = (now = Date.now()) => { const d = new Date(now); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
@@ -24,7 +26,18 @@ export class CreditWallet {
   constructor({ settings, bus, start = 50 }) {
     this.settings = settings; this.bus = bus;
     this.data = { credits: start, adFree: false, owned: [], equipped: {}, adAt: 0, streak: 0, dailyDay: '', ...settings.get(KEY, {}) };
-    if (!settings.get(KEY)) this.#save();
+    // Once per device: new and existing players receive 30 days of the HD character.
+    // A permanent purchase remains permanent, and subsequent launches never restart the trial.
+    if (!this.data.hdWelcomeGranted) {
+      // Preserve the old bundled HD entitlement of already-purchased outfits.
+      if (!this.data.owned.includes('hd') && this.data.owned.some(id => id.startsWith('hd-'))) this.data.owned.push('hd');
+      this.data.hdWelcomeGranted = true;
+      if (!this.data.owned.includes('hd')) {
+        this.data.trials = { ...this.data.trials, hd: Math.max(this.data.trials?.hd ?? 0, Date.now() + HD_WELCOME_MS) };
+      }
+      this.data.equipped.hd = 'hd';
+      this.#save();
+    }
   }
 
   #save() { this.settings.set(KEY, this.data); }

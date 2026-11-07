@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { Foliage } from '../../engine/Foliage.js';
 import { bakeStatic } from '../../engine/StaticBatch.js';
+import { GARDEN_PLOTS, GARDEN_TOOLS, GARDEN_SEEDS } from '../../content/gardenLayout.js';
 import { CROPS } from '../../systems/GardenSystem.js';
 // import { addTrashBin } from '../trashBin.js';
 
@@ -36,6 +37,14 @@ export class Yard extends Location {
     v.seeds.forEach((m, i) => { m.visible = i < (flags['farm-sown'] ?? 0); });
     v.sprouts.forEach((m, i) => { m.visible = !!flags['farm-watered'] && day > flags['farm-day'] && i < (flags['farm-sown'] ?? 0); });
   }
+
+  highlightGardenPlot(index) {
+    if (!this.gardenHighlight) return;
+    const p = GARDEN_PLOTS[index];
+    this.gardenHighlight.visible = !!p;
+    if (p) this.gardenHighlight.position.set(p.x, .22, p.z);
+  }
+  markGardenPlot(index) { this.gardenPulse = { index, elapsed: 0 }; }
 
   /** House front at z = -11, 19 m × 8 m (the rooms inside are 25 m long: a little magic, but close). */
   #house(mf, C) {
@@ -170,7 +179,7 @@ export class Yard extends Location {
     add(farm);
     const tiles = [];
     for (let i = 0; i < 9; i++) {
-      const x = 7.15 + (i % 3) * 1.85, z = 2.35 + Math.floor(i / 3) * 1.65;
+      const { x, z } = GARDEN_PLOTS[i];
       const tile = mf.group(); tile.position.set(x, .14, z); farm.add(tile);
       tile.add(mf.at(mf.box(1.56, .08, 1.36, 0xA27C4D), 0, 0, 0));
       const wet = mf.at(mf.box(1.5, .02, 1.3, 0x60422F), 0, .05, 0); tile.add(wet);
@@ -203,12 +212,39 @@ export class Yard extends Location {
       if (gardenTick >= 1) { gardenTick = 0; this.setGardenState(this.gardenFlags ?? {}, this.gardenDay ?? 1); }
     });
     // A hoe and watering can are already at the plot; no extra fetch errands.
-    const hoe = mf.group(); hoe.position.set(11.9, 0, 1);
+    const hoe = mf.group(); hoe.position.set(GARDEN_TOOLS[0].x, 0, GARDEN_TOOLS[0].z);
     const handle = mf.at(mf.cyl(0.035, 0.035, 1.1, DARK, 6), 0, 0.55, 0); handle.rotation.z = 0.3; hoe.add(handle);
     hoe.add(mf.at(mf.box(0.35, 0.08, 0.2, 0x606B72), 0.15, 0.08, 0)); add(hoe);
-    const can = mf.group(); can.position.set(12.4, 0, 1.7);
+    const can = mf.group(); can.position.set(GARDEN_TOOLS[1].x, 0, GARDEN_TOOLS[1].z);
     can.add(mf.at(mf.cyl(0.18, 0.18, 0.35, 0x4B8E9A, 10), 0, 0.2, 0));
     const spout = mf.at(mf.cyl(0.045, 0.06, 0.45, 0x4B8E9A, 8), -0.24, 0.28, 0); spout.rotation.z = 0.9; can.add(spout); add(can);
+    // Seeds and tools are real objects beside the bed, never a separate screen.
+    for (const [i, seed] of GARDEN_SEEDS.entries()) {
+      const bag = mf.group(); bag.position.set(seed.x, 0, seed.z);
+      bag.add(mf.at(mf.box(.45, .5, .3, 0xD7B273), 0, .25, 0));
+      bag.add(mf.at(mf.box(.4, .05, .32, 0x9A7742), 0, .49, 0));
+      bag.add(mf.at(mf.sphere(.11, [0x83AE4D,0xE35F40,0xE8B83D][i], 8), 0, .3, -.17)); add(bag);
+    }
+    const basket = GARDEN_TOOLS[2];
+    add(mf.at(mf.box(.5, .3, .4, 0xAA784B), basket.x, .2, basket.z));
+    const handleBasket = mf.at(mf.torus(.22, .025, 0x8C613C), basket.x, .45, basket.z); add(handleBasket);
+    const crate = mf.group(); crate.position.set(13, 0, 4.15);
+    crate.add(mf.at(mf.box(.7, .08, .5, 0xA87848), 0, .08, 0));
+    for (const side of [-1,1]) crate.add(mf.at(mf.box(.7, .28, .06, 0xB68A56), 0, .2, side*.25));
+    for (const side of [-1,1]) crate.add(mf.at(mf.box(.06, .28, .5, 0xB68A56), side*.35, .2, 0)); add(crate);
+    this.gardenHighlight = this.live(mf.at(mf.torus(.63, .035, 0xF5CB67), 0, .22, 0));
+    this.gardenHighlight.rotation.x = Math.PI / 2; this.gardenHighlight.visible = false; add(this.gardenHighlight);
+    const particles = this.live(mf.group()); add(particles);
+    for (let i = 0; i < 6; i++) particles.add(mf.sphere(.045, 0xD6B779, 6));
+    particles.visible = false;
+    this.animated.push((dt) => {
+      const pulse = this.gardenPulse; particles.visible = !!pulse;
+      if (!pulse) return;
+      pulse.elapsed += dt;
+      if (pulse.elapsed > .6) { this.gardenPulse = null; particles.visible = false; return; }
+      const p = GARDEN_PLOTS[pulse.index], k = pulse.elapsed / .6;
+      particles.children.forEach((m,i) => m.position.set(p.x+Math.cos(i)*k*.5, .2+Math.sin(k*Math.PI)*.45, p.z+Math.sin(i)*k*.5));
+    });
     this.farmVisual = { tiles };
     this.setGardenState(this.gardenFlags ?? {}, this.gardenDay ?? 1);
     // where the cow and the sheep graze (quest arrows; the chores themselves are next to the animal: systems/Animals.js)

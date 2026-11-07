@@ -42,7 +42,7 @@ import { CastDirector } from './systems/CastDirector.js';
 import { ItemSystem } from './systems/ItemSystem.js';
 import { EffectRunner } from './systems/EffectRunner.js';
 import { GardenSystem } from './systems/GardenSystem.js';
-import { GardenView } from './ui/GardenView.js';
+import { GardenInteractions } from './systems/GardenInteractions.js';
 import { GardenReleaseIntro } from './ui/GardenReleaseIntro.js';
 import { GardenNotifications } from './platform/GardenNotifications.js';
 import { StoryDirector } from './systems/StoryDirector.js';
@@ -56,6 +56,7 @@ import { Cat } from './entities/Cat.js';
 import { LessonController } from './systems/LessonController.js';
 import { TextbookController } from './systems/TextbookController.js';
 import { CreditWallet } from './services/monetization/CreditWallet.js';
+import { InterstitialFrequency } from './services/monetization/InterstitialFrequency.js';
 import { MockAdProvider } from './services/monetization/AdProvider.js';
 import { isNativeApp, loadNativeAdapters, wireAppLifecycle, scheduleDailyReminder, updateGate } from './platform/native.js';
 import { shareGame } from './platform/share.js';
@@ -453,7 +454,7 @@ const lessons = new LessonController({
 });
 const textbook = new TextbookController({
   canSkip: () => wallet.adFree || ads.hasRewarded,
-  skipLabel: () => wallet.adFree ? withGloss('Ödevi geç', 'Skip homework') : withGloss('Ödevi reklamla geç', 'Watch an ad and skip homework'),
+  skipLabel: () => withGloss('Ödevi atla', 'Skip homework'),
   requestSkip: () => wallet.adFree ? Promise.resolve(true) : ads.showRewarded(),
   book: TEXTBOOK, activities, tts, vocab, state, effects, modes, toasts,
   view: new TextbookView(host, { onClose: () => textbook.close(), onPrev: () => textbook.prev(), onNext: () => textbook.next() }),
@@ -613,9 +614,23 @@ const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { locati
 const cirak = new KahveCirak({ world, mf, models, player, labels, vocab, speak: (t) => tts.speak(t, { speaker: 'kardes' }) });
 cirak.build();
 
-// The second morning's saved planting lesson.
+// After day-two shopping: finish the saved garden lesson before taking the letter.
 const garden = new GardenSystem({ state, inventory, story, bus, vocab, toasts, world, time });
-const gardenView = new GardenView(host, { modes, garden });
+const gardenWalk = new GardenInteractions({ garden, world, player, mf, modes, toasts });
+const gardenGuide = () => {
+  const q = story.quest?.id;
+  if (String(q ?? '').startsWith('farm-') || (story.chapter?.id === 'd2-homework' && q === 'letter')) {
+    if (cast.where('dede') !== 'yard') cast.move('dede', 'yard', 'myGardenTeacher', 'stand');
+  }
+};
+bus.on(EV.QUEST, gardenGuide);
+bus.on(EV.CHAPTER, gardenGuide);
+bus.on(EV.GARDEN, ({ action }) => {
+  if (!garden.learning || cast.where('dede') !== 'yard') return;
+  const lines = { hoe: 'Aferin! Toprağı birlikte hazırlıyoruz.', sow: 'Her göze bir tohum. Çok güzel!', water: 'Can suyunu unutma evladım.' };
+  if (action === 'hoe') cast.get('dede').gardenHelpUntil = performance.now() + 2500;
+  if (lines[action]) labels.bubble(cast.get('dede'), lines[action], 'ok', 3);
+});
 const gardenNotifications = native ? new GardenNotifications({ plugin: nativeKit.LocalNotifications }) : null;
 const syncGardenNotifications = (ask = false) => gardenNotifications?.sync({ plots: garden.unlocked ? garden.data.plots : [], ask });
 bus.on(EV.GARDEN, ({ action }) => syncGardenNotifications(action === 'sow' || action === 'water'));
@@ -623,7 +638,7 @@ bus.on(EV.CHAPTER, () => syncGardenNotifications());
 if (native) nativeKit.App.addListener('appStateChange', ({ isActive }) => { if (isActive && garden.unlocked) syncGardenNotifications(); });
 effects.register('farm-seeds', () => garden.giveSeeds());
 effects.register('my-garden', () => {
-  if (garden.unlocked) { gardenView.open(); return; }
+  if (garden.unlocked) { toasts.show('Bahçenin yanındaki çapayı al, bir toprağın yanına git ve çapala.', ''); return; }
   if (cast.where('dede') === world.current.id) { dialogue.open('dede', story.quest?.id === 'farm-seeds' ? 'farmIntro' : state.day >= 2 && !state.flags['farm-seeds-given'] ? 'farmOffer' : 'myGarden'); return; }
   toasts.show('Bahçeyi ekmeyi öğrenmek için ikinci gün dedenle konuş.', 'Talk to grandpa on the second day to learn how to plant.');
 });
@@ -649,6 +664,7 @@ bicycle.build();
 bus.on(EV.LOCATION, ({ id }) => bicycle.moved(id)); // ridden out of the gate it comes along
 const hotspotUse = new HotspotInteractions({ world, rules: HOTSPOTS, story, travel, toasts, effects, bus, ctx: gameCtx });
 const interactions = new InteractionSystem([
+  gardenWalk,
   animals, // pet an animal, get on / off a horse
   bicycle,
   scooters,
@@ -755,7 +771,13 @@ models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animation
  * about ad-free mode: "Reklamsız oyna" opens the shop where it is sold.
  */
 const fullAdOffer = new ChoiceCard(host, modes);
-async function fullAd() {
+const interstitialFrequency = new InterstitialFrequency({ settings, every: CONFIG.ads.interstitialEvery });
+async function fullAd({ announce = false } = {}) {
+  if (wallet.adFree || (!native && !params.has('mockads')) || !interstitialFrequency.take()) return;
+  if (announce) {
+    toasts.show('📺 Kısa bir reklam…', gloss('A short ad…'));
+    await new Promise((r) => setTimeout(r, 1200));
+  }
   await ads.showInterstitial();
   if (!native && !params.has('mockads')) return; // (the website has no ads)
   const n = Number(settings.get('fullAds', 0)) + 1; settings.set('fullAds', n);
@@ -783,9 +805,7 @@ travel.beforeGo = async () => {
   if (!native || wallet.adFree || !modes.is('play') || village.voice.inCall || village.group.zone || Math.random() >= CONFIG.ads.travelChance) return; // (the app only: the website has no ads)
   if (performance.now() - travelAd.last < CONFIG.ads.travelGapMinutes * 60000) return;
   travelAd.last = performance.now();
-  toasts.show('📺 Kısa bir reklam…', gloss('A short ad…'));
-  await new Promise((r) => setTimeout(r, 1200));
-  await fullAd();
+  await fullAd({ announce: true });
 };
 
 // "Oyunu nasıl buldun?": once a day, credits for a real opinion (server/src/Feedback.js grades it with Gemini)
@@ -1097,7 +1117,7 @@ function continueGame(then) {
 
 
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
-const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 // frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
 const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };

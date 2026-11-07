@@ -421,6 +421,56 @@ export class Character {
     return ((hi - lo) * scene.scale.z) / (dur / 2);
   }
 
+  /** Lightweight held garden props, visible on both the basic and HD characters. */
+  holdGardenTool(tool, crop = 'bean', working = false) {
+    if (!tool) { if (this.heldGarden) this.heldGarden.visible = false; return; }
+    if (this.heldGardenKind !== tool) {
+      if (this.heldGarden) { this.heldGarden.visible = false; }
+      this.gardenProps ??= {};
+      if (!this.gardenProps[tool]) {
+        const mf = this.mf, g = mf.group();
+        if (tool === 'hoe') {
+          g.add(mf.at(mf.cyl(.025, .025, .85, 0x986839, 6), 0, 0, 0));
+          g.add(mf.at(mf.box(.24, .06, .16, 0x738087), 0, -.43, .04));
+        } else if (tool === 'water') {
+          g.add(mf.cyl(.13, .13, .25, 0x4B8E9A, 10));
+          const spout = mf.at(mf.cyl(.035, .04, .3, 0x4B8E9A, 6), 0, .05, .2); spout.rotation.x = Math.PI / 3; g.add(spout);
+        } else if (tool === 'sow') {
+          g.add(mf.box(.23, .3, .15, 0xD7B273));
+          g.add(mf.at(mf.sphere(.065, 0x7F9B45, 6), 0, .02, .08));
+        } else {
+          g.add(mf.box(.34, .2, .24, 0xAA784B));
+          const handle = mf.torus(.15, .018, 0x8C613C); handle.position.y = .16; g.add(handle);
+        }
+        g.position.set(.33, .9, .16); this.group.add(g); this.gardenProps[tool] = g;
+      }
+      this.heldGarden = this.gardenProps[tool]; this.heldGardenKind = tool;
+    }
+    this.heldGarden.visible = !(working && tool === 'hoe');
+    this.heldGarden.rotation.x = working ? -.5 : 0;
+  }
+
+  /** A short hoeing demonstration, applied after the HD animation mixer each frame. */
+  gardenPose(t, on) {
+    if (!on) { if (this.gardenHoe) this.gardenHoe.visible = false; return; }
+    if (!this.gardenHoe) {
+      const mf = this.mf, hoe = mf.group();
+      hoe.add(mf.at(mf.cyl(.025, .025, .85, 0x986839, 6), 0, 0, 0));
+      hoe.add(mf.at(mf.box(.24, .06, .16, 0x738087), 0, -.43, .04));
+      hoe.position.set(.22, .68, .48); this.group.add(hoe); this.gardenHoe = hoe;
+    }
+    const swing = (Math.sin(t * 3.5) + 1) / 2;
+    this.gardenHoe.visible = true; this.gardenHoe.rotation.x = -.35 + swing * .9;
+    const hd = this.#hd;
+    if (!hd || hd === 'loading') return;
+    for (const side of ['L', 'R']) {
+      const arm = hd.scene.getObjectByName(`UpperArm${side}`);
+      if (arm) arm.rotation.x = -.5 - swing * .55;
+    }
+    const hips = hd.scene.getObjectByName('Hips');
+    if (hips) hips.rotation.x = swing * .15;
+  }
+
   /** After a change of seat or behaviour: the HD body sits or stands again. */
   replayHd() { if (this.mixer && this.mixer === this.#hd?.mixer) { this.current = null; this.#playClip(this.seated ? 'sit' : 'idle'); } }
 

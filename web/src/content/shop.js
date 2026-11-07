@@ -46,7 +46,7 @@ export const outfitOn = (wallet) => (wallet.equipped('hd') === 'hd' ? SHOP.find(
 /** Saves from before the HD character was its own item: whoever had an outfit gets the HD character. */
 export function migrateWallet(wallet) {
   const d = wallet.data;
-  if (d.owned.includes('hd') || !d.owned.some((id) => id.startsWith('hd-'))) return;
+  if (d.hdWelcomeGranted || d.owned.includes('hd') || !d.owned.some((id) => id.startsWith('hd-'))) return;
   d.owned.push('hd');
   if (d.equipped.body) d.equipped.hd = 'hd';
   wallet.settings.set('wallet', d);

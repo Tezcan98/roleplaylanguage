@@ -191,6 +191,7 @@ export class Npc extends Character {
 
   update(dt, t, player) {
     super.update(dt);
+    this.gardenPose(t, !this.talking && performance.now() < (this.gardenHelpUntil ?? 0));
     if (this.behavior.swing) { this.#swing(player); return; }
     if (this.behavior.roam && !this.talking) { this.#roam(dt, t); return; }
     if (this.behavior.halay && !this.talking) { // the wedding's line dance: steps to the side and back, facing the middle

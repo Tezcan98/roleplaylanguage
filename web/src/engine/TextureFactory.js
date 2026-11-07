@@ -305,8 +305,7 @@ const GENERATORS = {
     g.fillStyle = '#C99B63'; g.fillRect(0, 0, s, s);
     g.fillStyle = '#3B2418'; g.textAlign = 'center'; g.textBaseline = 'middle';
     g.font = `bold ${s * 0.2}px Fredoka, sans-serif`;
-    g.fillText('BENİM', s / 2, s * 0.33, s * 0.95);
-    g.fillText('BAHÇEM', s / 2, s * 0.66, s * 0.95);
+    g.fillText('BAHÇE', s / 2, s * 0.5, s * 0.95);
   },
   alphabet(g, s) {
     g.fillStyle = '#FFF9EC'; g.fillRect(0, 0, s, s);

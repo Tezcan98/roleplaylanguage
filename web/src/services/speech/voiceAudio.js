@@ -6,7 +6,7 @@
  * first tap, and every line after that uses it.
  */
 const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
-let el = null, unlocked = false, ticker = null;
+let el = null, unlocked = false, ticker = null, settle = null;
 
 export function voiceAudio() {
   if (!el) { el = new Audio(); el.preload = 'auto'; }
@@ -30,8 +30,8 @@ if (typeof addEventListener === 'function') {
  * `volume`: a function (0–1) followed while the line plays — a villager's talk fades as you walk away.
  */
 export function playVoice(url, rate = 1, { onError, onPlaying, volume } = {}) {
+  stopVoice();
   const a = voiceAudio();
-  a.pause();
   a.onended = null; a.onerror = null; a.onplaying = null;
   clearInterval(ticker); ticker = null;
   a.volume = 1;
@@ -40,15 +40,21 @@ export function playVoice(url, rate = 1, { onError, onPlaying, volume } = {}) {
     set(); ticker = setInterval(set, 100);
   }
   return new Promise((resolve, reject) => {
-    a.onended = () => { clearInterval(ticker); ticker = null; resolve(); };
-    a.onerror = () => { onError?.(); reject(new Error('voice audio failed')); };
+    const finish = (error) => {
+      if (settle !== finish) return;
+      settle = null; clearInterval(ticker); ticker = null;
+      if (error) reject(error); else resolve();
+    };
+    settle = finish;
+    a.onended = () => finish();
+    a.onerror = () => { onError?.(); finish(new Error('voice audio failed')); };
     a.onplaying = () => onPlaying?.();
     a.src = url;
     a.preservesPitch = false;
     a.playbackRate = rate;
-    a.play().catch((e) => { if (e?.name !== 'AbortError') reject(e); });
+    a.play().catch((e) => finish(e?.name === 'AbortError' ? undefined : e));
   });
 }
 
 /** Stop whatever line is being said. */
-export function stopVoice() { clearInterval(ticker); ticker = null; if (el) { el.pause(); el.onended = null; el.onerror = null; el.onplaying = null; } }
+export function stopVoice() { settle?.(); clearInterval(ticker); ticker = null; if (el) { el.pause(); el.onended = null; el.onerror = null; el.onplaying = null; } }

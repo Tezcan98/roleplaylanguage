@@ -54,6 +54,14 @@ export class LocalClassroomSession extends ClassroomSession {
     const students = [this.player, ...this.bots];
     const speaker = students[this.turnIndex];
     this.emit('question', { index: this.index, total: qs.length, ...q, turnStudentId: speaker.id });
+  }
+
+  /** Called after the teacher has finished speaking, never from a fixed question timer. */
+  ready(index) {
+    if (index !== this.index || this.readyIndex === index) return;
+    this.readyIndex = index;
+    const q = this.lesson.questions[index];
+    const speaker = [this.player, ...this.bots][this.turnIndex];
     if (speaker.id !== this.player.id) {
       const delay = (1400 + Math.random() * 2200) / this.speed;
       this.#timers.push(setTimeout(() => {
