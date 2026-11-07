@@ -1,18 +1,55 @@
-import { CROPS } from './GardenSystem.js';
-import { GARDEN_PLOTS, GARDEN_TOOLS, GARDEN_SEEDS } from '../content/gardenLayout.js';
+import { CROPS, seedCrop } from './GardenSystem.js';
+import { GARDEN_PLOTS, GARDEN_TOOLS } from '../content/gardenLayout.js';
 const distance = (a,b) => Math.hypot(a.x-b.x,a.z-b.z);
+const BAG_INSTRUCTION = { tr: 'Çantanı aç → fasulye tohumunu seç', en: 'Open your bag and select the bean seeds.' };
 const VERBS = { hoe: 'Çapala', sow: 'Tohum ek', water: 'Sula', harvest: 'Hasat et' };
 
 /** Gardening uses the same walk-up action button as the rest of the village. No overlay. */
 export class GardenInteractions {
-  constructor({garden,world,player,mf,modes,toasts,now=()=>performance.now()}) {
-    Object.assign(this,{garden,world,player,mf,modes,toasts,now});
+  constructor({garden,world,player,mf,modes,toasts,onToolChange=()=>{},onInventoryHint=()=>{},now=()=>performance.now()}) {
+    Object.assign(this,{garden,world,player,mf,modes,toasts,onToolChange,onInventoryHint,now});
     this.tool=null;this.crop='bean';this.workingUntil=0;
   }
   get available(){return this.world.current?.id==='yard' && this.garden.unlocked && !this.garden.story.paused;}
+  get requiredTool(){return this.garden.learning ? {'farm-hoe':'hoe','farm-sow':'sow','farm-water':'water'}[this.garden.step] ?? null : null;}
+  clearTool(){this.tool=null;this.player.holdGardenTool?.(null);this.onToolChange();}
+  usablePlot(i,tool=this.tool){
+    if(this.garden.learning&&i>=3)return false;
+    const p=this.garden.data.plots[i];
+    return tool==='hoe'?!p.hoed&&!p.crop:tool==='sow'?p.hoed&&!p.crop:tool==='water'?p.crop&&p.wateredAt==null:tool==='harvest'&&this.garden.status(i).stage==='ready';
+  }
+  target(){
+    const tool=this.requiredTool;
+    if(!tool)return null;
+    if(this.tool!==tool){
+      if(tool==='sow')return this.world.current?.id==='yard'?{ui:'inventory',label:'Çantandaki fasulye tohumu'}:{location:'yard',point:{...GARDEN_PLOTS[0],y:.65},label:'Bahçe'};
+      const p=GARDEN_TOOLS.find(p=>p.tool===tool);
+      return {location:'yard',point:{x:p.x,y:.85,z:p.z},label:tool==='sow'?'Fasulye tohumu':p.label};
+    }
+    const i=GARDEN_PLOTS.map((p,i)=>({i,d:distance(p,this.player.position)})).filter(p=>this.usablePlot(p.i,tool)).sort((a,b)=>a.d-b.d)[0]?.i;
+    return i==null?null:{location:'yard',point:{...GARDEN_PLOTS[i],y:.65},label:`${i+1}. toprak`,plotIndex:i};
+  }
+  objective(){
+    const tool=this.requiredTool;
+    if(!tool)return null;
+    if(this.world.current?.id!=='yard')return 'Bahçeye git';
+    if(this.tool!==tool)return tool==='hoe'?'Bahçenin yanındaki çapayı al':tool==='sow'?BAG_INSTRUCTION.tr:'Sulama kabını al';
+    const done=this.garden.data.plots.slice(0,3).filter(p=>tool==='hoe'?p.hoed:tool==='sow'?p.crop:p.wateredAt!=null).length;
+    return `${tool==='hoe'?'İşaretli toprağı çapala':tool==='sow'?'İşaretli toprağa tohum ek':'İşaretli toprağı sula'} (${done}/3)`;
+  }
+  objectiveEn(){return this.requiredTool==='sow'&&this.tool!=='sow'?BAG_INSTRUCTION.en:null;}
+  canSelectSeed(kind){
+    const crop=seedCrop(kind);
+    return this.available && !!crop && this.garden.seeds(crop)>0 && (!this.requiredTool||this.requiredTool==='sow') && (!this.garden.learning||crop==='bean');
+  }
+  selectSeed(kind){
+    if(!this.canSelectSeed(kind))return false;
+    this.take('sow',seedCrop(kind));return true;
+  }
   take(tool,crop='bean') {
     this.tool=tool;this.crop=crop;
     this.player.holdGardenTool?.(tool,crop);
+    this.onToolChange();
     const text=tool==='hoe'?'Çapa elinde. Bir toprağın yanına git ve tek tek çapala.':tool==='sow'?`${CROPS[crop].name} tohumu elinde. Çapalanmış toprağın yanına git.`:tool==='water'?'Sulama kabı elinde. Ektiğin her göze can suyu ver.':'Sepet elinde. Olgunlaşmış ürünlerin yanına git.';
     this.toasts.show(text,'');
   }
@@ -29,34 +66,27 @@ export class GardenInteractions {
     if(!this.available)return null;
     const choices=[];
     const offer=(point,label,run,priority=3,plotIndex=-1)=>{const d=distance(point,pos);if(d<=1.15)choices.push({label,dist:d,priority,run,plotIndex});};
-    for(const p of GARDEN_TOOLS)offer(p,this.tool===p.tool?'Aracı yerine bırak':p.label,()=>{if(this.tool===p.tool){this.tool=null;this.player.holdGardenTool?.(null);}else this.take(p.tool);});
-    for(const p of GARDEN_SEEDS){
-      if(this.garden.learning&&p.crop!=='bean')continue;
-      const stock=this.garden.seeds(p.crop),c=CROPS[p.crop];
-      offer(p,stock?`${c.name} tohumunu al (${stock})`:`${c.name} tohumu al · ${c.price} bahçe parası`,()=>{
-        if(!stock&&!this.garden.buy(p.crop)){this.toasts.show('Yeni tohum için önce hasadını sat.','');return;}
-        this.take('sow',p.crop);
-      });
-    }
+    for(const p of GARDEN_TOOLS.filter(p=>!this.requiredTool||p.tool===this.requiredTool))offer(p,this.tool===p.tool?'Aracı yerine bırak':p.label,()=>{if(this.tool===p.tool){this.clearTool();}else this.take(p.tool);});
     const sale={x:13,z:4.15};
-    offer(sale,this.garden.basketValue?`Ürünleri sat · +${this.garden.basketValue} bahçe parası`:`Boş kasa · ${this.garden.data.coins} bahçe parası`,()=>{
+    if(!this.garden.learning)offer(sale,this.garden.basketValue?`Ürünleri sat · +${this.garden.basketValue} bahçe parası`:`Boş kasa · ${this.garden.data.coins} bahçe parası`,()=>{
       const value=this.garden.sell();this.toasts.show(value?`Hasadını sattın! +${value} bahçe parası.`:'Hasat ettiklerini burada satabilirsin.','');
     });
-    if(this.tool && this.now()>=this.workingUntil){
+    if(this.tool && (!this.requiredTool||this.tool===this.requiredTool) && this.now()>=this.workingUntil){
       GARDEN_PLOTS.forEach((p,i)=>{
         if(this.garden.learning&&i>=3)return;
-        const plot=this.garden.data.plots[i],s=this.garden.status(i);
-        const actionable=this.tool==='hoe'?!plot.hoed&&!plot.crop:this.tool==='sow'?plot.hoed&&!plot.crop:this.tool==='water'?plot.crop&&plot.wateredAt==null:s.stage==='ready';
+        const actionable=this.usablePlot(i);
         if(actionable)offer(p,`${VERBS[this.tool]} · ${i+1}. toprak`,()=>this.apply(i),4,i);
       });
     }
     choices.sort((a,b)=>b.priority-a.priority||a.dist-b.dist);
     const chosen=choices[0]??null;
-    this.world.get('yard').highlightGardenPlot?.(chosen?.plotIndex ?? -1);
+    this.world.get('yard').highlightGardenPlot?.(this.target()?.plotIndex ?? chosen?.plotIndex ?? -1);
     return chosen;
   }
   update(_dt,t) {
-    if(!this.available){this.player.gardenPose?.(t,false);if(this.tool){this.tool=null;this.player.holdGardenTool?.(null);}this.world.get('yard').highlightGardenPlot?.(-1);return;}
+    this.onInventoryHint(this.available&&this.requiredTool==='sow'&&this.tool!=='sow');
+    if(!this.available){this.player.gardenPose?.(t,false);if(this.tool){this.clearTool();}this.world.get('yard').highlightGardenPlot?.(-1);return;}
+    if(this.requiredTool&&this.tool&&this.tool!==this.requiredTool)this.clearTool();
     const working=this.now()<this.workingUntil;
     this.player.gardenPose?.(t,working&&this.tool==='hoe');
     this.player.holdGardenTool?.(this.tool,this.crop,working);

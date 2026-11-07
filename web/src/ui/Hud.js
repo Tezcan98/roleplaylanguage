@@ -32,6 +32,7 @@ export class Hud {
   /** Something more on the right-hand side of the bar, before the clock (the help button, who is online). */
   addRight(node) { this.right.prepend(node); }
 
+  hintBag(on) { this.bag.closest('button').classList.toggle('garden-bag-hint', on); }
   setTime(dayName, label, night) { this.clock.textContent = `${night ? '☾' : '☀'} ${dayName} ${label}`; }
   setWords(n) { this.words.textContent = n; }
   setBag(n) { this.bag.textContent = n; }

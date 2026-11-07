@@ -57,7 +57,10 @@ export class QuestMarker {
     if (!t) return null;
     const here = this.world.current.id;
     let loc = null, pos = null;
-    if (t.npc) {
+    if (t.point && t.location) {
+      loc = t.location;
+      if (loc === here) pos = this.#tmp.set(t.point.x, t.point.y ?? .7, t.point.z);
+    } else if (t.npc) {
       const n = this.cast.get(t.npc); loc = n?.location;
       if (loc === here) pos = this.#tmp.copy(n.position).setY(2.75 * n.group.scale.y);
     } else if (t.item || t.kind) {
@@ -90,7 +93,10 @@ export class QuestMarker {
     if (!t) return null;
     const here = this.world.current, P = this.player.position;
     let loc = null, name = '', spot = null;
-    if (t.npc) {
+    if (t.point && t.location) {
+      loc = t.location; name = t.label ?? '';
+      if (loc === here.id) spot = t.point;
+    } else if (t.npc) {
       const n = this.cast.get(t.npc); loc = n?.location; name = n?.name ?? '';
       if (n && loc === here.id) spot = n.position;
     } else if (t.item || t.kind) {

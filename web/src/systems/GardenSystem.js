@@ -1,5 +1,8 @@
 import { EV } from '../core/events.js';
 
+export const SEED_ITEMS = Object.freeze({ bean: 'tohum', tomato: 'domates-tohumu', pepper: 'biber-tohumu' });
+export const seedCrop = kind => Object.keys(SEED_ITEMS).find(crop => SEED_ITEMS[crop] === kind);
+
 export const CROPS = Object.freeze({
   bean: { name: 'Fasulye', color: '#86ba50', minutes: 2, price: 1, value: 3, yield: 2 },
   tomato: { name: 'Domates', color: '#ed6950', minutes: 4, price: 2, value: 5, yield: 2 },
@@ -31,6 +34,14 @@ export class GardenSystem {
         wateredAt: i < (f['farm-sown'] ?? 0) && f['farm-watered'] ? this.now() : null,
       })) };
     }
+    if (!f['farm-v2'].inventorySeeds) {
+      const legacy = { ...f['farm-v2'].seeds };
+      f['farm-v2'].inventorySeeds = true;
+      delete f['farm-v2'].seeds;
+      for (const crop of ['tomato', 'pepper']) {
+        if (Number.isSafeInteger(legacy[crop]) && legacy[crop] > 0) this.inventory.add(SEED_ITEMS[crop], legacy[crop]);
+      }
+    }
     // Earlier garden saves did not store sowing time. Start their water reminder now.
     for (const p of f['farm-v2'].plots) {
       if (p.crop && p.wateredAt == null && !Number.isFinite(p.plantedAt)) p.plantedAt = this.now();
@@ -47,11 +58,13 @@ export class GardenSystem {
     return f['farm-sidequest'] && !f['farm-watered'] ? (!f['farm-hoed'] ? 'farm-hoe' : !f['farm-planted'] ? 'farm-sow' : 'farm-water') : null;
   }
   sideObjective() {
+    if (String(this.story.quest?.id ?? '').startsWith('farm-')) return null;
     if (!this.state.flags['farm-sidequest'] || !this.step) return null;
     return this.step === 'farm-hoe' ? 'Toprağı çapala' : this.step === 'farm-sow' ? `Tohum ek (${this.state.flags['farm-sown'] ?? 0}/3)` : 'Can suyu ver';
   }
   onChange(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
   refresh() {
+    if (this.unlocked) this.data;
     this.world.get('yard').setGardenState?.(this.state.flags, this.time.day ?? this.state.day, this.now());
     this.listeners.forEach(fn => fn());
   }
@@ -60,7 +73,7 @@ export class GardenSystem {
     this.bus.emit(EV.QUEST, { quest: this.story.quest });
     this.bus.emit(EV.GARDEN, { action });
   }
-  seeds(crop) { return crop === 'bean' ? this.inventory.count('tohum') : this.data.seeds[crop] ?? 0; }
+  seeds(crop) { this.data; return SEED_ITEMS[crop] ? this.inventory.count(SEED_ITEMS[crop]) : 0; }
   status(index) {
     const p = this.data.plots[index];
     if (!p) return { stage: 'locked', progress: 0, remaining: 0 };
@@ -105,7 +118,7 @@ export class GardenSystem {
       if (!p.hoed) return 'Önce bu toprağı çapala.';
       if (this.seeds(crop) < 1) return 'Tohumun bitti. Tohumluğa bir göz at.';
       p.crop = crop; p.wateredAt = null; p.plantedAt = this.now();
-      if (crop === 'bean') this.inventory.remove('tohum', 1); else this.data.seeds[crop]--;
+      this.inventory.remove(SEED_ITEMS[crop], 1);
       this.vocab.learn('tohum ekmek', 'to sow, to plant');
       if (this.learning) {
         f['farm-sown'] = this.data.plots.slice(0, 3).filter(p => p.crop).length;
@@ -137,7 +150,7 @@ export class GardenSystem {
     const c = CROPS[crop];
     if (!this.unlocked || this.story.paused || this.learning || !c || this.data.coins < c.price) return false;
     this.data.coins -= c.price;
-    if (crop === 'bean') this.inventory.add('tohum', 1); else this.data.seeds[crop] = (this.data.seeds[crop] ?? 0) + 1;
+    this.inventory.add(SEED_ITEMS[crop], 1);
     this.#save('buy'); return true;
   }
   get basketValue() { return Object.entries(this.data.basket).reduce((sum, [id, n]) => sum + (CROPS[id]?.value ?? 0) * n, 0); }

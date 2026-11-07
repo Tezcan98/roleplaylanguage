@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { Foliage } from '../../engine/Foliage.js';
 import { bakeStatic } from '../../engine/StaticBatch.js';
-import { GARDEN_PLOTS, GARDEN_TOOLS, GARDEN_SEEDS } from '../../content/gardenLayout.js';
+import { GARDEN_PLOTS, GARDEN_TOOLS } from '../../content/gardenLayout.js';
 import { CROPS } from '../../systems/GardenSystem.js';
 // import { addTrashBin } from '../trashBin.js';
 
@@ -218,13 +218,6 @@ export class Yard extends Location {
     const can = mf.group(); can.position.set(GARDEN_TOOLS[1].x, 0, GARDEN_TOOLS[1].z);
     can.add(mf.at(mf.cyl(0.18, 0.18, 0.35, 0x4B8E9A, 10), 0, 0.2, 0));
     const spout = mf.at(mf.cyl(0.045, 0.06, 0.45, 0x4B8E9A, 8), -0.24, 0.28, 0); spout.rotation.z = 0.9; can.add(spout); add(can);
-    // Seeds and tools are real objects beside the bed, never a separate screen.
-    for (const [i, seed] of GARDEN_SEEDS.entries()) {
-      const bag = mf.group(); bag.position.set(seed.x, 0, seed.z);
-      bag.add(mf.at(mf.box(.45, .5, .3, 0xD7B273), 0, .25, 0));
-      bag.add(mf.at(mf.box(.4, .05, .32, 0x9A7742), 0, .49, 0));
-      bag.add(mf.at(mf.sphere(.11, [0x83AE4D,0xE35F40,0xE8B83D][i], 8), 0, .3, -.17)); add(bag);
-    }
     const basket = GARDEN_TOOLS[2];
     add(mf.at(mf.box(.5, .3, .4, 0xAA784B), basket.x, .2, basket.z));
     const handleBasket = mf.at(mf.torus(.22, .025, 0x8C613C), basket.x, .45, basket.z); add(handleBasket);

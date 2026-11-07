@@ -861,3 +861,8 @@ body.chess-focus #toasts,body.chess-focus #quest,body.chess-focus .home-note,bod
 @media(max-height:550px){.card:has(.card-illustration:not([hidden])){width:min(600px,100%);gap:8px;padding:14px}.card:has(.card-illustration:not([hidden])) .ctitle{font-size:25px}.card-illustration{height:64px}.card:has(.card-illustration:not([hidden])) .ctext{font-size:14px}.card:has(.card-illustration:not([hidden])) .cen{font-size:12px}}
 .tb-nav-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}.tb-nav .tb-skip{margin:0;max-width:none;min-height:44px;align-self:auto}.tb-nav .tb-skip[hidden]{display:none}.tb-nav-actions .chipbtn{white-space:nowrap}
 @media(max-width:600px){.tb-nav{gap:5px;padding:8px}.tb-nav-actions{gap:5px}.tb-nav .pg{font-size:11px}.tb-nav-actions .chipbtn{padding:6px 8px;font-size:12px}}
+.garden-bag-hint{outline:3px solid #ffe393;outline-offset:3px;animation:garden-bag-pulse 1.4s ease-in-out infinite}.inv-use{min-height:44px;white-space:normal}.inv-info:has(.inv-use){flex-wrap:wrap}.inv-seed-shop{padding:8px;background:#3c2b1d;border:1px solid #7f6139;border-radius:8px;font-size:12px}.inv-seed-shop[hidden]{display:none}.inv-seed-buttons{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.inv-seed-buttons .chipbtn{font-size:12px;min-height:44px;padding:5px 8px}@keyframes garden-bag-pulse{50%{box-shadow:0 0 0 7px #e0b04a44}}
+@media(max-height:520px) and (min-width:560px){.inv-seed-shop{grid-column:2;grid-row:4}.inv-money{grid-column:2;grid-row:5}.inv-seed-buttons{gap:3px}.inv-seed-buttons .chipbtn{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.garden-bag-hint{animation:none}}
+.inv-use small{display:block;font-size:11px;font-weight:500}
+.inv{touch-action:pan-y}.inv-use{width:100%}

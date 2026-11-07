@@ -8,7 +8,7 @@
 - [Hay Day](https://supercell.com/en/games/hayday/) ve [resmî para rehberi](https://support.supercell.com/hay-day/en/articles/coins-diamonds.html): ürün satışı yeni üretimi besleyen bir döngü. Bizde hasat sepeti → bahçe parası → yeni tohum. Ana hikâyenin alışveriş parasıyla karışmaz.
 - [Stardew Valley — sulama](https://stardewvalleywiki.com/Watering_Cans): susuz ürünün gelişiminin durması anlaşılır bir bakım kuralı. Bizde can suyu büyümeyi başlatır; oyuncu oyundan çıkınca gelişim sürer ve ürün solmaz. Günlük bakım zorunluluğu eklenmedi.
 
-Bu oyunların varlıkları kopyalanmadı. Ahşap çerçeveli topraklar, çapa, sulama kabı, renkleri ürüne göre değişen tohum torbaları, hasat sepeti ve satış kasası avluda yer alır.
+Bu oyunların varlıkları kopyalanmadı. Ahşap çerçeveli topraklar, çapa, sulama kabı, hasat sepeti ve satış kasası avluda yer alır. Tohum kutuları veya torbaları avluda durmaz; tüm tohumlar oyuncunun çantasındadır.
 
 ## İlk ders
 
@@ -19,10 +19,10 @@ Bu oyunların varlıkları kopyalanmadı. Ahşap çerçeveli topraklar, çapa, s
 ## Tekrar oynama
 
 1. Çapa ile boş toprağı hazırla.
-2. Bahçenin önündeki tohum torbasını al, hazır toprağın yanına gidip tohumu ek.
+2. Çantayı aç, tohumu seç ve “Ekmek için seç” düğmesine bas; hazır toprağın yanına gidip tohumu ek.
 3. Can suyu ver. Sayaç gerçek zamanla çalışır ve kayıt sonrası devam eder.
 4. Filiz → yapraklanma → olgun ürün. Sepet aracı yalnızca olgun ürünü toplar.
-5. Bahçenin sağındaki boş kasada ürünleri sat, tohum torbalarından yeni tohum al ve yeniden ek.
+5. Bahçenin sağındaki boş kasada ürünleri sat, çantadaki tohum alışından yeni tohum al ve yeniden ek.
 
 | Ürün | Süre | Tohum bedeli | Hasat | Sepet değeri |
 |---|---:|---:|---:|---:|
@@ -46,11 +46,11 @@ Bildirim planlama ve izin/iptal davranışı sahte yerel adaptörle test edildi;
 
 ## Telefon ve erişilebilirlik
 
-Ayrı menü, araç çubuğu veya ekim penceresi açılmaz. Oyuncu joystick/WASD ile yürür; telefonun mevcut eylem düğmesi veya E ile malzemeyi alıp bir toprağa işlem yapar. Yakındaki işlem yapılabilir toprak altın bir halka ile işaretlenir. Avludan ayrılınca malzeme bırakılır.
+Ayrı menü, araç çubuğu veya ekim penceresi açılmaz. Oyuncu joystick/WASD ile yürür; telefonun mevcut eylem düğmesi veya E ile çapa ve sulama kabını alıp bir toprağa işlem yapar. Ekim sırasında çanta düğmesi vurgulanır; fasulye tohumu seçili açılır. Yakındaki işlem yapılabilir toprak altın bir halka ile işaretlenir. Avludan ayrılınca malzeme bırakılır.
 
 ## Doğrulama
 
-32 bahçe, bildirim, avlu etkileşimi ve sürüm tanıtımı testi: gerçek görev yöneticisi, eski kayıt geçişi, yan görev, tek tek ekim, sulama, çevrimdışı büyüme, erken/tekrar hasat, tohum tüketimi, sepet satışı, para sınırı ve statik birleştirme sonrası gerçek 3B tarhlar. İçerik/çeviri kontrolü ve üretim derlemesi çalıştırıldı.
+37 bahçe, bildirim, avlu etkileşimi ve sürüm tanıtımı testi: gerçek görev yöneticisi, eski kayıt geçişi, yan görev, tek tek ekim, sulama, çevrimdışı büyüme, erken/tekrar hasat, tohum tüketimi, sepet satışı, para sınırı ve statik birleştirme sonrası gerçek 3B tarhlar. İçerik/çeviri kontrolü ve üretim derlemesi çalıştırıldı.
 
 Çizimlerin statik [önizlemesi](previews/garden-art.svg) gözle incelendi. Bu dosya oyun ekran görüntüsü değildir. Tarayıcı erişimi Work ayarlarında kapalı olduğundan avludaki malzemelerin cihazda görünümü ve yürüyerek eylem etkileşimi henüz görsel olarak doğrulanamadı. Yayın öncesi S22 boyutunda bu kontrol tamamlanmalıdır.
 

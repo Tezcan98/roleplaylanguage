@@ -5,8 +5,3 @@ export const GARDEN_TOOLS = [
   { tool: 'water', x: 13, z: 2.5, label: 'Sulama kabını al' },
   { tool: 'harvest', x: 13, z: 5.8, label: 'Hasat sepetini al' },
 ];
-export const GARDEN_SEEDS = [
-  { crop: 'bean', x: 7.15, z: .55 },
-  { crop: 'tomato', x: 9, z: .55 },
-  { crop: 'pepper', x: 10.85, z: .55 },
-];

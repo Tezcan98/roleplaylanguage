@@ -41,7 +41,7 @@ import { PlayerController } from './systems/PlayerController.js';
 import { CastDirector } from './systems/CastDirector.js';
 import { ItemSystem } from './systems/ItemSystem.js';
 import { EffectRunner } from './systems/EffectRunner.js';
-import { GardenSystem } from './systems/GardenSystem.js';
+import { GardenSystem, seedCrop, CROPS } from './systems/GardenSystem.js';
 import { GardenInteractions } from './systems/GardenInteractions.js';
 import { GardenReleaseIntro } from './ui/GardenReleaseIntro.js';
 import { GardenNotifications } from './platform/GardenNotifications.js';
@@ -245,7 +245,7 @@ world.setLinks(LINKS);
 
 // --- ui ---
 const toasts = new Toasts(host);
-const questPanel = new QuestPanel(host, { settings, onTap: (q) => directions.open(q) }); // (folds down to its title: remembered)
+const questPanel = new QuestPanel(host, { settings, onTap: (q) => story.target()?.ui === 'inventory' ? inventoryView.open() : directions.open(q) }); // (folds down to its title: remembered)
 const labels = new LabelLayer(host, ctx);
 const joystick = new Joystick(host);
 const cards = new CardOverlay(host, modes);
@@ -616,7 +616,8 @@ cirak.build();
 
 // After day-two shopping: finish the saved garden lesson before taking the letter.
 const garden = new GardenSystem({ state, inventory, story, bus, vocab, toasts, world, time });
-const gardenWalk = new GardenInteractions({ garden, world, player, mf, modes, toasts });
+const gardenWalk = new GardenInteractions({ garden, world, player, mf, modes, toasts, onToolChange: () => bus.emit(EV.QUEST, { quest: story.quest }), onInventoryHint: on => hud.hintBag(on) });
+gameCtx.garden = gardenWalk;
 const gardenGuide = () => {
   const q = story.quest?.id;
   if (String(q ?? '').startsWith('farm-') || (story.chapter?.id === 'd2-homework' && q === 'letter')) {
@@ -692,7 +693,7 @@ const marker = new QuestMarker({ scene: ctx.scene, story, world, cast, items, pl
 const autoDoor = new AutoDoor({ marker, player, interactions: hotspotUse, rules: HOTSPOTS, modes, ctx: gameCtx, enabled: !params.has('debug') || params.has('firststeps') });
 const directions = new DirectionsCard(host, modes, { where: () => marker.describe(camera.yaw) }); // a tap on the task: where to go
 // the round map, top right: people here, the one the task is about blinking (others online in blue); a tap: where to go
-const minimap = new Minimap(host, { world, cast, player, camera, marker, story, settings, others: () => (world.current.id === village.locationId ? village.remotes.visible() : []), onTap: () => directions.open(questPanel.quest) });
+const minimap = new Minimap(host, { world, cast, player, camera, marker, story, settings, others: () => (world.current.id === village.locationId ? village.remotes.visible() : []), onTap: () => story.target()?.ui === 'inventory' ? inventoryView.open() : directions.open(questPanel.quest) });
 
 // word notebook with "practice" (a quick quiz over the learned words)
 const drill = new WordDrill(host, { modes, vocab, activities, tts, state, effects, toasts });
@@ -878,7 +879,11 @@ const settingsPanel = new SettingsPanel(host, {
   },
 });
 const settingsBtn = el('button', { class: 'pill', attrs: { type: 'button', 'aria-label': 'Ayarlar', title: 'Ayarlar · settings' }, on: { click: () => settingsPanel.open() } }, ['⚙️']);
-const inventoryView = new InventoryView(host, { modes, inventory, items, wallet, speak: (tr) => tts.speak(tr, { speaker: 'ahmet' }) });
+const inventoryView = new InventoryView(host, { modes, inventory, items, wallet, speak: (tr) => tts.speak(tr, { speaker: 'ahmet' }),
+  preferredItem: () => gardenWalk.requiredTool === 'sow' ? 'tohum' : null,
+  itemAction: kind => seedCrop(kind) ? { label: 'Ekmek için seç', disabled: !gardenWalk.canSelectSeed(kind), run: () => gardenWalk.selectSeed(kind) } : null,
+  seedShop: () => garden.unlocked && !garden.learning ? { coins: garden.data.coins, crops: CROPS, buy: crop => garden.buy(crop) } : null,
+});
 const hud = new Hud(host, {
   extra: [settingsBtn, fullscreenBtn],
   onShop: () => shop.open(),

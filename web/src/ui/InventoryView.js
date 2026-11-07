@@ -7,6 +7,7 @@ const BUCKET = '<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="t
 const ICON = {
   ekmek: '🍞', sut: '🥛', simit: '🥯', ayran: '🥤', peynir: '🧀', yumurta: '🥚', tost: '🥪', kek: '🧁', meyvesuyu: '🧃', su: '💧',
   elma: '🍎', portakal: '🍊', armut: '🍐', muz: '🍌', domates: '🍅', patates: '🥔',
+  tohum: '🌱', 'domates-tohumu': '🍅', 'biber-tohumu': '🌶️',
   mektup: '✉️', zarf: '📩', kart: '🗒️', cay: '☕', kitap: '📕', mont: '🧥', anahtar: '🔧', camasir: '👕', kova: BUCKET,
 };
 const COLS = 6, ROWS = 4; // 24 slots, like a page of a game's inventory
@@ -20,10 +21,11 @@ export class InventoryView {
   #pop = null;
   #pick = null;
 
-  constructor(host, { modes, inventory, items, wallet, speak }) {
-    Object.assign(this, { modes, inventory, items, wallet, speak });
+  constructor(host, { modes, inventory, items, wallet, speak, itemAction = () => null, preferredItem = () => null, seedShop = () => null }) {
+    Object.assign(this, { modes, inventory, items, wallet, speak, itemAction, preferredItem, seedShop });
     this.grid = el('div', { class: 'inv-grid' });
     this.info = el('div', { class: 'inv-info' });
+    this.seeds = el('div', { class: 'inv-seed-shop', attrs: { hidden: '' } });
     this.money = el('div', { class: 'inv-money' });
     this.root = el('div', { class: 'overlay dim inv-overlay', on: { click: (e) => { if (e.target === this.root) this.close(); } } }, [
       el('div', { class: 'inv' }, [
@@ -31,7 +33,7 @@ export class InventoryView {
           el('b', { text: 'Envanter' }), el('small', { class: 'en-t', text: ` · ${gloss('Inventory')}` }),
           el('button', { class: 'inv-x', html: ICONS.close, attrs: { type: 'button', 'aria-label': 'Kapat' }, on: { click: () => this.close() } }),
         ]),
-        this.grid, this.info, this.money,
+        this.grid, this.info, this.seeds, this.money,
       ]),
     ]);
     host.append(this.root);
@@ -43,6 +45,7 @@ export class InventoryView {
   open() {
     if (!this.#pop) this.#pop = this.modes.push('overlay');
     this.root.classList.add('open');
+    this.#pick = this.preferredItem();
     this.render();
   }
 
@@ -62,13 +65,21 @@ export class InventoryView {
     this.grid.replaceChildren(...slots);
     if (this.#pick) {
       const i = this.items.info(this.#pick), n = this.inventory.count(this.#pick);
+      const action = this.itemAction(this.#pick);
       this.info.replaceChildren(
         el('b', { text: `${n > 1 ? `${n} ` : ''}${i.tr}` }), el('small', { class: 'en-t', text: ` · ${gloss(i.en)}` }),
         el('button', { class: 'inv-say', html: ICONS.speaker, attrs: { type: 'button', 'aria-label': 'Dinle' }, on: { click: () => this.speak?.(i.tr) } }),
       );
+      if (action) this.info.append(el('button', { class: 'chipbtn primary inv-use', attrs: { type: 'button', ...(action.disabled ? { disabled: '' } : {}) }, on: { click: () => { if (action.run()) this.close(); else this.render(); } } }, [action.label, el('small', { class: 'en-t', text: gloss('Select for planting') })]));
     } else {
       this.info.replaceChildren(el('span', { text: things.length ? 'Bir eşyaya dokun.' : 'Çantan boş.' }), el('small', { class: 'en-t', text: ` · ${gloss(things.length ? 'Tap a thing.' : 'Your bag is empty.')}` }));
     }
+    const shop = this.seedShop();
+    this.seeds.hidden = !shop;
+    if (shop) this.seeds.replaceChildren(
+      el('b', { text: `Tohum al · Bahçe paran: ${shop.coins}` }),
+      el('div', { class: 'inv-seed-buttons' }, Object.entries(shop.crops).map(([crop,c]) => el('button', { class: 'chipbtn', text: `${c.name} +1 · ${c.price} ◉`, attrs: { type: 'button', ...(shop.coins < c.price ? { disabled: '' } : {}) }, on: { click: () => { shop.buy(crop); this.render(); } } }))),
+    );
     this.money.replaceChildren(
       el('span', { class: 'inv-cash' }, [`💰 ${this.inventory.count('para')} ₺`]),
       el('span', { class: 'inv-cash' }, [coin(), ` ${this.wallet.balance}`]),
