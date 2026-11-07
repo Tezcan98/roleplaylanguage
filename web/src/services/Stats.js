@@ -1,3 +1,4 @@
+import { AgeAnalysis } from './AgeAnalysis.js';
 import { EV } from '../core/events.js';
 
 /**
@@ -19,6 +20,7 @@ export class Stats {
   /** `probe()` → { scr, q, loc, moving }: which screen the player is on (setup, menu, intro, card, talk, play, other), the task, the place, whether they are walking — for where players stop. */
   constructor({ bus, settings, modes, chapters, native, lang, version, post, probe = null, analytics = null, enabled = true }) {
     Object.assign(this, { bus, settings, modes, chapters, native, lang, version, post, probe, analytics });
+    this.ageAnalysis = new AgeAnalysis(settings); this.enabled = enabled;
     if (!enabled) return;
     if (!settings.get('deviceId')) settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (as the square and the ad numbers make it: one per device)
     const on = (ev, fn) => bus.on(ev, (d) => { try { fn(d ?? {}); } catch { /* never in the game's way */ } });
@@ -30,7 +32,7 @@ export class Stats {
     on(EV.QUEST_DONE, (d) => { this.count('quest'); if (d.quest?.id) this.count(`q:${String(d.quest.id).toLowerCase().replace(/[^a-z0-9:._-]/g, '-').slice(0, 36)}`); }); // (which task: the server counts the devices that did each)
     on(EV.CREDITS, (d) => { if (d.reason && d.reason !== 'dev' && d.reason !== 'spend') this.count(`cr:${d.reason}`); });
     on(EV.CHAPTER, (d) => { const i = chapters.indexOf(d.chapter?.id); if (i > (settings.get('statsCh', -1))) settings.set('statsCh', i); });
-    setInterval(() => { if (!document.hidden && modes.is('play')) { this.#sec++; this.#total(); } this.#watch(); }, 1000);
+    setInterval(() => { if (!document.hidden && modes.is('play')) { this.#sec++; this.ageAnalysis.tick(); this.#total(); } this.#watch(); }, 1000);
     setInterval(() => this.flush(), EVERY);
     addEventListener('pagehide', () => this.flush());
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.flush(); });
@@ -74,21 +76,27 @@ export class Stats {
   }
 
   /** One more of `key` ("chat", "ride", "talk:ali"…). */
-  count(key, n = 1) { if (KEY.test(key)) this.#counts[key] = (this.#counts[key] ?? 0) + n; }
+  count(key, n = 1) { if (KEY.test(key)) { this.#counts[key] = (this.#counts[key] ?? 0) + n; this.ageAnalysis.count(key, n); } }
+
+  #ageChanged = false;
+  ageChanged() { this.ageAnalysis.sync(); this.#ageChanged = true; return this.flush(); }
 
   async flush() {
-    if (this.#busy || this.settings.get('devCodes', false)) return;
+    if (!this.enabled || this.#busy || this.settings.get('devCodes', false)) return;
     const counts = this.#counts, sec = this.#sec, opens = this.#opens;
-    if (!Object.keys(counts).length && !sec && !opens) return;
+    if (!Object.keys(counts).length && !sec && !opens && !this.#ageChanged) return;
+    const age = this.ageAnalysis.take(); this.#ageChanged = false;
     this.#counts = {}; this.#sec = 0; this.#opens = 0;
     this.#busy = true;
     const ch = this.settings.get('statsCh', -1);
-    const body = { pid: this.settings.get('deviceId'), v: this.version() || 'web', plat: this.native ? 'app' : 'web', lang: this.lang(), ch, chId: this.chapters[ch] ?? '', ...(opens ? { opens } : {}), ...(this.#at ? { at: this.#at } : {}), ...(sec ? { sec: Math.min(sec, 3600) } : {}), counts };
+    const body = { age: age.sample, pid: this.settings.get('deviceId'), v: this.version() || 'web', plat: this.native ? 'app' : 'web', lang: this.lang(), ch, chId: this.chapters[ch] ?? '', ...(opens ? { opens } : {}), ...(this.#at ? { at: this.#at } : {}), ...(sec ? { sec: Math.min(sec, 3600) } : {}), counts };
     const ok = await this.post(URL, body).catch(() => false);
     if (!ok) { // not sent: counted again next time
       for (const [k, n] of Object.entries(counts)) this.#counts[k] = (this.#counts[k] ?? 0) + n;
-      this.#sec += sec; this.#opens += opens;
+      this.#sec += sec; this.#opens += opens; this.ageAnalysis.retry(age); this.#ageChanged = true;
     }
     this.#busy = false;
+    // A withdrawal while a request was in flight must follow that request, including when otherwise idle.
+    if (ok && this.#ageChanged) return this.flush();
   }
 }

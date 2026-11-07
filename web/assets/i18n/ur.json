@@ -3149,5 +3149,18 @@
  "Sow a seed in the marked soil.": "نشان والی زمین میں ایک بیج بوؤ۔",
  "Water the marked soil.": "نشان والی زمین کو پانی دو۔",
  "Harvest the ripe crop.": "پکی ہوئی فصل کاٹو۔",
- "Harvested! You can sell your crops at the crate.": "فصل کاٹ لی! تم اپنی پیداوار صندوق کے پاس بیچ سکتے ہو۔"
+ "Harvested! You can sell your crops at the crate.": "فصل کاٹ لی! تم اپنی پیداوار صندوق کے پاس بیچ سکتے ہو۔",
+ "Choose your age range": "اپنی عمر کا گروپ منتخب کریں",
+ "I am under 18": "میری عمر 18 سال سے کم ہے",
+ "Allow and share": "اجازت دیں اور شیئر کریں",
+ "We do not collect age analysis data from under-18s. Continue without sharing.": "ہم 18 سال سے کم عمر افراد سے عمر کے تجزیے کا ڈیٹا جمع نہیں کرتے۔ شیئر کیے بغیر جاری رکھیں۔",
+ "Help us improve the game": "گیم بہتر بنانے میں ہماری مدد کریں",
+ "Optionally share your age range. We do not ask for your birth date; your choice does not affect gameplay.": "آپ چاہیں تو اپنی عمر کا گروپ شیئر کریں۔ ہم تاریخ پیدائش نہیں پوچھتے؛ آپ کے انتخاب سے کھیل متاثر نہیں ہوگا۔",
+ "nsSoft stores your age range with this device’s play time, completed tasks and return days on its own server for up to 30 days. Measurement starts after consent. It is not sent to Google or used for ad targeting. Withdraw and delete it in Settings → Age analysis.": "nsSoft آپ کی عمر کا گروپ، اس ڈیوائس پر کھیلنے کا وقت، مکمل کیے گئے کام اور دوبارہ کھیلنے کے دن اپنے سرور پر زیادہ سے زیادہ 30 دن رکھتا ہے۔ پیمائش آپ کی اجازت کے بعد شروع ہوتی ہے۔ یہ ڈیٹا Google کو نہیں بھیجا جاتا اور اشتہارات کی ہدف بندی کے لیے استعمال نہیں ہوتا۔ ترتیبات ← عمر کا تجزیہ سے اجازت واپس لے کر اسے حذف کر سکتے ہیں۔",
+ "Privacy notice and your rights": "رازداری کا نوٹس اور آپ کے حقوق",
+ "I am 18 or older. I consent to my age range being processed for the described game analysis.": "میری عمر 18 سال یا زیادہ ہے۔ میں بیان کردہ گیم تجزیے کے لیے اپنی عمر کے گروپ پر کارروائی کی اجازت دیتا/دیتی ہوں۔",
+ "Withdraw and delete age analysis": "اجازت واپس لیں اور عمر کا تجزیہ حذف کریں",
+ "Continue without sharing": "شیئر کیے بغیر جاری رکھیں",
+ "Close without changes": "تبدیلی کے بغیر بند کریں",
+ "Age analysis": "عمر کا تجزیہ"
 }

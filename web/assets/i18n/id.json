@@ -2715,5 +2715,18 @@
  "Sow a seed in the marked soil.": "Tanam benih di tanah yang ditandai.",
  "Water the marked soil.": "Siram tanah yang ditandai.",
  "Harvest the ripe crop.": "Panen tanaman yang matang.",
- "Harvested! You can sell your crops at the crate.": "Sudah dipanen! Kamu bisa menjual hasil panen di dekat peti."
+ "Harvested! You can sell your crops at the crate.": "Sudah dipanen! Kamu bisa menjual hasil panen di dekat peti.",
+ "Choose your age range": "Pilih kelompok usiamu",
+ "I am under 18": "Saya berusia di bawah 18 tahun",
+ "Allow and share": "Izinkan dan bagikan",
+ "We do not collect age analysis data from under-18s. Continue without sharing.": "Kami tidak mengumpulkan data analisis usia dari pengguna di bawah 18 tahun. Lanjutkan tanpa berbagi.",
+ "Help us improve the game": "Bantu kami meningkatkan permainan",
+ "Optionally share your age range. We do not ask for your birth date; your choice does not affect gameplay.": "Kamu boleh membagikan kelompok usiamu jika mau. Kami tidak meminta tanggal lahir; pilihanmu tidak memengaruhi permainan.",
+ "nsSoft stores your age range with this device’s play time, completed tasks and return days on its own server for up to 30 days. Measurement starts after consent. It is not sent to Google or used for ad targeting. Withdraw and delete it in Settings → Age analysis.": "nsSoft menyimpan kelompok usiamu bersama waktu bermain, tugas yang diselesaikan dan hari kembali bermain perangkat ini di servernya sendiri selama maksimal 30 hari. Pengukuran dimulai setelah persetujuanmu. Data ini tidak dikirim ke Google atau digunakan untuk penargetan iklan. Tarik persetujuan dan hapus data di Pengaturan → Analisis usia.",
+ "Privacy notice and your rights": "Pemberitahuan privasi dan hakmu",
+ "I am 18 or older. I consent to my age range being processed for the described game analysis.": "Saya berusia 18 tahun atau lebih. Saya menyetujui pemrosesan kelompok usia saya untuk analisis permainan yang dijelaskan.",
+ "Withdraw and delete age analysis": "Tarik persetujuan dan hapus analisis usia",
+ "Continue without sharing": "Lanjutkan tanpa berbagi",
+ "Close without changes": "Tutup tanpa perubahan",
+ "Age analysis": "Analisis usia"
 }

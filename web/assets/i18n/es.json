@@ -3149,5 +3149,18 @@
  "Sow a seed in the marked soil.": "Siembra una semilla en la tierra señalada.",
  "Water the marked soil.": "Riega la tierra señalada.",
  "Harvest the ripe crop.": "Recoge el cultivo maduro.",
- "Harvested! You can sell your crops at the crate.": "¡Cosechado! Puedes vender tus productos junto a la caja."
+ "Harvested! You can sell your crops at the crate.": "¡Cosechado! Puedes vender tus productos junto a la caja.",
+ "Choose your age range": "Elige tu grupo de edad",
+ "I am under 18": "Tengo menos de 18 años",
+ "Allow and share": "Permitir y compartir",
+ "We do not collect age analysis data from under-18s. Continue without sharing.": "No recopilamos datos de análisis de edad de menores de 18 años. Continúa sin compartir.",
+ "Help us improve the game": "Ayúdanos a mejorar el juego",
+ "Optionally share your age range. We do not ask for your birth date; your choice does not affect gameplay.": "Puedes compartir tu grupo de edad si quieres. No pedimos tu fecha de nacimiento; tu elección no afecta al juego.",
+ "nsSoft stores your age range with this device’s play time, completed tasks and return days on its own server for up to 30 days. Measurement starts after consent. It is not sent to Google or used for ad targeting. Withdraw and delete it in Settings → Age analysis.": "nsSoft guarda tu grupo de edad junto con el tiempo de juego, las tareas completadas y los días de regreso de este dispositivo en su propio servidor durante un máximo de 30 días. La medición comienza tras tu consentimiento. No se envía a Google ni se usa para orientar anuncios. Retira tu permiso y elimina los datos en Ajustes → Análisis por edad.",
+ "Privacy notice and your rights": "Aviso de privacidad y tus derechos",
+ "I am 18 or older. I consent to my age range being processed for the described game analysis.": "Tengo 18 años o más. Doy mi consentimiento para tratar mi grupo de edad para el análisis del juego descrito.",
+ "Withdraw and delete age analysis": "Retirar permiso y eliminar el análisis por edad",
+ "Continue without sharing": "Continuar sin compartir",
+ "Close without changes": "Cerrar sin cambios",
+ "Age analysis": "Análisis por edad"
 }

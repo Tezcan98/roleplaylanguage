@@ -3150,5 +3150,18 @@
  "Sow a seed in the marked soil.": "ازرع بذرة في التربة المشار إليها.",
  "Water the marked soil.": "اسقِ التربة المشار إليها.",
  "Harvest the ripe crop.": "احصد المحصول الناضج.",
- "Harvested! You can sell your crops at the crate.": "تم الحصاد! يمكنك بيع محاصيلك عند الصندوق."
+ "Harvested! You can sell your crops at the crate.": "تم الحصاد! يمكنك بيع محاصيلك عند الصندوق.",
+ "Choose your age range": "اختر فئتك العمرية",
+ "I am under 18": "عمري أقل من 18 سنة",
+ "Allow and share": "السماح والمشاركة",
+ "We do not collect age analysis data from under-18s. Continue without sharing.": "لا نجمع بيانات تحليل العمر لمن هم دون 18 عامًا. يمكنك المتابعة دون مشاركة.",
+ "Help us improve the game": "ساعدنا على تحسين اللعبة",
+ "Optionally share your age range. We do not ask for your birth date; your choice does not affect gameplay.": "يمكنك مشاركة فئتك العمرية اختياريًا. لا نطلب تاريخ ميلادك، ولن يؤثر اختيارك على اللعب.",
+ "nsSoft stores your age range with this device’s play time, completed tasks and return days on its own server for up to 30 days. Measurement starts after consent. It is not sent to Google or used for ad targeting. Withdraw and delete it in Settings → Age analysis.": "تحتفظ nsSoft بفئتك العمرية مع مدة اللعب والمهام المكتملة وأيام العودة لهذا الجهاز على خادمها لمدة لا تتجاوز 30 يومًا. يبدأ القياس بعد موافقتك. لا تُرسل هذه البيانات إلى Google ولا تُستخدم لاستهداف الإعلانات. يمكنك سحب موافقتك وحذف التحليل من الإعدادات ← تحليل العمر.",
+ "Privacy notice and your rights": "إشعار الخصوصية وحقوقك",
+ "I am 18 or older. I consent to my age range being processed for the described game analysis.": "عمري 18 سنة أو أكثر. أوافق على معالجة فئتي العمرية لتحليل اللعب الموضح.",
+ "Withdraw and delete age analysis": "سحب الموافقة وحذف تحليل العمر",
+ "Continue without sharing": "المتابعة دون مشاركة",
+ "Close without changes": "إغلاق دون تغييرات",
+ "Age analysis": "تحليل العمر"
 }

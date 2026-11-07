@@ -159,6 +159,7 @@ http.listen(port, host, () => console.log(`village server → ws://${host}:${por
 for (const sig of ['SIGINT', 'SIGTERM']) {
   process.on(sig, () => {
     console.log(`[village] ${sig}, closing`);
+    playStats.flush();
     village.close();
     turn?.stop?.();
     http.close(() => process.exit(0));

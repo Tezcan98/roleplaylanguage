@@ -23,8 +23,8 @@ export class MainMenu {
   #view = 'home'; // home | settings
   #homeAd = false; // this time the main menu carries a banner (HOME_BANNER of the times it opens)
 
-  constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [], onCode = null }) {
-    Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters, onCode });
+  constructor(host, { settings, confirmQuality, villageServer, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters = [], onCode = null, onAgeAnalysis = null }) {
+    Object.assign(this, { host, settings, confirmQuality, hasSave, onStart, onContinue, onHelp, onProfile, onShop, onStartAt, onBanner, chapters, onCode, onAgeAnalysis });
     this.servers = new ServerPicker({ villageServer, value: settings.get('serverRegion', 'ankara'), onChange: (id) => { settings.set('serverRegion', id); settings.set('serverPicked', true); } }); // (picked by hand: kept even when busy)
     this.servers.onUpdate = () => { if (this.#where) this.#where.textContent = this.#whereText(); if (this.isOpen) this.#askPlayers(); }; // (refreshed while the menu stays open)
     this.root = el('div', { class: 'overlay main-menu' });
@@ -110,6 +110,7 @@ export class MainMenu {
         el('h2', { class: 'ctitle', text: `⚙️ ${ui('Ayarlar', 'Settings')}`, on: { click: () => this.#testerTap() } }),
         // start the story from any day (testers only: five taps on the title, as in the game's ⚙️)
         this.onStartAt && s.get('testerMode', false) && this.#chapterPicker(go),
+        this.onAgeAnalysis && btn(ui('Yaş analizi', 'Age analysis'), 'btn alt', () => this.onAgeAnalysis()),
         btn('Nasıl oynanır?', 'btn alt', () => this.onHelp?.()),
         save && btn('Yeni oyun (baştan başla)', 'btn alt', go(this.onStart)),
         el('label', { class: 'toggle' }, [voice, el('span', { text: ui('Doğal Türkçe sesler', 'Natural Turkish voices') })]),

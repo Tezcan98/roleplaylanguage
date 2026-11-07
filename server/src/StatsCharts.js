@@ -1,3 +1,4 @@
+import { ageBody } from './AgeStats.js';
 /**
  * The charts and the "how the game is played" block of the live numbers page (AdStats.js): plain
  * HTML and inline SVG, no scripts and nothing loaded from elsewhere. `play` is PlayStats.summary().
@@ -75,6 +76,7 @@ export function numbersBody(s) {
 ${PERIODS.map(per).join('')}
 ${first}
 ${back}
+${ageBody(p.age)}
 <h2>Günlük oyuncu <small>son 14 gün</small></h2>${columns(days, { w: 30 })}
 <h2>Nerede bırakıyorlar? <small>o bölüme kadar gelen oyuncu</small></h2>${bars(reach, { color: '#ba68c8' })}
 <div class="two"><div><h2>En çok konuşulanlar</h2>${bars(people, { color: '#ffb74d' })}</div><div><h2>Gidilen yerler</h2>${bars(visited, { color: '#81c784' })}</div></div>
