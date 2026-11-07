@@ -99,6 +99,21 @@ const work = (page, kit, tool, beds, crop = 'bean') => (async () => {
 })();
 const ALL = (crop, grown) => Array.from({ length: 9 }, () => ({ crop, grown }));
 
+
+/**
+ * The children in HD for a "friends" shot: the HD body has no swing or chase poses, so the game keeps those
+ * blocky (entities/Npc.js) — here they stand instead and turn HD like the player. `ids`: these; otherwise
+ * everyone within `radius` of the player.
+ */
+const hdFriends = (page, ids = null, radius = 10) => page.evaluate(([ids, r]) => {
+  const g = window.__game, p = g.player.position;
+  for (const n of g.cast.present()) {
+    if (ids ? !ids.includes(n.id) : Math.hypot(n.position.x - p.x, n.position.z - p.z) > r) continue;
+    if (n.behavior?.blockyPoses) { n.setBehavior('stand'); n.position.y = 0; }
+    n.refreshHd();
+  }
+}, [ids, radius]);
+
 export const EPISODES = {
   // 0 · a hook for Arabic speakers: the flag, "do you have to watch silly series to learn Turkish?", then the garden tasks from far away
   garden: {
@@ -281,6 +296,8 @@ export const EPISODES = {
           const page = await start(kit);
           await page.evaluate(() => { const g = window.__game, e = g.cast.get('emre'); g.player.position.set(e.position.x + 1.1, 0, e.position.z + 1.2); g.camera.snap(g.player.position, false); });
           await kit.sleep(800);
+          await hdFriends(page);
+          await kit.sleep(1500);
           return page;
         },
         act: async (kit, page) => {
@@ -360,6 +377,7 @@ export const EPISODES = {
           // in front of the swings, facing Defne on hers
           await page.evaluate(([x, z]) => { const g = window.__game; g.player.position.set(x - 1.3, 0, z + 1.6); g.player.group.rotation.y = Math.PI * 0.85; }, SWING);
           await fixed(page, [SWING[0] + 0.7, 1.7, SWING[1] + 7.2], [SWING[0] - 0.9, 2.1, SWING[1] + 0.6]); // the heads below the middle: the bubbles in the middle, clear of the caption
+          await hdFriends(page, ['defne']);
           await showLabels(page);
           await kit.sleep(1200);
           return page;
