@@ -120,49 +120,57 @@ const hdFriends = (page, ids = null, radius = 10) => page.evaluate(([ids, r]) =>
  * the player and five others drawn the way the game draws other online players (RemotePlayers), in HD —
  * red football shirts (the player's team) against navy tracksuits. `team` { id: [x, z] } where everyone starts; the ball at `ball`.
  */
-const TEAM = { b1: ['Yusuf', 'jersey', 'boy-modest'], b2: ['Ali', 'jersey', 'boy-strong'], r1: ['Omar', 'sport', 'boy-strong'], r2: ['Bilal', 'sport', 'boy-modest'], rk: ['Hamza', 'sport', 'boy-strong'] };
-const pitch = async (kit, { me, team, ball, cam, look }) => {
+const TEAM = { me: ['Ahmet', 'jersey', 'boy-modest'], b1: ['Yusuf', 'jersey', 'boy-modest'], b2: ['Ali', 'jersey', 'boy-strong'], r1: ['Omar', 'sport', 'boy-strong'], r2: ['Bilal', 'sport', 'boy-modest'], rk: ['Hamza', 'sport', 'boy-strong'] };
+const pitch = async (kit, { team, ball, cam, look }) => {
   const page = await start(kit);
-  await page.evaluate(([me, team, ball, TEAM]) => {
-    const g = window.__game, loc = g.world.get('village'), w = g.wallet, it = { id: 'hd-jersey', slot: 'body' };
-    w.buy({ ...it, price: 0 }); w.equip(it); g.shop.onOutfit?.(); // the player in the red football shirt too
-    g.player.position.set(me[0], 0, me[1]); g.player.group.rotation.y = Math.PI / 2;
+  await page.evaluate(([team, ball, TEAM]) => {
+    const g = window.__game, loc = g.world.get('village');
+    // all six drawn the same way, as online players, so they all run with the same animation (the player hidden: "me" is one of them)
+    g.player.position.set(team.me[0] - 6, 0, team.me[1] + 9); g.player.group.visible = false;
     for (const [id, [x, z]] of Object.entries(team)) {
       const [name, outfit, key] = TEAM[id], [gender, style] = key.split('-');
       g.village.remotes.add(loc, { id, name, look: { outfit, gender, style }, x, z, rot: id.startsWith('r') ? -Math.PI / 2 : Math.PI / 2 });
     }
     const b = g.village.places.village.balls[0]; b.setState({ x: ball[0], z: ball[1] });
     g.village.places.village.balls.slice(1).forEach((o) => o.setState({ x: 8, z: 22 })); // (the second ball out of the way)
-  }, [me, team, ball, TEAM]);
+  }, [team, ball, TEAM]);
   await kit.sleep(1800);
   await fixed(page, cam, look);
   await kit.sleep(600);
   return page;
 };
-/** Everyone runs to their next spot, the ball rolls from where it is to `to` over `ms` (a pass), in small steps. */
-const play = async (page, kit, { moves = {}, to = null, ms = 1000, kicker = null }) => {
+/**
+ * Everyone runs to their next spot over `ms` (small steps; RemotePlayers smooths them and picks walk or run
+ * from the speed: over ~3.2 m/s they run). `to`: the ball is kicked there — a real roll with the ball's own
+ * friction (vel × 0.35^t), fast enough to arrive in `ms`, then stopped at the receiver's feet.
+ */
+const play = async (page, kit, { moves = {}, to = null, ms = 1000, kicker = null, stop = true }) => {
   const steps = Math.max(1, Math.round(ms / 100));
-  const from = await page.evaluate(([moves, kicker]) => {
+  const start0 = await page.evaluate(([moves, kicker, to, ms]) => {
     const g = window.__game, b = g.village.places.village.balls[0];
-    if (kicker) (kicker === 'me' ? g.player : g.village.remotes.get(kicker))?.kick?.(0.8);
-    const start = {}; for (const id of Object.keys(moves)) { const c = id === 'me' ? g.player : g.village.remotes.get(id); start[id] = [c.group.position.x, c.group.position.z]; }
-    return { ball: [b.position.x, b.position.z], start };
-  }, [moves, kicker]);
+    if (kicker) g.village.remotes.get(kicker)?.kick?.(0.8);
+    if (to) {
+      const dx = to[0] - b.position.x, dz = to[1] - b.position.z, d = Math.hypot(dx, dz), T = ms / 1000;
+      const v0 = d * Math.log(1 / 0.35) / (1 - Math.pow(0.35, T));
+      b.setState({ x: b.position.x, z: b.position.z, vx: dx / d * v0, vz: dz / d * v0 });
+    }
+    const start = {}; for (const id of Object.keys(moves)) { const c = g.village.remotes.get(id); start[id] = [c.group.position.x, c.group.position.z]; }
+    return start;
+  }, [moves, kicker, to, ms]);
   for (let i = 1; i <= steps; i++) {
     const k = i / steps;
-    await page.evaluate(([moves, start, ball, to, k]) => {
-      const g = window.__game, b = g.village.places.village.balls[0], states = [];
+    await page.evaluate(([moves, start, k]) => {
+      const states = [];
       for (const [id, [x, z]] of Object.entries(moves)) {
-        const [sx, sz] = start[id], px = sx + (x - sx) * k, pz = sz + (z - sz) * k, rot = Math.atan2(x - sx, z - sz);
-        if (id === 'me') { g.player.position.set(px, 0, pz); g.player.group.rotation.y = rot; } else states.push({ id, x: px, z: pz, rot, moving: k < 1 });
+        const [sx, sz] = start[id];
+        states.push({ id, x: sx + (x - sx) * k, z: sz + (z - sz) * k, rot: Math.atan2(x - sx, z - sz), moving: k < 1 });
       }
-      if (states.length) g.village.remotes.setStates(states);
-      if (to) { const e = 1 - (1 - k) * (1 - k); b.setState({ x: ball[0] + (to[0] - ball[0]) * e, z: ball[1] + (to[1] - ball[1]) * e }); }
-    }, [moves, from.start, from.ball, to, k]);
+      if (states.length) window.__game.village.remotes.setStates(states);
+    }, [moves, start0, k]);
     await kit.sleep(100);
   }
+  if (to && stop) await page.evaluate(() => { const b = window.__game.village.places.village.balls[0]; b.setState({ x: b.position.x, z: b.position.z }); });
 };
-
 
 /**
  * The giant chess on the square (VillageSquare.js CHESS: 8 × 1.1 m squares around (−15, 15), white at the
@@ -358,26 +366,26 @@ export const EPISODES = {
     scenes: [
       {
         name: 'mWide', seconds: 4.0,
-        setup: async (kit) => pitch(kit, { me: [33, 31], ball: [30, 33], cam: [31, 4.2, 41.5], look: [34, 0.6, 31],
-          team: { b1: [29.5, 34], b2: [31, 27], r1: [36, 33], r2: [37, 28.5], rk: [44.6, 32] } }),
+        setup: async (kit) => pitch(kit, { ball: [30, 33], cam: [31, 4.2, 41.5], look: [34, 0.6, 31],
+          team: { me: [33, 31], b1: [29.4, 33.6], b2: [31, 27.5], r1: [36, 33], r2: [37, 28.5], rk: [44.6, 32] } }),
         act: async (kit, page) => {
           await kit.caption(page, 'Halı saha: 3’e 3', 'مباراة كرة قدم: ٣ ضد ٣!');
-          await play(page, kit, { kicker: 'b1', to: [31.2, 27.6], ms: 900, moves: { b1: [30.5, 33.5], r1: [34.5, 31], r2: [35, 28.5] } });
-          await play(page, kit, { moves: { b2: [32, 27.8], me: [35.5, 32.5], r1: [35, 30.5] }, ms: 800 });
-          await play(page, kit, { kicker: 'b2', to: [35.4, 32.2], ms: 900, moves: { b1: [33, 35], r2: [36.8, 30], rk: [44.4, 32.4] } });
+          await play(page, kit, { kicker: 'b1', to: [31.4, 27.9], ms: 900, moves: { b1: [30.6, 33.4], me: [36.2, 33.2], r1: [33.4, 30.6], r2: [34, 28.4] } });
+          await play(page, kit, { to: [33.6, 27.7], ms: 700, stop: false, moves: { b2: [33.1, 27.7], me: [37.8, 32.6], r1: [32.6, 29.2], b1: [33.5, 35.4] } });
+          await play(page, kit, { kicker: 'b2', to: [37.4, 32.3], ms: 900, moves: { b2: [34.6, 27.2], r2: [36.4, 30.2], rk: [44.4, 32.6], b1: [36, 35.8] } });
         },
       },
       {
         name: 'mGoal', seconds: 4.4,
-        setup: async (kit) => pitch(kit, { me: [38, 31.5], ball: [38.7, 31.5], cam: [35.2, 2.3, 30.4], look: [45.5, 0.6, 32.2],
-          team: { b1: [36.5, 33.8], b2: [36, 29.2], r1: [41.2, 34.6], r2: [42.2, 28.6], rk: [44.6, 32] } }),
+        setup: async (kit) => pitch(kit, { ball: [38.8, 31.5], cam: [35.2, 2.3, 30.4], look: [45.5, 0.6, 32.2],
+          team: { me: [38, 31.5], b1: [35.4, 34.2], b2: [35, 28.6], r1: [41.2, 34.8], r2: [42.2, 28.4], rk: [44.6, 32] } }),
         act: async (kit, page) => {
           await kit.caption(page, 'Şut… GOL!', 'سدّد… هدف!');
-          await play(page, kit, { moves: { me: [39.6, 31.5], r1: [41, 33.4], r2: [41.6, 29.6] }, to: [40.3, 31.5], ms: 700 });
-          await play(page, kit, { kicker: 'me', to: [46.6, 33.6], ms: 700, moves: { rk: [44.5, 30.6] } });
+          await play(page, kit, { to: [41, 31.6], ms: 700, stop: false, moves: { me: [40.4, 31.6], r1: [41.3, 33.2], r2: [41.8, 30], b1: [37.6, 34.4] } });
+          await play(page, kit, { kicker: 'me', to: [46.9, 33.7], ms: 500, stop: false, moves: { rk: [44.6, 30.4], me: [41.2, 31.6] } });
           await showLabels(page);
-          await page.evaluate(() => { const g = window.__game; g.labels.bubble(g.player, 'Gooool!', null, 2.5, 'هدف!'); g.labels.bubble(g.village.remotes.get('b2'), 'Harikasın!', null, 2.5, 'أنت رائع!'); g.world.get('village').writeScore?.(1, 0); });
-          await play(page, kit, { moves: { b1: [38, 33], b2: [37.5, 30], me: [40.5, 31.8] }, ms: 1500 });
+          await page.evaluate(() => { const g = window.__game, r = g.village.remotes; g.labels.bubble(r.get('me'), 'Gooool!', null, 2.5, 'هدف!'); g.labels.bubble(r.get('b2'), 'Harikasın!', null, 2.5, 'أنت رائع!'); g.world.get('village').writeScore?.(1, 0); });
+          await play(page, kit, { moves: { b1: [41, 33], b2: [40.6, 30.4], me: [42.4, 31.8] }, ms: 1500 });
         },
       },
       {
