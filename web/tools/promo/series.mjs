@@ -163,6 +163,48 @@ const play = async (page, kit, { moves = {}, to = null, ms = 1000, kicker = null
   }
 };
 
+
+/**
+ * The giant chess on the square (VillageSquare.js CHESS: 8 × 1.1 m squares around (−15, 15), white at the
+ * south edge): two players face each other at it, two friends watch from İsmail Dede's bench on the east
+ * side. The board follows a short game (the scholar's mate) through ChessGame's own server state, so the
+ * pieces slide as in the game. `MATE[i]`: { from, to, fen } after move i.
+ */
+const MATE = [
+  { from: 'e2', to: 'e4', fen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1' },
+  { from: 'e7', to: 'e5', fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2' },
+  { from: 'f1', to: 'c4', fen: 'rnbqkbnr/pppp1ppp/8/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR b KQkq - 1 2' },
+  { from: 'b8', to: 'c6', fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3' },
+  { from: 'd1', to: 'h5', fen: 'r1bqkbnr/pppp1ppp/2n5/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 3 3' },
+  { from: 'g8', to: 'f6', fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4' },
+  { from: 'h5', to: 'f7', fen: 'r1bqkb1r/pppp1Qpp/2n2n2/4p3/2B1P3/8/PPPP1PPP/RNB1K1NR b KQkq - 0 4' },
+];
+const board = (page, i, over = false) => page.evaluate(([m, over]) => {
+  window.__game.chess.applyServer({
+    v: 1, phase: over ? 'over' : 'playing', fen: m ? m.fen : 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', last: m ? { from: m.from, to: m.to } : null,
+    seats: { w: { id: 'p1', name: 'Ahmet' }, b: { id: 'p2', name: 'Omar' } }, queue: [], scores: [], clocks: null, timed: false, draw: { offer: null, declined: null },
+    result: over ? { winner: 'w', reason: 'checkmate' } : null,
+  });
+}, [i < 0 ? null : MATE[i], over]);
+const chessScene = async (kit, { upTo = -1, cam, look }) => {
+  const page = await start(kit);
+  await page.evaluate(() => {
+    const g = window.__game, loc = g.world.get('village');
+    g.cast.dismiss?.('ismail'); // (the bench is the friends' today)
+    g.player.position.set(-15, 0, 20.5); g.player.group.rotation.y = Math.PI; // white, at the south edge, facing the board
+    const add = (id, name, outfit, key, x, z, rot, sit = false) => { const [gender, style] = key.split('-'); g.village.remotes.add(loc, { id, name, look: { outfit, gender, style }, x, z, rot, sit }); };
+    add('p2', 'Omar', 'sweater', 'boy-strong', -15, 9.5, 0);
+    add('w1', 'Yusuf', 'jersey', 'boy-modest', -8.6, 16.7, -Math.PI / 2, true);
+    add('w2', 'Mariam', 'casual', 'girl-covered', -8.6, 18.3, -Math.PI / 2, true);
+  });
+  await board(page, upTo);
+  await kit.sleep(1800);
+  await fixed(page, cam, look);
+  await kit.sleep(600);
+  return page;
+};
+const speak = (page, who, tr, ar) => page.evaluate(([who, tr, ar]) => { const g = window.__game, c = who === 'me' ? g.player : g.village.remotes.get(who); g.labels.bubble(c, tr, null, 2.6, ar); }, [who, tr, ar]);
+
 export const EPISODES = {
   // 0 · a hook for Arabic speakers: the flag, "do you have to watch silly series to learn Turkish?", then the garden tasks from far away
   garden: {
@@ -364,6 +406,48 @@ export const EPISODES = {
       tr: ['Köy meydanında halı saha: üçe üç!', 'Şut… ve gol!', 'Maçtan sonra kahvede dama.', 'Türk Ailem, Google Play’de ücretsiz.'],
       en: ['A three-on-three on the village pitch!', 'Shoot… goal!', 'Then dama at the café.', 'My Turkish Family, free on Google Play.'],
       ar: ['مباراة ثلاثة ضد ثلاثة في ساحة القرية!', 'سدّد… هدف!', 'ثم لعبة الداما في المقهى.', 'عائلتي التركية، مجانًا على غوغل بلاي.'],
+    },
+  },
+  // 0d · giant chess on the square: two players face to face, two friends watch from the bench, then mate
+  satranc: {
+    scenes: [
+      {
+        name: 'cWide', seconds: 4.2,
+        setup: async (kit) => chessScene(kit, { cam: [-23.5, 6.8, 26], look: [-12.5, 0, 14] }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Köy meydanında dev satranç', 'شطرنج عملاق في ساحة القرية!');
+          await kit.sleep(500); await board(page, 0);
+          await kit.sleep(1300); await board(page, 1);
+        },
+      },
+      {
+        name: 'cMoves', seconds: 4.6,
+        setup: async (kit) => chessScene(kit, { upTo: 1, cam: [-15.9, 3.3, 24.6], look: [-15, 0.4, 13.5] }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Fil, at, vezir: taşların Türkçesi', 'تعلّم أسماء القطع بالتركية');
+          await showLabels(page);
+          await board(page, 2); await speak(page, 'me', 'Fil c4’e!', 'الفيل إلى c4!');
+          await kit.sleep(1300); await board(page, 3); await speak(page, 'p2', 'At c6’ya.', 'الحصان إلى c6.');
+          await kit.sleep(1300); await board(page, 4); await speak(page, 'me', 'Vezir h5’e!', 'الوزير إلى h5!');
+        },
+      },
+      {
+        name: 'cMate', seconds: 4.4,
+        setup: async (kit) => chessScene(kit, { upTo: 5, cam: [-5.6, 2.4, 21.2], look: [-12.6, 0.8, 15.2] }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Şah mat!', 'كش مات!');
+          await showLabels(page);
+          await kit.sleep(400); await board(page, 6, true); await speak(page, 'me', 'Şah mat!', 'كش مات!');
+          await kit.sleep(1100); await speak(page, 'w1', 'Bravo!', 'برافو!');
+          await kit.sleep(700); await speak(page, 'w2', 'Harika oyun!', 'لعبة رائعة!');
+        },
+      },
+      endCard('cEnd'),
+    ],
+    vo: {
+      tr: ['Köy meydanında dev satranç!', 'Fil, at, vezir: taşların Türkçesini oynayarak öğren.', 'Şah mat!', 'Türk Ailem, Google Play’de ücretsiz.'],
+      en: ['Giant chess on the village square!', 'Bishop, knight, queen: learn the Turkish names as you play.', 'Checkmate!', 'My Turkish Family, free on Google Play.'],
+      ar: ['شطرنج عملاق في ساحة القرية!', 'الفيل، الحصان، الوزير… تعلّم أسماءها بالتركية وأنت تلعب.', 'كش مات!', 'عائلتي التركية، مجانًا على غوغل بلاي.'],
     },
   },
   // 1 · the park: the slide, the swings, the children to make friends with
