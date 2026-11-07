@@ -39,6 +39,7 @@ export class PlayStats {
     if (dir) {
       mkdirSync(dir, { recursive: true });
       this.#load();
+      this.flush(); // remove any retired age-survey data before serving requests
       this.#timer = setInterval(() => this.flush(), 60000); this.#timer.unref?.();
     }
   }
@@ -52,7 +53,7 @@ export class PlayStats {
   }
 
   #load() {
-    try { for (const [h, v] of Object.entries(JSON.parse(readFileSync(join(this.dir, 'devices.json'), 'utf8')))) this.#devices.set(h, v); } catch { /* none yet */ }
+    try { for (const [h, v] of Object.entries(JSON.parse(readFileSync(join(this.dir, 'devices.json'), 'utf8')))) { if ('age' in v) { delete v.age; this.#dirty = true; } this.#devices.set(h, v); } } catch { /* none yet */ }
     for (let k = DAYS - 1; k >= 0; k--) {
       const d = day(Date.now() - k * 86400000), f = join(this.dir, `${d}.jsonl`);
       if (!existsSync(f)) continue;

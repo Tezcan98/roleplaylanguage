@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PlayStats } from '../src/PlayStats.js';
@@ -212,4 +212,20 @@ test('first-minutes sub-page: a button on the numbers page leads to it; steps, d
   const sub = get('/api/istatistik?key=k&sayfa=ilk');
   assert.match(sub, /İlk dakikalar/); assert.match(sub, /Oyuna girdi/); assert.match(sub, /Bu adıma ulaşmayan/); assert.match(sub, /1 \(%50\)/);
   assert.match(sub, /Türkiye/); assert.match(sub, /Hindistan/); assert.match(sub, /talk-mom/);
+});
+
+test('retired age survey: purge stored ages on startup and ignore old-client submissions', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'retired-age-'));
+  try {
+    writeFileSync(join(dir, 'devices.json'), JSON.stringify({ legacy: { first: '2026-11-01', last: '2026-11-02', sec: 60, counts: {}, age: { band: '25-34', days: {} } } }));
+    const s = new PlayStats({ dir });
+    const saved = JSON.parse(readFileSync(join(dir, 'devices.json'), 'utf8'));
+    assert.equal(saved.legacy.age, undefined);
+    assert.equal(saved.legacy.sec, 60, 'general game statistics remain');
+    s.record(batch({ age: { band: '25-34', v: 1, at: Date.now(), sec: 60, counts: { quest: 1 } } }));
+    s.flush();
+    const updated = JSON.parse(readFileSync(join(dir, 'devices.json'), 'utf8'));
+    assert.ok(Object.values(updated).every((d) => !('age' in d)));
+    assert.equal(s.summary().age, undefined);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
 });

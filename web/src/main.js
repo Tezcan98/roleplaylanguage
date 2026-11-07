@@ -182,6 +182,8 @@ const host = document.getElementById('ui');
 
 // --- core ---
 const settings = new Settings();
+// Retired age survey: discard its local value without disturbing the player's save.
+if (settings.get('ageAnalysis')) settings.set('ageAnalysis', null);
 /** Sound levels from the settings, 0–1: "Ses" (everything), "Karakter sesleri", "Müzik" (older saves: the on/off switches). */
 const soundSetting = (k) => { const v = settings.get(`${k}Vol`); return typeof v === 'number' ? Math.max(0, Math.min(1, v)) : settings.get(`${k}On`, true) ? 1 : 0; };
 const voicesLevel = () => soundSetting('sound') * soundSetting('voices'), musicLevel = () => soundSetting('sound') * soundSetting('music');
