@@ -114,6 +114,55 @@ const hdFriends = (page, ids = null, radius = 10) => page.evaluate(([ids, r]) =>
   }
 }, [ids, radius]);
 
+
+/**
+ * A 3-on-3 on the square's pitch (VillageSquare.js SQUARE_PITCH: x 6…46, z 20…44, the goals at z 29…35):
+ * the player and five others drawn the way the game draws other online players (RemotePlayers), in HD —
+ * red football shirts (the player's team) against navy tracksuits. `team` { id: [x, z] } where everyone starts; the ball at `ball`.
+ */
+const TEAM = { b1: ['Yusuf', 'jersey', 'boy-modest'], b2: ['Ali', 'jersey', 'boy-strong'], r1: ['Omar', 'sport', 'boy-strong'], r2: ['Bilal', 'sport', 'boy-modest'], rk: ['Hamza', 'sport', 'boy-strong'] };
+const pitch = async (kit, { me, team, ball, cam, look }) => {
+  const page = await start(kit);
+  await page.evaluate(([me, team, ball, TEAM]) => {
+    const g = window.__game, loc = g.world.get('village'), w = g.wallet, it = { id: 'hd-jersey', slot: 'body' };
+    w.buy({ ...it, price: 0 }); w.equip(it); g.shop.onOutfit?.(); // the player in the red football shirt too
+    g.player.position.set(me[0], 0, me[1]); g.player.group.rotation.y = Math.PI / 2;
+    for (const [id, [x, z]] of Object.entries(team)) {
+      const [name, outfit, key] = TEAM[id], [gender, style] = key.split('-');
+      g.village.remotes.add(loc, { id, name, look: { outfit, gender, style }, x, z, rot: id.startsWith('r') ? -Math.PI / 2 : Math.PI / 2 });
+    }
+    const b = g.village.places.village.balls[0]; b.setState({ x: ball[0], z: ball[1] });
+    g.village.places.village.balls.slice(1).forEach((o) => o.setState({ x: 8, z: 22 })); // (the second ball out of the way)
+  }, [me, team, ball, TEAM]);
+  await kit.sleep(1800);
+  await fixed(page, cam, look);
+  await kit.sleep(600);
+  return page;
+};
+/** Everyone runs to their next spot, the ball rolls from where it is to `to` over `ms` (a pass), in small steps. */
+const play = async (page, kit, { moves = {}, to = null, ms = 1000, kicker = null }) => {
+  const steps = Math.max(1, Math.round(ms / 100));
+  const from = await page.evaluate(([moves, kicker]) => {
+    const g = window.__game, b = g.village.places.village.balls[0];
+    if (kicker) (kicker === 'me' ? g.player : g.village.remotes.get(kicker))?.kick?.(0.8);
+    const start = {}; for (const id of Object.keys(moves)) { const c = id === 'me' ? g.player : g.village.remotes.get(id); start[id] = [c.group.position.x, c.group.position.z]; }
+    return { ball: [b.position.x, b.position.z], start };
+  }, [moves, kicker]);
+  for (let i = 1; i <= steps; i++) {
+    const k = i / steps;
+    await page.evaluate(([moves, start, ball, to, k]) => {
+      const g = window.__game, b = g.village.places.village.balls[0], states = [];
+      for (const [id, [x, z]] of Object.entries(moves)) {
+        const [sx, sz] = start[id], px = sx + (x - sx) * k, pz = sz + (z - sz) * k, rot = Math.atan2(x - sx, z - sz);
+        if (id === 'me') { g.player.position.set(px, 0, pz); g.player.group.rotation.y = rot; } else states.push({ id, x: px, z: pz, rot, moving: k < 1 });
+      }
+      if (states.length) g.village.remotes.setStates(states);
+      if (to) { const e = 1 - (1 - k) * (1 - k); b.setState({ x: ball[0] + (to[0] - ball[0]) * e, z: ball[1] + (to[1] - ball[1]) * e }); }
+    }, [moves, from.start, from.ball, to, k]);
+    await kit.sleep(100);
+  }
+};
+
 export const EPISODES = {
   // 0 · a hook for Arabic speakers: the flag, "do you have to watch silly series to learn Turkish?", then the garden tasks from far away
   garden: {
@@ -260,6 +309,61 @@ export const EPISODES = {
       tr: ['Dede sana Türkçe ekmeyi öğretiyor!', 'Toprağı çapala,', 'tohum ek,', 've sula.', 'Bak, nasıl büyüyor!', 'Sonra hasat et,', 'sat ve yeni tohum al.', 'Türk Ailem, Google Play’de ücretsiz.'],
       en: ['Grandpa teaches you to farm, in Turkish!', 'Hoe the soil,', 'sow the seeds,', 'and water them.', 'Watch them grow!', 'Then harvest,', 'sell, and buy new seeds.', 'My Turkish Family, free on Google Play.'],
       ar: ['جدّك يعلّمك الزراعة… بالتركية!', 'احرث التربة،', 'ازرع البذور،', 'واسقِها بالماء.', 'شاهدها تكبر!', 'ثم احصد محصولك،', 'بِعه، واشترِ بذورًا جديدة.', 'عائلتي التركية، مجانًا على غوغل بلاي.'],
+    },
+  },
+  // 0c · a 3-on-3 on the square, then dama in the kahvehane with Rıfat Amca
+  mac: {
+    scenes: [
+      {
+        name: 'mWide', seconds: 4.0,
+        setup: async (kit) => pitch(kit, { me: [33, 31], ball: [30, 33], cam: [31, 4.2, 41.5], look: [34, 0.6, 31],
+          team: { b1: [29.5, 34], b2: [31, 27], r1: [36, 33], r2: [37, 28.5], rk: [44.6, 32] } }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Halı saha: 3’e 3', 'مباراة كرة قدم: ٣ ضد ٣!');
+          await play(page, kit, { kicker: 'b1', to: [31.2, 27.6], ms: 900, moves: { b1: [30.5, 33.5], r1: [34.5, 31], r2: [35, 28.5] } });
+          await play(page, kit, { moves: { b2: [32, 27.8], me: [35.5, 32.5], r1: [35, 30.5] }, ms: 800 });
+          await play(page, kit, { kicker: 'b2', to: [35.4, 32.2], ms: 900, moves: { b1: [33, 35], r2: [36.8, 30], rk: [44.4, 32.4] } });
+        },
+      },
+      {
+        name: 'mGoal', seconds: 4.4,
+        setup: async (kit) => pitch(kit, { me: [38, 31.5], ball: [38.7, 31.5], cam: [35.2, 2.3, 30.4], look: [45.5, 0.6, 32.2],
+          team: { b1: [36.5, 33.8], b2: [36, 29.2], r1: [41.2, 34.6], r2: [42.2, 28.6], rk: [44.6, 32] } }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Şut… GOL!', 'سدّد… هدف!');
+          await play(page, kit, { moves: { me: [39.6, 31.5], r1: [41, 33.4], r2: [41.6, 29.6] }, to: [40.3, 31.5], ms: 700 });
+          await play(page, kit, { kicker: 'me', to: [46.6, 33.6], ms: 700, moves: { rk: [44.5, 30.6] } });
+          await showLabels(page);
+          await page.evaluate(() => { const g = window.__game; g.labels.bubble(g.player, 'Gooool!', null, 2.5, 'هدف!'); g.labels.bubble(g.village.remotes.get('b2'), 'Harikasın!', null, 2.5, 'أنت رائع!'); g.world.get('village').writeScore?.(1, 0); });
+          await play(page, kit, { moves: { b1: [38, 33], b2: [37.5, 30], me: [40.5, 31.8] }, ms: 1500 });
+        },
+      },
+      {
+        name: 'mDama', seconds: 4.6,
+        setup: async (kit) => {
+          const page = await start(kit);
+          await page.evaluate(() => { const g = window.__game, a = g.world.get('village').anchors.get('kahve1'); g.player.position.set(a.x + 0.8, 0, a.z + 0.8); });
+          await kit.sleep(400);
+          await page.evaluate(() => window.__game.dama.playRifat());
+          await kit.sleep(2200);
+          return page;
+        },
+        act: async (kit, page) => {
+          await kit.caption(page, 'Sonra kahvede dama', 'ثم إلى المقهى… لعبة الداما!');
+          await kit.sleep(900);
+          await page.click('.dama.open .dama-board .cell.can').catch(() => {}); await kit.sleep(300);
+          await page.click('.dama.open .dama-board .cell.to').catch(() => {});
+          await kit.sleep(1500);
+          await showLabels(page);
+          await page.evaluate(() => { const g = window.__game; g.labels.bubble(g.cast.get('rifat'), 'Aferin, iyi hamle!', null, 2.5, 'أحسنت، نقلة جيدة!'); });
+        },
+      },
+      endCard('mEnd'),
+    ],
+    vo: {
+      tr: ['Köy meydanında halı saha: üçe üç!', 'Şut… ve gol!', 'Maçtan sonra kahvede dama.', 'Türk Ailem, Google Play’de ücretsiz.'],
+      en: ['A three-on-three on the village pitch!', 'Shoot… goal!', 'Then dama at the café.', 'My Turkish Family, free on Google Play.'],
+      ar: ['مباراة ثلاثة ضد ثلاثة في ساحة القرية!', 'سدّد… هدف!', 'ثم لعبة الداما في المقهى.', 'عائلتي التركية، مجانًا على غوغل بلاي.'],
     },
   },
   // 1 · the park: the slide, the swings, the children to make friends with
