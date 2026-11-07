@@ -11,6 +11,7 @@ export const EV = Object.freeze({
   HOTSPOT: 'hotspot:used',
   FLAG: 'flag:set',
   FREE_ACTION: 'free:action',
+  GARDEN: 'garden:changed',
   CREDITS: 'credits:changed',
   DIALOGUE_OPEN: 'dialogue:opened',
   DIALOGUE_CLOSE: 'dialogue:closed',

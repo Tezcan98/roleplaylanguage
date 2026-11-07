@@ -16,10 +16,11 @@ export class CardOverlay {
     this.modes = modes;
     this.num = el('p', { class: 'chap' });
     this.title = el('h2', { class: 'ctitle' });
+    this.illustration = el('div', { class: 'card-illustration', attrs: { 'aria-hidden': 'true', hidden: '' } });
     this.text = el('p', { class: 'ctext' });
     this.en = el('p', { class: 'cen en-t' });
     this.btn = el('button', { class: 'btn', attrs: { type: 'button' } });
-    this.root = el('div', { class: 'overlay story-card' }, [el('div', { class: 'card' }, [this.num, this.title, this.text, this.en, this.btn])]);
+    this.root = el('div', { class: 'overlay story-card' }, [el('div', { class: 'card' }, [this.num, this.title, this.illustration, this.text, this.en, this.btn])]);
     host.append(this.root);
   }
 
@@ -29,6 +30,9 @@ export class CardOverlay {
     if (this.root.classList.contains('open')) { this.#queue.push([card, onDone]); return; }
     this.num.textContent = card.num ?? '';
     this.title.textContent = card.title;
+    // Only internal, generated vector illustrations are supplied by content.
+    this.illustration.hidden = !card.illustration;
+    this.illustration.innerHTML = card.illustration ?? '';
     this.text.textContent = typeof card.text === 'function' ? card.text() : card.text;
     this.en.textContent = gloss(card.en) ?? '';
     const button = card.button ?? 'Başla', g = BUTTON_EN[button] && gloss(BUTTON_EN[button]);

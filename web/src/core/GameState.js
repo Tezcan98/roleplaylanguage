@@ -30,7 +30,7 @@ export class GameState {
 
   snapshot() {
     const { day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table } = this;
-    return structuredClone({ v: 1, storyRevision: 2, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table });
+    return structuredClone({ v: 1, storyRevision: 3, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table });
   }
 
   restore(data) {
@@ -40,6 +40,8 @@ export class GameState {
     Object.assign(this, structuredClone(rest));
     // Revision 2 removed quest index 1 (take-book) from chapter 4 (d1-night).
     if (storyRevision < 2 && this.chapter === 4 && this.quest >= 1) this.quest = Math.max(1, this.quest - 1);
+    // Revision 3 inserted four gardening quests after wake in d2-morning.
+    if (storyRevision < 3 && this.chapter === 5 && this.quest >= 1) this.quest += 4;
     // Older night saves may not have collected the book yet. School still needs it.
     if (this.chapter >= 4 && !this.inventory.kitap) this.inventory.kitap = 1;
     return true;

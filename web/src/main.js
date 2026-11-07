@@ -41,6 +41,10 @@ import { PlayerController } from './systems/PlayerController.js';
 import { CastDirector } from './systems/CastDirector.js';
 import { ItemSystem } from './systems/ItemSystem.js';
 import { EffectRunner } from './systems/EffectRunner.js';
+import { GardenSystem } from './systems/GardenSystem.js';
+import { GardenView } from './ui/GardenView.js';
+import { GardenReleaseIntro } from './ui/GardenReleaseIntro.js';
+import { GardenNotifications } from './platform/GardenNotifications.js';
 import { StoryDirector } from './systems/StoryDirector.js';
 import { TravelService } from './systems/TravelService.js';
 import { InteractionSystem, NpcInteractions, ItemInteractions, HotspotInteractions } from './systems/InteractionSystem.js';
@@ -244,6 +248,7 @@ const questPanel = new QuestPanel(host, { settings, onTap: (q) => directions.ope
 const labels = new LabelLayer(host, ctx);
 const joystick = new Joystick(host);
 const cards = new CardOverlay(host, modes);
+const gardenReleaseIntro = new GardenReleaseIntro({ cards, settings });
 const list = new ListModal(host, modes);
 const fader = new Fader(host);
 const sleepScreen = new SleepScreen(host, modes);
@@ -608,10 +613,19 @@ const kahveTalk = new AmbientTalk({ world, player, cast, labels, place: { locati
 const cirak = new KahveCirak({ world, mf, models, player, labels, vocab, speak: (t) => tts.speak(t, { speaker: 'kardes' }) });
 cirak.build();
 
-// your own garden bed: planting comes later — grandpa says you are still a bit young
+// The second morning's saved planting lesson.
+const garden = new GardenSystem({ state, inventory, story, bus, vocab, toasts, world, time });
+const gardenView = new GardenView(host, { modes, garden });
+const gardenNotifications = native ? new GardenNotifications({ plugin: nativeKit.LocalNotifications }) : null;
+const syncGardenNotifications = (ask = false) => gardenNotifications?.sync({ plots: garden.unlocked ? garden.data.plots : [], ask });
+bus.on(EV.GARDEN, ({ action }) => syncGardenNotifications(action === 'sow' || action === 'water'));
+bus.on(EV.CHAPTER, () => syncGardenNotifications());
+if (native) nativeKit.App.addListener('appStateChange', ({ isActive }) => { if (isActive && garden.unlocked) syncGardenNotifications(); });
+effects.register('farm-seeds', () => garden.giveSeeds());
 effects.register('my-garden', () => {
-  if (cast.where('dede') === world.current.id) { dialogue.open('dede', 'myGarden'); return; }
-  toasts.show('Dede: “Biraz büyü, sonra birlikte ekeriz.”', gloss('Grandpa: “Grow a little, then we will plant it together.”'));
+  if (garden.unlocked) { gardenView.open(); return; }
+  if (cast.where('dede') === world.current.id) { dialogue.open('dede', story.quest?.id === 'farm-seeds' ? 'farmIntro' : state.day >= 2 && !state.flags['farm-seeds-given'] ? 'farmOffer' : 'myGarden'); return; }
+  toasts.show('Bahçeyi ekmeyi öğrenmek için ikinci gün dedenle konuş.', 'Talk to grandpa on the second day to learn how to plant.');
 });
 
 // --- interaction ---
@@ -869,7 +883,7 @@ function showBoost() {
 showBoost(); setInterval(showBoost, 1000);
 
 // --- event wiring (UI reacts to the model) ---
-const refreshQuest = () => questPanel.show(story.objective());
+const refreshQuest = () => { questPanel.show(story.objective()); questPanel.showSide(garden.sideObjective()); };
 bus.on(EV.TIME, () => hud.setTime(time.dayName, time.label, time.isNight));
 bus.on(EV.WORD, ({ size }) => hud.setWords(size));
 bus.on(EV.INVENTORY, () => { hud.setBag(inventory.size); hud.setMoney(inventory.count('para')); hud.setTextbook(inventory.has('kitap')); refreshQuest(); });
@@ -906,6 +920,7 @@ const enterPlay = () => {
   modes.setBase('play');
   document.body.classList.remove('menu');
   autosaveOn = true;
+  gardenReleaseIntro.showIfNeeded();
   if (village.places[world.current.id]) village.join(); // in the square already (a new game starts in the park; a saved one may be there): among the others at once
 };
 const intro = new IntroSlides(host, modes);
@@ -1009,6 +1024,8 @@ else {
   else if (again && saved) { menu.hide(); continueGame(); } else offerDaily();
 }
 if (native) scheduleDailyReminder(nativeKit.LocalNotifications); // keep tomorrow's reminder
+// Before Continue, state is still empty: restore pending alerts from the saved garden.
+gardenNotifications?.sync({ plots: saved?.flags?.['farm-v2']?.plots ?? [] });
 // Play Games sign-in (silent for Play Games users): the player id goes with what they write, for the safety log
 if (native) nativeKit.PlayGames.signIn().then((r) => { if (r?.signedIn && r.playerId) settings.set('playGamesId', r.playerId); }).catch(() => {});
 

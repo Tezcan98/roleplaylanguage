@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { Foliage } from '../../engine/Foliage.js';
+import { bakeStatic } from '../../engine/StaticBatch.js';
+import { CROPS } from '../../systems/GardenSystem.js';
 // import { addTrashBin } from '../trashBin.js';
 
 const DARK = { tex: 'darkWood' };
@@ -9,6 +11,30 @@ const DARK = { tex: 'darkWood' };
 export class Yard extends Location {
   constructor() {
     super({ id: 'yard', name: 'Avlu', spawn: 'houseDoor', bounds: { x: [-23, 23], z: [-23, 23] } });
+  }
+
+  setGardenState(flags, day, now = Date.now()) {
+    this.gardenFlags = flags; this.gardenDay = day;
+    if (!this.farmVisual) return;
+    const v = this.farmVisual;
+    if (v.tiles) {
+      v.tiles.forEach((tile, i) => {
+        const p = flags['farm-v2']?.plots[i] ?? { hoed: i < 3 && flags['farm-hoed'], crop: i < (flags['farm-sown'] ?? 0) ? 'bean' : null, wateredAt: null };
+        const growing = p.crop && p.wateredAt != null;
+        const progress = growing ? Math.min(1, Math.max(0, now - p.wateredAt) / (CROPS[p.crop].minutes * 60000)) : 0;
+        tile.furrows.visible = !!p.hoed;
+        tile.wet.visible = !!growing;
+        tile.seed.visible = !!p.crop && !growing;
+        tile.plant.visible = !!growing;
+        tile.plant.scale.setScalar(.35 + progress * .65);
+        Object.entries(tile.fruits).forEach(([id, group]) => { group.visible = progress >= 1 && p.crop === id; });
+      });
+      return;
+    }
+    v.furrows.visible = !!flags['farm-hoed'];
+    v.wet.visible = !!flags['farm-watered'];
+    v.seeds.forEach((m, i) => { m.visible = i < (flags['farm-sown'] ?? 0); });
+    v.sprouts.forEach((m, i) => { m.visible = !!flags['farm-watered'] && day > flags['farm-day'] && i < (flags['farm-sown'] ?? 0); });
   }
 
   /** House front at z = -11, 19 m × 8 m (the rooms inside are 25 m long: a little magic, but close). */
@@ -130,7 +156,7 @@ export class Yard extends Location {
     this.hotspot('yard.garden', 12.4, -3, 1.4);
 
     // the player's own garden bed: as big as grandpa's and in line with it, across the path he walks
-    // (empty for now: planting comes when you are older)
+    // Nine independent beds mirror the planting interface, including timed growth and fruit.
     const G = { x: 9, z: 4, w: 6, d: 5 };
     add(mf.at(mf.box(G.w, 0.1, G.d, { tex: 'dirt', repeat: [2, 2], color: 0x8A5E40 }), G.x, 0.05, G.z));
     [-1, 1].forEach((s) => add(mf.at(mf.box(G.w + 0.2, 0.18, 0.1, DARK), G.x, 0.09, G.z + s * (G.d / 2 + 0.05)))); // the wooden edge
@@ -138,6 +164,53 @@ export class Yard extends Location {
     add(mf.at(mf.box(0.08, 0.9, 0.08, DARK), G.x - G.w / 2 + 0.4, 0.45, G.z - G.d / 2 - 0.15));
     add(mf.at(mf.box(0.9, 0.45, 0.05, { tex: 'myGardenSign' }), G.x - G.w / 2 + 0.4, 0.95, G.z - G.d / 2 - 0.11)).rotation.y = Math.PI; // facing the path
     this.hotspot('yard.myGarden', G.x, G.z - G.d / 2 - 0.4, 1.6);
+    this.anchor('myGardenTeacher', 6.2, 0.6, Math.PI / 2);
+    // Dynamic soil stays out of static batching, so progress survives room changes.
+    const farm = this.live(mf.group());
+    add(farm);
+    const tiles = [];
+    for (let i = 0; i < 9; i++) {
+      const x = 7.15 + (i % 3) * 1.85, z = 2.35 + Math.floor(i / 3) * 1.65;
+      const tile = mf.group(); tile.position.set(x, .14, z); farm.add(tile);
+      tile.add(mf.at(mf.box(1.56, .08, 1.36, 0xA27C4D), 0, 0, 0));
+      const wet = mf.at(mf.box(1.5, .02, 1.3, 0x60422F), 0, .05, 0); tile.add(wet);
+      const furrows = mf.group(); tile.add(furrows);
+      for (let r = 0; r < 3; r++) furrows.add(mf.at(mf.box(1.3, .04, .07, 0x70472D), 0, .07, -.4 + r * .4));
+      bakeStatic(furrows);
+      const seed = mf.at(mf.sphere(.14, 0xD3B27B, 8), 0, .1, 0); seed.scale.y = .4; tile.add(seed);
+      const plant = mf.group(); tile.add(plant);
+      plant.add(mf.at(mf.cyl(.035, .045, .85, 0x4E7B37, 6), 0, .48, 0));
+      for (let level = 0; level < 3; level++) for (const side of [-1, 1]) {
+        const leaf = mf.at(mf.sphere(.24, side < 0 ? 0x558E3F : 0x83B451, 8), side * .2, .3 + level * .23, 0);
+        leaf.scale.set(1.2, .22, .65); leaf.rotation.z = side * .35; plant.add(leaf);
+      }
+      const fruits = {};
+      for (const [id, color] of [['bean',0xA8C653],['tomato',0xE35F40],['pepper',0xE8B83D]]) {
+        const fruit = mf.group(); plant.add(fruit); fruits[id] = fruit;
+        for (const [fx,fy,fz] of [[-.24,.48,.12],[.25,.68,.04],[.03,.3,.2]]) {
+          const m = mf.at(mf.sphere(id === 'tomato' ? .15 : .11, color, 8), fx, fy, fz);
+          if (id !== 'tomato') m.scale.set(id === 'bean' ? .65 : 1, 2, .7);
+          fruit.add(m);
+        }
+        bakeStatic(fruit); this.live(fruit);
+      }
+      bakeStatic(plant);
+      tiles.push({ furrows, wet, seed, plant, fruits });
+    }
+    let gardenTick = 0;
+    this.animated.push((dt) => {
+      gardenTick += dt;
+      if (gardenTick >= 1) { gardenTick = 0; this.setGardenState(this.gardenFlags ?? {}, this.gardenDay ?? 1); }
+    });
+    // A hoe and watering can are already at the plot; no extra fetch errands.
+    const hoe = mf.group(); hoe.position.set(11.9, 0, 1);
+    const handle = mf.at(mf.cyl(0.035, 0.035, 1.1, DARK, 6), 0, 0.55, 0); handle.rotation.z = 0.3; hoe.add(handle);
+    hoe.add(mf.at(mf.box(0.35, 0.08, 0.2, 0x606B72), 0.15, 0.08, 0)); add(hoe);
+    const can = mf.group(); can.position.set(12.4, 0, 1.7);
+    can.add(mf.at(mf.cyl(0.18, 0.18, 0.35, 0x4B8E9A, 10), 0, 0.2, 0));
+    const spout = mf.at(mf.cyl(0.045, 0.06, 0.45, 0x4B8E9A, 8), -0.24, 0.28, 0); spout.rotation.z = 0.9; can.add(spout); add(can);
+    this.farmVisual = { tiles };
+    this.setGardenState(this.gardenFlags ?? {}, this.gardenDay ?? 1);
     // where the cow and the sheep graze (quest arrows; the chores themselves are next to the animal: systems/Animals.js)
     this.hotspot('yard.cow', 14, -10, 0.01);
     this.hotspot('yard.sheep', -12.4, 14.5, 0.01);

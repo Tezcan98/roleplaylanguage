@@ -292,7 +292,7 @@ export const DIALOGUES = {
         options: [{ tr: 'Tabii dede! Kova nerede?', en: 'Sure! Where is the bucket?', next: 'd3' }, { tr: 'Olur. Kova nerede?', en: 'All right. Where is the bucket?', next: 'd3' }] },
       d2k: { say: 'Sağ ol evladım! Domateslere su veriyorum. Ama kova lazım. Kovayı getirir misin?', en: 'Thank you, my child! I am watering the tomatoes. But I need the bucket. Will you bring the bucket?', words: [['sağ ol', 'thanks (the answer to “kolay gelsin”)'], ['domates', 'tomato'], ['kova', 'bucket']],
         options: [{ tr: 'Tabii dede! Kova nerede?', en: 'Sure! Where is the bucket?', next: 'd3' }] },
-      d3: { say: 'Evin yanında, çeşmenin önünde.', en: 'Next to the house, in front of the tap.', words: [['çeşme', 'tap / fountain']],
+      d3: { say: 'Evin yanında, çeşmenin önünde. Yarın sana kendi bahçeni ekmeyi öğreteyim.', en: 'Next to the house, in front of the tap. Tomorrow I will teach you to plant your own garden.', words: [['çeşme', 'tap / fountain']],
         options: [{ tr: 'Hemen getiriyorum!', en: "I'm bringing it right away!", do: ['quest:talk-dede'] }, { tr: 'Tamam dede, geliyorum.', en: "Okay grandpa, I'm coming.", do: ['quest:talk-dede'] }] },
       dw: { say: 'Kova evin yanında, çeşmenin önünde.', en: 'The bucket is next to the house, in front of the tap.', options: [{ tr: 'Tamam dede.', en: 'Okay grandpa.' }] },
       dq: { say: 'Aa, getirdin mi? Söyle bakalım, bu ne?', en: 'Oh, did you bring it? Tell me, what is this?', hint: 'kova = bucket',

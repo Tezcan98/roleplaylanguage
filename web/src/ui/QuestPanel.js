@@ -13,8 +13,9 @@ export class QuestPanel {
     this.t = el('div', { class: 'qt' });
     this.o = el('div', { class: 'qo' });
     this.e = el('div', { class: 'qe en-t' });
+    this.side = el('div', { class: 'q-side', attrs: { hidden: '' } });
     this.toggle = el('button', { class: 'q-toggle fold-btn', attrs: { type: 'button' }, on: { click: (e) => { e.stopPropagation(); this.setCollapsed(!this.collapsed); } } });
-    this.root = el('div', { attrs: { id: 'quest' } }, [this.toggle, this.t, this.o, this.e]);
+    this.root = el('div', { attrs: { id: 'quest' } }, [this.toggle, this.t, this.o, this.e, this.side]);
     this.root.addEventListener('click', () => { if (this.collapsed) this.setCollapsed(false); else this.onTap?.(this.quest); });
     host.append(this.root);
     // what sits under it on the left (the "alone in the square" note) moves with its height
@@ -29,9 +30,16 @@ export class QuestPanel {
     this.settings?.set('questCollapsed', on);
   }
 
+  showSide(text) {
+    this.side.hidden = !text;
+    this.side.textContent = text ? `🌱 Yan görev: Bahçem · ${text}` : '';
+    this.root.hidden = !this.quest && !text;
+  }
+
   show(obj) {
     this.root.hidden = !obj;
     this.quest = obj;
+    for (const node of [this.t, this.o, this.e]) node.hidden = !obj;
     if (!obj) return;
     const title = `Görev: ${obj.title}`;
     if (this.collapsed && this.t.textContent && this.t.textContent !== title) { // a new task while folded: a blink
