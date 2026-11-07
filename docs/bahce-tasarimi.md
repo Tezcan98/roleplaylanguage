@@ -5,10 +5,10 @@
 ## İncelenen oyunlardan çıkarımlar
 
 - [FarmVille 3 — ekim ve hasat](https://zyngasupport.helpshift.com/hc/en/91-farmville-3/faq/14485-how-do-i-plant-and-harvest-crops/): boş alanı seçme, ürünü alanlara sürükleyerek ekme, büyümeyi bekleme ve araçla hasat. Bizde malzemeyi yanına yürüyerek alma ve tek bir toprağın yanında mevcut eylem düğmesine basma; her toprakta ayrı büyüme aşaması.
-- [Hay Day](https://supercell.com/en/games/hayday/) ve [resmî para rehberi](https://support.supercell.com/hay-day/en/articles/coins-diamonds.html): ürün satışı yeni üretimi besleyen bir döngü. Bizde hasat sepeti → bahçe parası → yeni tohum. Ana hikâyenin alışveriş parasıyla karışmaz.
+- [Hay Day](https://supercell.com/en/games/hayday/) ve [resmî para rehberi](https://support.supercell.com/hay-day/en/articles/coins-diamonds.html): ürün satışı yeni üretimi besleyen bir döngü. Bizde doğrudan hasat → bahçe parası → yeni tohum. Ana hikâyenin alışveriş parasıyla karışmaz.
 - [Stardew Valley — sulama](https://stardewvalleywiki.com/Watering_Cans): susuz ürünün gelişiminin durması anlaşılır bir bakım kuralı. Bizde can suyu büyümeyi başlatır; oyuncu oyundan çıkınca gelişim sürer ve ürün solmaz. Günlük bakım zorunluluğu eklenmedi.
 
-Bu oyunların varlıkları kopyalanmadı. Ahşap çerçeveli topraklar, çapa, sulama kabı, hasat sepeti ve satış kasası avluda yer alır. Tohum kutuları veya torbaları avluda durmaz; tüm tohumlar oyuncunun çantasındadır.
+Bu oyunların varlıkları kopyalanmadı. Ahşap çerçeveli topraklar, çapa, sulama kabı ve satış kasası avluda yer alır. Tohum kutuları veya torbaları avluda durmaz; tüm tohumlar oyuncunun çantasındadır.
 
 ## İlk ders
 
@@ -21,7 +21,7 @@ Bu oyunların varlıkları kopyalanmadı. Ahşap çerçeveli topraklar, çapa, s
 1. Çapa ile boş toprağı hazırla.
 2. Çantayı aç, tohumu seç ve “Ekmek için seç” düğmesine bas; hazır toprağın yanına gidip tohumu ek.
 3. Can suyu ver. Sayaç gerçek zamanla çalışır ve kayıt sonrası devam eder.
-4. Filiz → yapraklanma → olgun ürün. Sepet aracı yalnızca olgun ürünü toplar.
+4. Filiz → yapraklanma → olgun ürün. Olgun bitkinin yanında doğrudan “Hasat et” düğmesi çıkar. Sepet veya başka bir hasat aracı ele alınmaz.
 5. Bahçenin sağındaki boş kasada ürünleri sat, çantadaki tohum alışından yeni tohum al ve yeniden ek.
 
 | Ürün | Süre | Tohum bedeli | Hasat | Sepet değeri |
@@ -46,7 +46,7 @@ Bildirim planlama ve izin/iptal davranışı sahte yerel adaptörle test edildi;
 
 ## Telefon ve erişilebilirlik
 
-Ayrı menü, araç çubuğu veya ekim penceresi açılmaz. Oyuncu joystick/WASD ile yürür; telefonun mevcut eylem düğmesi veya E ile çapa ve sulama kabını alıp bir toprağa işlem yapar. Ekim sırasında çanta düğmesi vurgulanır; fasulye tohumu seçili açılır. Yakındaki işlem yapılabilir toprak altın bir halka ile işaretlenir. Avludan ayrılınca malzeme bırakılır.
+Ayrı menü, araç çubuğu veya ekim penceresi açılmaz. Oyuncu joystick/WASD ile yürür; telefonun mevcut eylem düğmesi veya E ile çapa ve sulama kabını alıp bir toprağa işlem yapar. Ekim sırasında çanta düğmesi vurgulanır; fasulye tohumu seçili açılır. Yakındaki işlem yapılabilir toprak altın bir halka ile işaretlenir. Bahçe çalışma alanından üç metre uzaklaşınca eldeki malzeme otomatik bırakılır; tohumlar envanterden silinmez. Avludan ayrılınca da malzeme bırakılır.
 
 ## Doğrulama
 

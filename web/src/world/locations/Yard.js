@@ -218,9 +218,6 @@ export class Yard extends Location {
     const can = mf.group(); can.position.set(GARDEN_TOOLS[1].x, 0, GARDEN_TOOLS[1].z);
     can.add(mf.at(mf.cyl(0.18, 0.18, 0.35, 0x4B8E9A, 10), 0, 0.2, 0));
     const spout = mf.at(mf.cyl(0.045, 0.06, 0.45, 0x4B8E9A, 8), -0.24, 0.28, 0); spout.rotation.z = 0.9; can.add(spout); add(can);
-    const basket = GARDEN_TOOLS[2];
-    add(mf.at(mf.box(.5, .3, .4, 0xAA784B), basket.x, .2, basket.z));
-    const handleBasket = mf.at(mf.torus(.22, .025, 0x8C613C), basket.x, .45, basket.z); add(handleBasket);
     const crate = mf.group(); crate.position.set(13, 0, 4.15);
     crate.add(mf.at(mf.box(.7, .08, .5, 0xA87848), 0, .08, 0));
     for (const side of [-1,1]) crate.add(mf.at(mf.box(.7, .28, .06, 0xB68A56), 0, .2, side*.25));

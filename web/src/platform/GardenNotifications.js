@@ -25,8 +25,8 @@ export function gardenNotificationPlan(plots, now = Date.now()) {
     id: FIRST_ID + group[0].i,
     title: 'Bahçende hasat zamanı! 🌱',
     body: group.length === 1
-      ? `${group[0].i + 1}. gözdeki ${CROPS[group[0].crop].name.toLocaleLowerCase('tr')} olgunlaştı. Sepetini al, hasada gel!`
-      : `${group.map(p => p.i + 1).join(', ')}. gözlerdeki ürünlerin olgunlaştı. Sepetini al, hasada gel!`,
+      ? `${group[0].i + 1}. gözdeki ${CROPS[group[0].crop].name.toLocaleLowerCase('tr')} olgunlaştı. Bahçene gel, olgun ürünlerini topla!`
+      : `${group.map(p => p.i + 1).join(', ')}. gözlerdeki ürünlerin olgunlaştı. Bahçene gel, olgun ürünlerini topla!`,
     // Last plant in the group must also be mature before announcing it.
     schedule: { at: new Date(Math.max(...group.map(p => p.at))) },
     extra: { garden: true, kind: 'harvest', plots: group.map(p => p.i) },

@@ -423,6 +423,7 @@ export class Character {
 
   /** Lightweight held garden props, visible on both the basic and HD characters. */
   holdGardenTool(tool, crop = 'bean', working = false) {
+    if(tool && !['hoe','water','sow'].includes(tool))tool=null;
     if (!tool) { if (this.heldGarden) this.heldGarden.visible = false; return; }
     if (this.heldGardenKind !== tool) {
       if (this.heldGarden) { this.heldGarden.visible = false; }
@@ -438,9 +439,6 @@ export class Character {
         } else if (tool === 'sow') {
           g.add(mf.box(.23, .3, .15, 0xD7B273));
           g.add(mf.at(mf.sphere(.065, 0x7F9B45, 6), 0, .02, .08));
-        } else {
-          g.add(mf.box(.34, .2, .24, 0xAA784B));
-          const handle = mf.torus(.15, .018, 0x8C613C); handle.position.y = .16; g.add(handle);
         }
         g.position.set(.33, .9, .16); this.group.add(g); this.gardenProps[tool] = g;
       }

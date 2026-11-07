@@ -7,7 +7,7 @@ import { gloss, glossLang, turkishOnly } from './Gloss.js';
  * dictionaries (assets/i18n/<code>.json); a button not listed shows its Turkish alone.
  */
 const EN = {
-  ...Object.fromEntries(['hoe','water','harvest','putBack','bag','yard'].map(key => [GARDEN_TEXT[key].tr,GARDEN_TEXT[key].en])),
+  ...Object.fromEntries(['hoe','water','putBack','bag','yard'].map(key => [GARDEN_TEXT[key].tr,GARDEN_TEXT[key].en])),
   'Eve dön': 'Go home', 'Eve gir': 'Go into the house', 'Dışarı çık': 'Go outside', 'Sokağa çık': 'Go out to the street', 'Bahçeye çık': 'Go out to the yard',
   'Köy meydanına git': 'Go to the village square', 'Okul bahçesine git ⚽': 'Go to the schoolyard ⚽', 'Ana menüye dön': 'Back to the main menu',
   'Yat, uyu': 'Lie down and sleep', 'Otur, kitap oku': 'Sit and read a book', 'Kitap oku': 'Read a book', 'Televizyon izle': 'Watch TV', 'Pencereden bak': 'Look out of the window',

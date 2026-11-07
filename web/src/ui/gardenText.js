@@ -2,7 +2,6 @@
 export const GARDEN_TEXT = {
   hoe: { tr: 'Çapayı al', en: 'Take the hoe' },
   water: { tr: 'Sulama kabını al', en: 'Take the watering can' },
-  harvest: { tr: 'Hasat sepetini al', en: 'Take the harvest basket' },
   putBack: { tr: 'Aracı yerine bırak', en: 'Put the tool back' },
   bag: { tr: 'Çantanı aç', en: 'Open your bag' },
   yard: { tr: 'Bahçeye git', en: 'Go to the garden' },
