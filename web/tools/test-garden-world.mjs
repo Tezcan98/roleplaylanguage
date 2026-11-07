@@ -60,3 +60,15 @@ test('selecting seeds consumes nothing until sowing, wrong stage and remote inve
  assert.equal(a.walk.selectSeed('tohum'),true);assert.equal(a.garden.seeds('bean'),3);Object.assign(a.walk.player.position,GARDEN_PLOTS[0]);a.walk.apply(0);assert.equal(a.garden.seeds('bean'),2);
  a.world.current.id='house';assert.equal(a.walk.selectSeed('tohum'),false);a.walk.clearTool();assert.equal(a.walk.target().location,'yard');
 });
+test('harvest basket cannot be picked up before any watered crop is fully mature',()=>{
+ const a=setup();a.state.flags['farm-watered']=true;a.story.quest.id='letter';let time=1000;a.garden.now=()=>time;
+ assert.equal(a.at(GARDEN_TOOLS[2]),null);assert.equal(a.walk.take('harvest'),false);assert.equal(a.walk.tool,null);assert.deepEqual(a.held,[]);
+ a.garden.data.plots[0]={hoed:true,crop:'bean',wateredAt:null};time+=999999;assert.equal(a.at(GARDEN_TOOLS[2]),null);
+ a.garden.data.plots[0].wateredAt=time;time+=119999;assert.equal(a.at(GARDEN_TOOLS[2]),null);assert.equal(a.walk.take('harvest'),false);
+ time++;const action=a.at(GARDEN_TOOLS[2]);assert.equal(action.label,'Hasat sepetini al');action.run();assert.equal(a.walk.tool,'harvest');assert.equal(a.held.at(-1),'harvest');
+});
+test('a stale basket action rechecks readiness and an already held basket can still be put back',()=>{
+ const a=setup();a.state.flags['farm-watered']=true;a.story.quest.id='letter';a.garden.now=()=>200000;
+ a.garden.data.plots[1]={hoed:true,crop:'bean',wateredAt:1000};const stale=a.at(GARDEN_TOOLS[2]);a.garden.act(1,'harvest');stale.run();assert.equal(a.walk.tool,null);
+ a.garden.data.plots[2]={hoed:true,crop:'bean',wateredAt:1000};assert.equal(a.walk.take('harvest'),true);a.garden.act(2,'harvest');const putBack=a.at(GARDEN_TOOLS[2]);assert.equal(putBack.label,'Aracı yerine bırak');putBack.run();assert.equal(a.walk.tool,null);
+});
