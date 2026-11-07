@@ -12,9 +12,9 @@ export default {
   id: 'bahce',
   quests: [{ chapter: 'd2-homework', after: 'buy', quests: [
     { id: 'farm-seeds', title: 'Dedeyle ekim', obj: 'Bahçede dedenle konuş, üç tohum al', en: 'Talk to grandpa in the yard and get three seeds', target: { npc: 'dede' }, minutes: 2 },
-    { id: 'farm-hoe', title: 'Toprağı hazırla', obj: c => c.garden?.objective() ?? 'Bahçenin yanındaki çapayı al, üç toprağı tek tek çapala', en: 'Go to your garden bed and hoe the soil', target: c => c.garden?.target() ?? { hotspot: 'yard.myGarden' }, complete: { flag: 'farm-hoed' }, minutes: 2 },
+    { id: 'farm-hoe', title: 'Toprağı hazırla', obj: c => c.garden?.objective() ?? 'Bahçenin yanındaki çapayı al, üç toprağı tek tek çapala', en: c => c.garden?.objectiveEn() ?? 'Go to your garden bed and hoe the soil', target: c => c.garden?.target() ?? { hotspot: 'yard.myGarden' }, complete: { flag: 'farm-hoed' }, minutes: 2 },
     { id: 'farm-sow', title: 'Tohum ek', obj: (c) => c.garden?.objective() ?? `Üç tohumu tek tek ek (${c.state.flags['farm-sown'] ?? 0}/3)`, en: c => c.garden?.objectiveEn() ?? 'Sow three seeds, one at a time', target: c => c.garden?.target() ?? { hotspot: 'yard.myGarden' }, complete: { flag: 'farm-planted' }, minutes: 2 },
-    { id: 'farm-water', title: 'Can suyu', obj: c => c.garden?.objective() ?? 'Ektiğin tohumları sula', en: 'Water the seeds you planted', target: c => c.garden?.target() ?? { hotspot: 'yard.myGarden' }, complete: { flag: 'farm-watered' }, minutes: 2 },
+    { id: 'farm-water', title: 'Can suyu', obj: c => c.garden?.objective() ?? 'Ektiğin tohumları sula', en: c => c.garden?.objectiveEn() ?? 'Water the seeds you planted', target: c => c.garden?.target() ?? { hotspot: 'yard.myGarden' }, complete: { flag: 'farm-watered' }, minutes: 2 },
   ] }],
 
   kindNames: {

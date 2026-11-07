@@ -1,3 +1,4 @@
+import { GARDEN_TEXT } from '../ui/gardenText.js';
 import { gloss, glossLang, turkishOnly } from './Gloss.js';
 
 /**
@@ -6,6 +7,7 @@ import { gloss, glossLang, turkishOnly } from './Gloss.js';
  * dictionaries (assets/i18n/<code>.json); a button not listed shows its Turkish alone.
  */
 const EN = {
+  ...Object.fromEntries(['hoe','water','harvest','putBack','bag','yard'].map(key => [GARDEN_TEXT[key].tr,GARDEN_TEXT[key].en])),
   'Eve dön': 'Go home', 'Eve gir': 'Go into the house', 'Dışarı çık': 'Go outside', 'Sokağa çık': 'Go out to the street', 'Bahçeye çık': 'Go out to the yard',
   'Köy meydanına git': 'Go to the village square', 'Okul bahçesine git ⚽': 'Go to the schoolyard ⚽', 'Ana menüye dön': 'Back to the main menu',
   'Yat, uyu': 'Lie down and sleep', 'Otur, kitap oku': 'Sit and read a book', 'Kitap oku': 'Read a book', 'Televizyon izle': 'Watch TV', 'Pencereden bak': 'Look out of the window',
@@ -27,6 +29,10 @@ const EN = {
 };
 /** Buttons with something variable in them (a time, a price, a player's name): [pattern, English, variables]. */
 const PATTERNS = [
+  [/^Çapala · (\d+)\. toprak$/, GARDEN_TEXT.hoePlot.en, m => ({ n: m[1] })],
+  [/^Tohum ek · (\d+)\. toprak$/, GARDEN_TEXT.sowPlot.en, m => ({ n: m[1] })],
+  [/^Sula · (\d+)\. toprak$/, GARDEN_TEXT.waterPlot.en, m => ({ n: m[1] })],
+  [/^Hasat et · (\d+)\. toprak$/, GARDEN_TEXT.harvestPlot.en, m => ({ n: m[1] })],
   [/^Attan in · (.+)$/, 'Get off the horse · {time}', (m) => ({ time: m[1] })],
   [/^Ata bin · (.+) kaldı$/, 'Ride the horse · {time} left', (m) => ({ time: m[1] })],
   [/^Ata bin · (\d+) dk · (\d+) kredi$/, 'Ride the horse · {min} min · {price} credits', (m) => ({ min: m[1], price: m[2] })],

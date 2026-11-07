@@ -3135,5 +3135,19 @@
  "pepper seed": "بذرة فلفل",
  "Select for planting": "اختر للزراعة",
  "Open your bag and select the bean seeds.": "افتح حقيبتك واختر بذور الفاصولياء.",
- "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "إليك ثلاث بذور فاصولياء. وضعتها في حقيبتك. المعزقة وإبريق الري بجانب الحديقة. احفر ثلاث حفر صغيرة وضع بذرة في كل حفرة وغطّها بالتراب."
+ "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "إليك ثلاث بذور فاصولياء. وضعتها في حقيبتك. المعزقة وإبريق الري بجانب الحديقة. احفر ثلاث حفر صغيرة وضع بذرة في كل حفرة وغطّها بالتراب.",
+ "Take the hoe": "خذ المعزقة",
+ "Take the watering can": "خذ إبريق الري",
+ "Take the harvest basket": "خذ سلة الحصاد",
+ "Put the tool back": "أعد الأداة إلى مكانها",
+ "Open your bag": "افتح حقيبتك",
+ "Go to the garden": "اذهب إلى الحديقة",
+ "Hoe plot {n}": "اعزق التربة {n}",
+ "Sow a seed in plot {n}": "ازرع بذرة في التربة {n}",
+ "Water plot {n}": "اسقِ التربة {n}",
+ "Harvest plot {n}": "احصد التربة {n}",
+ "Hoe the marked soil.": "اعزق التربة المشار إليها.",
+ "Sow a seed in the marked soil.": "ازرع بذرة في التربة المشار إليها.",
+ "Water the marked soil.": "اسقِ التربة المشار إليها.",
+ "Harvest the ripe crop.": "احصد المحصول الناضج."
 }

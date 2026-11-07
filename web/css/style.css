@@ -866,3 +866,6 @@ body.chess-focus #toasts,body.chess-focus #quest,body.chess-focus .home-note,bod
 @media(prefers-reduced-motion:reduce){.garden-bag-hint{animation:none}}
 .inv-use small{display:block;font-size:11px;font-weight:500}
 .inv{touch-action:pan-y}.inv-use{width:100%}
+.bag-guide{position:fixed;z-index:66;pointer-events:none;color:#fff1bb;text-align:center;filter:drop-shadow(0 4px 3px #25160f99)}.bag-guide[hidden]{display:none}.bag-guide-arrow{width:76px;height:94px;animation:bag-guide-bounce 1s ease-in-out infinite}.bag-guide-arrow svg{width:100%;height:100%}.bag-guide-label{background:#4a321ef5;border:2px solid #f4cd6a;border-radius:13px;padding:8px 12px;line-height:1.3}.bag-guide-label strong{display:block;font-family:var(--gloss-font,Nunito),sans-serif;font-size:21px}.bag-guide-label small{display:block;font-size:12px;margin-top:3px;color:#e6d3a3}@keyframes bag-guide-bounce{50%{transform:translateY(8px)}}
+@media(max-height:420px){.bag-guide-arrow{height:78px}.bag-guide-label{padding:6px 9px}.bag-guide-label strong{font-size:18px}}
+@media(prefers-reduced-motion:reduce){.bag-guide-arrow{animation:none}}

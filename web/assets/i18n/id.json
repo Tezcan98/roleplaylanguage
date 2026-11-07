@@ -2700,5 +2700,19 @@
  "pepper seed": "benih paprika",
  "Select for planting": "Pilih untuk ditanam",
  "Open your bag and select the bean seeds.": "Buka tasmu dan pilih benih kacang.",
- "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "Ini tiga benih kacang. Kakek sudah memasukkannya ke tasmu. Cangkul dan penyiram ada di samping kebun. Buat tiga lubang kecil, masukkan satu benih ke setiap lubang lalu tutup dengan tanah."
+ "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "Ini tiga benih kacang. Kakek sudah memasukkannya ke tasmu. Cangkul dan penyiram ada di samping kebun. Buat tiga lubang kecil, masukkan satu benih ke setiap lubang lalu tutup dengan tanah.",
+ "Take the hoe": "Ambil cangkul",
+ "Take the watering can": "Ambil penyiram",
+ "Take the harvest basket": "Ambil keranjang panen",
+ "Put the tool back": "Kembalikan alat",
+ "Open your bag": "Buka tasmu",
+ "Go to the garden": "Pergi ke kebun",
+ "Hoe plot {n}": "Cangkul petak {n}",
+ "Sow a seed in plot {n}": "Tanam benih di petak {n}",
+ "Water plot {n}": "Siram petak {n}",
+ "Harvest plot {n}": "Panen petak {n}",
+ "Hoe the marked soil.": "Cangkul tanah yang ditandai.",
+ "Sow a seed in the marked soil.": "Tanam benih di tanah yang ditandai.",
+ "Water the marked soil.": "Siram tanah yang ditandai.",
+ "Harvest the ripe crop.": "Panen tanaman yang matang."
 }

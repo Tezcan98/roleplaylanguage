@@ -3134,5 +3134,19 @@
  "pepper seed": "مرچ کا بیج",
  "Select for planting": "بونے کے لیے منتخب کرو",
  "Open your bag and select the bean seeds.": "اپنا بیگ کھولو اور پھلیوں کے بیج منتخب کرو۔",
- "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "یہ لو پھلی کے تین بیج۔ میں نے تمہارے بیگ میں رکھ دیے ہیں۔ کدال اور پانی کا برتن باغ کے پاس ہیں۔ تین چھوٹے گڑھے بناؤ، ہر ایک میں ایک بیج رکھو اور مٹی سے ڈھانپ دو۔"
+ "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "یہ لو پھلی کے تین بیج۔ میں نے تمہارے بیگ میں رکھ دیے ہیں۔ کدال اور پانی کا برتن باغ کے پاس ہیں۔ تین چھوٹے گڑھے بناؤ، ہر ایک میں ایک بیج رکھو اور مٹی سے ڈھانپ دو۔",
+ "Take the hoe": "کدال اٹھاؤ",
+ "Take the watering can": "پانی دینے کا برتن اٹھاؤ",
+ "Take the harvest basket": "فصل کی ٹوکری اٹھاؤ",
+ "Put the tool back": "اوزار واپس رکھو",
+ "Open your bag": "اپنا بیگ کھولو",
+ "Go to the garden": "باغ میں جاؤ",
+ "Hoe plot {n}": "کیاری {n} کی گوڈی کرو",
+ "Sow a seed in plot {n}": "کیاری {n} میں بیج بوؤ",
+ "Water plot {n}": "کیاری {n} کو پانی دو",
+ "Harvest plot {n}": "کیاری {n} کی فصل کاٹو",
+ "Hoe the marked soil.": "نشان والی زمین کی گوڈی کرو۔",
+ "Sow a seed in the marked soil.": "نشان والی زمین میں ایک بیج بوؤ۔",
+ "Water the marked soil.": "نشان والی زمین کو پانی دو۔",
+ "Harvest the ripe crop.": "پکی ہوئی فصل کاٹو۔"
 }

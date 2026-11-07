@@ -616,7 +616,7 @@ cirak.build();
 
 // After day-two shopping: finish the saved garden lesson before taking the letter.
 const garden = new GardenSystem({ state, inventory, story, bus, vocab, toasts, world, time });
-const gardenWalk = new GardenInteractions({ garden, world, player, mf, modes, toasts, onToolChange: () => bus.emit(EV.QUEST, { quest: story.quest }), onInventoryHint: on => hud.hintBag(on) });
+const gardenWalk = new GardenInteractions({ garden, world, player, mf, modes, toasts, onToolChange: () => bus.emit(EV.QUEST, { quest: story.quest }), onInventoryHint: on => hud.hintBag(on && modes.is('play')) });
 gameCtx.garden = gardenWalk;
 const gardenGuide = () => {
   const q = story.quest?.id;

@@ -3134,5 +3134,19 @@
  "pepper seed": "semilla de pimiento",
  "Select for planting": "Elegir para plantar",
  "Open your bag and select the bean seeds.": "Abre tu bolsa y selecciona las semillas de judía.",
- "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "Aquí tienes tres semillas de judía. Las he puesto en tu bolsa. La azada y la regadera están junto al huerto. Haz tres hoyos pequeños, coloca una semilla en cada uno y cúbrelos con tierra."
+ "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "Aquí tienes tres semillas de judía. Las he puesto en tu bolsa. La azada y la regadera están junto al huerto. Haz tres hoyos pequeños, coloca una semilla en cada uno y cúbrelos con tierra.",
+ "Take the hoe": "Coge la azada",
+ "Take the watering can": "Coge la regadera",
+ "Take the harvest basket": "Coge la cesta de cosecha",
+ "Put the tool back": "Devuelve la herramienta",
+ "Open your bag": "Abre tu bolsa",
+ "Go to the garden": "Ve al huerto",
+ "Hoe plot {n}": "Prepara la parcela {n}",
+ "Sow a seed in plot {n}": "Siembra una semilla en la parcela {n}",
+ "Water plot {n}": "Riega la parcela {n}",
+ "Harvest plot {n}": "Cosecha la parcela {n}",
+ "Hoe the marked soil.": "Prepara la tierra señalada.",
+ "Sow a seed in the marked soil.": "Siembra una semilla en la tierra señalada.",
+ "Water the marked soil.": "Riega la tierra señalada.",
+ "Harvest the ripe crop.": "Recoge el cultivo maduro."
 }

@@ -2592,5 +2592,19 @@
  "pepper seed": "मिर्च का बीज",
  "Select for planting": "बोने के लिए चुनो",
  "Open your bag and select the bean seeds.": "अपना बैग खोलो और फलियों के बीज चुनो।",
- "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "ये लो फलियों के तीन बीज। मैंने तुम्हारे बैग में रख दिए हैं। कुदाल और पानी का डिब्बा बगीचे के पास हैं। तीन छोटे गड्ढे बनाओ, हर एक में एक बीज रखो और मिट्टी से ढक दो।"
+ "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "ये लो फलियों के तीन बीज। मैंने तुम्हारे बैग में रख दिए हैं। कुदाल और पानी का डिब्बा बगीचे के पास हैं। तीन छोटे गड्ढे बनाओ, हर एक में एक बीज रखो और मिट्टी से ढक दो।",
+ "Take the hoe": "कुदाल उठाओ",
+ "Take the watering can": "पानी देने का डिब्बा उठाओ",
+ "Take the harvest basket": "फसल की टोकरी उठाओ",
+ "Put the tool back": "औज़ार वापस रखो",
+ "Open your bag": "अपना बैग खोलो",
+ "Go to the garden": "बगीचे में जाओ",
+ "Hoe plot {n}": "क्यारी {n} की गुड़ाई करो",
+ "Sow a seed in plot {n}": "क्यारी {n} में एक बीज बोओ",
+ "Water plot {n}": "क्यारी {n} में पानी दो",
+ "Harvest plot {n}": "क्यारी {n} की फसल काटो",
+ "Hoe the marked soil.": "निशान वाली मिट्टी की गुड़ाई करो।",
+ "Sow a seed in the marked soil.": "निशान वाली मिट्टी में एक बीज बोओ।",
+ "Water the marked soil.": "निशान वाली मिट्टी में पानी दो।",
+ "Harvest the ripe crop.": "पकी हुई फसल काटो।"
 }

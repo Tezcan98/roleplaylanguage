@@ -1,3 +1,4 @@
+import { GARDEN_TEXT } from '../ui/gardenText.js';
 import { CROPS, seedCrop } from './GardenSystem.js';
 import { GARDEN_PLOTS, GARDEN_TOOLS } from '../content/gardenLayout.js';
 const distance = (a,b) => Math.hypot(a.x-b.x,a.z-b.z);
@@ -37,7 +38,13 @@ export class GardenInteractions {
     const done=this.garden.data.plots.slice(0,3).filter(p=>tool==='hoe'?p.hoed:tool==='sow'?p.crop:p.wateredAt!=null).length;
     return `${tool==='hoe'?'İşaretli toprağı çapala':tool==='sow'?'İşaretli toprağa tohum ek':'İşaretli toprağı sula'} (${done}/3)`;
   }
-  objectiveEn(){return this.requiredTool==='sow'&&this.tool!=='sow'?BAG_INSTRUCTION.en:null;}
+  objectiveEn(){
+    const tool=this.requiredTool;
+    if(!tool)return null;
+    if(this.world.current?.id!=='yard')return GARDEN_TEXT.yard.en;
+    if(this.tool!==tool)return tool==='sow'?BAG_INSTRUCTION.en:GARDEN_TEXT[tool].en;
+    return GARDEN_TEXT[{hoe:'workHoe',sow:'workSow',water:'workWater'}[tool]].en;
+  }
   canSelectSeed(kind){
     const crop=seedCrop(kind);
     return this.available && !!crop && this.garden.seeds(crop)>0 && (!this.requiredTool||this.requiredTool==='sow') && (!this.garden.learning||crop==='bean');
@@ -51,7 +58,7 @@ export class GardenInteractions {
     this.player.holdGardenTool?.(tool,crop);
     this.onToolChange();
     const text=tool==='hoe'?'Çapa elinde. Bir toprağın yanına git ve tek tek çapala.':tool==='sow'?`${CROPS[crop].name} tohumu elinde. Çapalanmış toprağın yanına git.`:tool==='water'?'Sulama kabı elinde. Ektiğin her göze can suyu ver.':'Sepet elinde. Olgunlaşmış ürünlerin yanına git.';
-    this.toasts.show(text,'');
+    this.toasts.show(text,GARDEN_TEXT[{hoe:'workHoe',sow:'workSow',water:'workWater',harvest:'workHarvest'}[tool]].en);
   }
   apply(index) {
     if(!this.available || !this.tool || this.now()<this.workingUntil || !GARDEN_PLOTS[index] || distance(this.player.position,GARDEN_PLOTS[index])>1.2)return false;

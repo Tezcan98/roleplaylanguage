@@ -3134,5 +3134,19 @@
  "pepper seed": "graine de poivron",
  "Select for planting": "Choisir pour planter",
  "Open your bag and select the bean seeds.": "Ouvre ton sac et sélectionne les graines de haricot.",
- "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "Voici trois graines de haricot. Je les ai mises dans ton sac. La binette et l’arrosoir sont à côté du potager. Fais trois petits trous, mets une graine dans chacun et recouvre-les de terre."
+ "Here are three bean seeds. I put the seeds in your bag. The hoe and watering can are beside the garden. Make three small holes, put one seed in each and cover them with soil.": "Voici trois graines de haricot. Je les ai mises dans ton sac. La binette et l’arrosoir sont à côté du potager. Fais trois petits trous, mets une graine dans chacun et recouvre-les de terre.",
+ "Take the hoe": "Prends la binette",
+ "Take the watering can": "Prends l’arrosoir",
+ "Take the harvest basket": "Prends le panier de récolte",
+ "Put the tool back": "Repose l’outil",
+ "Open your bag": "Ouvre ton sac",
+ "Go to the garden": "Va au potager",
+ "Hoe plot {n}": "Bine la parcelle {n}",
+ "Sow a seed in plot {n}": "Sème une graine dans la parcelle {n}",
+ "Water plot {n}": "Arrose la parcelle {n}",
+ "Harvest plot {n}": "Récolte la parcelle {n}",
+ "Hoe the marked soil.": "Bine la terre indiquée.",
+ "Sow a seed in the marked soil.": "Sème une graine dans la terre indiquée.",
+ "Water the marked soil.": "Arrose la terre indiquée.",
+ "Harvest the ripe crop.": "Récolte le légume mûr."
 }
