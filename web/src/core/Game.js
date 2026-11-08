@@ -36,7 +36,7 @@ export class Game {
     const dt = this.#last == null ? 0.016 : Math.min(Math.max(0, (now - this.#last) / 1000), 0.05);
     this.#last = now;
     const t = (this.t += dt);
-    const { ambient = [], shotButton, help, prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx } = this;
+    const { ambient = [], shotButton, passButton, help, prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx } = this;
     const playing = modes.base === 'play';
     if (this.rest?.()) { // a board covers the world: only what plays on without being seen
       time.update(dt);
@@ -59,7 +59,9 @@ export class Game {
 
     actionButton.show(interactions.update(player.position), interactions.others);
     actionButton.showLeft(interactions.left);
-    shotButton?.show(modes.is('play') && !player.seated && !player.mount && (!!toys.shotBall() || !!village.onPitch?.(player.position))); // on a pitch: always there
+    const footballControls = modes.is('play') && !player.seated && !player.mount && (!!toys.shotBall() || !!village.onPitch?.(player.position));
+    shotButton?.show(footballControls);
+    passButton?.show(footballControls);
     joystick.visible = modes.is('play');
     help.visible = modes.is('play');
     marker.update(dt, t, playing && !dialogue.talking);

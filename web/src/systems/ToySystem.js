@@ -15,6 +15,7 @@ export class ToySystem {
   #wordsAt = -Infinity;
   #dt = 0;
   #shotWant = 0;
+  #passWant = 0;
   #vel = { x: 0, z: 0 }; // the player's own velocity (for dribbling)
 
   constructor({ world, player, free, tts }) {
@@ -44,6 +45,7 @@ export class ToySystem {
 
   /** Hard shot (⚡ button / F key): the ball flies the way the player faces (towards the goal: Football.assist). */
   shoot() {
+    this.#passWant = 0;
     const entry = this.shotBall();
     if (!entry) { this.#shotWant = SHOT_WAIT; return false; } // not quite there yet: as soon as it is
     this.#shotWant = 0;
@@ -52,6 +54,20 @@ export class ToySystem {
     this.player.kick?.(1);
     entry.cool = KICK_COOLDOWN * 2;
     entry.onKick?.(entry.toy, 'shot');
+    return true;
+  }
+
+  /** Pass along the ground in the direction the player faces. */
+  pass() {
+    this.#shotWant = 0;
+    const entry = this.shotBall();
+    if (!entry) { this.#passWant = SHOT_WAIT; return false; }
+    this.#passWant = 0;
+    const rot = this.player.group.rotation.y;
+    entry.toy.pass(Math.sin(rot), Math.cos(rot));
+    this.player.kick?.(0.5);
+    entry.cool = KICK_COOLDOWN * 2;
+    entry.onKick?.(entry.toy, 'pass');
     return true;
   }
 
@@ -82,6 +98,7 @@ export class ToySystem {
     if (this.#last && dt > 0) this.#vel = { x: (p.x - this.#last.x) / dt, z: (p.z - this.#last.z) / dt };
     this.#last = { x: p.x, z: p.z };
     if (this.#shotWant > 0) { this.#shotWant -= dt; if (this.shotBall()) this.shoot(); }
+    if (this.#passWant > 0) { this.#passWant -= dt; if (this.shotBall()) this.pass(); }
     for (const entry of this.toys) {
       const { toy } = entry;
       if (!toy.location.group.visible) continue;

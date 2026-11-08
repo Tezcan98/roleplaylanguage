@@ -1,4 +1,5 @@
 import { el } from './dom.js';
+import { gloss } from '../i18n/Gloss.js';
 import { actionText } from '../i18n/ActionLabels.js';
 
 /**
@@ -50,11 +51,12 @@ export class ActionButton {
 export class ShotButton {
   #key = '';
 
-  constructor(host, onPress, act, { id = 'shot', text = '⚡ Sert vur', label = 'Sert vur', press = false } = {}) {
+  constructor(host, onPress, act, { id = 'shot', text = '⚡ Sert vur', label = 'Sert vur', meaning = '', press = false } = {}) {
     this.act = act;
     // press: fire as the finger goes down (with a thumb on the joystick a second tap often makes no click on phones)
-    const on = press ? { pointerdown: (e) => { e.preventDefault(); onPress(); } } : { click: onPress };
-    this.root = el('button', { attrs: { id, type: 'button', 'aria-label': label }, text, on });
+    const on = press ? { pointerdown: (e) => { e.preventDefault(); onPress(); }, click: (e) => { if (e.detail === 0) onPress(); } } : { click: onPress };
+    const translated = gloss(meaning);
+    this.root = el('button', { attrs: { id, type: 'button', 'aria-label': translated ? `${label} · ${translated}` : label }, on }, [el('span', { text }), ...(translated ? [el('small', { class: 'btn-g', text: translated })] : [])]);
     this.root.hidden = true;
     host.append(this.root);
   }
@@ -62,10 +64,10 @@ export class ShotButton {
   show(on) {
     if (this.root.hidden === !!on) this.root.hidden = !on;
     if (!on) return;
-    const key = `${this.act.hidden}|${this.act.textContent}|${innerWidth}x${innerHeight}`;
+    const a = this.act.getBoundingClientRect();
+    const key = `${this.act.hidden}|${a.left}|${a.bottom}|${a.width}|${innerWidth}x${innerHeight}`;
     if (key === this.#key) return; // re-place only when the action button changes
     this.#key = key;
-    const a = this.act.getBoundingClientRect();
     this.root.style.right = a.width ? `${innerWidth - a.left + 10}px` : '';
     this.root.style.bottom = a.width ? `${innerHeight - a.bottom}px` : '';
   }

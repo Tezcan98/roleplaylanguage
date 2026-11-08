@@ -76,6 +76,7 @@ export class Football {
    * (and not sped up), so the ball stays at your feet.
    */
   assist(ball, kind = 'shot') {
+    if (kind === 'pass') return; // leave passes aimed where the player chose
     if (!this.has(ball.position)) return;
     const v = ball.vel, speed = Math.hypot(v.x, v.z);
     if (speed < 0.5) return;

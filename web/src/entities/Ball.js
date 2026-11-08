@@ -42,6 +42,14 @@ export class Ball {
     this.hopVel = 4 + Math.random();
   }
 
+  /** A controlled ground pass, slower than a shot and without a bounce. */
+  pass(dirX, dirZ) {
+    const n = Math.hypot(dirX, dirZ) || 1;
+    this.vel.set(dirX / n * 7, 0, dirZ / n * 7);
+    this.hop = 0; this.hopVel = 0;
+    this.position.y = this.radius;
+  }
+
   get moving() { return this.vel.lengthSq() > 1e-3; }
 
   /** Network snapshot / restore (multiplayer square: everyone plays with the same ball). */

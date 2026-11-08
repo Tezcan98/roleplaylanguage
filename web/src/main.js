@@ -440,6 +440,7 @@ const villageBalls = [{ x: pitchMid, z: SQUARE_PITCH.cz }, { x: pitchMid - 4, z:
   .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, quiet: true, onKick: (b, kind) => { squareFootball.assist(b, kind); village.ballKicked(b); } }));
 // ⚡ hard shot next to a ball: button (see the action button below) or key F
 input.onKey((e) => { if (modes.is('play') && (e.key === 'f' || e.key === 'F')) toys.shoot(); });
+input.onKey((e) => { if (modes.is('play') && !e.repeat && (e.key === 'p' || e.key === 'P')) toys.pass(); });
 // C: another camera view (normal, close, far, from above)
 const VIEW_NAMES = [['Normal görünüm', gloss('Normal view')], ['Yakın görünüm', gloss('Close view')], ['Uzak görünüm', gloss('Far view')], ['Yukarıdan görünüm', gloss('View from above')]];
 input.onKey((e) => { if (modes.is('play') && (e.key === 'c' || e.key === 'C')) { const [tr, en] = VIEW_NAMES[camera.cycleView()]; toasts.show(`🎥 ${tr}`, en); } });
@@ -680,7 +681,8 @@ const interactions = new InteractionSystem([
   hotspotUse,
 ], modes);
 const actionButton = new ActionButton(host, () => interactions.trigger());
-const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root, { press: true }); // (fires as the finger goes down: with a thumb on the joystick a second tap makes no click on phones)
+const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root, { text: '⚽ Şut', label: 'Şut', meaning: 'Shoot', press: true });
+const passButton = new ShotButton(host, () => toys.pass(), shotButton.root, { id: 'pass', text: '↗ Pas', label: 'Pas', meaning: 'Pass', press: true }); // (fires as the finger goes down: with a thumb on the joystick a second tap makes no click on phones)
 // on horseback: jump (the button, or Space on a keyboard)
 const jumpHorse = () => { if (modes.is('play') && player.jump()) { vocab.learn('zıplamak', 'to jump'); village.jumped(); } }; // (the others see it)
 const jumpButton = new ShotButton(host, jumpHorse, actionButton.root, { id: 'jump', text: '🐎 Zıpla', label: 'Zıpla', press: true });
@@ -1124,7 +1126,7 @@ function continueGame(then) {
 
 
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
-const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk], shotButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk], shotButton, passButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 // frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
 const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };

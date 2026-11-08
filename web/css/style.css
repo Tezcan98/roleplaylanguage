@@ -82,11 +82,11 @@ body.has-map #toasts{top:calc(env(safe-area-inset-top,0px) + 32px + var(--hud-h,
 #act-more{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 122px);display:flex;flex-direction:column-reverse;align-items:flex-end;gap:8px;pointer-events:none}
 .act-alt{pointer-events:auto;background:var(--parch);color:var(--ink);border:3px solid var(--wood);border-radius:16px;padding:0 16px;min-height:48px;font:700 16px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 3px 0 var(--wood2)}
 .act-alt:active{transform:translateY(2px);box-shadow:0 1px 0 var(--wood2)}
-#shot,#jump{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 54px);pointer-events:auto;background:#E4574A;color:#fff;border:3px solid var(--wood);border-radius:18px;padding:0 16px;min-height:52px;font:700 17px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
-#shot:active,#jump:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
-#shot[hidden],#jump[hidden]{display:none}
+#shot,#pass,#jump{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 54px);pointer-events:auto;background:#E4574A;color:#fff;border:3px solid var(--wood);border-radius:18px;padding:0 16px;min-height:52px;font:700 17px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 4px 0 var(--wood2)}
+#shot:active,#pass:active,#jump:active{transform:translateY(3px);box-shadow:0 1px 0 var(--wood2)}
+#shot[hidden],#pass[hidden],#jump[hidden]{display:none}
 #jump{background:#3E8E4A}
-body.menu #shot{display:none!important}
+body.menu #shot,body.menu #pass{display:none!important}
 body.menu .hud,body.menu #quest,body.menu #joy,body.menu #act,body.menu #act-left,body.menu #act-more,body.menu #labels{display:none!important}
 
 /* ---------- overlays ---------- */
@@ -624,7 +624,7 @@ html[data-gloss-scale] .set-head small{font-size:12px}
 .feedback .fb-count{display:block;text-align:right;opacity:.65;margin-top:4px}
 .feedback .fb-status{min-height:1.2em;margin:6px 0 0;font-weight:700}
 .feedback .row{display:flex;gap:10px;justify-content:center;margin-top:10px}
-body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.open) #shot{display:none!important} /* the talk button never covers a conversation or a card */
+body:has(#dlg.open) .ptt-wrap,body:has(.overlay.open) .ptt-wrap,body:has(#dlg.open) #shot,body:has(#dlg.open) #pass{display:none!important} /* the talk button never covers a conversation or a card */
 .tile.nope{animation:nope .35s;border-color:#C0392B;background:#FADBD8}
 @keyframes nope{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .tile.hint-tile{background:#D5F5E3;border-color:#3E8E4A;box-shadow:0 0 0 3px rgba(62,142,74,.35)}
@@ -869,3 +869,7 @@ body.chess-focus #toasts,body.chess-focus #quest,body.chess-focus .home-note,bod
 .bag-guide{position:fixed;z-index:66;pointer-events:none;color:#fff1bb;text-align:center;filter:drop-shadow(0 4px 3px #25160f99)}.bag-guide[hidden]{display:none}.bag-guide-arrow{width:76px;height:94px;animation:bag-guide-bounce 1s ease-in-out infinite}.bag-guide-arrow svg{width:100%;height:100%}.bag-guide-label{background:#4a321ef5;border:2px solid #f4cd6a;border-radius:13px;padding:8px 12px;line-height:1.3}.bag-guide-label strong{display:block;font-family:var(--gloss-font,Nunito),sans-serif;font-size:21px}.bag-guide-label small{display:block;font-size:12px;margin-top:3px;color:#e6d3a3}@keyframes bag-guide-bounce{50%{transform:translateY(8px)}}
 @media(max-height:420px){.bag-guide-arrow{height:78px}.bag-guide-label{padding:6px 9px}.bag-guide-label strong{font-size:18px}}
 @media(prefers-reduced-motion:reduce){.bag-guide-arrow{animation:none}}
+
+#shot,#pass{touch-action:none;min-width:86px;right:max(20px,env(safe-area-inset-right));max-width:150px}
+#pass{background:#3A78B8}
+#shot .btn-g,#pass .btn-g{font-size:13px;line-height:1.2;padding-bottom:3px}
