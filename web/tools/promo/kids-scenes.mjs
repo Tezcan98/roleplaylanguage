@@ -47,7 +47,7 @@ export async function start(kit) {
 }
 export const showLabels = (page) => page.evaluate(() => document.getElementById('labels')?.style.setProperty('visibility', 'visible', 'important'));
 export const showToasts = (page) => page.evaluate(() => document.getElementById('toasts')?.style.setProperty('visibility', 'visible', 'important'));
-export const fixed = (page, [x, y, z], [lx, ly, lz]) => page.evaluate(([x, y, z, lx, ly, lz]) => { const g = window.__game, V = g.player.position.constructor; g.camera.setFixed(new V(x, y, z), new V(lx, ly, lz)); }, [x, y, z, lx, ly, lz]);
+export const fixed = (page, [x, y, z], [lx, ly, lz], snap = false) => page.evaluate(([x, y, z, lx, ly, lz, snap]) => { const g = window.__game, V = g.player.position.constructor; g.camera.setFixed(new V(x, y, z), new V(lx, ly, lz), snap); }, [x, y, z, lx, ly, lz, snap]);
 
 export const KIDS_SCENES = [
   {

@@ -115,7 +115,7 @@ const PROMO_CSS = `
   .promo-card h1{margin:0;font-size:72px;font-weight:700;letter-spacing:.5px}
   .promo-card p{margin:0;font-size:30px}.promo-card small{font-size:22px;opacity:.85}
   .promo-card .badge{margin-top:10px;background:#FFC845;color:#1B2440;border-radius:999px;padding:10px 26px;font-size:26px;font-weight:600}
-  .promo-hide #joy,.promo-hide .help-btn,.promo-hide #quest,.promo-hide #toasts,.promo-hide .ptt-wrap,.promo-hide #shot,.promo-hide #act,.promo-hide #act-more,.promo-hide #act-left{visibility:hidden!important}
+  .promo-hide #joy,.promo-hide .help-btn,.promo-hide #quest,.promo-hide #toasts,.promo-hide .ptt-wrap,.promo-hide #shot,.promo-hide #act,.promo-hide #act-more,.promo-hide #act-left,.promo-hide #pass{visibility:hidden!important}
   body.short .promo-cap.kids{top:7vh;padding:18px 22px 16px;background:rgba(20,28,52,.82);border:2px solid rgba(255,200,69,.55)}body.short .promo-cap.kids b{font-size:44px;line-height:1.14}body.short.lang-ur .promo-cap.kids b{font-size:32px;line-height:2.05} /* (Nastaliq: tall, lines apart) */
   .promo-badges .free{background:#FFC845;color:#1B2440;border-color:#FFC845}
   @keyframes promoIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1}}

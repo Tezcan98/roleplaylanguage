@@ -143,7 +143,11 @@ export class CameraController {
     this.camera.lookAt(this.#look);
   }
 
-  setFixed(pos, look) { this.fixed = { pos: pos.clone(), look: look.clone() }; }
+  /** A fixed view (`snap`: there at once, instead of gliding over from where the camera is). */
+  setFixed(pos, look, snap = false) {
+    this.fixed = { pos: pos.clone(), look: look.clone() };
+    if (snap) { this.camera.position.copy(pos); this.#look.copy(look); this.camera.lookAt(look); }
+  }
   clearFixed() { this.fixed = null; }
 
   /**

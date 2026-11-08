@@ -135,7 +135,7 @@ const pitch = async (kit, { team, ball, cam, look }) => {
     g.village.places.village.balls.slice(1).forEach((o) => o.setState({ x: 8, z: 22 })); // (the second ball out of the way)
   }, [team, ball, TEAM]);
   await kit.sleep(1800);
-  await fixed(page, cam, look);
+  await fixed(page, cam, look, true);
   await kit.sleep(600);
   return page;
 };
@@ -207,7 +207,7 @@ const chessScene = async (kit, { upTo = -1, cam, look }) => {
   });
   await board(page, upTo);
   await kit.sleep(1800);
-  await fixed(page, cam, look);
+  await fixed(page, cam, look, true);
   await kit.sleep(600);
   return page;
 };
@@ -456,6 +456,99 @@ export const EPISODES = {
       tr: ['Köy meydanında dev satranç!', 'Fil, at, vezir: taşların Türkçesini oynayarak öğren.', 'Şah mat!', 'Türk Ailem, Google Play’de ücretsiz.'],
       en: ['Giant chess on the village square!', 'Bishop, knight, queen: learn the Turkish names as you play.', 'Checkmate!', 'My Turkish Family, free on Google Play.'],
       ar: ['شطرنج عملاق في ساحة القرية!', 'الفيل، الحصان، الوزير… تعلّم أسماءها بالتركية وأنت تلعب.', 'كش مات!', 'عائلتي التركية، مجانًا على غوغل بلاي.'],
+    },
+  },
+  // 0e · the 3-on-3 again, the goal first (the first second decides whether a Short is watched)
+  mac2: {
+    scenes: [
+      {
+        name: 'n2Goal', seconds: 3.2,
+        setup: async (kit) => pitch(kit, { ball: [39.2, 31.5], cam: [35.3, 2.4, 30.5], look: [45.5, 0.6, 32.2],
+          team: { me: [38.6, 31.5], b1: [36.4, 34], b2: [36, 29], r1: [41.4, 34.2], r2: [42.2, 28.8], rk: [44.6, 32] } }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'GOOOL!', 'هدف!!!');
+          await play(page, kit, { to: [40.4, 31.6], ms: 400, stop: false, moves: { me: [39.9, 31.6], r1: [41.2, 33.2], r2: [41.8, 30.2] } });
+          await play(page, kit, { kicker: 'me', to: [46.9, 33.7], ms: 500, stop: false, moves: { rk: [44.6, 30.4] } });
+          await showLabels(page);
+          await page.evaluate(() => { const g = window.__game, r = g.village.remotes; g.labels.bubble(r.get('me'), 'Gooool!', null, 2.2, 'هدف!'); g.labels.bubble(r.get('b2'), 'Harikasın!', null, 2.2, 'أنت رائع!'); g.world.get('village').writeScore?.(1, 0); });
+          await play(page, kit, { moves: { b1: [40.6, 33.2], b2: [40.2, 30.4], me: [41.6, 31.8] }, ms: 1300 });
+        },
+      },
+      {
+        name: 'n2Pass', seconds: 3.6,
+        setup: async (kit) => pitch(kit, { ball: [30, 33], cam: [31, 4.0, 40.5], look: [34, 0.6, 31],
+          team: { me: [33, 31], b1: [29.4, 33.6], b2: [31, 27.5], r1: [36, 33], r2: [37, 28.5], rk: [44.6, 32] } }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Dünyadan oyuncularla 3’e 3', 'مباراة ٣ ضد ٣… مع لاعبين من كل العالم');
+          await play(page, kit, { kicker: 'b1', to: [31.4, 27.9], ms: 800, moves: { b1: [30.6, 33.4], me: [36.2, 33.2], r1: [33.4, 30.6], r2: [34, 28.4] } });
+          await play(page, kit, { to: [33.6, 27.7], ms: 600, stop: false, moves: { b2: [33.1, 27.7], me: [37.8, 32.6], r1: [32.6, 29.2], b1: [33.5, 35.4] } });
+          await play(page, kit, { kicker: 'b2', to: [37.4, 32.3], ms: 800, moves: { b2: [34.6, 27.2], r2: [36.4, 30.2], b1: [36, 35.8] } });
+        },
+      },
+      {
+        name: 'n2Dama', seconds: 3.8,
+        setup: async (kit) => {
+          const page = await start(kit);
+          await page.evaluate(() => { const g = window.__game, a = g.world.get('village').anchors.get('kahve1'); g.player.position.set(a.x + 0.8, 0, a.z + 0.8); });
+          await kit.sleep(400);
+          await page.evaluate(() => window.__game.dama.playRifat());
+          await kit.sleep(2200);
+          return page;
+        },
+        act: async (kit, page) => {
+          await kit.caption(page, 'Sonra çay ve dama', 'ثم شاي وداما في المقهى ☕');
+          await kit.sleep(500);
+          await page.click('.dama.open .dama-board .cell.can').catch(() => {}); await kit.sleep(300);
+          await page.click('.dama.open .dama-board .cell.to').catch(() => {});
+          await kit.sleep(1200);
+          await showLabels(page);
+          await page.evaluate(() => { const g = window.__game; g.labels.bubble(g.cast.get('rifat'), 'Aferin, iyi hamle!', null, 2.2, 'أحسنت، نقلة جيدة!'); });
+        },
+      },
+      endCard('n2End'),
+    ],
+    vo: {
+      tr: ['Gooool!', 'Dünyadan oyuncularla üçe üç!', 'Sonra çay ve dama.', 'Türk Ailem, Google Play’de ücretsiz.'],
+      en: ['Goooal!', 'Three-on-three with players from all over the world!', 'Then tea and dama.', 'My Turkish Family, free on Google Play.'],
+      ar: ['هدف!!!', 'مباراة ثلاثة ضد ثلاثة… مع لاعبين من كل العالم!', 'ثم شاي وداما في المقهى.', 'عائلتي التركية، مجانًا على غوغل بلاي.'],
+    },
+  },
+  // 0f · the giant chess again, the mate first
+  satranc2: {
+    scenes: [
+      {
+        name: 't2Mate', seconds: 3.4,
+        setup: async (kit) => chessScene(kit, { upTo: 5, cam: [-6.2, 2.2, 20.6], look: [-12.8, 0.9, 15.4] }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Şah mat!', 'كش مات!');
+          await showLabels(page);
+          await kit.sleep(200); await board(page, 6); // (not 'over': the result card would cover the board) await speak(page, 'me', 'Şah mat!', 'كش مات!');
+          await kit.sleep(800); await speak(page, 'w1', 'Bravo!', 'برافو!');
+          await kit.sleep(600); await speak(page, 'w2', 'Harika oyun!', 'لعبة رائعة!');
+        },
+      },
+      {
+        name: 't2Moves', seconds: 3.8,
+        setup: async (kit) => chessScene(kit, { upTo: 1, cam: [-15.9, 3.1, 24.2], look: [-15, 0.4, 13.5] }),
+        act: async (kit, page) => {
+          await kit.caption(page, 'Fil, at, vezir: taşların Türkçesi', 'تعلّم أسماء القطع بالتركية');
+          await showLabels(page);
+          await board(page, 2); await speak(page, 'me', 'Fil c4’e!', 'الفيل إلى c4!');
+          await kit.sleep(1100); await board(page, 3); await speak(page, 'p2', 'At c6’ya.', 'الحصان إلى c6.');
+          await kit.sleep(1100); await board(page, 4); await speak(page, 'me', 'Vezir h5’e!', 'الوزير إلى h5!');
+        },
+      },
+      {
+        name: 't2Wide', seconds: 3.0,
+        setup: async (kit) => chessScene(kit, { upTo: 6, cam: [-23.5, 6.8, 26], look: [-12.5, 0, 14] }),
+        act: async (kit, page) => { await kit.caption(page, 'Köy meydanında dev satranç', 'شطرنج عملاق في ساحة القرية!'); },
+      },
+      endCard('t2End'),
+    ],
+    vo: {
+      tr: ['Şah mat!', 'Fil, at, vezir: Türkçesini oynayarak öğren!', 'Köy meydanında dev satranç!', 'Türk Ailem, Google Play’de ücretsiz.'],
+      en: ['Checkmate!', 'Bishop, knight, queen: learn them in Turkish as you play!', 'Giant chess on the village square!', 'My Turkish Family, free on Google Play.'],
+      ar: ['كش مات!', 'الفيل، الحصان، الوزير… تعلّمها بالتركية!', 'شطرنج عملاق في ساحة القرية!', 'عائلتي التركية، مجانًا على غوغل بلاي.'],
     },
   },
   // 1 · the park: the slide, the swings, the children to make friends with
