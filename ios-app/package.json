@@ -1,0 +1,25 @@
+{
+  "name": "turk-ailem-ios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Türk Ailem native iOS app, packaged with Capacitor and built on EAS",
+  "scripts": {
+    "prepare:web": "node tools/prepare-web.mjs",
+    "sync": "npm run prepare:web && node tools/sync-ios.mjs",
+    "eas-build-post-install": "node tools/sync-ios.mjs"
+  },
+  "dependencies": {
+    "@capacitor-community/admob": "^8.1.0",
+    "@capacitor-community/speech-recognition": "^7.0.1",
+    "@capacitor-community/text-to-speech": "^8.0.2",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "8.0.3",
+    "@capgo/native-purchases": "^8.8.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2"
+  }
+}

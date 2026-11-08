@@ -4,6 +4,8 @@ import { AdProvider } from './AdProvider.js';
 // Google's test units: used until the real ones are in assets/manifest.json → "admob"
 const TEST = { rewarded: 'ca-app-pub-3940256099942544/5224354917', interstitial: 'ca-app-pub-3940256099942544/1033173712', banner: 'ca-app-pub-3940256099942544/6300978111' };
 
+const TEST_IOS = { rewarded: 'ca-app-pub-3940256099942544/1712485313', interstitial: 'ca-app-pub-3940256099942544/4411468910', banner: 'ca-app-pub-3940256099942544/2934735716' };
+
 /**
  * AdMob in the Android app: rewarded videos (credits), full-screen interstitials between story
  * days, and a banner at the bottom of the menu where you pick the village square. The interstitial ad unit should be set to "display" only (no video) in the AdMob console.
@@ -24,8 +26,9 @@ export class AdMobAdProvider extends AdProvider {
     this.onEvent = onEvent;
     this.onHouse = onHouse;
     this.lastError = '';
-    this.ids = { rewarded: rewardedId || TEST.rewarded, interstitial: interstitialId || TEST.interstitial, banner: bannerId || TEST.banner };
-    this.testing = Object.fromEntries(Object.keys(TEST).map((k) => [k, this.ids[k] === TEST[k]])); // test mode only for Google's test ids
+    const tests = window.Capacitor?.getPlatform?.() === 'ios' ? TEST_IOS : TEST;
+    this.ids = { rewarded: rewardedId || tests.rewarded, interstitial: interstitialId || tests.interstitial, banner: bannerId || tests.banner };
+    this.testing = Object.fromEntries(Object.keys(TEST).map((k) => [k, this.ids[k] === tests[k]])); // test mode only for Google's test ids
     this.bannerOn = false;
     this.ready = null;
   }

@@ -1,0 +1,13 @@
+# Upload only the standalone iOS project, including its prepared offline game.
+/*
+!/ios-app
+!/ios-app/**
+/ios-app/node_modules/
+/ios-app/ios/Pods/
+/ios-app/ios/build/
+/ios-app/ios/App/public/
+/ios-app/**/xcuserdata/
+**/*.p8
+**/*.p12
+**/*.mobileprovision
+**/credentials.json

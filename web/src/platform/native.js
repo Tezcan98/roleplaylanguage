@@ -15,8 +15,9 @@ export async function loadNativeAdapters() {
     import('@capgo/native-purchases'),
     import('@capacitor/core'),
   ]);
-  const PlayGames = registerPlugin('PlayGames'); // mobile/android: PlayGamesPlugin.java
-  const FirebaseAnalytics = registerPlugin('FirebaseAnalytics'); // @capacitor-firebase/analytics (an app built before it: every call just fails and is ignored)
+  const android = window.Capacitor?.getPlatform?.() === 'android';
+  const PlayGames = android ? registerPlugin('PlayGames') : { signIn: async () => ({ signedIn: false }) }; // mobile/android: PlayGamesPlugin.java
+  const FirebaseAnalytics = android ? registerPlugin('FirebaseAnalytics') : null; // @capacitor-firebase/analytics (an app built before it: every call just fails and is ignored)
   return { FirebaseAnalytics, App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider, LocalNotifications, NativePurchases, PURCHASE_TYPE, PlayGames };
 }
 
@@ -50,6 +51,7 @@ const within = (promise, ms) => Promise.race([promise, new Promise((resolve) => 
 
 /** Before the game is built: a newer build is downloaded and started now; otherwise the game goes on. */
 export async function updateGate(App) {
+  if (window.Capacitor?.getPlatform?.() !== 'android') return; // Android OTA bundles are not iOS releases
   let screen = null, listener = null;
   try {
     const { CapacitorUpdater } = await import('@capgo/capacitor-updater');

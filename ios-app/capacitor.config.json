@@ -1,0 +1,16 @@
+{
+  "appId": "com.nssoft.turkailem.ios",
+  "appName": "Türk Ailem",
+  "webDir": "www",
+  "ios": {
+    "backgroundColor": "#2A1E15",
+    "contentInset": "never",
+    "preferredContentMode": "mobile"
+  },
+  "plugins": {
+    "SystemBars": {
+      "hidden": true,
+      "style": "DARK"
+    }
+  }
+}

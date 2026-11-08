@@ -15,3 +15,17 @@ mobile/android/keystore.properties
 google-services.json
 .DS_Store
 *.log
+
+# iOS build products and Apple signing material
+/ios-app/www/
+/ios-app/ios/App/public/
+/ios-app/ios/Pods/
+/ios-app/ios/build/
+/ios-app/ios/App/capacitor.config.json
+/ios-app/ios/App.xcworkspace/xcuserdata/
+/ios-app/ios/App.xcodeproj/xcuserdata/
+*.p8
+*.p12
+*.mobileprovision
+credentials.json
+GoogleService-Info.plist

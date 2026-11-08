@@ -57,6 +57,7 @@ export class NativeSpeechRecognizer extends SpeechRecognizer {
         if (result?.matches?.length) {
           this.#last = result.matches[0];
           this.#alternatives = result.matches;
+          if (window.Capacitor?.getPlatform?.() === 'ios') finish({ matches: result.matches });
         }
       } catch (e) {
         this.#cleanup();

@@ -6,7 +6,7 @@
 const STORE = 'https://play.google.com/store/apps/details?id=com.anadolu';
 
 /** Where rating makes sense: the Android app, or a browser on Android (no App Store app yet). */
-export const canRate = () => !!window.Capacitor?.isNativePlatform?.() || /Android/i.test(navigator.userAgent);
+export const canRate = () => window.Capacitor?.getPlatform?.() !== 'ios' && (!!window.Capacitor?.isNativePlatform?.() || /Android/i.test(navigator.userAgent));
 
 export function openStore(settings) {
   settings?.set('rateTapped', true); // (the note at the top asks twice more, then stops: ui/RatePrompt.js)

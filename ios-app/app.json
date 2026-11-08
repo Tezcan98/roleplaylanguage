@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Türk Ailem",
+    "slug": "turk-ailem-ios",
+    "owner": "tezcan98",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "ios": {
+      "bundleIdentifier": "com.nssoft.turkailem.ios",
+      "appleTeamId": "29ZC3SL63L",
+      "buildNumber": "1",
+      "supportsTablet": false
+    },
+    "extra": {
+      "eas": {
+        "projectId": "b5e5a4ff-17e0-4a4b-a4b8-793626b14203"
+      }
+    }
+  }
+}

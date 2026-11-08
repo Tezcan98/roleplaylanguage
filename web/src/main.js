@@ -309,7 +309,8 @@ const adEvent = (e, f, d) => {
 };
 let appVersion = '';
 if (native) nativeKit.App.getInfo().then((i) => { appVersion = `${i.version}`; }).catch(() => {});
-const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: manifest.admob?.rewardedId, interstitialId: manifest.admob?.interstitialId, bannerId: manifest.admob?.bannerId, onEvent: adEvent })
+const adConfig = window.Capacitor?.getPlatform?.() === 'ios' ? manifest.admobIos : manifest.admob;
+const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: adConfig?.rewardedId, interstitialId: adConfig?.interstitialId, bannerId: adConfig?.bannerId, onEvent: adEvent })
   : new MockAdProvider(host, modes, params.has('fastads') ? 1 : 5, { interstitials: params.has('mockads'), rewarded: params.has('mockads') }); // (the website: no ads; tests: stand-ins)
 const billing = !params.has('nobilling') && SELL_PACKS && native ? new PlayBilling(nativeKit.NativePurchases, nativeKit.PURCHASE_TYPE) : new NoBilling();
 const gate = new ClassAccessGate({ host, modes, wallet, ads });
@@ -1207,7 +1208,7 @@ async function offerAppUpdate() {
   if (go) location.href = CONFIG.update.store; // (the app opens Google Play for it)
 }
 if (setup.done && !params.has('debug') && !params.has('nointro')) setTimeout(() => new HindiNews(host, { settings, modes, currentLang: () => glossLang() }).maybe(), 1200); // (Hindi came: once, for players from India)
-if (native && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 1500);
+if (native && window.Capacitor?.getPlatform?.() === 'android' && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 1500);
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
