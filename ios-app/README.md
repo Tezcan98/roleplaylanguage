@@ -30,6 +30,11 @@ Build: `f72b4111-0d96-4b33-aee6-6a92070164d9`
 https://expo.dev/accounts/tezcan98/projects/turk-ailem-ios/builds/f72b4111-0d96-4b33-aee6-6a92070164d9
 Bu simülatör paketidir; imzalı cihaz/TestFlight paketi veya gerçek iOS çalıştırma testi değildir.
 
+İmzalı App Store dağıtım derlemesi: **1.0.0 (4)**, 2026-11-08 tarihinde başarılı.
+Build: `9937fb9b-982b-473c-98b8-c110b816f79f`
+https://expo.dev/accounts/tezcan98/projects/turk-ailem-ios/builds/9937fb9b-982b-473c-98b8-c110b816f79f
+Bu paket App Store Connect'e henüz yüklenmedi. Gerçek iOS çalıştırma testi ve aşağıdaki mağaza koşulları hâlâ bekliyor.
+
 ## Henüz yayımlama koşulları tamamlanmadı
 
 - `enes0tezcan@gmail.com` App Manager rolünde; Developer portalı erişimi yok, fakat mevcut API anahtarı ile yeni Bundle ID ve imzalama profili oluşturuldu. Bu adım için hesap sahibi girişi gerekmiyor. Mağaza kaydı için App Store Connect tarayıcı oturumu açılmalı; tarayıcı aracı şu an Work ayarlarında kapalı.
