@@ -13,6 +13,7 @@ export const DEFAULTS = {
   boosts: { pepperMinutes: 30, pepperSpeed: 1.5, glowDays: 3 }, // Urfa biberi: this much faster for this long; Altın baklava: shining this many days
   ads: { interstitialEvery: 2, idleBannerSeconds: 90, menuBannerChance: 1, betweenDays: true, afterChess: true, afterChessEvery: 2, travelChance: 0.35, travelGapMinutes: 6 },
   sellPacks: false, // credit packs for sale (Google Play): on once the Play Console products are live
+  yakarTop: false, // dodgeball in the schoolyard (Saturday afternoon): hidden until the server turns it on
   roomFull: 30, // a room this busy: newcomers who didn't pick a city go to a quieter one
   cities: [['ankara', 'Ankara'], ['istanbul', 'İstanbul'], ['izmir', 'İzmir'], ['manisa', 'Manisa']],
   update: { latestApp: 0, store: 'https://play.google.com/store/apps/details?id=com.anadolu', text: '', en: '' },

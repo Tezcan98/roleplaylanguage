@@ -5,14 +5,14 @@ import { CONFIG } from '../../config/remote.js';
  * (the listed TL prices are only shown until Play answers with the real, local price).
  */
 export const PACKS = [
-  { id: 'credits_50', credits: 50, price: '14,90 TL' },
-  { id: 'credits_200', credits: 200, price: '24,90 TL' },
-  { id: 'credits_500', credits: 500, price: '48,90 TL' },
+  { id: 'credits_50', credits: 50, price: '6,99 TL' },
+  { id: 'credits_100', credits: 100, price: '10,99 TL' },
+  { id: 'credits_200', credits: 200, price: '19,99 TL' },
 ];
 
 /**
  * Credit packs for sale (config.json "sellPacks", turned on from the server once the Play Console
- * products — credits_50, credits_200, credits_500 — are live; off: no packs in the shop).
+ * products — credits_50, credits_100, credits_200 — are live; off: no packs in the shop).
  */
 export const SELL_PACKS = CONFIG.sellPacks;
 

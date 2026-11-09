@@ -10,6 +10,8 @@
  * Chapter `enter`: effects run when the chapter starts. A dialogue/hotspot effect
  * `chapter` moves the story on.
  */
+import { CONFIG } from '../config/remote.js';
+
 /** The grocer is always at the village square. */
 const VILLAGE_NPCS = { bakkal: ['village', 'bakkal', 'stand'] };
 
@@ -482,44 +484,43 @@ export const STORY = {
       },
       intro: {
         num: 'Cumartesi · Bölüm 21', title: 'Hafta sonu başladı',
-        text: 'Okul yok! Arkadaşların köy meydanında. Bu akşam bakkal Recep amcanın oğlunun düğünü var; meydanda hazırlık yapılıyor.',
-        en: 'No school! Your friends are at the village square. Tonight is the wedding of Recep the grocer’s son; the square is getting ready.',
+        text: 'Okul yok! Arkadaşların köy meydanında. Bütün gün meydanda oynayacaksınız.',
+        en: 'No school! Your friends are at the village square. You will play in the square all day.',
       },
       quests: [
         { id: 'sat-elif', title: 'Elif ile buluş', obj: 'Elif ile konuş', en: 'Talk to Elif', target: { npc: 'elif' }, minutes: 10 },
         { id: 'sat-can', title: 'Can ile buluş', obj: 'Can ile konuş', en: 'Talk to Can', target: { npc: 'can' }, minutes: 10 },
-        { id: 'sat-zehra', title: 'Zehra ile buluş', obj: 'Zehra ile konuş', en: 'Talk to Zehra', target: { npc: 'zehra' }, minutes: 10 },
-        { id: 'sat-bakkal', title: 'Düğün hazırlığı', obj: 'Bakkal Recep amcayla konuş', en: 'Talk to Recep the grocer', target: { npc: 'bakkal' }, after: ['chapter'], minutes: 20 },
+        { id: 'sat-zehra', title: 'Zehra ile buluş', obj: 'Zehra ile konuş', en: 'Talk to Zehra', target: { npc: 'zehra' }, ...(CONFIG.yakarTop ? {} : { after: ['chapter'] }), minutes: 10 },
+        ...(CONFIG.yakarTop ? [{ id: 'sat-yakar', title: 'Yakar top', obj: 'Elif ile okul bahçesine gitmeyi konuş', en: 'Talk to Elif about going to the schoolyard', target: { npc: 'elif' }, after: ['chapter'], minutes: 20 }] : []),
       ],
     },
 
-    // Saturday evening: the wedding in the square — congratulate the family, join the halay
+    // Saturday afternoon: dodgeball (yakar top) in the schoolyard's chalk circle (systems/YakarTop.js);
+    // hidden until config.json "yakarTop" is true (Saturday then ends after the friends in the square)
+    ...(CONFIG.yakarTop ? [
     {
-      id: 'd6-wedding', day: 7, time: '19:30', location: 'village', spawn: 'yardRoad',
+      id: 'd6-yard', day: 7, time: '15:00', location: 'schoolyard', spawn: 'gate',
       cast: {
-        anne: ['village', 'weddingAnne', 'stand'],
-        baba: ['village', 'weddingBaba', 'stand'],
-        dede: ['village', 'weddingDede', 'stand'],
-        bakkal: ['village', 'weddingHost', 'stand'],
-        elif: ['village', 'halay1', 'halay'],
-        can: ['village', 'halay2', 'halay'],
-        zehra: ['village', 'halay3', 'halay'],
-        kemal: ['village', 'halay4', 'halay'],
-        rifat: ['village', 'halay5', 'halay'],
-        manav: ['village', 'halay6', 'halay'],
-        seyis: ['village', 'halay7', 'halay'],
+        anne: ['house', 'kitchen', 'cook'],
+        baba: ['house', 'sedirL', 'sitBench'],
+        dede: ['house', 'sedirR', 'sitBench'],
+        elif: ['schoolyard', 'yakarElif', 'stand'],
+        can: ['schoolyard', 'yakarCan', 'stand'],
+        zehra: ['schoolyard', 'yakarZehra', 'stand'],
+        ...VILLAGE_NPCS,
       },
       intro: {
-        num: 'Cumartesi · Bölüm 22', title: 'Düğün',
-        text: 'Akşam oldu. Meydanda davul zurna çalıyor! Recep amcanın oğlu bugün evleniyor, bütün köy düğünde.',
-        en: 'Evening has come. Drum and zurna are playing in the square! Recep’s son is getting married today; the whole village is at the wedding.',
+        num: 'Cumartesi · Bölüm 22', title: 'Yakar top',
+        text: 'Öğleden sonra okul bahçesindesin. Arkadaşların tebeşirle bir daire çizmiş: yakar top zamanı!',
+        en: 'It is afternoon and you are in the schoolyard. Your friends have drawn a chalk circle: time for dodgeball!',
       },
       quests: [
-        { id: 'wedding-congrats', title: 'Tebrik', obj: 'Recep amcayı tebrik et', en: 'Congratulate uncle Recep', target: { npc: 'bakkal' }, minutes: 10 },
-        { id: 'wedding-halay', title: 'Halay', obj: 'Halaya katıl', en: 'Join the halay (the line dance by the fountain)', target: { hotspot: 'village.halay' }, complete: { flag: 'halay-done' }, minutes: 30 },
-        { id: 'wedding-home', title: 'Eve dönüş', obj: 'Annenle konuş', en: 'Talk to mom', target: { npc: 'anne' }, after: ['chapter'], minutes: 10 },
+        { id: 'yard-team', title: 'Oyunun kuralları', obj: 'Elif ile yakar top kurallarını konuş', en: 'Talk to Elif about the dodgeball rules', target: { npc: 'elif' }, minutes: 10 },
+        { id: 'yard-play', title: 'Yakar top', obj: 'Daireye gir ve yakar top oyna', en: 'Step into the circle and play dodgeball', target: { hotspot: 'school.yakar' }, complete: { flag: 'yakartop-done' }, minutes: 30 },
+        { id: 'yard-end', title: 'Eve dönüş', obj: 'Zehra ile konuş', en: 'Talk to Zehra', target: { npc: 'zehra' }, after: ['chapter'], minutes: 10 },
       ],
     },
+    ] : []),
 
     {
       id: 'd7-morning', day: 8, time: '10:00', location: 'yard', spawn: 'houseDoor',

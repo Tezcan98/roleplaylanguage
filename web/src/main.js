@@ -65,6 +65,7 @@ import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
 import { SettingsPanel, defaultFps } from './ui/SettingsPanel.js';
 import { FeedbackView } from './ui/FeedbackView.js';
+import { YakarTop } from './systems/YakarTop.js';
 import { ParkPlay } from './systems/ParkPlay.js';
 import { Animals } from './systems/Animals.js';
 import { Bicycle, bikeMount } from './systems/Bicycle.js';
@@ -72,7 +73,6 @@ import { Scooters, scooterMount } from './systems/Scooter.js';
 import { KahveCirak } from './systems/KahveCirak.js';
 import { DamaView } from './ui/DamaView.js';
 import { DamaClub } from './systems/DamaClub.js';
-import { HalayDance } from './systems/HalayDance.js';
 import { el } from './ui/dom.js';
 import { ShopView } from './ui/ShopView.js';
 import { DailyRewardView } from './ui/DailyRewardView.js';
@@ -755,9 +755,9 @@ const dama = new DamaClub({
 });
 gameCtx.dama = dama; // (the shelf's "Dama al" only when your hands are free)
 effects.register('dama-take', () => dama.take()).register('dama-npc', () => dama.playRifat());
-// Saturday's wedding: the drum, and the player joining the halay line
-const halay = new HalayDance({ world, player, modes, toasts, vocab, effects, story, muted: () => musicLevel() <= 0, volume: musicLevel });
-effects.register('halay', () => halay.join());
+// Saturday in the schoolyard: dodgeball (yakar top) in the chalk circle
+const yakarTop = new YakarTop({ world, player, vocab, toasts, effects });
+effects.register('yakar-top', () => yakarTop.start());
 // the tailor's mannequin in the square wears the HD suit (so people see what they can buy)
 models.has('hd.suit.boy') && models.load('hd.suit.boy').then(({ scene, animations }) => {
   const a = world.get('village').anchors.get('mannequin');
@@ -1127,7 +1127,7 @@ function continueGame(then) {
 
 
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
-const game = new Game({ ambient: [kahveTalk, cirak, dama, halay, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk], shotButton, passButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, yakarTop, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk], shotButton, passButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 // frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
 const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };
@@ -1212,4 +1212,4 @@ if (native && window.Capacitor?.getPlatform?.() === 'android' && CONFIG.update.l
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { garden, gardenWalk, items, menu, cinema, ratePrompt, firstSteps, parkPlay, feedback, halay, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { garden, gardenWalk, items, menu, cinema, ratePrompt, firstSteps, parkPlay, feedback, yakarTop, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

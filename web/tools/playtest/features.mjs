@@ -475,19 +475,13 @@ try {
   check('Sunday has no tale and no greengrocer any more (Tuesday, after the numbers lesson)', await ev(() => { const ch = (id) => window.__game.story.story.chapters.find((c) => c.id === id).quests.map((q) => q.id); return !ch('d1-afternoon').includes('masal') && !ch('d1-afternoon').includes('manav') && ch('d3-home').join() === 'review-2,manav,masal,dede-filistin,talk-baba-tools,talk-dede-3'; }));
   check('the prayer: grandpa asks whether you join or watch', await ev(() => window.__game.dialogue.dialogues.dede.nodes.ez2.options.some((o) => o.next === 'ezWatch')));
   check('the envelope is a surprise, nobody asks to keep a secret', await ev(() => !JSON.stringify(Object.values(window.__game.dialogue.dialogues).map((d) => Object.values(d.nodes).map((n) => [n.say, ...(n.options ?? []).map((o) => o.tr)]))).match(/[Aa]ramızda kalsın|[Kk]imseye gösterme|sorular sorulmaz/)));
-  // Saturday evening: the wedding — congratulate, join the halay, home
-  const wi = await ev(() => window.__game.story.story.chapters.findIndex((c) => c.id === 'd6-wedding'));
-  await ev((i) => window.__game.story.startChapter(i), wi); await sleep(1500);
-  await ev(() => document.querySelector('.overlay.open .card .btn')?.click()); await sleep(800);
-  check('the wedding: the villagers dance the halay by the fountain', await ev(() => ['elif', 'can', 'zehra'].every((id) => window.__game.cast.get(id).behavior.halay) && window.__game.story.quest?.id === 'wedding-congrats'));
-  await ev(() => [...document.querySelectorAll('.overlay.open button')].find((b) => b.textContent.trim() === 'Gir')?.click()); await sleep(300); // the wedding is at the kahvehane, a talking zone: "Gir" at its door
-  await ev(() => window.__game.dialogue.open('bakkal')); await sleep(500);
-  await page.click('#dlg button:has-text("Allah mesut etsin")'); await sleep(500);
-  await page.click('#dlg button:has-text("Hemen katılıyorum")'); await sleep(500);
-  check('…"Allah mesut etsin" to the family, then "Halaya katıl"', await ev(() => window.__game.story.quest?.id === 'wedding-halay'));
-  await ev(() => window.__game.halay.join());
-  check('…in the line for a few rounds, then the quest is done', !!(await waitFor(() => ev(() => window.__game.story.quest?.id === 'wedding-home' && !window.__game.player.dancing), 20000)));
-  await ev(() => window.__game.travel.place('yard', 'gate', { force: true })); await sleep(500);
+  // Saturday: no wedding or halay any more; the dodgeball chapter stays hidden until config "yakarTop" is on
+  check('no wedding or halay is left in the story', await ev(() => !JSON.stringify(window.__game.story.story).match(/halay|düğün|wedding/)));
+  check('dodgeball (yakar top) is hidden for now: no chapter, Saturday ends with the friends in the square', await ev(() => {
+    const ch = window.__game.story.story.chapters; const sat = ch.find((c) => c.id === 'd6-morning');
+    return !ch.some((c) => c.id === 'd6-yard') && sat.quests.at(-1).id === 'sat-zehra' && !!sat.quests.at(-1).after;
+  }));
+  check('…and the schoolyard has no chalk circle', await ev(() => !window.__game.world.get('schoolyard').anchors.has('yakarElif')));
 
   // --- word practice -------------------------------------------------------------------
   check('word practice is offered from the notebook', await ev(() => window.__game.drill.available));

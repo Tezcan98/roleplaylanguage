@@ -194,12 +194,6 @@ export class Npc extends Character {
     this.gardenPose(t, !this.talking && performance.now() < (this.gardenHelpUntil ?? 0));
     if (this.behavior.swing) { this.#swing(player); return; }
     if (this.behavior.roam && !this.talking) { this.#roam(dt, t); return; }
-    if (this.behavior.halay && !this.talking) { // the wedding's line dance: steps to the side and back, facing the middle
-      const rot = this.home.rot ?? 0, s = Math.sin(t * 2.4 + (this.home.x + this.home.z) * 0.15) * 0.3;
-      this.position.x = this.home.x + Math.cos(rot) * s; this.position.z = this.home.z - Math.sin(rot) * s;
-      this.turnTo(rot, 0.2); this.walk(t, 0.5); this.behavior.pose(this.rig, t);
-      return;
-    }
     if (this.behavior.follow && !this.talking) { this.#follow(dt, t, player); return; }
     if (this.behavior.roam || this.behavior.follow) { this.position.y = 0; this.roam.jumping = false; }
     const b = this.behavior, near = b.turnToPlayerWithin && Math.hypot(player.position.x - this.position.x, player.position.z - this.position.z) < b.turnToPlayerWithin;

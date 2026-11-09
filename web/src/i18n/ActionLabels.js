@@ -14,7 +14,7 @@ const EN = {
   'Sofrayı hazırla': 'Set the table', 'Sofraya otur': 'Sit at the table', 'Masaya koy': 'Put it on the table', 'Ekmeği sofraya koy': 'Put the bread on the table',
   'Ödev yap': 'Do homework', 'Odayı süpür': 'Sweep the room', 'Bulaşıkları yıka': 'Wash the dishes', 'Elini yıka': 'Wash your hands', 'Abdest al': 'Make ablution (wudu)',
   'Su iç': 'Drink water', 'Çeşmeden su iç': 'Drink water from the fountain', 'Çay iç': 'Drink tea', 'Çay hazırla': 'Make tea', 'Çöpe at': 'Throw it in the bin',
-  'Bahçeyi sula': 'Water the garden', 'Çiçeği sula': 'Water the flower', 'Topa vur': 'Kick the ball', 'Halaya katıl': 'Join the halay dance',
+  'Bahçeyi sula': 'Water the garden', 'Çiçeği sula': 'Water the flower', 'Topa vur': 'Kick the ball', 'Yakar top oyna': 'Play dodgeball',
   'Salıncakta sallan': 'Swing on the swing', 'Kaydıraktan kay': 'Go down the slide', 'Tahterevalliye bin': 'Ride the seesaw', 'Bisiklete bin': 'Ride the bicycle', 'Bisikletten in': 'Get off the bicycle',
   'Banka otur': 'Sit on the bench', 'Bankta otur': 'Sit on the bench', 'Banka otur, maçı izle': 'Sit on the bench and watch the match', 'Kahvehanede otur': 'Sit in the coffeehouse', 'Çay bahçesinde otur': 'Sit in the tea garden',
   'Sinemada otur': 'Sit in the cinema', 'Camiye bak': 'Look at the mosque', 'Raflara bak': 'Look at the shelves', 'Bakkalın tezgahına bak': 'Look at the grocer’s counter', 'Alışveriş yap': 'Go shopping', 'Meyve sebze al': 'Buy fruit and vegetables',

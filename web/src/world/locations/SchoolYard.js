@@ -3,6 +3,7 @@ import { Location } from '../Location.js';
 import { Foliage } from '../../engine/Foliage.js';
 import { buildPitch } from '../Pitch.js';
 import { Townscape } from '../Townscape.js';
+import { CONFIG } from '../../config/remote.js';
 // import { addTrashBin } from '../trashBin.js';
 
 const DARK = { tex: 'darkWood' };
@@ -11,6 +12,8 @@ const DARK = { tex: 'darkWood' };
 /** The football pitch on the yard: goals at both ends (x), centre spot. */
 export const PITCH = { x0: -10, x1: 10, z0: -8.6, z1: 4.6, goalHalf: 2 }; // wide goals: easier to score
 PITCH.cz = (PITCH.z0 + PITCH.z1) / 2;
+/** The chalk circle south of the pitch where the children play dodgeball (systems/YakarTop.js): its centre and radius. */
+export const YAKAR = { x: 0, z: 7.6, r: 2.8 };
 /** The canteen kiosk beside the school building, west of the pitch (its window faces south). */
 const CANTEEN = { x: -13.6, z: -7.7 };
 
@@ -23,6 +26,20 @@ export class SchoolYard extends Location {
     this.scoreWriter = buildPitch(this, mf, { ...PITCH, board: { x: -12.6, z: PITCH.cz, rot: Math.PI / 2 } });
     this.anchor('kickoff', 0, PITCH.cz + 2.5, Math.PI);
     this.hotspot('school.scoreReset', -12.0, PITCH.cz, 1.3); // under the score board
+  }
+
+  /** Dodgeball: a chalk circle, the player's spot in the middle, three friends on the far side facing it. */
+  #yakarCircle() {
+    if (!CONFIG.yakarTop) return; // hidden for now
+    const { x, z, r } = YAKAR;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(r - 0.07, r, 72).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xF4F1EA }));
+    ring.position.set(x, 0.035, z);
+    this.add(ring);
+    this.hotspot('school.yakar', x, z, 1.6);
+    [['yakarElif', -1.05], ['yakarCan', 0], ['yakarZehra', 1.05]].forEach(([name, a]) => {
+      const ax = x + Math.sin(a) * (r + 0.7), az = z - Math.cos(a) * (r + 0.7);
+      this.anchor(name, ax, az, Math.atan2(x - ax, z - az));
+    });
   }
 
   /**
@@ -143,6 +160,7 @@ export class SchoolYard extends Location {
     });
 
     this.#pitch(mf, C);
+    this.#yakarCircle();
     this.#canteen(mf, C);
 
     // benches for the spectators and trees
@@ -165,7 +183,7 @@ export class SchoolYard extends Location {
     [[13, -3], [-12, 7], [12, 8], [-15, 2], [15, 3]].forEach(([x, z]) => { tree(x, z, 1.1); C.addCircle(x, z, 0.6); });
     add(Foliage.meadow({
       area: { x: [-16, 16], z: [-9.5, 12] }, count: kit.quality === 'low' ? 800 : 2500, flowers: 200,
-      blocked: (x, z) => (Math.abs(x) < 11.2 && z > -10.2 && z < 6.2) || (Math.abs(x) < 1.6 && z > 4) || (x < -11 && z < -5.6),
+      blocked: (x, z) => (Math.abs(x) < 11.2 && z > -10.2 && z < 6.2) || (Math.abs(x) < 1.6 && z > 4) || Math.hypot(x - YAKAR.x, z - YAKAR.z) < YAKAR.r + 0.4 || (x < -11 && z < -5.6),
     }));
 
     this.#town(mf);

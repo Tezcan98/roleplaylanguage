@@ -14,34 +14,21 @@ export const DIALOGUES = {
   bakkal: {
     start: (ctx) => {
       if (ctx.q === 'letter' && ctx.has('mektup')) return 'm1';
-      if (ctx.q === 'sat-bakkal') return 'wedding';
-      if (ctx.q === 'wedding-congrats') return 'wed1';
-      if (ctx.q === 'wedding-halay' || ctx.q === 'wedding-home') return 'wedIdle';
       return ctx.q === 'buy' && !ctx.has('sut') ? 'b1' : 'shop';
     },
     nodes: {
-      // grandpa's letter: the grocer's son is getting married
+      // grandpa's letter: the grocer says the kids meet in the square on Saturday
       m1: { ask: 'speak', say: 'Hoş geldin evlat! Elindeki ne?', en: "Welcome, kid! What's that in your hand?", words: [['göndermek', 'to send']],
         expect: ['Dedem bu mektubu gönderdi', 'Dedem mektup gönderdi', 'Dedemden mektup'], show: 'Dedem bu mektubu gönderdi.', showEn: 'My grandpa sent this letter.', next: 'm2' },
-      m2: { ask: 'listen', say: 'Cumartesi oğlumun düğünü var! Dedene söyle, herkes davetli.', en: "My son's wedding is on Saturday! Tell your grandpa, everyone is invited.",
-        prompt: 'Recep amca mektubu okudu. Ne dedi?', words: [['cumartesi', 'Saturday'], ['düğün', 'wedding'], ['davetli', 'invited'], ['oğul', 'son']],
+      m2: { ask: 'listen', say: 'Cumartesi çocuklar meydanda buluşuyor! Dedene söyle, torunu da gelsin.', en: "On Saturday the kids are meeting in the square! Tell your grandpa his grandchild should come too.",
+        prompt: 'Recep amca mektubu okudu. Ne dedi?', words: [['cumartesi', 'Saturday'], ['buluşmak', 'to meet'], ['meydan', 'square'], ['torun', 'grandchild']],
         options: [
           { tr: 'Pazar günü okul yok.', en: 'No school on Sunday.', wrong: true },
-          { tr: 'Cumartesi köyde düğün var.', en: "There's a wedding in the village on Saturday.", next: 'm3' },
+          { tr: 'Cumartesi meydanda buluşma var.', en: 'There is a get-together in the square on Saturday.', next: 'm3' },
           { tr: 'Cuma günü pazar kurulacak.', en: 'There will be a market on Friday.', wrong: true },
         ] },
       m3: { say: 'Dedene selam söyle!', en: 'Say hello to your grandpa for me!', words: [['selam söylemek', 'to send regards']],
         options: [{ tr: 'Söylerim Recep amca!', en: 'I will, uncle Recep!', do: ['take:mektup', 'flag:letter-delivered'] }] },
-      wedding: { say: 'Bu akşam oğlumun düğünü var! Şimdi hazırlık yapıyoruz. Akşam meydanda davul zurna çalacak, hep birlikte halay çekeceğiz. Sen de gel!', en: "Tonight is my son's wedding! We are getting ready now. In the evening the drum and zurna will play in the square, and we'll all dance the halay together. You come too!", words: [['düğün', 'wedding'], ['davul', 'drum'], ['zurna', 'zurna (a shrill folk pipe)']], options: [{ tr: 'Hayırlı olsun Recep amca! Gelirim.', en: "Congratulations, uncle Recep! I'll come.", do: ['quest'] }, { tr: 'Yardım edebilir miyim?', en: 'Can I help?', next: 'weddingHelp' }] },
-      weddingHelp: { say: 'Sağ ol evlat! Sen akşam erken gel, halayda ilk sen dur. Kolay gelsin bana dersen o da yeter!', en: 'Thanks, kid! Come early in the evening and be the first in the halay. Saying “kolay gelsin” to me is help enough!', options: [{ tr: 'Kolay gelsin Recep amca!', en: 'Take it easy, uncle Recep!', next: 'weddingSagol' }] },
-      weddingSagol: { say: 'Sağ ol, sağ ol! Akşam görüşürüz.', en: 'Thanks, thanks! See you tonight.', options: [{ tr: 'Görüşürüz!', en: 'See you!', do: ['quest'] }] },
-      wed1: { say: 'Gel evlat, düğünümüze hoş geldin!', en: 'Come, kid, welcome to our wedding!', words: [['gelin', 'bride'], ['damat', 'groom'], ['Allah mesut etsin', 'may God make them happy (said to a family at a wedding)']],
-        options: [{ tr: 'Hoş bulduk! Allah mesut etsin Recep amca.', en: 'Glad to be here! May God make them happy, uncle Recep.', next: 'wed2' }, { tr: 'Hoş bulduk! Gelin ile damat çok güzel olmuş.', en: 'Glad to be here! The bride and groom look lovely.', next: 'wed2' }] },
-      wed2: { say: 'Amin, sağ ol evlat! Bak, herkes çeşmenin önünde halay çekiyor. Sen de katıl!', en: "Amen, thank you, kid! Look, everyone is dancing the halay in front of the fountain. You join in too!", words: [['halay çekmek', 'to dance the halay']],
-        options: [{ tr: 'Hemen katılıyorum!', en: "I'm joining right away!", do: ['quest'] }, { tr: 'Halay nasıl çekilir?', en: 'How do you dance the halay?', next: 'wed3' }] },
-      wed3: { say: 'Çok kolay! Yan yana durursunuz, serçe parmaklarınızı tutarsınız. Davula göre sağa iki adım, sola bir adım!', en: 'Very easy! You stand side by side and hold each other’s little fingers. With the drum: two steps right, one step left!', words: [['adım', 'step'], ['serçe parmak', 'little finger']],
-        options: [{ tr: 'Anladım, hadi!', en: 'Got it, come on!', do: ['quest'] }] },
-      wedIdle: { say: 'Hadi, halay seni bekliyor!', en: 'Come on, the halay is waiting for you!', options: [{ tr: 'Geliyorum!', en: "I'm coming!" }] },
       b1: { ask: 'order', say: 'Hoş geldin! Ne vereyim?', en: 'Welcome! What can I get you?', words: [['vermek', 'to give']],
         answer: 'Bir ekmek ve bir süt lütfen.', answerEn: 'A bread and a milk, please.', next: 'b2' },
       b2: { ask: 'listen', say: 'Ekmek on lira, süt on beş lira.', en: 'Bread is ten lira, milk is fifteen lira.', prompt: 'Dinle: toplam kaç lira?',
@@ -94,8 +81,6 @@ export const DIALOGUES = {
         case 'morning-3': return 'mGreet3';
         case 'morning-4': return 'mGreet4';
         case 'talk-mom-weekend': return 'weekend';
-        case 'wedding-congrats': case 'wedding-halay': return 'wedMom';
-        case 'wedding-home': return 'wedHome';
         case 'show-mom': return 'hw1';
         case 'buy': return ctx.has('sut') ? 'shBack' : 'shRemind';
         default: break;
@@ -126,10 +111,6 @@ export const DIALOGUES = {
           { tr: 'Mutfakta.', en: 'In the kitchen.', wrong: true },
         ] },
       b6: { say: 'Aferin! Hadi, montunu al.', en: 'Well done! Go on, take your jacket.', words: [['aferin', 'well done']], options: [{ tr: 'Tamam anne!', en: 'Okay mom!' }, { tr: 'Hemen alıyorum!', en: "I'm getting it right away!" }] },
-      wedMom: { say: 'Ne güzel bir düğün! Önce Recep amcayı tebrik et, sonra halaya katıl.', en: 'What a lovely wedding! First congratulate uncle Recep, then join the halay.', options: [{ tr: 'Tamam anne!', en: 'Okay mom!' }] },
-      wedHome: { say: 'Maşallah, çok güzel halay çektin! Geç oldu, hadi eve gidelim.', en: 'Well done, you danced the halay beautifully! It is late, come on, let’s go home.', words: [['geç', 'late']],
-        options: [{ tr: 'Hadi gidelim. Çok eğlendim!', en: "Let's go. I had so much fun!", do: ['quest'] }, { tr: 'Biraz daha kalalım mı?', en: 'Shall we stay a little longer?', next: 'wedLate' }] },
-      wedLate: { say: 'Yarın erken kalkacağız oğlum. Hadi, herkese iyi geceler de.', en: 'We will get up early tomorrow, son. Come on, say good night to everyone.', options: [{ tr: 'İyi geceler herkese!', en: 'Good night, everyone!', do: ['quest'] }] },
       jacketWhere: { say: 'Montun kapının yanında, askıda.', en: 'Your jacket is next to the door, on the hanger.', options: [{ tr: 'Tamam.', en: 'Okay.' }] },
       goOut: { say: 'Mont sana çok yakışmış! Hadi, dışarı çık.', en: 'The jacket looks great on you! Go on, go outside.', words: [['yakışmak', 'to suit, look good on']],
         options: [{ tr: 'Görüşürüz anne!', en: 'See you mom!' }, { tr: 'Hoşça kal anne!', en: 'Bye, mom!' }, { tr: 'Teşekkürler anne!', en: 'Thanks mom!' }] },
@@ -325,10 +306,10 @@ export const DIALOGUES = {
       ltWait: { say: 'Mektubu Recep amcaya verdin mi? Bakkal dükkânı meydanda.', en: 'Did you give the letter to Recep? The grocer’s shop is in the square.',
         options: [{ tr: 'Gidiyorum dede.', en: "I'm going, grandpa." }] },
       ltBack: { ask: 'order', say: 'Geldin mi evladım? Recep amca ne dedi?', en: 'You are back, my child? What did Recep say?',
-        answer: 'Cumartesi köyde düğün var.', answerEn: "There's a wedding in the village on Saturday.", next: 'ltEnd' },
-      ltEnd: { say: 'Düğün mü? Ne güzel! Davul zurna çalar, hep beraber halay çekeriz.', en: 'A wedding? How lovely! The drum and pipe will play and we will all dance the halay together.',
-        words: [['düğün', 'wedding']],
-        options: [{ tr: 'Ben de halay çekeceğim!', en: "I'll dance the halay too!", do: ['quest'] }, { tr: 'Halayı bilmiyorum ama öğrenirim!', en: "I don't know the halay, but I'll learn!", do: ['quest'] }] },
+        answer: 'Cumartesi meydanda buluşma var.', answerEn: 'There is a get-together in the square on Saturday.', next: 'ltEnd' },
+      ltEnd: { say: 'Meydanda buluşma mı? Ne güzel! Sen de git, arkadaşlarınla güzelce oyna.', en: 'A get-together in the square? How lovely! You go too, have a good time with your friends.',
+        words: [['buluşma', 'get-together']],
+        options: [{ tr: 'Ben de gideceğim!', en: "I'll go too!", do: ['quest'] }, { tr: 'Arkadaşlarımla oynayacağım!', en: "I'll play with my friends!", do: ['quest'] }] },
       later: { say: 'Önce annene yardım et. Sonra gel, sana güzel bir masal anlatacağım.', en: "Help your mom first. Then come, I'll tell you a nice tale.", options: [{ tr: 'Tamam dede!', en: 'Okay grandpa!' }] },
       allTold: { say: 'Bütün masallarımı anlattım! Hangisini tekrar dinlemek istersin?', en: 'I have told all my tales! Which one would you like to hear again?',
         options: TALES.map((t) => ({ tr: t.title, en: '', next: `${t.id}.start` })) },
@@ -432,6 +413,9 @@ export const DIALOGUES = {
     start: (ctx) => {
       if (ctx.q === 'sun-friends') return 'sunMeet';
       if (ctx.q === 'sat-elif') return 'friendMeet';
+      if (ctx.q === 'sat-yakar') return 'yakarCall';
+      if (ctx.q === 'yard-team') return 'yakarTeam';
+      if (ctx.q === 'yard-play') return 'yakarPlay';
       if (ctx.q === 'chat-weekend') return 'friendFri';
       if (ctx.q === 'friend-plan') return 'friendPlan';
       return ctx.q === 'meet-elif' ? 'e1' : ctx.loc === 'classroom' ? 'eClass' : 'eIdle';
@@ -441,10 +425,14 @@ export const DIALOGUES = {
         options: [{ tr: 'Tabii, haftaya görüşürüz!', en: 'Sure, see you next week!', do: ['quest'] }] },
       friendPlan: { say: 'Hafta sonu yaklaşıyor! Cumartesi köy meydanında buluşalım mı?', en: 'The weekend is coming! Shall we meet at the village square on Saturday?', words: [['buluşmak', 'to meet'], ['hafta sonu', 'weekend']], options: [{ tr: 'Tabii, buluşalım!', en: 'Sure, let’s meet!', do: ['quest'] }, { tr: 'Saat kaçta?', en: 'At what time?', next: 'friendTime' }] },
       friendTime: { say: 'Sabah dokuzda, çeşmenin yanında. Can ve Zehra da gelecek.', en: 'At nine in the morning, by the fountain. Can and Zehra are coming too.', words: [['sabah', 'morning']], options: [{ tr: 'Tamam, orada olurum!', en: "Okay, I'll be there!", do: ['quest'] }] },
-      friendFri: { say: 'Yarın cumartesi! Sabah meydanda buluşuyoruz, unutmadın değil mi? Akşam da düğün var!', en: "Tomorrow is Saturday! We're meeting in the square in the morning, you haven't forgotten, have you? And there's a wedding in the evening!", words: [['düğün', 'wedding']], options: [{ tr: 'Unutmadım, gelirim!', en: "I haven't forgotten, I'll come!", do: ['quest'] }, { tr: 'Düğün kimin?', en: 'Whose wedding is it?', next: 'friendWho' }] },
-      friendWho: { say: 'Bakkal Recep amcanın oğlunun! Bütün köy davetli. Halay çekeceğiz!', en: "Recep the grocer's son's! The whole village is invited. We'll dance the halay!", words: [['halay', 'halay (a line dance)']], options: [{ tr: 'Ne güzel! Görüşürüz.', en: 'How nice! See you.', do: ['quest'] }] },
-      friendMeet: { say: 'Sonunda hafta sonu! Bugün okul yok. Hadi meydanda biraz oynayalım.', en: "Finally the weekend! No school today. Let's play in the square for a while.", words: [['sonunda', 'finally']], options: [{ tr: 'Hadi oynayalım!', en: "Let's play!", do: ['quest'] }, { tr: 'Akşam düğüne geliyor musun?', en: 'Are you coming to the wedding tonight?', next: 'friendWed' }] },
-      friendWed: { say: 'Tabii! Annemle geleceğim. Halayda yan yana duralım!', en: "Of course! I'll come with my mom. Let's stand side by side in the halay!", options: [{ tr: 'Olur, anlaştık!', en: "Okay, it's a deal!", do: ['quest'] }] },
+      friendFri: { say: 'Yarın cumartesi! Sabah meydanda buluşuyoruz, unutmadın değil mi?', en: "Tomorrow is Saturday! We're meeting in the square in the morning, you haven't forgotten, have you?", options: [{ tr: 'Unutmadım, gelirim!', en: "I haven't forgotten, I'll come!", do: ['quest'] }] },
+      yakarCall: { say: 'Hadi okul bahçesine gidelim! Orada yakar top oynayacağız. Herkes bekliyor.', en: "Come on, let's go to the schoolyard! We're going to play dodgeball there. Everyone is waiting.", words: [['bahçe', 'yard, garden'], ['beklemek', 'to wait']], options: [{ tr: 'Hadi gidelim!', en: "Let's go!", do: ['quest'] }, { tr: 'Biraz sonra geleceğim.', en: "I'll come in a little while.", next: 'yakarLater' }] },
+      yakarLater: { say: 'Tamam, ama çok bekletme!', en: "Okay, but don't keep us waiting too long!", words: [['bekletmek', 'to keep waiting']], options: [{ tr: 'Hemen geliyorum!', en: "I'm coming right away!", do: ['quest'] }] },
+      yakarTeam: { say: 'Yakar top çok kolay! Biri ortada durur, biz ona topla vururuz. Ortadaki kaçar. Topa değerse yanar!', en: 'Dodgeball is very easy! One person stands in the middle, we throw the ball at them. The one in the middle dodges. If the ball touches you, you are out!', words: [['ortada', 'in the middle'], ['kaçmak', 'to dodge, run away'], ['yanmak', 'to be out (in the game)'], ['vurmak', 'to hit']],
+        options: [{ tr: 'Anladım! Önce ben ortada duruyorum.', en: "Got it! I'll stand in the middle first.", do: ['quest'] }, { tr: 'Kaç kere vuracaksınız?', en: 'How many times will you throw?', next: 'yakarCount' }] },
+      yakarCount: { say: 'Sekiz kere! Üç kere yanarsan oyun biter. Tekrar deneyebilirsin.', en: 'Eight times! If you get hit three times the game is over. You can try again.', words: [['sekiz', 'eight'], ['üç', 'three'], ['tekrar', 'again']], options: [{ tr: 'Tamam, hazırım!', en: "Okay, I'm ready!", do: ['quest'] }] },
+      yakarPlay: { say: 'Ortadaki daireye gir ve "Yakar top oyna" de! Topa dikkat et!', en: 'Step into the circle in the middle and say “play dodgeball”! Watch out for the ball!', words: [['daire', 'circle'], ['dikkat etmek', 'to be careful']], options: [{ tr: 'Tamam, geliyorum!', en: "Okay, I'm coming!" }] },
+      friendMeet: { say: 'Sonunda hafta sonu! Bugün okul yok. Hadi meydanda biraz oynayalım.', en: "Finally the weekend! No school today. Let's play in the square for a while.", words: [['sonunda', 'finally']], options: [{ tr: 'Hadi oynayalım!', en: "Let's play!", do: ['quest'] }] },
       e1: { ask: 'speak', say: 'Merhaba! Sen yeni misin? Adın ne?', en: "Hi! Are you new? What's your name?", words: [['yeni', 'new'], ['ad', 'name']],
         expect: ['Benim adım', 'Adım'], keywords: ['adım'], show: 'Benim adım … (kendi adın)', showEn: 'My name is … (your own name)', next: 'e2' },
       e2: { say: 'Memnun oldum! Ben Elif. Bu da Can, o çok komik.', en: "Nice to meet you! I'm Elif. This is Can, he's very funny.", words: [['memnun oldum', 'nice to meet you']],
@@ -474,8 +462,9 @@ export const DIALOGUES = {
   },
 
   zehra: {
-    start: (ctx) => (ctx.q === 'sat-zehra' ? 'friendMeet' : 'z1'),
+    start: (ctx) => (ctx.q === 'sat-zehra' ? 'friendMeet' : ctx.q === 'yard-end' ? 'yakarEnd' : 'z1'),
     nodes: {
+      yakarEnd: { say: 'Çok güzel oynadın! Yarın yine oynarız. Akşam oldu, hadi eve gidelim.', en: 'You played very well! We will play again tomorrow. It is evening, come on, let’s go home.', words: [['akşam', 'evening']], options: [{ tr: 'Görüşürüz Zehra!', en: 'See you, Zehra!', do: ['quest'] }, { tr: 'Çok eğlendim, teşekkürler!', en: 'I had a lot of fun, thanks!', do: ['quest'] }] },
       friendMeet: { say: 'Ben de geldim! Yarın için bir planımız var mı?', en: 'I’m here too! Do we have a plan for tomorrow?', words: [['plan', 'plan'], ['yarın', 'tomorrow']], options: [{ tr: 'Yarın yine buluşalım.', en: 'Let’s meet again tomorrow.', do: ['quest'] }] },
       z1: { say: 'Merhaba! Kalemin var mı? Benimki kayboldu.', en: 'Hi! Do you have a pencil? Mine got lost.', words: [['kalem', 'pencil'], ['kaybolmak', 'to get lost']],
         options: [{ tr: 'Al, benim kalemimi kullan.', en: 'Here, use my pencil.', next: 'z2' }, { tr: 'Maalesef yok.', en: "Sorry, I don't.", next: 'z3' }] },
