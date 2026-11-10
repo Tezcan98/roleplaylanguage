@@ -38,7 +38,8 @@ export class Game {
     const t = (this.t += dt);
     const { ambient = [], shotButton, passButton, help, prayer, village, toys, foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx } = this;
     const playing = modes.base === 'play';
-    if (this.rest?.()) { // a board covers the world: only what plays on without being seen
+    if (this.rest?.()) {
+      shotButton?.cancel?.(); passButton?.cancel?.(); toys.cancelKick(); // a board covers the world: only what plays on without being seen
       time.update(dt);
       village.update(dt, t);
       ambient.forEach((a) => a.update(dt, t));

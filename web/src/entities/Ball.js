@@ -1,3 +1,4 @@
+import { passSpeed } from '../systems/FootballKick.js';
 import * as THREE from 'three';
 
 /** A football that can be kicked around; rolls, bounces off walls and slows down. */
@@ -36,16 +37,16 @@ export class Ball {
   }
 
   /** A hard shot in a direction (the way the player faces): fast and off the ground. */
-  shoot(dirX, dirZ, speed = 12.5) {
+  shoot(dirX, dirZ, speed = 12.5, lift = 4 + Math.random()) {
     const n = Math.hypot(dirX, dirZ) || 1;
     this.vel.set(dirX / n * speed, 0, dirZ / n * speed);
-    this.hopVel = 4 + Math.random();
+    this.hopVel = lift;
   }
 
   /** A controlled ground pass, slower than a shot and without a bounce. */
-  pass(dirX, dirZ) {
+  pass(dirX, dirZ, power = 0.2) {
     const n = Math.hypot(dirX, dirZ) || 1;
-    this.vel.set(dirX / n * 7, 0, dirZ / n * 7);
+    this.vel.set(dirX / n * passSpeed(power), 0, dirZ / n * passSpeed(power));
     this.hop = 0; this.hopVel = 0;
     this.position.y = this.radius;
   }
@@ -58,6 +59,7 @@ export class Ball {
     if (![x, z, vx, vz].every(Number.isFinite)) return;
     this.position.x = x; this.position.z = z;
     this.vel.set(vx, 0, vz);
+    this.hop = 0; this.hopVel = 0; this.position.y = this.radius; // a network ground pass clears any old local bounce
   }
 
   update(dt) {

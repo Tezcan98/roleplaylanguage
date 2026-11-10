@@ -873,3 +873,13 @@ body.chess-focus #toasts,body.chess-focus #quest,body.chess-focus .home-note,bod
 #shot,#pass{touch-action:none;min-width:86px;right:max(20px,env(safe-area-inset-right));max-width:150px}
 #pass{background:#3A78B8}
 #shot .btn-g,#pass .btn-g{font-size:13px;line-height:1.2;padding-bottom:3px}
+
+/* Charge without lifting the movement thumb; transform-only fill keeps mobile frames light. */
+#shot.charged-kick,#pass.charged-kick{min-height:74px;padding:8px 14px 19px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;position:absolute;overflow:hidden}
+.charged-kick .kick-meter{position:absolute;left:10px;right:10px;bottom:7px;height:7px;border:1px solid #ffffff70;border-radius:999px;background:#251b1680;overflow:hidden;pointer-events:none}
+.charged-kick .kick-fill{display:block;width:100%;height:100%;transform:scaleX(0);transform-origin:left center;background:#87ee72;will-change:transform;pointer-events:none}
+.charged-kick .kick-value{display:none;pointer-events:none;font:800 11px Nunito,sans-serif}
+.charged-kick.charging .kick-value{display:block;position:absolute;right:5px;top:2px;text-shadow:0 1px 2px #000}
+.charged-kick.charging{filter:brightness(1.12);outline:2px solid #fff3b3;outline-offset:2px}
+.charged-kick.full-power .kick-fill{background:#ffce43}
+@media(max-height:420px){#shot.charged-kick,#pass.charged-kick{min-height:66px;padding:6px 12px 18px}}

@@ -65,8 +65,8 @@ import { ClassAccessGate } from './services/monetization/ClassAccessGate.js';
 import { PlayBilling, NoBilling, SELL_PACKS } from './services/monetization/Billing.js';
 import { SettingsPanel, defaultFps } from './ui/SettingsPanel.js';
 import { FeedbackView } from './ui/FeedbackView.js';
-import { YakarTop } from './systems/YakarTop.js';
 import { ParkPlay } from './systems/ParkPlay.js';
+import { YakarTop } from './systems/YakarTop.js';
 import { Animals } from './systems/Animals.js';
 import { Bicycle, bikeMount } from './systems/Bicycle.js';
 import { Scooters, scooterMount } from './systems/Scooter.js';
@@ -123,6 +123,9 @@ import { Stats } from './services/Stats.js';
 import { Toasts } from './ui/Toasts.js';
 import { LabelLayer } from './ui/LabelLayer.js';
 import { Joystick } from './ui/Joystick.js';
+import { ChargedKickButton } from './ui/ChargedKickButton.js';
+import { PassAim } from './systems/PassAim.js';
+import { passReceiver } from './systems/FootballKick.js';
 import { ActionButton, ShotButton } from './ui/ActionButton.js';
 import { InventoryView } from './ui/InventoryView.js';
 import { SleepScreen } from './ui/SleepScreen.js';
@@ -440,8 +443,6 @@ const pitchMid = (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2;
 const villageBalls = [{ x: pitchMid, z: SQUARE_PITCH.cz }, { x: pitchMid - 4, z: SQUARE_PITCH.cz - 2 }]
   .map((at) => toys.add(new Ball(mf, world.get('village'), at), { action: 'ball', touch: true, quiet: true, onKick: (b, kind) => { squareFootball.assist(b, kind); village.ballKicked(b); } }));
 // ⚡ hard shot next to a ball: button (see the action button below) or key F
-input.onKey((e) => { if (modes.is('play') && (e.key === 'f' || e.key === 'F')) toys.shoot(); });
-input.onKey((e) => { if (modes.is('play') && !e.repeat && (e.key === 'p' || e.key === 'P')) toys.pass(); });
 // C: another camera view (normal, close, far, from above)
 const VIEW_NAMES = [['Normal görünüm', gloss('Normal view')], ['Yakın görünüm', gloss('Close view')], ['Uzak görünüm', gloss('Far view')], ['Yukarıdan görünüm', gloss('View from above')]];
 input.onKey((e) => { if (modes.is('play') && (e.key === 'c' || e.key === 'C')) { const [tr, en] = VIEW_NAMES[camera.cycleView()]; toasts.show(`🎥 ${tr}`, en); } });
@@ -682,8 +683,47 @@ const interactions = new InteractionSystem([
   hotspotUse,
 ], modes);
 const actionButton = new ActionButton(host, () => interactions.trigger());
-const shotButton = new ShotButton(host, () => toys.shoot(), actionButton.root, { text: '⚽ Şut', label: 'Şut', meaning: 'Shoot', press: true });
-const passButton = new ShotButton(host, () => toys.pass(), shotButton.root, { id: 'pass', text: '↗ Pas', label: 'Pas', meaning: 'Pass', press: true }); // (fires as the finger goes down: with a thumb on the joystick a second tap makes no click on phones)
+const canKick = () => modes.is('play') && !document.hidden && !document.body.classList.contains('menu') && !player.seated && !player.mount;
+toys.canKick = canKick;
+toys.passTargets = () => {
+  const match = matches[world.current?.id];
+  if (!match) return [];
+  const online = village.joinedAt === world.current.id ? village.remotes.visible() : [];
+  return [...online, ...cast.present()].filter((c) => c !== player && !c.seated && !c.mount && match.has(c.position));
+};
+const passAim = new PassAim({
+  canvas: ctx.renderer.domElement, camera: ctx.camera, world,
+  enabled: () => canKick() && !!village.onPitch(player.position),
+  inside: (p) => !!matches[world.current?.id]?.has(p),
+  receiverAt: (point) => {
+    const origin = toys.shotBall()?.toy.position ?? player.position;
+    return passReceiver(origin, { x: point.x - origin.x, z: point.z - origin.z }, toys.passTargets(), point);
+  },
+  receiverValid: (receiver) => toys.passTargets().includes(receiver),
+  holding: () => passButton.charging,
+  selected: () => {
+    if (!passButton.charging && !passAim.target()) return null;
+    return toys.passDirection(toys.shotBall()?.toy.position ?? player.position).receiver ?? passAim.target();
+  },
+});
+toys.passAim = () => passAim.target();
+const shotButton = new ChargedKickButton(host, (power) => toys.shoot(power), actionButton.root, {
+  text: '⚽ Şut', label: 'Şut', meaning: 'Shoot', canUse: canKick,
+  onStart: () => { passButton.cancel(); passAim.clear(); toys.cancelKick(); },
+});
+const passButton = new ChargedKickButton(host, (power) => { if (toys.pass(power)) passAim.clear(); }, shotButton.root, {
+  id: 'pass', text: '↗ Pas', label: 'Pas', meaning: 'Pass', canUse: canKick,
+  onStart: () => { shotButton.cancel(); toys.cancelKick(); },
+});
+input.onKey((e) => {
+  if (e.key.toLowerCase() === 'f') shotButton.keyDown(e);
+  if (e.key.toLowerCase() === 'p') passButton.keyDown(e);
+});
+addEventListener('keyup', (e) => { shotButton.keyUp(e); passButton.keyUp(e); });
+const cancelFootball = () => { shotButton.cancel(); passButton.cancel(); passAim.clear(); toys.cancelKick(); };
+bus.on(EV.LOCATION, cancelFootball);
+addEventListener('blur', cancelFootball);
+document.addEventListener('visibilitychange', () => { if (document.hidden) cancelFootball(); });
 // on horseback: jump (the button, or Space on a keyboard)
 const jumpHorse = () => { if (modes.is('play') && player.jump()) { vocab.learn('zıplamak', 'to jump'); village.jumped(); } }; // (the others see it)
 const jumpButton = new ShotButton(host, jumpHorse, actionButton.root, { id: 'jump', text: '🐎 Zıpla', label: 'Zıpla', press: true });
@@ -1127,7 +1167,7 @@ function continueGame(then) {
 
 
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
-const game = new Game({ ambient: [kahveTalk, cirak, dama, yakarTop, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk], shotButton, passButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [kahveTalk, cirak, dama, yakarTop, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk, passAim], shotButton, passButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 // frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
 const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };

@@ -243,6 +243,16 @@ test('per-IP connection limit', async () => {
   await again.close();
 });
 
+test('charged football accepts a full-power shot but rejects excessive speed', async () => {
+  const a = await join('Şutçu', 'charged'), b = await join('Pasçı', 'charged');
+  try {
+    a.send({ type: 'ball', x: 20, z: 30, vx: 20, vz: 0 });
+    const shot = await b.next('ball'); assert.equal(shot.vx, 20);
+    a.send({ type: 'ball', x: 20, z: 30, vx: 25, vz: 0 });
+    await silence(); assert.equal(b.inbox.some((m) => m.type === 'ball'), false);
+  } finally { await Promise.all([a, b].map((p) => p.close())); }
+});
+
 test('shared ball: kicks are relayed, newcomers get where it stopped; nonsense is ignored', async () => {
   const a = await join('Topçu', 'ball');
   const b = await join('Kaleci', 'ball');

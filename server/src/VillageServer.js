@@ -232,7 +232,7 @@ export class VillageServer {
         break;
       case 'ball': {
         const n = [msg.x, msg.z, msg.vx, msg.vz];
-        if (!n.every(Number.isFinite) || Math.abs(msg.x) > 120 || Math.abs(msg.z) > 120 || Math.hypot(msg.vx, msg.vz) > 15) return;
+        if (!n.every(Number.isFinite) || Math.abs(msg.x) > 120 || Math.abs(msg.z) > 120 || Math.hypot(msg.vx, msg.vz) > 24) return;
         const i = msg.n ?? 0;
         if (!Number.isInteger(i) || i < 0 || i >= MAX_BALLS) return;
         const ball = { x: msg.x, z: msg.z, vx: msg.vx, vz: msg.vz };

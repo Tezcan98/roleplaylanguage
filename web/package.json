@@ -26,7 +26,7 @@
     "test:school": "node --test tools/test-school-pacing.mjs",
     "test:wallet": "node --test tools/test-hd-welcome.mjs",
     "test:ads": "node --test tools/test-interstitial-frequency.mjs",
-    "test:football": "node --test tools/test-football-controls.mjs"
+    "test:football": "node --test tools/test-football-controls.mjs tools/test-kick-charge-ui.mjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",

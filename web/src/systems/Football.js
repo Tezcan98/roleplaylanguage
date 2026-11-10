@@ -89,7 +89,7 @@ export class Football {
     if (ux * tx + uz * tz < (dribble ? 0.5 : 0.2)) return; // not towards that goal
     if (dribble && d > 9) return; // far from the goal: just your touch
     const k = dribble ? 0.35 : 0.75, nx = ux * (1 - k) + tx * k, nz = uz * (1 - k) + tz * k, n = Math.hypot(nx, nz);
-    const s = dribble ? speed : Math.max(speed, Math.min(13, 3 + d * 0.6)); // a shot strong enough to arrive
+    const s = speed; // aim assistance never overrides the charged power
     v.x = nx / n * s; v.z = nz / n * s;
   }
 

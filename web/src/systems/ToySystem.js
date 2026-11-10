@@ -1,3 +1,4 @@
+import { clampPower, shotSpeed, passReceiver } from './FootballKick.js';
 const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const PLAYER_R = 0.35;
 const KICK_COOLDOWN = 0.25;   // s between two kicks of the same ball
@@ -14,8 +15,7 @@ export class ToySystem {
   #last = null;
   #wordsAt = -Infinity;
   #dt = 0;
-  #shotWant = 0;
-  #passWant = 0;
+  #pendingKick = null;
   #vel = { x: 0, z: 0 }; // the player's own velocity (for dribbling)
 
   constructor({ world, player, free, tts }) {
@@ -43,31 +43,35 @@ export class ToySystem {
     }) ?? null;
   }
 
-  /** Hard shot (⚡ button / F key): the ball flies the way the player faces (towards the goal: Football.assist). */
-  shoot() {
-    this.#passWant = 0;
-    const entry = this.shotBall();
-    if (!entry) { this.#shotWant = SHOT_WAIT; return false; } // not quite there yet: as soon as it is
-    this.#shotWant = 0;
-    const rot = this.player.group.rotation.y;
-    entry.toy.shoot(Math.sin(rot), Math.cos(rot));
-    this.player.kick?.(1);
-    entry.cool = KICK_COOLDOWN * 2;
-    entry.onKick?.(entry.toy, 'shot');
-    return true;
+  cancelKick() { this.#pendingKick = null; }
+
+  /** Called at release; a ball just out of reach can receive the same powered kick for 0.8 s. */
+  shoot(power = 0.5) { return this.#kick('shot', clampPower(power)); }
+  pass(power = 0.2) { return this.#kick('pass', clampPower(power, 0.2)); }
+
+  passDirection(origin) {
+    const point = this.passAim?.() ?? null, rot = this.player.group.rotation.y;
+    const direction = point && dist(point, origin) > 0.5 ? { x: point.x - origin.x, z: point.z - origin.z } : { x: Math.sin(rot), z: Math.cos(rot) };
+    const receiver = passReceiver(origin, direction, this.passTargets?.() ?? [], point);
+    const p = receiver?.position ?? receiver;
+    return { x: p ? p.x - origin.x : direction.x, z: p ? p.z - origin.z : direction.z, receiver };
   }
 
-  /** Pass along the ground in the direction the player faces. */
-  pass() {
-    this.#shotWant = 0;
+  #kick(kind, power) {
+    this.cancelKick();
+    if (this.canKick?.() === false || this.player.seated || this.player.mount) return false;
     const entry = this.shotBall();
-    if (!entry) { this.#passWant = SHOT_WAIT; return false; }
-    this.#passWant = 0;
-    const rot = this.player.group.rotation.y;
-    entry.toy.pass(Math.sin(rot), Math.cos(rot));
-    this.player.kick?.(0.5);
+    if (!entry) { this.#pendingKick = { kind, power, left: SHOT_WAIT, location: this.world.current }; return false; }
+    if (kind === 'pass') {
+      const dir = this.passDirection(entry.toy.position);
+      entry.toy.pass(dir.x, dir.z, power);
+    } else {
+      const rot = this.player.group.rotation.y;
+      entry.toy.shoot(Math.sin(rot), Math.cos(rot), shotSpeed(power), 1.5 + power * 3.5);
+    }
+    this.player.kick?.(0.3 + power * 0.7);
     entry.cool = KICK_COOLDOWN * 2;
-    entry.onKick?.(entry.toy, 'pass');
+    entry.onKick?.(entry.toy, kind);
     return true;
   }
 
@@ -97,8 +101,12 @@ export class ToySystem {
     const speed = this.#last && dt > 0 ? dist(p, this.#last) / dt : 0;
     if (this.#last && dt > 0) this.#vel = { x: (p.x - this.#last.x) / dt, z: (p.z - this.#last.z) / dt };
     this.#last = { x: p.x, z: p.z };
-    if (this.#shotWant > 0) { this.#shotWant -= dt; if (this.shotBall()) this.shoot(); }
-    if (this.#passWant > 0) { this.#passWant -= dt; if (this.shotBall()) this.pass(); }
+    const pending = this.#pendingKick;
+    if (pending) {
+      pending.left -= dt;
+      if (pending.left <= 0 || pending.location !== this.world.current || this.canKick?.() === false || this.player.seated || this.player.mount) this.cancelKick();
+      else if (this.shotBall()) this.#kick(pending.kind, pending.power);
+    }
     for (const entry of this.toys) {
       const { toy } = entry;
       if (!toy.location.group.visible) continue;
