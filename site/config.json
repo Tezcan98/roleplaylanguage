@@ -63,6 +63,14 @@
       "Manisa"
     ]
   ],
+  "announce": {
+    "id": "gold-sale-2026-11",
+    "title": "Altın artık satın alınabiliyor! 🪙",
+    "text": "Dükkândan 50, 100 ve 200 altın paketlerini alabilirsin. Reklamsız oynamak da mümkün. Bedava altın için \"Kazan\" sekmesine bak.",
+    "en": "Gold is now on sale! Buy 50, 100 or 200 gold in the shop, play without ads, or earn free gold in the Earn tab.",
+    "yes": "Dükkâna bak",
+    "no": "Sonra"
+  },
   "update": {
     "latestApp": 0,
     "store": "https://play.google.com/store/apps/details?id=com.anadolu",

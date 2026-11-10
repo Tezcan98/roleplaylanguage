@@ -1247,6 +1247,17 @@ async function offerAppUpdate() {
   });
   if (go) location.href = CONFIG.update.store; // (the app opens Google Play for it)
 }
+/** A notice from the server (config.json "announce"): one card per id, once, in the app; "yes" opens the shop. */
+async function showAnnouncement() {
+  const a = CONFIG.announce;
+  let seen = null;
+  try { seen = localStorage.getItem('announceSeen'); } catch { /* private mode */ }
+  if (!a.id || !a.text || seen === a.id || !billing.available) return;
+  try { localStorage.setItem('announceSeen', a.id); } catch { /* private mode */ }
+  const go = await new ChoiceCard(host, modes).ask({ title: a.title, text: a.text, en: a.en, yes: a.yes, no: a.no });
+  if (go) shop.open('gold');
+}
+if (native && setup.done && !params.has('debug') && !params.has('nointro')) setTimeout(showAnnouncement, 4000);
 if (setup.done && !params.has('debug') && !params.has('nointro')) setTimeout(() => new HindiNews(host, { settings, modes, currentLang: () => glossLang() }).maybe(), 1200); // (Hindi came: once, for players from India)
 if (native && window.Capacitor?.getPlatform?.() === 'android' && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 1500);
 

@@ -16,6 +16,7 @@ export const DEFAULTS = {
   yakarTop: false, // dodgeball in the schoolyard (Saturday afternoon): hidden until the server turns it on
   roomFull: 30, // a room this busy: newcomers who didn't pick a city go to a quieter one
   cities: [['ankara', 'Ankara'], ['istanbul', 'İstanbul'], ['izmir', 'İzmir'], ['manisa', 'Manisa']],
+  announce: { id: '', title: '', text: '', en: '', yes: 'Dükkâna bak', no: 'Sonra' }, // a card shown once per id at the start (the app); empty id: none
   update: { latestApp: 0, store: 'https://play.google.com/store/apps/details?id=com.anadolu', text: '', en: '' },
 };
 
