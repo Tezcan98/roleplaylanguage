@@ -926,3 +926,44 @@ EPISODES.hasat = {
   ],
   vo: { tr: ['Korkuluk nöbette.', 'Hasat zamanı!', 'Yeniden ek.', 'Büyüsün, olgunlaşsın.'], en: ['The scarecrow is on guard.', 'Harvest time!', 'Plant again.', 'Watch them grow.'], ar: ['الفزّاعة تحرس.', 'وقت الحصاد!', 'ازرع من جديد.', 'شاهدها تكبر.'] },
 };
+
+/** The garden, faster (review video 3): camera glides in, planting runs straight into the growth, harvest, then the Play Store card. */
+EPISODES.tarla2 = {
+  scenes: [
+    {
+      name: 'fWide', seconds: 4,
+      setup: async (kit) => { const page = await tarlaStart(kit); await tPlots(page, ['bean', 'tomato', 'pepper', 'carrot', 'corn', 'bean', 'tomato', 'carrot', 'corn'].map((crop, i) => ({ crop, min: [20, 20, 20, 20, 20, 1.2, 2.5, 1.5, 4][i] }))); await fixed(page, [9.3, 10.5, 19.5], [9.4, 0.2, 3.6], true); await kit.sleep(900); return page; },
+      act: async (kit, page) => { await kit.big(page, { tr: 'Tarlanda 5 ürün!', en: 'Five crops in your garden!', ar: 'خمسة محاصيل في حقلك!' }); await kit.sleep(500); await fixed(page, [9.3, 6.8, 12.6], [9.4, 0.4, 3.6]); await kit.sleep(3000); },
+    },
+    {
+      name: 'fWork', seconds: 7,
+      setup: async (kit) => { const page = await tarlaStart(kit); await tPlots(page, []); await fixed(page, [3.4, 3.2, 10.6], [9.2, 0.3, 4], true); await kit.sleep(900); return page; },
+      act: async (kit, page) => {
+        await kit.big(page, { tr: 'Çapala, ek, sula!', en: 'Hoe, sow, water!', ar: 'احفر، ازرع، اسقِ!' });
+        const crops = ['bean', 'tomato', 'pepper', 'carrot', 'corn', 'carrot', 'corn', 'tomato', 'bean'];
+        for (let i = 0; i < 9; i++) { await tWork(page, i, 'hoe'); await kit.sleep(90); await tWork(page, i, 'sow', crops[i]); await kit.sleep(90); await tWork(page, i, 'water'); await kit.sleep(150); }
+        await fixed(page, [9.3, 8.6, 14.8], [9.4, 0.3, 3.8]);
+        // straight into the growth: the beds' clock runs fast, sprouts to ripe in two seconds
+        for (let s = 0; s <= 40; s++) {
+          await page.evaluate((s) => { const g = window.__game, now = Date.now(); g.garden.data.plots.forEach((p) => { const need = { bean: 2, tomato: 4, pepper: 6, carrot: 3, corn: 8 }[p.crop] * 60000; p.wateredAt = now - need * Math.min(1.02, s / 36); }); g.garden.refresh(); }, s);
+          await kit.sleep(55);
+        }
+      },
+    },
+    {
+      name: 'fHarvest', seconds: 4.6,
+      setup: async (kit) => { const page = await tarlaStart(kit); await tPlots(page, ['tomato', 'carrot', 'corn', 'pepper', 'bean', 'tomato', 'carrot', 'corn', 'bean'].map((crop) => ({ crop, min: 40 }))); await fixed(page, [9.4, 13.5, 11.2], [9.4, 0, 4.1], true); await kit.sleep(900); return page; },
+      act: async (kit, page) => {
+        await kit.big(page, { tr: 'Hasat zamanı!', en: 'Harvest time!', ar: 'وقت الحصاد!' });
+        await fixed(page, [9.4, 9.2, 9.0], [9.4, 0, 4.1]);
+        for (const i of [0, 1, 2, 5, 4, 3, 6, 7, 8]) { await tWork(page, i, 'harvest'); await kit.sleep(300); }
+      },
+    },
+    card('fLogo', 4.2, (e) => `<img src="assets/icons/icon-512.png" alt=""><h1 dir="auto">${e.name}</h1><p dir="auto">${e.now}</p><div class="promo-badges"><span dir="auto">▶ ${e.search}</span><span class="free">${e.free}</span></div>`),
+  ],
+  vo: {
+    tr: ['Kendi tarlanda beş ürün yetişiyor!', 'Çapala, ek, sula, hemen büyüsün!', 'Olgunlaşınca hasat et!', 'Türk Ailem, şimdi Google Play’de, ücretsiz!'],
+    en: ['Five crops grow in your own garden!', 'Hoe, sow, water, and watch them grow!', 'Harvest when ripe!', 'My Turkish Family, free on Google Play!'],
+    ar: ['[excited] في حقلك الخاص تنمو خمسة محاصيل!', '[excited] احفر، ازرع، اسقِ… وشاهدها تكبر بسرعة!', '[shouting] وعندما تنضج… احصد!', '[cheerful] عائلتي التركية، مجانًا على غوغل بلاي!'],
+  },
+};
