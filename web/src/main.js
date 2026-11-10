@@ -1258,6 +1258,25 @@ async function showAnnouncement() {
   if (go) shop.open('gold');
 }
 if (native && setup.done && !params.has('debug') && !params.has('nointro')) setTimeout(showAnnouncement, 4000);
+/** Status-bar notifications (tools/push.mjs sends to the topic 'all'): asked once, with a card first; a "no" is never asked again. */
+async function joinNews() {
+  const fm = nativeKit.FirebaseMessaging;
+  if (!fm) return;
+  try {
+    let { receive } = await fm.checkPermissions();
+    if (receive === 'prompt') {
+      let asked = null;
+      try { asked = localStorage.getItem('pushAsked'); } catch { /* private mode */ }
+      if (asked) return;
+      try { localStorage.setItem('pushAsked', '1'); } catch { /* private mode */ }
+      const yes = await new ChoiceCard(host, modes).ask({ title: 'Haberler 🔔', text: 'Yeni haberler ve ödüller için bildirim almak ister misin?', en: 'Do you want notifications about news and rewards?', yes: 'Evet', no: 'Hayır' });
+      if (!yes) return;
+      ({ receive } = await fm.requestPermissions());
+    }
+    if (receive === 'granted') await fm.subscribeToTopic({ topic: 'all' });
+  } catch (e) { console.warn('[push]', e); }
+}
+if (native && setup.done && !params.has('debug') && !params.has('nointro')) setTimeout(joinNews, 25000);
 if (setup.done && !params.has('debug') && !params.has('nointro')) setTimeout(() => new HindiNews(host, { settings, modes, currentLang: () => glossLang() }).maybe(), 1200); // (Hindi came: once, for players from India)
 if (native && window.Capacitor?.getPlatform?.() === 'android' && CONFIG.update.latestApp && setup.done) setTimeout(offerAppUpdate, 1500);
 
