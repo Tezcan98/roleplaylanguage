@@ -1,18 +1,19 @@
-# Durum çubuğu bildirimi (push)
+# Durum çubuğu bildirimi (haber)
 
-Oyuncuların telefonuna "Altın satışta!" gibi bir bildirim gönderir (Firebase Cloud Messaging, konu: `all`).
+Oyuncuların telefonunun durum çubuğuna "Altın satışta!" gibi bir mesaj düşürür. **Firebase yok, anahtar yok:**
+uygulama kendisi sunucudaki bir dosyayı kontrol eder.
 
-**Nasıl çalışır:** uygulama (1.0.37 ve sonrası) açıldıktan ~25 sn sonra bir kez "Haberler 🔔" kartı gösterir;
-"Evet" derse Android izni sorulur, izin verilirse telefon `all` konusuna abone olur (`web/src/main.js` → `joinNews`).
-"Hayır" bir daha sorulmaz. Eski sürümler bildirim almaz (Play'den güncellemeleri gerekir).
+**Nasıl çalışır:** Android uygulaması (1.0.37 ve sonrası) açıldıktan ~25 sn sonra bir kez "Haberler 🔔" kartı gösterir.
+"Evet" derse Android'in izin sorusu çıkar (Android 13+), izin verilirse saatte bir (internet varken)
+`https://anadoluailesi.com.tr/haber.json` okunur (`mobile/android/.../NewsWorker.java`). Dosyadaki `id` yeniyse
+mesaj durum çubuğuna düşer; dokununca oyun açılır. "Hayır" derse hiç kontrol edilmez, bir daha sorulmaz.
+Mesaj, **yayınlandıktan sonra en geç ~1 saat içinde** ulaşır. Telefona yeni kurulan oyuncu eski mesajı görmez.
 
-**Göndermek:**
+**Yayınlamak** (komut siteyi de canlıya alır):
 
 ```
-node tools/push.mjs "Başlık" "Mesaj"          # herkese gider
-node tools/push.mjs "Başlık" "Mesaj" --dry    # yalnızca doğrular, göndermez
+node tools/push.mjs "Başlık" "Mesaj"
+node tools/push.mjs "Başlık" "Mesaj" --dry    # yalnızca gösterir
 ```
 
-**Gönderici anahtarı:** Firebase konsol → Project settings → Service accounts → "Generate new private key".
-İndirilen JSON'u `~/AnadoluAilesi-imza/fcm-service-account.json` olarak koy (ya da yolu `FCM_KEY` ile ver).
-**Repo'ya asla koyma**, sunucuya da koyma: bu anahtar projedeki herkese bildirim atabilir.
+Eski sürümler (1.0.36 ve öncesi) bu bildirimi alamaz; Play'den güncellemeleri gerekir.

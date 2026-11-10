@@ -18,7 +18,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(PlayGamesPlugin.class); // Play Games sign-in (the safety log's player id)
+        registerPlugin(NewsPlugin.class); // the "Haberler" card: the hourly news check (NewsWorker)
         super.onCreate(savedInstanceState);
+        NewsPlugin.resume(this);
         EdgeToEdge.enable(this);
         if (getResources().getConfiguration().smallestScreenWidthDp < 600) setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         hideBars();

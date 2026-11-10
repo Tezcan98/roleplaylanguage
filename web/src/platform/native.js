@@ -18,8 +18,8 @@ export async function loadNativeAdapters() {
   const android = window.Capacitor?.getPlatform?.() === 'android';
   const PlayGames = android ? registerPlugin('PlayGames') : { signIn: async () => ({ signedIn: false }) }; // mobile/android: PlayGamesPlugin.java
   const FirebaseAnalytics = android ? registerPlugin('FirebaseAnalytics') : null; // @capacitor-firebase/analytics (an app built before it: every call just fails and is ignored)
-  const FirebaseMessaging = android ? registerPlugin('FirebaseMessaging') : null; // @capacitor-firebase/messaging: status-bar notifications from the server (topic 'all'); an app built before it: calls fail and are ignored
-  return { FirebaseMessaging, FirebaseAnalytics, App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider, LocalNotifications, NativePurchases, PURCHASE_TYPE, PlayGames };
+  const News = android ? registerPlugin('News') : null; // mobile/android: NewsPlugin.java (the hourly check of the server's message, NewsWorker.java; an app built before it: calls fail and are ignored)
+  return { News, FirebaseAnalytics, App, NativeTTS, NativeSpeechRecognizer, AdMobAdProvider, LocalNotifications, NativePurchases, PURCHASE_TYPE, PlayGames };
 }
 
 /**
