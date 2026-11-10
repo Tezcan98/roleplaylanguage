@@ -27,6 +27,8 @@ export class NoBilling {
 export class PlayBilling {
   constructor(NativePurchases, PURCHASE_TYPE) { Object.assign(this, { NativePurchases, PURCHASE_TYPE }); }
   get available() { return true; }
+  /** Set by main.js: told about every completed purchase (the server mails the operator). */
+  onPurchase = null;
 
   /** Local prices from Play: { id: '₺14,99' }. */
   async prices() {
@@ -40,7 +42,9 @@ export class PlayBilling {
   async buy(pack) {
     try {
       const t = await this.NativePurchases.purchaseProduct({ productIdentifier: pack.id, productType: this.PURCHASE_TYPE.INAPP, quantity: 1, isConsumable: true });
-      return !!t?.transactionId || !!t?.purchaseToken;
+      const ok = !!t?.transactionId || !!t?.purchaseToken;
+      if (ok) try { this.onPurchase?.(pack, t.transactionId ?? ''); } catch { /* only a notice */ }
+      return ok;
     } catch (e) { console.warn('[billing] purchase', e); return false; }
   }
 }

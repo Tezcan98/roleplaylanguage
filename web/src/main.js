@@ -316,6 +316,8 @@ const adConfig = window.Capacitor?.getPlatform?.() === 'ios' ? manifest.admobIos
 const ads = native ? new nativeKit.AdMobAdProvider({ rewardedId: adConfig?.rewardedId, interstitialId: adConfig?.interstitialId, bannerId: adConfig?.bannerId, onEvent: adEvent })
   : new MockAdProvider(host, modes, params.has('fastads') ? 1 : 5, { interstitials: params.has('mockads'), rewarded: params.has('mockads') }); // (the website: no ads; tests: stand-ins)
 const billing = !params.has('nobilling') && SELL_PACKS && native ? new PlayBilling(nativeKit.NativePurchases, nativeKit.PURCHASE_TYPE) : new NoBilling();
+// every completed gold-pack purchase to our server: it mails the operator (server/src/Purchases.js)
+if (billing instanceof PlayBilling) billing.onPurchase = (pack, tx) => import('@capacitor/core').then(({ CapacitorHttp }) => CapacitorHttp.post({ url: 'https://anadoluailesi.com.tr/api/purchase', headers: { 'Content-Type': 'application/json' }, data: { id: pack.id, tx, v: appVersion, pid: settings.get('deviceId') } })).catch(() => {});
 const gate = new ClassAccessGate({ host, modes, wallet, ads });
 const activities = new ActivityRegistry({ tts, speech, gate })
   .register('choice', ChoiceActivity)

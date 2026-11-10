@@ -42,7 +42,7 @@
  *   MAIL_API_URL, MAIL_API_KEY, REPORT_MAIL_TO  the mail API on the SMTP machine and the operator's address (Mailer.js; TODO)
  *
  * Endpoints: ws(s)://host/ws/village · GET /health · GET /health?name=&pid= (is the username free) · POST /api/npc-chat
- *            · POST /api/ad-event · GET /api/istatistik?key= · POST /api/feedback · GET /api/feedback-list?key=
+ *            · POST /api/ad-event · POST /api/purchase · GET /api/istatistik?key= · POST /api/feedback · GET /api/feedback-list?key=
  *            · GET /api/reports?key= · GET /api/report-action?id=&key=&do=ban7|ban|dismiss|unban
  */
 import { createServer } from 'node:http';
@@ -63,6 +63,7 @@ import { IgnoreIps } from './IgnoreIps.js';
 import { Feedback } from './Feedback.js';
 import { Reports } from './Reports.js';
 import { Mailer } from './Mailer.js';
+import { Purchases } from './Purchases.js';
 
 const env = process.env;
 const port = Number(process.argv[2] ?? env.PORT ?? 8090);
@@ -102,7 +103,11 @@ const reports = new Reports({
   publicUrl: env.PUBLIC_URL ?? '', mailer: Mailer.fromEnv(env), onBan: (ban) => village.kick(ban),
 });
 
+// gold-pack purchases reported by the app: logged, and a mail to the operator
+const purchases = new Purchases({ mailer: Mailer.fromEnv(env), dir: env.PURCHASES_DIR || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'purchases') : null) });
+
 const http = createServer((req, res) => {
+  if (purchases.route(req, res, { clientIp })) return;
   if (adStats.route(req, res, { clientIp })) return;
   if (playStats.route(req, res, { clientIp })) return;
   if (reports.route(req, res)) return;
