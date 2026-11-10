@@ -563,10 +563,13 @@ try {
     await p2.click('.main-menu.open [aria-label="Dükkan"]'); await sleep(400);
     check('shop opens from the menu', !!(await p2.$('.shop.open')));
     check('blocky player: the villagers on the square are blocky too', await e2(() => !window.__game.cast.get('manav').hdOn));
+    await p2.click('.shop.open .shop-tab:has-text("Kazan")'); await sleep(200); // the free things are on the earn tab
+    check('earn tab: the daily reward, the video, an invitation and a review are here, no packs', await e2(() => { const t = document.querySelector('.shop.open .shop-grid').textContent; return t.includes('Video izle') && !document.querySelector('.shop.open .shop-card.pack'); }));
     await p2.click('.shop.open .shop-card:has-text("Video izle") button');
     await waitFor(() => p2.$('.overlay.ad button:not([disabled])'), 6000); await p2.click('.overlay.ad button');
     await sleep(300);
     check('rewarded video: +3, then the next one in 3 hours', (await e2(() => window.__game.wallet.balance)) === 106 && (await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((c) => c.textContent.includes('Video izle')).querySelector('button').disabled)));
+    await p2.click('.shop.open .shop-tab:has-text("Altın")'); await sleep(200);
     check('credit packs shown with their prices, not for sale yet (buttons off)', (await e2(() => [...document.querySelectorAll('.shop.open .shop-card.pack')].map((c) => c.querySelector('button').disabled))).join() === 'true,true,true' && !(await page.evaluate(() => window.__game.billing.available)));
     await e2(() => { window.__game.wallet.trySpend(50); window.__game.shop.render(); }); // 56
     check('not enough credits for ad-free mode (100) yet: its button is off (on the gold tab)', await e2(() => [...document.querySelectorAll('.shop.open .shop-card')].find((i) => i.textContent.includes('Reklamsız mod'))?.querySelector('button').disabled));

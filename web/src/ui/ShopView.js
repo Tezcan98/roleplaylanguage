@@ -11,14 +11,14 @@ const mmss = (ms) => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 
 /** How long a food works: '30 dk', '3 gün'; what is left: '29:41', '2 gün 23 sa'. */
 const span = (min) => (min >= 1440 ? `${Math.round(min / 1440)} gün` : `${min} dk`);
 const left_ = (ms) => (ms >= 86400000 ? `${Math.floor(ms / 86400000)} gün ${Math.floor((ms % 86400000) / 3600000)} sa` : ms >= 3600000 ? `${Math.floor(ms / 3600000)} sa ${Math.floor((ms % 3600000) / 60000)} dk` : mmss(ms));
-/** The shop's tabs: gold (free credits and packs), food (boosts), outfits and more. */
-const TABS = [['gold', '🪙', 'Altın', 'Gold'], ['food', '🌶️', 'Yiyecek', 'Food'], ['wear', '👕', 'Kıyafet', 'Outfits and more']];
+/** The shop's tabs: gold (packs, ad-free mode), earn (free credits), food (boosts), outfits and more. */
+const TABS = [['gold', '🪙', 'Altın', 'Gold'], ['earn', '🎁', 'Kazan', 'Earn gold'], ['food', '🌶️', 'Yiyecek', 'Food'], ['wear', '👕', 'Kıyafet', 'Outfits and more']];
 
 /**
  * The shop (the coin in the HUD, and on the main menu), in tabs of bright cards: earn credits
- * (daily reward, a rewarded video every hour, sharing), buy credit packs (Google Play, in the
- * app), spend credits on food that works for a few minutes (Urfa biberi: faster) and on ad-free
- * mode (on the gold tab) and outfits. Lessons and practice at the school are free.
+ * (the earn tab: daily reward, a rewarded video every hour, sharing, a review), buy credit packs
+ * (the gold tab: Google Play, in the app), spend credits on food that works for a few minutes (Urfa biberi: faster) and on ad-free
+ * mode (also on the gold tab) and outfits. Lessons and practice at the school are free.
  */
 export class ShopView {
   #pop = null;
@@ -48,7 +48,7 @@ export class ShopView {
 
   get isOpen() { return this.root.classList.contains('open'); }
 
-  /** `tab`: open on that tab ('gold', 'food', 'wear'; else the one it was on). */
+  /** `tab`: open on that tab ('gold', 'earn', 'food', 'wear'; else the one it was on). */
   async open(tab = null) {
     if (tab) this.#tab = tab;
     if (!this.#pop) this.#pop = this.modes.push('overlay');
@@ -79,8 +79,8 @@ export class ShopView {
     }, [el('span', { class: 'shop-tab-icon', text: icon }), el('span', {}, [tr, el('small', { class: 'en-t', text: gloss(en) })])])));
 
     let cards;
-    if (this.#tab === 'gold') {
-      // free first (daily reward, a video, sharing), then every pack with its price (while packs are sold)
+    if (this.#tab === 'earn') {
+      // everything that is free: the daily reward, a video, an invitation, a review
       const daily = w.daily(), wait = w.adWait();
       cards = [
         card('free', '🎁', daily ? `+${daily.amount}` : '✓', daily ? `Günlük ödül · ${daily.day}. gün` : 'Yarın yine gel',
@@ -101,6 +101,10 @@ export class ShopView {
           }), { subTr: true }),
         this.feedback && card('free feedback', '💬', '+20', 'Yorum yaz, kazan',
           this.feedback.due() ? btn('Yaz', 'go', () => { this.close(); this.feedback.open(); }) : btn('Yarın yine ✓', '', () => {}, true), { subTr: true }),
+      ];
+    } else if (this.#tab === 'gold') {
+      // what costs money or gold: ad-free mode, then every pack with its price (while packs are sold)
+      cards = [
         // ad-free mode: here with the gold, not among the outfits
         this.#itemCard(SHOP.find((i) => i.id === 'adFree'), { card, btn, price }),
         // the packs with their prices; not on sale yet (config.json sellPacks): shown, the button off

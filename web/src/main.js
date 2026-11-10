@@ -726,8 +726,8 @@ const shop = new ShopView(host, {
 // AdMob has no banner to give (no fill): our own offers in its place until it has one (HouseBanner)
 const house = new HouseBanner(host, [
   { icon: '🚫', tr: 'Reklamsız oyna', en: 'Play without ads', run: () => shop.open('wear') },
-  { icon: '▶️', tr: 'Video izle, kredi kazan', en: 'Watch a video, earn credits', run: () => shop.open('gold') },
-  { icon: '📤', tr: 'Paylaş, kredi kazan', en: 'Share the game, earn credits', run: () => shop.open('gold') },
+  { icon: '▶️', tr: 'Video izle, kredi kazan', en: 'Watch a video, earn credits', run: () => shop.open('earn') },
+  { icon: '📤', tr: 'Paylaş, kredi kazan', en: 'Share the game, earn credits', run: () => shop.open('earn') },
 ]);
 ads.onHouse = (on) => house.set(on && !wallet.adFree);
 const dailyView = new DailyRewardView(host, modes);
