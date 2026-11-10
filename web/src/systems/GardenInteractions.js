@@ -9,7 +9,7 @@ const VERBS = { hoe: 'Çapala', sow: 'Tohum ek', water: 'Sula', harvest: 'Hasat 
 export class GardenInteractions {
   constructor({garden,world,player,mf,modes,toasts,onToolChange=()=>{},onInventoryHint=()=>{},now=()=>performance.now()}) {
     Object.assign(this,{garden,world,player,mf,modes,toasts,onToolChange,onInventoryHint,now});
-    this.tool=null;this.crop='bean';this.workingUntil=0;
+    this.tool=null;this.crop='bean';this.workingUntil=0;this.ripe=new Set();this.ripeSeen=false;this.ripeCheck=0;
   }
   get available(){return this.world.current?.id==='yard' && this.garden.unlocked && !this.garden.story.paused;}
   get nearGarden(){return this.world.current?.id==='yard' && gardenDistance(this.player.position)<=GARDEN_RELEASE_DISTANCE;}
@@ -65,10 +65,11 @@ export class GardenInteractions {
   }
   apply(index,action=this.tool) {
     if(!this.available || !action || this.now()<this.workingUntil || !GARDEN_PLOTS[index] || distance(this.player.position,GARDEN_PLOTS[index])>1.2)return false;
+    const grown=this.garden.data.plots[index].crop;
     const error=this.garden.act(index,action,this.crop);
     if(error){this.toasts.show(error,'');return false;}
     this.workingUntil=this.now()+700;
-    this.world.get('yard').markGardenPlot?.(index);
+    this.world.get('yard').markGardenPlot?.(index,action,Number.parseInt((CROPS[grown]?.color??'#e35f40').slice(1),16));
     if(action==='harvest'){
       if(this.tool)this.clearTool();
       this.toasts.show('Hasat edildi! Ürünlerini boş kasanın yanında satabilirsin.','Harvested! You can sell your crops at the crate.');
@@ -101,11 +102,20 @@ export class GardenInteractions {
     this.world.get('yard').highlightGardenPlot?.(this.target()?.plotIndex ?? chosen?.plotIndex ?? -1);
     return chosen;
   }
+  /** A bed ripens while you are in the garden: say so once (not in the first lesson). */
+  #noticeRipe(){
+    if(this.garden.learning||this.now()<this.ripeCheck)return;
+    this.ripeCheck=this.now()+1000;
+    const ready=new Set(GARDEN_PLOTS.map((_,i)=>i).filter(i=>this.garden.status(i).stage==='ready'));
+    if([...ready].some(i=>!this.ripe.has(i))&&this.ripeSeen)this.toasts.show('Bir ürün olgunlaştı! Hasat zamanı.','A crop is ripe! Time to harvest.');
+    this.ripe=ready;this.ripeSeen=true;
+  }
   update(_dt,t) {
     this.onInventoryHint(this.available&&this.nearGarden&&this.requiredTool==='sow'&&this.tool!=='sow');
     if(!this.available){this.player.gardenPose?.(t,false);if(this.tool){this.clearTool();}this.world.get('yard').highlightGardenPlot?.(-1);return;}
     if(this.tool&&!this.nearGarden){this.clearTool();this.workingUntil=0;}
     if(this.requiredTool&&this.tool&&this.tool!==this.requiredTool)this.clearTool();
+    this.#noticeRipe();
     const working=this.now()<this.workingUntil;
     this.player.gardenPose?.(t,working&&this.tool==='hoe');
     this.player.holdGardenTool?.(this.tool,this.crop,working);

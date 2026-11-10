@@ -46,13 +46,13 @@ test('pre-farming save keeps the old morning quest; new saves do not migrate twi
  const night=new GameState();night.restore({v:1,chapter:4,quest:3});assert.equal(night.quest,2);
 });
 test('nine world beds show independent soil, water, growth and mature crop varieties',()=>{
- const yard=new Yard(), group=()=>({visible:false}),tile=()=>({furrows:group(),wet:group(),seed:group(),plant:{visible:false,scale:{setScalar(n){this.n=n;}}},fruits:{bean:group(),tomato:group(),pepper:group()}});
+ const yard=new Yard(), group=()=>({visible:false}),tile=()=>({furrows:group(),wet:group(),seed:group(),sparkle:group(),plants:Object.fromEntries(['bean','tomato','pepper','carrot','corn'].map(id=>[id,{root:{visible:false,scale:{setScalar(n){this.n=n;}}},ripe:group()}]))});
  yard.farmVisual={tiles:Array.from({length:9},tile)};
  const f={'farm-v2':{plots:Array.from({length:9},()=>({hoed:false,crop:null,wateredAt:null}))}};
  f['farm-v2'].plots[0]={hoed:true,crop:'tomato',wateredAt:1000};
  f['farm-v2'].plots[1]={hoed:true,crop:'bean',wateredAt:null};
- yard.setGardenState(f,2,1000);assert.equal(yard.farmVisual.tiles[0].wet.visible,true);assert.equal(yard.farmVisual.tiles[0].fruits.tomato.visible,false);assert.equal(yard.farmVisual.tiles[1].seed.visible,true);assert.equal(yard.farmVisual.tiles[2].plant.visible,false);
- yard.setGardenState(f,2,241000);assert.equal(yard.farmVisual.tiles[0].fruits.tomato.visible,true);assert.equal(yard.farmVisual.tiles[0].fruits.bean.visible,false);assert.equal(yard.farmVisual.tiles[0].plant.scale.n,1);
+ yard.setGardenState(f,2,1000);assert.equal(yard.farmVisual.tiles[0].wet.visible,true);assert.equal(yard.farmVisual.tiles[0].plants.tomato.ripe.visible,false);assert.equal(yard.farmVisual.tiles[0].plants.tomato.root.visible,true);assert.equal(yard.farmVisual.tiles[1].seed.visible,true);assert.equal(yard.farmVisual.tiles[2].plants.bean.root.visible,false);
+ yard.setGardenState(f,2,241000);assert.equal(yard.farmVisual.tiles[0].plants.tomato.ripe.visible,true);assert.equal(yard.farmVisual.tiles[0].plants.bean.root.visible,false);assert.equal(yard.farmVisual.tiles[0].plants.tomato.root.scale.n,1);assert.equal(yard.farmVisual.tiles[0].sparkle.visible,true);
 });
 
 test('real story advances through all four farming quests and unlocks the letter only after watering',()=>{
@@ -136,12 +136,12 @@ test('actual yard geometry keeps all nine dynamic beds and harvest varieties aft
  yard.build({mf,quality:'low',props:{create:(id,build)=>id==='prop.car'?new THREE.Group():build()}});
  bakeStatic(yard.group);
  assert.equal(yard.farmVisual.tiles.length,9);
- const plots=Array.from({length:9},(_,i)=>({hoed:true,crop:['bean','tomato','pepper'][i%3],wateredAt:1000}));
- yard.setGardenState({'farm-v2':{plots}},2,361000);
+ const plots=Array.from({length:9},(_,i)=>({hoed:true,crop:['bean','tomato','pepper','carrot','corn'][i%5],wateredAt:1000}));
+ yard.setGardenState({'farm-v2':{plots}},2,601000);
  for(const [i,tile]of yard.farmVisual.tiles.entries()){
-  assert.ok(tile.plant.parent);assert.ok(tile.furrows.children.length);
-  const id=plots[i].crop;assert.equal(tile.fruits[id].visible,true);assert.ok(tile.fruits[id].children.length);
-  assert.ok(Object.entries(tile.fruits).filter(([kind])=>kind!==id).every(([,g])=>!g.visible));
+  assert.ok(tile.furrows.children.length);
+  const id=plots[i].crop;assert.equal(tile.plants[id].ripe.visible,true);assert.ok(tile.plants[id].ripe.children.length);assert.ok(tile.plants[id].root.parent);
+  assert.ok(Object.entries(tile.plants).filter(([kind])=>kind!==id).every(([,g])=>!g.root.visible&&!g.ripe.visible));
  }
 });
 

@@ -4,6 +4,7 @@ import { Foliage } from '../../engine/Foliage.js';
 import { bakeStatic } from '../../engine/StaticBatch.js';
 import { GARDEN_PLOTS, GARDEN_TOOLS } from '../../content/gardenLayout.js';
 import { CROPS } from '../../systems/GardenSystem.js';
+import { buildPlant, buildScarecrow, buildSunflower } from '../gardenPlants.js';
 // import { addTrashBin } from '../trashBin.js';
 
 const DARK = { tex: 'darkWood' };
@@ -26,9 +27,14 @@ export class Yard extends Location {
         tile.furrows.visible = !!p.hoed;
         tile.wet.visible = !!growing;
         tile.seed.visible = !!p.crop && !growing;
-        tile.plant.visible = !!growing;
-        tile.plant.scale.setScalar(.35 + progress * .65);
-        Object.entries(tile.fruits).forEach(([id, group]) => { group.visible = progress >= 1 && p.crop === id; });
+        tile.ready = progress >= 1;
+        tile.sparkle.visible = tile.ready;
+        for (const [id, plant] of Object.entries(tile.plants)) {
+          const show = !!growing && p.crop === id;
+          plant.root.visible = show;
+          plant.ripe.visible = show && progress >= 1;
+          if (show) plant.root.scale.setScalar(.3 + progress * .7);
+        }
       });
       return;
     }
@@ -44,7 +50,7 @@ export class Yard extends Location {
     this.gardenHighlight.visible = !!p;
     if (p) this.gardenHighlight.position.set(p.x, .22, p.z);
   }
-  markGardenPlot(index) { this.gardenPulse = { index, elapsed: 0 }; }
+  markGardenPlot(index, kind = 'hoe', color = 0xE35F40) { this.gardenPulse = { index, kind, color, elapsed: 0 }; }
 
   /** House front at z = -11, 19 m × 8 m (the rooms inside are 25 m long: a little magic, but close). */
   #house(mf, C) {
@@ -187,29 +193,20 @@ export class Yard extends Location {
       for (let r = 0; r < 3; r++) furrows.add(mf.at(mf.box(1.3, .04, .07, 0x70472D), 0, .07, -.4 + r * .4));
       bakeStatic(furrows);
       const seed = mf.at(mf.sphere(.14, 0xD3B27B, 8), 0, .1, 0); seed.scale.y = .4; tile.add(seed);
-      const plant = mf.group(); tile.add(plant);
-      plant.add(mf.at(mf.cyl(.035, .045, .85, 0x4E7B37, 6), 0, .48, 0));
-      for (let level = 0; level < 3; level++) for (const side of [-1, 1]) {
-        const leaf = mf.at(mf.sphere(.24, side < 0 ? 0x558E3F : 0x83B451, 8), side * .2, .3 + level * .23, 0);
-        leaf.scale.set(1.2, .22, .65); leaf.rotation.z = side * .35; plant.add(leaf);
-      }
-      const fruits = {};
-      for (const [id, color] of [['bean',0xA8C653],['tomato',0xE35F40],['pepper',0xE8B83D]]) {
-        const fruit = mf.group(); plant.add(fruit); fruits[id] = fruit;
-        for (const [fx,fy,fz] of [[-.24,.48,.12],[.25,.68,.04],[.03,.3,.2]]) {
-          const m = mf.at(mf.sphere(id === 'tomato' ? .15 : .11, color, 8), fx, fy, fz);
-          if (id !== 'tomato') m.scale.set(id === 'bean' ? .65 : 1, 2, .7);
-          fruit.add(m);
-        }
-        bakeStatic(fruit); this.live(fruit);
-      }
-      bakeStatic(plant);
-      tiles.push({ furrows, wet, seed, plant, fruits });
+      const plants = {};
+      for (const id of Object.keys(CROPS)) { const plant = buildPlant(mf, id); plant.root.visible = false; tile.add(plant.root); plants[id] = plant; }
+      const sparkle = mf.mesh(new THREE.OctahedronGeometry(.1), 0xFFD54F); sparkle.userData.live = true; sparkle.position.y = 1.35; sparkle.visible = false; tile.add(sparkle);
+      tiles.push({ furrows, wet, seed, plants, sparkle, ready: false });
     }
-    let gardenTick = 0;
+    let gardenTick = 0, swayT = 0;
     this.animated.push((dt) => {
       gardenTick += dt;
       if (gardenTick >= 1) { gardenTick = 0; this.setGardenState(this.gardenFlags ?? {}, this.gardenDay ?? 1); }
+      swayT += dt;
+      tiles.forEach((tile, i) => {
+        for (const plant of Object.values(tile.plants)) if (plant.root.visible) plant.root.rotation.z = Math.sin(swayT * 1.7 + i) * .035;
+        if (tile.ready) { tile.sparkle.rotation.y = swayT * 2.5; tile.sparkle.position.y = 1.35 + Math.sin(swayT * 3 + i) * .06; }
+      });
     });
     // A hoe and watering can are already at the plot; no extra fetch errands.
     const hoe = mf.group(); hoe.position.set(GARDEN_TOOLS[0].x, 0, GARDEN_TOOLS[0].z);
@@ -222,18 +219,35 @@ export class Yard extends Location {
     crate.add(mf.at(mf.box(.7, .08, .5, 0xA87848), 0, .08, 0));
     for (const side of [-1,1]) crate.add(mf.at(mf.box(.7, .28, .06, 0xB68A56), 0, .2, side*.25));
     for (const side of [-1,1]) crate.add(mf.at(mf.box(.06, .28, .5, 0xB68A56), side*.35, .2, 0)); add(crate);
+    const scarecrow = buildScarecrow(mf); scarecrow.position.set(12.9, 0, 6.4); scarecrow.rotation.y = -.5; add(scarecrow); C.addCircle(12.9, 6.4, .3);
+    [7.2, 8.7, 10.2, 11.7].forEach((x, i) => { const f = buildSunflower(mf, (i % 2) * .15); f.position.set(x, 0, 1.0); f.rotation.y = i * .4; f.scale.setScalar(.9 + (i % 3) * .1); add(f); });
     this.gardenHighlight = this.live(mf.at(mf.torus(.63, .035, 0xF5CB67), 0, .22, 0));
     this.gardenHighlight.rotation.x = Math.PI / 2; this.gardenHighlight.visible = false; add(this.gardenHighlight);
+    // little bursts on the bed you work: soil from the hoe, seeds, water drops, and the crop's own colour when you harvest
     const particles = this.live(mf.group()); add(particles);
-    for (let i = 0; i < 6; i++) particles.add(mf.sphere(.045, 0xD6B779, 6));
+    const bits = Array.from({ length: 10 }, () => { const m = mf.mesh(new THREE.SphereGeometry(.045, 6, 5), mf.uniqueMat(0xD6B779)); particles.add(m); return m; });
     particles.visible = false;
+    const BURST = {
+      hoe: { color: 0x7A5230, n: 10, up: .55, spread: .6, size: 1.1, t: .6 },
+      sow: { color: 0xE0C48A, n: 6, up: .3, spread: .3, size: .9, t: .5, fall: true },
+      water: { color: 0x5DB7F0, n: 10, up: .8, spread: .45, size: 1, t: .7, fall: true },
+      harvest: { color: 0xFFFFFF, n: 10, up: 1.1, spread: .7, size: 1.4, t: .9 },
+    };
     this.animated.push((dt) => {
       const pulse = this.gardenPulse; particles.visible = !!pulse;
       if (!pulse) return;
+      const b = BURST[pulse.kind] ?? BURST.hoe;
       pulse.elapsed += dt;
-      if (pulse.elapsed > .6) { this.gardenPulse = null; particles.visible = false; return; }
-      const p = GARDEN_PLOTS[pulse.index], k = pulse.elapsed / .6;
-      particles.children.forEach((m,i) => m.position.set(p.x+Math.cos(i)*k*.5, .2+Math.sin(k*Math.PI)*.45, p.z+Math.sin(i)*k*.5));
+      if (pulse.elapsed > b.t) { this.gardenPulse = null; particles.visible = false; return; }
+      const p = GARDEN_PLOTS[pulse.index], k = pulse.elapsed / b.t;
+      bits.forEach((m, i) => {
+        m.visible = i < b.n;
+        const a = i * 2.4;
+        m.material.color.setHex(pulse.kind === 'harvest' ? (i % 2 ? pulse.color : 0xFFD54F) : b.color);
+        m.scale.setScalar(b.size);
+        const y = b.fall ? .95 - k * .75 + (i % 3) * .05 : .2 + Math.sin(k * Math.PI) * b.up;
+        m.position.set(p.x + Math.cos(a) * k * b.spread, y, p.z + Math.sin(a) * k * b.spread);
+      });
     });
     this.farmVisual = { tiles };
     this.setGardenState(this.gardenFlags ?? {}, this.gardenDay ?? 1);

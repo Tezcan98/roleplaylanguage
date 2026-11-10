@@ -21,6 +21,8 @@ export default {
     tohum: { tr: 'fasulye tohumu', en: 'bean seed' },
     'domates-tohumu': { tr: 'domates tohumu', en: 'tomato seed' },
     'biber-tohumu': { tr: 'biber tohumu', en: 'pepper seed' },
+    'havuc-tohumu': { tr: 'havuç tohumu', en: 'carrot seed' },
+    'misir-tohumu': { tr: 'mısır tohumu', en: 'corn seed' },
   },
   hotspots: {
     'yard.myGarden': { available: (c) => !c.flag('farm-seeds-given'), label: (c) => gardenStep(c) === 'farm-hoe' ? 'Toprağı çapala' : gardenStep(c) === 'farm-sow' ? `Tohum ek (${c.state.flags['farm-sown'] ?? 0}/3)` : gardenStep(c) === 'farm-water' ? 'Can suyu ver' : 'Kendi bahçen', use: ['my-garden'] },

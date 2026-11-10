@@ -1,12 +1,14 @@
 import { EV } from '../core/events.js';
 
-export const SEED_ITEMS = Object.freeze({ bean: 'tohum', tomato: 'domates-tohumu', pepper: 'biber-tohumu' });
+export const SEED_ITEMS = Object.freeze({ bean: 'tohum', tomato: 'domates-tohumu', pepper: 'biber-tohumu', carrot: 'havuc-tohumu', corn: 'misir-tohumu' });
 export const seedCrop = kind => Object.keys(SEED_ITEMS).find(crop => SEED_ITEMS[crop] === kind);
 
 export const CROPS = Object.freeze({
   bean: { name: 'Fasulye', color: '#86ba50', minutes: 2, price: 1, value: 3, yield: 2 },
   tomato: { name: 'Domates', color: '#ed6950', minutes: 4, price: 2, value: 5, yield: 2 },
   pepper: { name: 'Biber', color: '#efbf4b', minutes: 6, price: 3, value: 8, yield: 2 },
+  carrot: { name: 'Havuç', color: '#f08a2e', minutes: 3, price: 2, value: 6, yield: 2 },
+  corn: { name: 'Mısır', color: '#f2c94c', minutes: 8, price: 4, value: 11, yield: 2 },
 });
 
 /** A persistent nine-bed garden. Real time continues offline; crops never wither. */
