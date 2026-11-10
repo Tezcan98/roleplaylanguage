@@ -3178,5 +3178,11 @@
  "Do you want notifications about news and rewards?": "Veux-tu recevoir des notifications sur les nouveautés et les récompenses ?",
  "A crop is ripe! Time to harvest.": "Une culture est mûre ! C'est l'heure de récolter.",
  "carrot seed": "graine de carotte",
- "corn seed": "graine de maïs"
+ "corn seed": "graine de maïs",
+ "Harvested! It is in your bag. Keep it, or sell it at the crate.": "Récolté ! C'est dans ton sac. Garde-le ou vends-le à la caisse.",
+ "beans": "haricots",
+ "tomatoes": "tomates",
+ "peppers": "poivrons",
+ "carrots": "carottes",
+ "corn": "maïs"
 }

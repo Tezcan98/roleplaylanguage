@@ -2748,5 +2748,11 @@
  "Do you want notifications about news and rewards?": "Mau menerima notifikasi tentang kabar dan hadiah?",
  "A crop is ripe! Time to harvest.": "Ada tanaman yang matang! Saatnya panen.",
  "carrot seed": "biji wortel",
- "corn seed": "biji jagung"
+ "corn seed": "biji jagung",
+ "Harvested! It is in your bag. Keep it, or sell it at the crate.": "Dipanen! Hasilnya ada di tasmu. Simpan atau jual di peti.",
+ "beans": "kacang",
+ "tomatoes": "tomat",
+ "peppers": "cabai",
+ "carrots": "wortel",
+ "corn": "jagung"
 }

@@ -3179,5 +3179,11 @@
  "Do you want notifications about news and rewards?": "هل تريد تلقي إشعارات عن الأخبار والمكافآت؟",
  "A crop is ripe! Time to harvest.": "نضج محصول! حان وقت الحصاد.",
  "carrot seed": "بذرة جزر",
- "corn seed": "بذرة ذرة"
+ "corn seed": "بذرة ذرة",
+ "Harvested! It is in your bag. Keep it, or sell it at the crate.": "تم الحصاد! المحصول في حقيبتك. احتفظ به أو بعه عند الصندوق.",
+ "beans": "فاصوليا",
+ "tomatoes": "طماطم",
+ "peppers": "فلفل",
+ "carrots": "جزر",
+ "corn": "ذرة"
 }

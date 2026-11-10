@@ -72,7 +72,7 @@ export class GardenInteractions {
     this.world.get('yard').markGardenPlot?.(index,action,Number.parseInt((CROPS[grown]?.color??'#e35f40').slice(1),16));
     if(action==='harvest'){
       if(this.tool)this.clearTool();
-      this.toasts.show('Hasat edildi! Ürünlerini boş kasanın yanında satabilirsin.','Harvested! You can sell your crops at the crate.');
+      this.toasts.show('Hasat edildi! Ürün çantana girdi. İstersen sakla, istersen kasada sat.','Harvested! It is in your bag. Keep it, or sell it at the crate.');
     }
     return true;
   }
@@ -82,7 +82,7 @@ export class GardenInteractions {
     const offer=(point,label,run,priority=3,plotIndex=-1)=>{const d=distance(point,pos);if(d<=1.15)choices.push({label,dist:d,priority,run,plotIndex});};
     for(const p of GARDEN_TOOLS.filter(p=>!this.requiredTool||p.tool===this.requiredTool))offer(p,this.tool===p.tool?'Aracı yerine bırak':p.label,()=>{if(this.tool===p.tool){this.clearTool();}else this.take(p.tool);});
     const sale={x:13,z:4.15};
-    if(!this.garden.learning)offer(sale,this.garden.basketValue?`Ürünleri sat · +${this.garden.basketValue} bahçe parası`:`Boş kasa · ${this.garden.data.coins} bahçe parası`,()=>{
+    if(!this.garden.learning)offer(sale,this.garden.basketValue?`Ürünleri sat · +${this.garden.basketValue} bahçe parası`:`Ürünleri satabilirsin · ${this.garden.data.coins} bahçe parası`,()=>{
       const value=this.garden.sell();this.toasts.show(value?`Hasadını sattın! +${value} bahçe parası.`:'Hasat ettiklerini burada satabilirsin.','');
     });
     if(this.tool && (!this.requiredTool||this.tool===this.requiredTool) && this.now()>=this.workingUntil){

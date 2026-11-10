@@ -109,7 +109,7 @@ test('dry crops pause, watering starts clock, early/double harvest cannot grant 
  const a=setup();let now=1000;a.garden.now=()=>now;lesson(a);
  assert.equal(a.garden.status(0).stage,'sprout');assert.ok(a.garden.act(0,'harvest'));assert.equal(a.garden.data.harvests,0);
  now+=60000;assert.equal(a.garden.status(0).stage,'leaf');now+=60000;assert.equal(a.garden.status(0).stage,'ready');
- assert.equal(a.garden.act(0,'harvest'),null);assert.equal(a.garden.data.basket.bean,2);assert.ok(a.garden.act(0,'harvest'));assert.equal(a.garden.data.harvests,1);
+ assert.equal(a.garden.act(0,'harvest'),null);assert.equal(a.inventory.count('fasulye'),2);assert.ok(a.garden.act(0,'harvest'));assert.equal(a.garden.data.harvests,1);
  assert.equal(a.garden.status(0).stage,'soil');assert.equal(a.garden.sell(),6);assert.equal(a.garden.sell(),0);
  assert.equal(a.garden.buy('tomato'),true);assert.equal(a.garden.data.coins,4);assert.equal(a.garden.seeds('tomato'),1);
  assert.equal(a.garden.act(0,'hoe'),null);assert.equal(a.garden.act(0,'sow','tomato'),null);now+=9999999;assert.equal(a.garden.status(0).stage,'dry');

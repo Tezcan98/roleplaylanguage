@@ -7,7 +7,7 @@ const BUCKET = '<svg viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="t
 const ICON = {
   ekmek: '🍞', sut: '🥛', simit: '🥯', ayran: '🥤', peynir: '🧀', yumurta: '🥚', tost: '🥪', kek: '🧁', meyvesuyu: '🧃', su: '💧',
   elma: '🍎', portakal: '🍊', armut: '🍐', muz: '🍌', domates: '🍅', patates: '🥔',
-  tohum: '🌱', 'domates-tohumu': '🍅', 'biber-tohumu': '🌶️', 'havuc-tohumu': '🥕', 'misir-tohumu': '🌽',
+  tohum: '🌱', 'domates-tohumu': '🍅', 'biber-tohumu': '🌶️', 'havuc-tohumu': '🥕', fasulye: '🫘', 'taze-domates': '🍅', 'taze-biber': '🌶️', havuc: '🥕', misir: '🌽', 'misir-tohumu': '🌽',
   mektup: '✉️', zarf: '📩', kart: '🗒️', cay: '☕', kitap: '📕', mont: '🧥', anahtar: '🔧', camasir: '👕', kova: BUCKET,
 };
 const COLS = 6, ROWS = 4; // 24 slots, like a page of a game's inventory

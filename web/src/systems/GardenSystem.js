@@ -1,6 +1,8 @@
 import { EV } from '../core/events.js';
 
 export const SEED_ITEMS = Object.freeze({ bean: 'tohum', tomato: 'domates-tohumu', pepper: 'biber-tohumu', carrot: 'havuc-tohumu', corn: 'misir-tohumu' });
+/** What a harvested crop is in the bag (kept, or sold at the crate). */
+export const HARVEST_ITEMS = Object.freeze({ bean: 'fasulye', tomato: 'taze-domates', pepper: 'taze-biber', carrot: 'havuc', corn: 'misir' });
 export const seedCrop = kind => Object.keys(SEED_ITEMS).find(crop => SEED_ITEMS[crop] === kind);
 
 export const CROPS = Object.freeze({
@@ -139,7 +141,7 @@ export class GardenSystem {
       if (this.learning) return 'Önce ekim dersini tamamla.';
       if (this.status(index).stage !== 'ready') return 'Ürün henüz olgunlaşmadı.';
       const kind = p.crop;
-      this.data.basket[kind] = (this.data.basket[kind] ?? 0) + CROPS[kind].yield;
+      this.inventory.add(HARVEST_ITEMS[kind], CROPS[kind].yield);
       this.data.harvests++;
       p.crop = null; p.wateredAt = null; p.plantedAt = null; p.hoed = false;
       this.vocab.learn('hasat', 'harvest');
@@ -155,10 +157,15 @@ export class GardenSystem {
     this.inventory.add(SEED_ITEMS[crop], 1);
     this.#save('buy'); return true;
   }
-  get basketValue() { return Object.entries(this.data.basket).reduce((sum, [id, n]) => sum + (CROPS[id]?.value ?? 0) * n, 0); }
+  /** The crops in the bag (and, from older saves, the crate's basket): what the crate would pay. */
+  get basketValue() {
+    return Object.entries(HARVEST_ITEMS).reduce((sum, [crop, kind]) => sum + CROPS[crop].value * (this.inventory.count(kind) + (this.data.basket[crop] ?? 0)), 0);
+  }
+  /** Sell every harvested crop in the bag; whatever is not sold stays in the bag. */
   sell() {
     if (!this.unlocked || this.story.paused || !this.basketValue) return 0;
     const value = this.basketValue;
+    for (const kind of Object.values(HARVEST_ITEMS)) this.inventory.remove(kind);
     this.data.coins += value; this.data.basket = {};
     this.#save('sell'); return value;
   }

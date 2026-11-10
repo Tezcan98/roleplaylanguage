@@ -2640,5 +2640,11 @@
  "Do you want notifications about news and rewards?": "क्या आप समाचार और इनाम की सूचनाएँ चाहते हैं?",
  "A crop is ripe! Time to harvest.": "एक फसल पक गई! कटाई का समय है।",
  "carrot seed": "गाजर का बीज",
- "corn seed": "मक्के का बीज"
+ "corn seed": "मक्के का बीज",
+ "Harvested! It is in your bag. Keep it, or sell it at the crate.": "कटाई हो गई! फसल आपके बैग में है। रखें या क्रेट पर बेच दें।",
+ "beans": "फलियाँ",
+ "tomatoes": "टमाटर",
+ "peppers": "मिर्चें",
+ "carrots": "गाजर",
+ "corn": "मक्का"
 }

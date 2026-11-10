@@ -64,11 +64,11 @@ test('ripe crops are harvested directly with empty hands, without any basket pic
  const a=setup();a.state.flags['farm-watered']=true;a.story.quest.id='letter';let time=1000;a.garden.now=()=>time;
  assert.equal(a.walk.take('harvest'),false);a.garden.data.plots[0]={hoed:true,crop:'bean',wateredAt:null};assert.equal(a.at(GARDEN_PLOTS[0]),null);
  a.garden.data.plots[0].wateredAt=time;time+=119999;assert.equal(a.at(GARDEN_PLOTS[0]),null);time++;
- const action=a.at(GARDEN_PLOTS[0]);assert.equal(action.label,'Hasat et · 1. toprak');action.run();assert.equal(a.walk.tool,null);assert.equal(a.garden.data.basket.bean,2);assert.deepEqual(a.held,[]);assert.equal(a.garden.data.plots[0].crop,null);
+ const action=a.at(GARDEN_PLOTS[0]);assert.equal(action.label,'Hasat et · 1. toprak');action.run();assert.equal(a.walk.tool,null);assert.equal(a.garden.inventory.count('fasulye'),2);assert.deepEqual(a.held,[]);assert.equal(a.garden.data.plots[0].crop,null);
 });
 test('direct harvest puts held tools away and stale harvest actions cannot collect twice',()=>{
  const a=setup();a.state.flags['farm-watered']=true;a.story.quest.id='letter';a.garden.now=()=>200000;a.garden.data.plots[1]={hoed:true,crop:'bean',wateredAt:1000};a.walk.take('hoe');
- const action=a.at(GARDEN_PLOTS[1]);assert.match(action.label,/Hasat et/);action.run();assert.equal(a.walk.tool,null);assert.equal(a.held.at(-1),null);a.advance();action.run();assert.equal(a.garden.data.basket.bean,2);assert.equal(a.garden.data.harvests,1);
+ const action=a.at(GARDEN_PLOTS[1]);assert.match(action.label,/Hasat et/);action.run();assert.equal(a.walk.tool,null);assert.equal(a.held.at(-1),null);a.advance();action.run();assert.equal(a.garden.inventory.count('fasulye'),2);assert.equal(a.garden.data.harvests,1);
 });
 test('walking three metres beyond the garden puts tools away without removing seeds from inventory',()=>{
  const a=setup();a.walk.take('hoe');Object.assign(a.walk.player.position,{x:16.5,z:3});a.walk.update(0,0);assert.equal(a.walk.tool,'hoe');
@@ -78,4 +78,11 @@ test('walking three metres beyond the garden puts tools away without removing se
 test('tools stay held while walking across all nine garden plots',()=>{
  const a=setup();a.state.flags['farm-watered']=true;a.story.quest.id='letter';a.walk.take('water');
  for(const p of GARDEN_PLOTS){Object.assign(a.walk.player.position,p);a.walk.update(0,0);assert.equal(a.walk.tool,'water');}
+});
+
+test('harvested crops wait in the bag: keep them or sell them all at the crate',()=>{
+ const a=setup();a.state.flags['farm-watered']=true;a.story.quest.id='letter';a.garden.inventory.add('havuc',2);a.garden.inventory.add('misir',1);
+ assert.equal(a.garden.basketValue,6*2+11);
+ a.at({x:13,z:4.15}).run();
+ assert.equal(a.garden.data.coins,23);assert.equal(a.garden.inventory.count('havuc'),0);assert.equal(a.garden.basketValue,0);
 });
