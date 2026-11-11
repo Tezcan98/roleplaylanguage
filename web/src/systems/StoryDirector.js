@@ -83,7 +83,9 @@ export class StoryDirector {
     this.travel.place(this.state.location, spawn, { silent: true, force: true });
     this.bus.emit(EV.CHAPTER, { chapter: ch, resumed: true });
     this.bus.emit(EV.QUEST, { quest: this.quest });
-    this.cards.show({ num: ch.intro.num, title: ch.intro.title, text: 'Kaldığın yerden devam ediyorsun.', en: 'Continuing where you left off.', button: 'Devam' }, () => { this.#announce(); onPlay?.(); });
+    // the story was over (its last chapter done) and new chapters came since: they start now
+    const more = this.state.quest >= ch.quests.length && this.story.chapters[this.state.chapter + 1];
+    this.cards.show({ num: ch.intro.num, title: ch.intro.title, text: 'Kaldığın yerden devam ediyorsun.', en: 'Continuing where you left off.', button: 'Devam' }, () => { this.#announce(); onPlay?.(); if (more) this.nextChapter(); });
   }
 
   /** Move to the next chapter once any open conversation has ended. */

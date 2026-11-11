@@ -192,8 +192,9 @@ export class Animals {
 
   ride(a) {
     const p = this.player;
+    const gift = this.story?.quest?.id === 'at-bin'; // the first ride with Hamdi the groom (content/addons/gunler.js): his treat
     if (this.#rent?.horse !== a) { // a new ride: pay for RIDE_SECONDS
-      if (this.wallet && !this.wallet.trySpend(RIDE_PRICE)) { // not enough credits: the shop
+      if (!gift && this.wallet && !this.wallet.trySpend(RIDE_PRICE)) { // not enough credits: the shop
         this.toasts.show(`Ata binmek ${RIDE_PRICE} kredi. Kredin yetmiyor.`, gloss('A ride costs credits. Get some in the shop.'));
         this.onShop?.();
         return;
@@ -205,6 +206,7 @@ export class Animals {
     a.play('idle');
     p.setMount(a);
     this.vocab.learn('at', 'horse'); this.vocab.learn('ata binmek', 'to ride a horse');
+    if (gift) { this.toasts.show('Ata bindin! Bu biniş Hamdi Amca’dan hediye.', gloss('You are on horseback! This ride is a gift from Uncle Hamdi.')); this.effects?.run(['flag:at-bin-ridden']); return; }
     this.toasts.show(`Ata bindin! ${RIDE_SECONDS / 60} dakika senin.`, gloss('You are on horseback! It is yours for a few minutes; get off and it waits for you.'));
   }
 

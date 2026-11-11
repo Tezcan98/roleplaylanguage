@@ -27,7 +27,7 @@ export default {
         bakkal: ['village', 'bakkal', 'stand'],
       },
       intro: {
-        num: 'Pazar · Bölüm 24', title: 'Gizemli zarf',
+        num: 'Pazar · Bölüm 26', title: 'Gizemli zarf',
         text: 'Öğleden sonra dede asmanın altında oturuyor. Elinde eski, kapalı bir zarf var. Seni çağırıyor…',
         en: 'In the afternoon grandpa is sitting under the vine. He has an old, sealed envelope in his hand. He is calling you…',
       },

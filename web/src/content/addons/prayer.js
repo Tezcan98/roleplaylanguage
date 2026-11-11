@@ -22,7 +22,7 @@ export default {
         ogretmen: null, elif: null, can: null, zehra: null,
       },
       intro: {
-        num: 'Perşembe · Bölüm 17', title: 'Perşembe akşamı',
+        num: 'Perşembe · Bölüm 19', title: 'Perşembe akşamı',
         text: 'Okul güzel geçti. Bu akşam Cuma gecesi. Dede yatsı namazını evde, ailecek kıldıracak. İstersen katılırsın, istersen izlersin.',
         en: 'School went well. Tonight is the eve of Friday. Grandpa will lead the night prayer at home, with the family. You can join in, or just watch.',
       },

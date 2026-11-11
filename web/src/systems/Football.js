@@ -16,6 +16,7 @@ export class Football {
   constructor({ place, pitch, balls, writeScore, world, village, toasts }) {
     Object.assign(this, { place, pitch, balls, writeScore, world, village, toasts });
     this.score = { a: 0, b: 0 }; // a = blue (scores into the right goal), b = red
+    this.onGoal = null; // (side): a goal of mine (main.js: a story quest)
   }
 
   /**
@@ -117,6 +118,7 @@ export class Football {
     // the announcement only for the scorer and for whoever is at the pitch (or looking at it): a goal far off in the square is no news
     const p = this.village.player?.position, { x0, x1, z0, z1 } = this.pitch.fence ?? { x0: this.pitch.x0, x1: this.pitch.x1, z0: this.pitch.z0, z1: this.pitch.z1 };
     const near = !p || (this.world.current?.id === this.place && p.x > x0 - 14 && p.x < x1 + 14 && p.z > z0 - 14 && p.z < z1 + 14);
+    if (mine) this.onGoal?.(side);
     if (mine || near) this.toasts.show(`GOOOL! ${team} takım attı · ${this.score.a} - ${this.score.b}`, 'Goal!');
     if (mine && ball) {
       setTimeout(() => {

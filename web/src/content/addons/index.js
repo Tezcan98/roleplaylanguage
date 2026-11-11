@@ -14,9 +14,10 @@ import simitci from './simitci.js';
 import ciftlik from './ciftlik.js';
 import imam from './imam.js';
 import park from './park.js';
+import gunler from './gunler.js';
 
 /** Teaching add-ons applied on top of the base story (see core/ContentComposer.js). */
-export const ADDONS = [prayer, market, nine, kardes, meydan, kahvehane, kutuphane, satranc, bahce, zarf, kantin, seyis, simitci, ciftlik, imam, park];
+export const ADDONS = [prayer, market, nine, kardes, meydan, kahvehane, kutuphane, satranc, bahce, zarf, kantin, seyis, simitci, ciftlik, imam, park, gunler]; // (gunler last: its lines go before the others' for its own quests)
 
 /** Which meal is on the sini in which chapter (the evening chore "set the table" adds dinner). */
 export const MEALS = { 'd1-breakfast': 'breakfast', 'd1-dinner': 'dinner' };

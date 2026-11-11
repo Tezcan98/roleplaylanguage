@@ -160,6 +160,8 @@ export class VillageSquare extends Location {
     add(mf.ground(SQUARE_PITCH.fence.x1 - SQUARE_PITCH.fence.x0, SQUARE_PITCH.fence.z1 - SQUARE_PITCH.fence.z0, { tex: 'grass', repeat: [6, 3] }, 0.035))
       .position.set((SQUARE_PITCH.fence.x0 + SQUARE_PITCH.fence.x1) / 2, 0.035, (SQUARE_PITCH.fence.z0 + SQUARE_PITCH.fence.z1) / 2);
     this.anchor('kickoff', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, SQUARE_PITCH.cz - 2.5, 0);
+    this.anchor('pitchElif', SQUARE_PITCH.x0 + 2.5, SQUARE_PITCH.cz, Math.PI / 2); // the match on the second Monday (content/addons/gunler.js): Elif in goal
+    this.anchor('pitchZehra', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2 + 3, SQUARE_PITCH.z0 + 1.5, 0); // …and Zehra, the referee, on the touchline
     this.hotspot('village.scoreReset', (SQUARE_PITCH.x0 + SQUARE_PITCH.x1) / 2, SQUARE_PITCH.fence.z0 - 1.3, 1.3); // under the score board
 
     // trees, each in a ring of stones with soil inside (none on the pitch)
@@ -688,6 +690,7 @@ export class VillageSquare extends Location {
     add(mf.at(mf.cyl(0.22, 0.18, 0.4, { tex: 'metal' }, 10), x0 - 0.6, 0.2, H.z + 1.1));
     [-0.08, 0, 0.08].forEach((o, i) => { const c = add(mf.at(mf.cone(0.04, 0.22, 0xE67E22, 6), x0 - 0.6 + o, 0.46, H.z + 1.1 + (i - 1) * 0.05)); c.rotation.x = Math.PI; });
     this.anchor('seyis', x0 - 1.2, H.z + 0.4, 0.3);
+    this.anchor('stableElif', H.xs[1], H.z + 2.6, Math.PI); // Elif waits here for the first ride (content/addons/gunler.js)
   }
 
   /** Cemal's simit cart west of the fountain: a red cart on two wheels with a glass case full of simits, a sunshade. */
@@ -813,6 +816,14 @@ export class VillageSquare extends Location {
       this.#stool(mf, `kitap${n}`, x - 0.4, z - 0.85, 0);
       this.#stool(mf, `kitap${n + 1}`, x + 0.4, z - 0.85, 0);
     });
+    // the reading corner of Kerem and Defne, who read here every day (content/addons/gunler.js): a low table and two stools, theirs
+    const kx = L.x - 7, kz = L.z - 3.2;
+    add(mf.at(mf.box(0.8, 0.05, 0.8, LIGHT_WOOD), kx, 0.5, kz));
+    add(mf.at(mf.box(0.1, 0.48, 0.1, WOOD), kx, 0.24, kz));
+    add(mf.at(mf.box(0.36, 0.05, 0.28, colors[3]), kx, 0.54, kz)).rotation.y = 0.5;
+    C.addBox(kx - 0.4, kx + 0.4, kz - 0.4, kz + 0.4);
+    this.#stool(mf, 'libKid1', kx - 0.85, kz, Math.PI / 2, false);
+    this.#stool(mf, 'libKid2', kx + 0.85, kz, -Math.PI / 2, false);
   }
   /**
    * The open-air cinema (CINEMA): walls with no roof, the screen in a wooden frame at the back (a live

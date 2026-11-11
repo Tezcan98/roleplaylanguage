@@ -571,6 +571,7 @@ village.onPitch = (pos) => Object.values(matches).some((m) => m.has(pos));
 effects.register('score-reset', () => matches[world.current.id]?.reset(true));
 world.get('schoolyard').animated.push((dt) => football.update(dt));
 world.get('village').animated.push((dt) => squareFootball.update(dt));
+squareFootball.onGoal = () => { if (story.quest?.id === 'hs-goal') effects.run(['flag:hs-goal-scored']); }; // the match with the friends (content/addons/gunler.js)
 // the tea garden and the chess benches: villagers chat, sit down to listen in
 // the villagers' own talk, out loud near them — not over a conversation of yours
 const ambientSpeak = (text, who) => {
@@ -587,6 +588,7 @@ village.ptt.onType = (text) => village.say(text); // typed instead of spoken (no
 const library = new Library({
   books: BOOKS, state, player, choice: new ChoiceCard(host, modes), toasts, vocab, wallet, world,
   subtitles: new Subtitles(host), speak: (t) => tts.speak(t, { speaker: 'okuyucu' }),
+  onRead: () => { if (story.quest?.id === 'lib-read') effects.run(['flag:lib-read-together']); }, // reading with Elif (content/addons/gunler.js)
   reader: new BookReader(host, { modes, onSpeak: (t) => tts.speak(t, { speaker: 'okuyucu' }), onClose: (b, page) => library.closed(b, page), onFinish: (b) => library.finished(b) }),
 });
 effects.register('library', () => library.atShelf());
@@ -838,6 +840,7 @@ async function fullAd({ announce = false } = {}) {
 // a game of chess of mine is over: a full-screen ad, once the result has been seen
 const CHESS_PRIZE = 5; // credits for beating İsmail Dede
 chess.onResult = ({ win, vsDede, text, en }) => {
+  if (vsDede && story.quest?.id === 'chess-play') effects.run([`flag:chess-dede-${win ? 'won' : win === false ? 'lost' : 'draw'}`, 'flag:chess-dede-played']); // grandpa's rematch (content/addons/gunler.js)
   const prize = win && vsDede ? CHESS_PRIZE : 0;
   if (prize) wallet.add(prize, 'reward');
   cards.show({ num: 'Satranç', title: win ? '🏆 Tebrikler, kazandın!' : win === false ? 'Kaybettin' : 'Berabere', text: prize ? `${text} İsmail Dede'den hediye: +${prize} kredi 🪙` : text, en: win ? (prize ? 'Congratulations, you won! A gift from İsmail Dede: 5 credits' : 'Congratulations, you won!') : en, button: 'Tamam' });

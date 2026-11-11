@@ -12,8 +12,9 @@ export class Library {
   #mesh = null;
   #reading = null; // { book, page, timer }: read aloud at a library seat
 
-  constructor({ books, state, player, choice, reader, toasts, vocab, wallet, world, subtitles = null, speak = null }) {
-    Object.assign(this, { books, state, player, choice, reader, toasts, vocab, wallet, world, subtitles, speak });
+  /** `onRead()`: reading at a library seat, aloud or in the book (a story quest: reading together). */
+  constructor({ books, state, player, choice, reader, toasts, vocab, wallet, world, subtitles = null, speak = null, onRead = null }) {
+    Object.assign(this, { books, state, player, choice, reader, toasts, vocab, wallet, world, subtitles, speak, onRead });
     this.#show();
   }
 
@@ -42,7 +43,7 @@ export class Library {
   find() {
     const b = this.held;
     if (!b || !this.player.seated || this.reader.isOpen) return null;
-    return { label: `📖 ${b.title} oku`, dist: 0, priority: 4, run: () => this.reader.open(b, this.state.bookPage?.[b.id] ?? 0) };
+    return { label: `📖 ${b.title} oku`, dist: 0, priority: 4, run: () => { this.reader.open(b, this.state.bookPage?.[b.id] ?? 0); if (this.player.seatAnchor?.startsWith('kitap')) this.onRead?.(); } };
   }
 
   /** Sat down at a library seat: a book at random (one not read yet first; the one in your hand if any), read aloud. */
@@ -53,6 +54,7 @@ export class Library {
     this.state.heldBook = book.id;
     this.#show();
     this.#reading = { book, page: this.state.bookPage?.[book.id] ?? 0, timer: 1 };
+    this.onRead?.();
   }
 
   get reading() { return this.#reading?.book ?? null; }

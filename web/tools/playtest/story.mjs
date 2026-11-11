@@ -18,6 +18,14 @@ const TO = opt.to ?? null;
 const MAX_STEPS = Number(opt['max-steps'] ?? 900);
 const STALL = Number(opt.stall ?? 25); // steps on the same quest before it counts as stuck
 
+/** Mini-games the bot can't play by walking up and pressing E (content/addons/gunler.js). */
+const PLAY = {
+  'hs-goal': () => window.__game.squareFootball.scored('a', true), // a goal of mine on the square's pitch
+  'at-bin': () => { const g = window.__game; g.animals.ride(g.animals.horses()[0]); }, // the gift ride
+  'at-end': () => window.__game.animals.dismount(),
+  'chess-play': () => { const c = window.__game.chess; c.playDede('w', false); setTimeout(() => c.resign(), 1500); }, // a game with İsmail Dede, given up
+};
+
 const server = opt.server ? { url: opt.server, stop() {} } : await startServer();
 const browser = await openBrowser();
 const page = await browser.newPage({ viewport: { width: 1100, height: 680 } });
@@ -49,6 +57,8 @@ try {
       const shot = await screenshot(page, `stuck-${s.chapter}-${s.quest}`);
       throw new Error(`stuck on quest "${s.quest}" in ${s.chapter}: ${JSON.stringify(s)} — screenshot ${shot}`);
     }
+    // quests a mini-game finishes: played through the game's own calls once standing there didn't do it
+    if (same === 2 && PLAY[s.quest]) { await page.evaluate(PLAY[s.quest]); await sleep(1500); continue; }
     // stand next to whatever the quest arrow points at (a closer spot when it keeps failing)
     const target = await page.evaluate((near) => {
       const g = window.__game, p = g.marker.resolve();
