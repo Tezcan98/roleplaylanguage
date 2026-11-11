@@ -137,6 +137,7 @@ import { ChessGame } from './systems/ChessGame.js';
 import { Football } from './systems/Football.js';
 import { TalkAreas } from './systems/TalkAreas.js';
 import { Library } from './systems/Library.js';
+import { QuestCelebration } from './systems/QuestCelebration.js';
 import { Cinema } from './systems/Cinema.js';
 import { CinemaView } from './ui/CinemaView.js';
 import { ClipScreen } from './ui/ClipScreen.js';
@@ -273,6 +274,7 @@ const npcs = new Map(Object.entries(NPCS).map(([id, def]) => [id, new Npc(id, de
 const cast = new CastDirector({ npcs, world, player });
 const travel = new TravelService({ world, player, cast, camera, fader, state });
 const story = new StoryDirector({ story: STORY, state, bus, time, cast, travel, cards, toasts, fader });
+const celebration = new QuestCelebration({ bus, player, level: () => soundSetting('sound') }); // a big task done: a chime and a flash of light on the player
 story.beforeSleep = () => { tts.cancel(); return sleepScreen.show(); };
 const items = new ItemSystem({ defs: ITEMS, names: KIND_NAMES, world, kit, state, inventory, vocab, bus, story });
 const gameCtx = new GameContext({ state, inventory, story, world, time, vocab, player, cast });
@@ -1268,4 +1270,4 @@ if (native && window.Capacitor?.getPlatform?.() === 'android' && CONFIG.update.l
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { garden, gardenWalk, items, menu, cinema, ratePrompt, firstSteps, parkPlay, feedback, yakarTop, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { celebration, garden, gardenWalk, items, menu, cinema, ratePrompt, firstSteps, parkPlay, feedback, yakarTop, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

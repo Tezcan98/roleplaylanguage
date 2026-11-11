@@ -967,3 +967,51 @@ EPISODES.tarla2 = {
     ar: ['[excited] في حقلك الخاص تنمو خمسة محاصيل!', '[excited] احفر، ازرع، اسقِ… وشاهدها تكبر بسرعة!', '[shouting] وعندما تنضج… احصد!', '[cheerful] عائلتي التركية، مجانًا على غوغل بلاي!'],
   },
 };
+
+/**
+ * The library on the village square (content/addons/gunler.js, Monday after school): a calm Short.
+ * Elif and Can read at the tables, Kerem and Defne in their corner, a book read aloud with its
+ * subtitles. record.mjs <dir> --episode=kutuphane --lang=ar --music=bahce (kutuphane.mp3 sounded tense)
+ */
+const kutuphaneStart = async (kit) => {
+  const page = await start(kit);
+  await page.evaluate(() => {
+    const g = window.__game, i = g.story.story.chapters.findIndex((c) => c.id === 'd2-library');
+    g.story.startChapter(i);
+  });
+  await kit.sleep(1500);
+  for (let i = 0; i < 6; i++) { await kit.closeCards(page); await kit.sleep(300); }
+  await page.evaluate(() => {
+    const g = window.__game, m = g.marker;
+    m.update = () => { m.mesh.visible = m.exit.visible = m.ring.visible = false; }; // no quest arrow on camera
+    g.player.position.set(-31.5, 0, -27.5); g.player.group.rotation.y = Math.PI;
+  });
+  await kit.sleep(800);
+  return page;
+};
+const readTogether = (page) => page.evaluate(() => { const g = window.__game; g.story.complete('lib-elif'); g.story.effects.run(['sit:kitap4', 'library-read']); });
+EPISODES.kutuphane = {
+  scenes: [
+    {
+      name: 'kLib', seconds: 6,
+      setup: async (kit) => { const page = await kutuphaneStart(kit); await fixed(page, [-34, 2.6, -19.5], [-34, 2.4, -30], true); await kit.sleep(900); return page; }, // the KÜTÜPHANE board from the square…
+      act: async (kit, page) => { await kit.big(page, { tr: 'Köyün kütüphanesi', en: 'The village library', ar: 'مكتبة القرية' }); await kit.sleep(900); await fixed(page, [-34.6, 4.9, -30.4], [-34.4, 0.8, -36.2]); await kit.sleep(5000); }, // …then in over it, down to Elif's table and Aslan Bey
+    },
+    {
+      name: 'kRead', seconds: 8,
+      setup: async (kit) => { const page = await kutuphaneStart(kit); await readTogether(page); await kit.sleep(2500); await fixed(page, [-31.6, 2.5, -29.4], [-33.9, 0.9, -34.4], true); await kit.sleep(900); return page; },
+      act: async (kit, page) => { await kit.big(page, { tr: 'Arkadaşlarınla beraber oku', en: 'Read together with your friends', ar: 'اقرأ مع أصدقائك' }); await kit.sleep(300); await fixed(page, [-32.6, 2.0, -31.0], [-33.9, 0.9, -34.4]); await kit.sleep(7200); },
+    },
+    {
+      name: 'kCorner', seconds: 5.5,
+      setup: async (kit) => { const page = await kutuphaneStart(kit); await page.evaluate(() => window.__game.cast.move('can', 'village', 'kitap6', 'sitBench')); await fixed(page, [-41, 3.6, -33.0], [-41, 1.5, -39.4], true); await kit.sleep(900); return page; }, // (Can to another table: the camera stands back far enough for both of them whole in the narrow picture)
+      act: async (kit, page) => { await kit.big(page, { tr: 'Her kitap yeni kelimeler', en: 'Every book, new words', ar: 'كل كتاب… كلمات جديدة' }); await kit.sleep(300); await fixed(page, [-41, 3.1, -34.0], [-41, 1.4, -39.4]); await kit.sleep(4800); },
+    },
+    card('kLogo', 4.2, (e) => `<img src="assets/icons/icon-512.png" alt=""><h1 dir="auto">${e.name}</h1><p dir="auto">${e.now}</p><div class="promo-badges"><span dir="auto">▶ ${e.search}</span><span class="free">${e.free}</span></div>`),
+  ],
+  vo: {
+    tr: ['Köyün kütüphanesi seni bekliyor.', 'Arkadaşlarınla yan yana otur, kitabını sesli dinle.', 'Her sayfada yeni Türkçe kelimeler.', 'Türk Ailem, Google Play’de ücretsiz.'],
+    en: ['The village library is waiting for you.', 'Sit next to your friends and listen to your book read aloud.', 'New Turkish words on every page.', 'My Turkish Family, free on Google Play.'],
+    ar: ['[calm] مكتبة القرية تنتظرك.', '[calm] اجلس بجانب أصدقائك، واستمع إلى كتابك وهو يُقرأ بصوت هادئ.', '[calm] في كل صفحة كلمات تركية جديدة.', '[warm] عائلتي التركية، مجانًا على غوغل بلاي.'],
+  },
+};

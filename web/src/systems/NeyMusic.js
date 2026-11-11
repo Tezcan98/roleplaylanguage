@@ -4,7 +4,7 @@
  * silent elsewhere. Without the file nothing plays. Silent at once when the game goes to the background.
  */
 const HEAR = 14;     // metres from the library's middle
-const VOLUME = 0.55; // at the very middle
+const VOLUME = 0.18; // at the very middle (0.55 was too loud: its low strings sounded tense, "scary", in the quiet library)
 
 export class NeyMusic {
   #audio = null;
