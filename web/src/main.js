@@ -309,7 +309,7 @@ const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(
 // every ad event to our server too: live numbers (AdMob's own come a day or two late; server/src/AdStats.js)
 const adEvent = (e, f, d) => {
   if (!settings.get('deviceId')) settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (as the square makes it: one per device)
-  const body = { e, f, v: appVersion, pid: settings.get('deviceId'), ...(d.valueMicros != null ? { micros: Number(d.valueMicros), cur: d.currencyCode } : {}), ...(e === 'fail' && Number.isInteger(d.code) ? { code: d.code } : {}) };
+  const body = { e, f, v: appVersion, pid: settings.get('deviceId'), ...(d.valueMicros != null ? { micros: Number(d.valueMicros), cur: d.currencyCode } : {}), ...(e === 'fail' && Number.isInteger(d.code) ? { code: d.code, msg: String(d.message ?? '').slice(0, 80) } : {}) };
   import('@capacitor/core').then(({ CapacitorHttp }) => CapacitorHttp.post({ url: 'https://anadoluailesi.com.tr/api/ad-event', headers: { 'Content-Type': 'application/json' }, data: body })).catch(() => {});
 };
 let appVersion = '';
@@ -1035,8 +1035,11 @@ const idleAd = {
     if (menu.isOpen) { this.idle = 0; this.on = false; this.hold = 0; adClock.hidden = true; return; } // the menu decides its own banner
     this.idle = modes.is('play') && !player.moving ? this.idle + dt : 0;
     if (this.hold > 0) this.hold -= dt;
-    const want = (this.idle > IDLE_BANNER || this.hold > 0) && !wallet.adFree;
-    if (want !== this.on) { this.on = want; if (want) ads.showBanner(); else ads.hideBanner(); }
+    // only while walking about, and only where the small banner fits between the joystick and the buttons (a phone
+    // held sideways): on top of them every thumb going back to the controls opened the ad
+    const roomy = innerWidth >= 760 && innerWidth > innerHeight;
+    const want = (this.idle > IDLE_BANNER || this.hold > 0) && modes.is('play') && roomy && !wallet.adFree;
+    if (want !== this.on) { this.on = want; if (want) ads.showBanner({ compact: true }); else ads.hideBanner(); }
     const left = want && this.idle <= IDLE_BANNER ? Math.ceil(this.hold) : 0; // (standing still: the banner stays until a step, no count)
     adClock.hidden = !(left > 0 && document.body.classList.contains('banner-on'));
     if (!adClock.hidden) { const t = `${ui('Reklam', 'Ad')} · ${left} ${ui('sn', 's')}`; if (adClock.textContent !== t) adClock.textContent = t; }

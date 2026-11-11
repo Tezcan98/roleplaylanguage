@@ -92,9 +92,13 @@ export class AdMobAdProvider extends AdProvider {
    * When AdMob has no ad (its first load or a refresh a minute later fails — the plugin then removes
    * the banner altogether), our own goes in its place and AdMob is asked again: in 15 s, then 30, then
    * every minute, for as long as the banner is wanted.
+   * `compact`: the small 320×50 one in the middle (while playing: the screen-wide one lay over the joystick and the
+   * buttons, and a thumb going back to them opened the ad — AdMob counts those as accidental clicks).
    */
-  async showBanner() {
-    if (this.bannerOn) return;
+  async showBanner({ compact = false } = {}) {
+    if (this.bannerOn && this.#compact === compact) return;
+    if (this.bannerOn) { this.bannerOn = false; try { await AdMob.removeBanner(); } catch { /* not shown */ } } // the other size
+    this.#compact = compact;
     this.bannerOn = true; this.#wanted = true;
     document.body.classList.add('banner-on'); // the menus leave room for it at the bottom (style.css --banner-h)
     try {
@@ -105,7 +109,7 @@ export class AdMobAdProvider extends AdProvider {
         AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => this.#noAd()),
       ]).catch(() => {});
       if (!this.bannerOn) return; // left the menu meanwhile
-      await AdMob.showBanner({ adId: this.ids.banner, adSize: BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0, isTesting: this.testing.banner });
+      await AdMob.showBanner({ adId: this.ids.banner, adSize: compact ? BannerAdSize.BANNER : BannerAdSize.ADAPTIVE_BANNER, position: BannerAdPosition.BOTTOM_CENTER, margin: 0, isTesting: this.testing.banner });
       if (!this.bannerOn) await AdMob.removeBanner(); // taken away while it was coming up
     } catch (e) {
       console.warn('[admob] banner failed', e);
@@ -114,6 +118,7 @@ export class AdMobAdProvider extends AdProvider {
   }
 
   #wanted = false;  // a banner is asked for (the menu is still up): a failed one tries again
+  #compact = false; // the one wanted is the small one
   #watch = null;
   #retry = null;
   #backoff = 0;     // failed tries in a row
@@ -124,7 +129,7 @@ export class AdMobAdProvider extends AdProvider {
     this.onHouse?.(true);
     clearTimeout(this.#retry);
     const wait = [15000, 30000][this.#backoff++] ?? 60000;
-    this.#retry = setTimeout(() => { if (this.#wanted) this.showBanner(); }, wait);
+    this.#retry = setTimeout(() => { if (this.#wanted) this.showBanner({ compact: this.#compact }); }, wait);
   }
 
   async hideBanner() {

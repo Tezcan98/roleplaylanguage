@@ -11,7 +11,7 @@ import { numbersBody, firstMinutesBody, chartsCss } from './StatsCharts.js';
  * every minute or so) is not an error the player sees: the page counts it apart, next to the loads
  * that brought an ad (how often there is one), and keeps it out of the latest events.
  *
- *   POST /api/ad-event  { e, f, micros?, cur?, v?, pid?, code? }  (code: AdMob's error code of a 'fail')   from the app (web/src/services/monetization/AdMobAdProvider.js)
+ *   POST /api/ad-event  { e, f, micros?, cur?, v?, pid?, code?, msg? }  (code, msg: AdMob's error code and words of a 'fail')   from the app (web/src/services/monetization/AdMobAdProvider.js)
  *   GET  /api/istatistik?key=…  a page with the ads (today, the last days, the latest events) and how the game is played, with charts (&format=json); /api/ad-stats the same, the old address
  *
  * One JSON line per event in DIR/YYYY-MM-DD.jsonl (Turkish time), the last DAYS days kept in memory.
@@ -69,6 +69,7 @@ export class AdStats {
     if (/^[A-Z]{3}$/.test(String(msg.cur ?? ''))) ev.cur = msg.cur;
     if (typeof msg.v === 'string') ev.v = msg.v.slice(0, 16);
     if (msg.e === 'fail' && Number.isInteger(msg.code) && msg.code >= -1 && msg.code < 100) ev.code = msg.code;
+    if (msg.e === 'fail' && typeof msg.msg === 'string' && msg.msg) ev.msg = msg.msg.replace(/[^\x20-\x7E]/g, '').slice(0, 80); // (code 0 is many things: "JavascriptEngine", a blocked network…)
     if (msg.pid) { ev.d = createHash('sha256').update(String(msg.pid)).digest('hex').slice(0, 10); this.#everyone.add(ev.d); }
     if (/^[A-Z]{2}$/.test(country)) ev.c = country;
     const d = day(now);
