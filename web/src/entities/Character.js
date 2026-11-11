@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { buildRig, RIG_PROPS } from './CharacterRig.js';
 import { fitToBox } from '../engine/ModelLibrary.js';
 import { sitPose } from './Behaviors.js';
+import { GARDEN_TOOL_COLORS } from '../content/gardenLayout.js';
 import { addHeadscarf, addDress, addFace, paintOutfit, addShoes, paintLook, addLookExtras, facingZ } from './hdClothes.js';
 
 /** The jacket's colour (the blocky one's, CharacterRig.js). */
@@ -430,17 +431,23 @@ export class Character {
       this.gardenProps ??= {};
       if (!this.gardenProps[tool]) {
         const mf = this.mf, g = mf.group();
+        // big and bright (GARDEN_TOOL_COLORS): what you hold must read at a glance on a phone
+        const C = GARDEN_TOOL_COLORS;
         if (tool === 'hoe') {
-          g.add(mf.at(mf.cyl(.025, .025, .85, 0x986839, 6), 0, 0, 0));
-          g.add(mf.at(mf.box(.24, .06, .16, 0x738087), 0, -.43, .04));
+          g.add(mf.at(mf.cyl(.045, .045, 1.05, C.handle, 8), 0, .05, 0));
+          g.add(mf.at(mf.box(.34, .09, .2, C.hoe), 0, -.46, .07));
+          g.add(mf.at(mf.box(.36, .025, .03, C.edge), 0, -.5, .17)); // the shining edge
         } else if (tool === 'water') {
-          g.add(mf.cyl(.13, .13, .25, 0x4B8E9A, 10));
-          const spout = mf.at(mf.cyl(.035, .04, .3, 0x4B8E9A, 6), 0, .05, .2); spout.rotation.x = Math.PI / 3; g.add(spout);
+          g.add(mf.cyl(.17, .17, .3, C.can, 12));
+          g.add(mf.at(mf.cyl(.175, .175, .05, C.band, 12), 0, .1, 0));
+          const spout = mf.at(mf.cyl(.04, .055, .38, C.spout, 8), 0, .07, .25); spout.rotation.x = Math.PI / 3; g.add(spout);
+          const arch = mf.at(mf.torus(.12, .025, C.spout), 0, .2, -.02); arch.rotation.y = Math.PI / 2; g.add(arch);
         } else if (tool === 'sow') {
-          g.add(mf.box(.23, .3, .15, 0xD7B273));
-          g.add(mf.at(mf.sphere(.065, 0x7F9B45, 6), 0, .02, .08));
+          g.add(mf.box(.3, .36, .18, C.bag));
+          g.add(mf.at(mf.box(.31, .1, .19, C.band), 0, .06, 0)); // the label
+          g.add(mf.at(mf.sphere(.08, C.sprout, 8), 0, .24, 0));
         }
-        g.position.set(.33, .9, .16); this.group.add(g); this.gardenProps[tool] = g;
+        g.position.set(.36, .85, .2); this.group.add(g); this.gardenProps[tool] = g;
       }
       this.heldGarden = this.gardenProps[tool]; this.heldGardenKind = tool;
     }
@@ -453,8 +460,8 @@ export class Character {
     if (!on) { if (this.gardenHoe) this.gardenHoe.visible = false; return; }
     if (!this.gardenHoe) {
       const mf = this.mf, hoe = mf.group();
-      hoe.add(mf.at(mf.cyl(.025, .025, .85, 0x986839, 6), 0, 0, 0));
-      hoe.add(mf.at(mf.box(.24, .06, .16, 0x738087), 0, -.43, .04));
+      hoe.add(mf.at(mf.cyl(.045, .045, 1.05, GARDEN_TOOL_COLORS.handle, 8), 0, .05, 0));
+      hoe.add(mf.at(mf.box(.34, .09, .2, GARDEN_TOOL_COLORS.hoe), 0, -.46, .07));
       hoe.position.set(.22, .68, .48); this.group.add(hoe); this.gardenHoe = hoe;
     }
     const swing = (Math.sin(t * 3.5) + 1) / 2;

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { Location } from '../Location.js';
 import { Foliage } from '../../engine/Foliage.js';
 import { bakeStatic } from '../../engine/StaticBatch.js';
-import { GARDEN_PLOTS, GARDEN_TOOLS } from '../../content/gardenLayout.js';
+import { GARDEN_PLOTS, GARDEN_TOOLS, GARDEN_TOOL_COLORS } from '../../content/gardenLayout.js';
 import { CROPS } from '../../systems/GardenSystem.js';
 import { buildPlant, buildScarecrow, buildSunflower } from '../gardenPlants.js';
 // import { addTrashBin } from '../trashBin.js';
@@ -209,12 +209,15 @@ export class Yard extends Location {
       });
     });
     // A hoe and watering can are already at the plot; no extra fetch errands.
+    // (bright: GARDEN_TOOL_COLORS, the same as in the hand)
+    const TC = GARDEN_TOOL_COLORS;
     const hoe = mf.group(); hoe.position.set(GARDEN_TOOLS[0].x, 0, GARDEN_TOOLS[0].z);
-    const handle = mf.at(mf.cyl(0.035, 0.035, 1.1, DARK, 6), 0, 0.55, 0); handle.rotation.z = 0.3; hoe.add(handle);
-    hoe.add(mf.at(mf.box(0.35, 0.08, 0.2, 0x606B72), 0.15, 0.08, 0)); add(hoe);
+    const handle = mf.at(mf.cyl(0.05, 0.05, 1.3, TC.handle, 8), 0, 0.65, 0); handle.rotation.z = 0.3; hoe.add(handle);
+    hoe.add(mf.at(mf.box(0.45, 0.1, 0.26, TC.hoe), 0.18, 0.08, 0)); add(hoe);
     const can = mf.group(); can.position.set(GARDEN_TOOLS[1].x, 0, GARDEN_TOOLS[1].z);
-    can.add(mf.at(mf.cyl(0.18, 0.18, 0.35, 0x4B8E9A, 10), 0, 0.2, 0));
-    const spout = mf.at(mf.cyl(0.045, 0.06, 0.45, 0x4B8E9A, 8), -0.24, 0.28, 0); spout.rotation.z = 0.9; can.add(spout); add(can);
+    can.add(mf.at(mf.cyl(0.22, 0.22, 0.42, TC.can, 12), 0, 0.23, 0));
+    can.add(mf.at(mf.cyl(0.225, 0.225, 0.06, TC.band, 12), 0, 0.33, 0));
+    const spout = mf.at(mf.cyl(0.05, 0.07, 0.5, TC.spout, 8), -0.28, 0.32, 0); spout.rotation.z = 0.9; can.add(spout); add(can);
     const crate = mf.group(); crate.position.set(13, 0, 4.15);
     crate.add(mf.at(mf.box(.7, .08, .5, 0xA87848), 0, .08, 0));
     for (const side of [-1,1]) crate.add(mf.at(mf.box(.7, .28, .06, 0xB68A56), 0, .2, side*.25));
