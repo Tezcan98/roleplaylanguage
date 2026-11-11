@@ -68,7 +68,12 @@ export class AdMobAdProvider extends AdProvider {
     try {
       await this.#init();
       this.lastError = '';
-      await AdMob.prepareRewardVideoAd({ adId: this.ids.rewarded, isTesting: this.testing.rewarded });
+      // "Unable to obtain a JavascriptEngine": the SDK's own WebView part wasn't ready yet (a cold start, or Android updating
+      // WebView); it is there a moment later, so ask again before giving up
+      for (let tries = 0; ; tries++) {
+        try { await AdMob.prepareRewardVideoAd({ adId: this.ids.rewarded, isTesting: this.testing.rewarded }); break; }
+        catch (e) { if (tries >= 2 || !/JavascriptEngine/i.test(String(e?.message ?? e))) throw e; await new Promise((r) => setTimeout(r, 1500)); }
+      }
       // closed before the end: the plugin's call never answers, so the "dismissed" event does
       let off = null;
       const closed = new Promise((r) => { AdMob.addListener(RewardAdPluginEvents.Dismissed, () => setTimeout(() => r(null), 300)).then((h) => { off = h; }); });

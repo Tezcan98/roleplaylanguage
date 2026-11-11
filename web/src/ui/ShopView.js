@@ -89,7 +89,7 @@ export class ShopView {
           wait ? btn(hm(wait), '', () => {}, true) : btn('İzle', 'go', async (e) => {
             e.target.disabled = true;
             if (await this.ads.showRewarded()) { w.adWatched(); this.toasts.show(`+${AD_REWARD} kredi`, 'Credits earned'); }
-            else if (this.ads.lastError) this.toasts.show(`Şu an reklam yok, sonra tekrar dene. (AdMob: ${this.ads.lastError})`, 'No ad right now — try again later.');
+            else if (this.ads.lastError) this.toasts.show('Şu an reklam yok, sonra tekrar dene.', 'No ad right now — try again later.');
             this.render();
           }), { subTr: true }),
         // "Davet et, kazan": the share sheet with an invitation; the credits once a friend's app was picked in it
