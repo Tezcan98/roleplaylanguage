@@ -51,6 +51,8 @@ export class Yard extends Location {
     if (p) this.gardenHighlight.position.set(p.x, .22, p.z);
   }
   markGardenPlot(index, kind = 'hoe', color = 0xE35F40) { this.gardenPulse = { index, kind, color, elapsed: 0 }; }
+  /** The tool in the player's hand (`tool`: hoe / water / null) is not also lying on its mat. */
+  setGardenToolTaken(tool) { for (const [k, m] of Object.entries(this.gardenTools ?? {})) m.visible = k !== tool; }
 
   /** House front at z = -11, 19 m × 8 m (the rooms inside are 25 m long: a little magic, but close). */
   #house(mf, C) {
@@ -209,15 +211,20 @@ export class Yard extends Location {
       });
     });
     // A hoe and watering can are already at the plot; no extra fetch errands.
-    // (bright: GARDEN_TOOL_COLORS, the same as in the hand)
+    // (bright: GARDEN_TOOL_COLORS, the same as in the hand) on a white mat each: thin tools were lost on the green grass
     const TC = GARDEN_TOOL_COLORS;
+    GARDEN_TOOLS.forEach((t) => {
+      add(mf.at(mf.cyl(0.62, 0.62, 0.04, 0xFFFFFF, 28), t.x, 0.02, t.z));
+      add(mf.at(mf.torus(0.62, 0.035, 0xE8452C, 28), t.x, 0.045, t.z)).rotation.x = Math.PI / 2; // a red rim
+    });
     const hoe = mf.group(); hoe.position.set(GARDEN_TOOLS[0].x, 0, GARDEN_TOOLS[0].z);
     const handle = mf.at(mf.cyl(0.05, 0.05, 1.3, TC.handle, 8), 0, 0.65, 0); handle.rotation.z = 0.3; hoe.add(handle);
-    hoe.add(mf.at(mf.box(0.45, 0.1, 0.26, TC.hoe), 0.18, 0.08, 0)); add(hoe);
+    hoe.add(mf.at(mf.box(0.45, 0.1, 0.26, TC.hoe), 0.18, 0.08, 0)); add(this.live(hoe));
     const can = mf.group(); can.position.set(GARDEN_TOOLS[1].x, 0, GARDEN_TOOLS[1].z);
     can.add(mf.at(mf.cyl(0.22, 0.22, 0.42, TC.can, 12), 0, 0.23, 0));
     can.add(mf.at(mf.cyl(0.225, 0.225, 0.06, TC.band, 12), 0, 0.33, 0));
-    const spout = mf.at(mf.cyl(0.05, 0.07, 0.5, TC.spout, 8), -0.28, 0.32, 0); spout.rotation.z = 0.9; can.add(spout); add(can);
+    const spout = mf.at(mf.cyl(0.05, 0.07, 0.5, TC.spout, 8), -0.28, 0.32, 0); spout.rotation.z = 0.9; can.add(spout); add(this.live(can));
+    this.gardenTools = { hoe, water: can }; // (taken: gone from its mat, in the hand — setGardenToolTaken)
     const crate = mf.group(); crate.position.set(13, 0, 4.15);
     crate.add(mf.at(mf.box(.7, .08, .5, 0xA87848), 0, .08, 0));
     for (const side of [-1,1]) crate.add(mf.at(mf.box(.7, .28, .06, 0xB68A56), 0, .2, side*.25));

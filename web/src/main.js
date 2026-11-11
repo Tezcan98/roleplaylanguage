@@ -163,7 +163,7 @@ import { DialogueView } from './ui/DialogueView.js';
 
 import { defaultGlossLang } from './i18n/Region.js';
 import { HindiNews } from './ui/HindiNews.js';
-import { gloss, ui, wordNote, loadGlossLang, glossLang, meaning, example, withGloss, turkishOnly, glossDir } from './i18n/Gloss.js';
+import { gloss, ui, wordNote, loadGlossLang, glossLang, meaning, example, withGloss } from './i18n/Gloss.js';
 import { man } from './content/characters.js';
 import { schoolDay } from './content/hotspots.js';
 import { setPlayerGender, setPlayerLook, playerGender, playerName, personalizeContent, setTeacher, teacherInfo } from './i18n/Persona.js';
@@ -627,15 +627,7 @@ cirak.build();
 
 // After day-two shopping: finish the saved garden lesson before taking the letter.
 const garden = new GardenSystem({ state, inventory, story, bus, vocab, toasts, world, time });
-// what the player holds in the garden, in words at the bottom of the screen (the tool in the hand is easy to miss on a phone)
-const heldChip = el('div', { class: 'held-chip', attrs: { hidden: '' } });
-host.append(heldChip);
-const showHeld = () => {
-  const t = gardenWalk.tool, name = t === 'hoe' ? ['Çapa', 'In your hand: the hoe'] : t === 'water' ? ['Sulama kabı', 'In your hand: the watering can'] : t === 'sow' ? [`${CROPS[gardenWalk.crop]?.name ?? 'Fasulye'} tohumu`, 'In your hand: seeds'] : null;
-  heldChip.hidden = !name;
-  if (name) heldChip.replaceChildren(...[el('strong', { text: `✋ Elinde: ${name[0]}` }), !turkishOnly() && el('small', { text: gloss(name[1]), attrs: { dir: glossDir() } })].filter(Boolean));
-};
-const gardenWalk = new GardenInteractions({ garden, world, player, mf, modes, toasts, onToolChange: () => { bus.emit(EV.QUEST, { quest: story.quest }); showHeld(); }, onInventoryHint: on => hud.hintBag(on && modes.is('play')) });
+const gardenWalk = new GardenInteractions({ garden, world, player, mf, modes, toasts, onToolChange: () => bus.emit(EV.QUEST, { quest: story.quest }), onInventoryHint: on => hud.hintBag(on && modes.is('play')) });
 gameCtx.garden = gardenWalk;
 const gardenGuide = () => {
   const q = story.quest?.id;

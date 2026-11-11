@@ -2,22 +2,19 @@ import { GARDEN_TEXT } from '../ui/gardenText.js';
 import { CROPS, seedCrop } from './GardenSystem.js';
 import { GARDEN_PLOTS, GARDEN_TOOLS, gardenDistance, GARDEN_RELEASE_DISTANCE } from '../content/gardenLayout.js';
 const distance = (a,b) => Math.hypot(a.x-b.x,a.z-b.z);
+const BAG_INSTRUCTION = { tr: 'Çantanı aç → fasulye tohumunu seç', en: 'Open your bag and select the bean seeds.' };
 const VERBS = { hoe: 'Çapala', sow: 'Tohum ek', water: 'Sula', harvest: 'Hasat et' };
 
-/**
- * Gardening uses the same walk-up action button as the rest of the village. No overlay. At a bed the button does
- * its next job (hoe, sow, water, harvest) and the right tool comes into your hand; the tools by the garden can
- * still be taken and put back.
- */
+/** Gardening uses the same walk-up action button as the rest of the village. No overlay. */
 export class GardenInteractions {
   constructor({garden,world,player,mf,modes,toasts,onToolChange=()=>{},onInventoryHint=()=>{},now=()=>performance.now()}) {
     Object.assign(this,{garden,world,player,mf,modes,toasts,onToolChange,onInventoryHint,now});
-    this.tool=null;this.crop='bean';this.workingUntil=0;this.told=new Set();this.ripe=new Set();this.ripeSeen=false;this.ripeCheck=0;
+    this.tool=null;this.crop='bean';this.workingUntil=0;this.ripe=new Set();this.ripeSeen=false;this.ripeCheck=0;
   }
   get available(){return this.world.current?.id==='yard' && this.garden.unlocked && !this.garden.story.paused;}
   get nearGarden(){return this.world.current?.id==='yard' && gardenDistance(this.player.position)<=GARDEN_RELEASE_DISTANCE;}
   get requiredTool(){return this.garden.learning ? {'farm-hoe':'hoe','farm-sow':'sow','farm-water':'water'}[this.garden.step] ?? null : null;}
-  clearTool(){this.tool=null;this.player.holdGardenTool?.(null);this.onToolChange();}
+  clearTool(){this.tool=null;this.player.holdGardenTool?.(null);this.world.get('yard')?.setGardenToolTaken?.(null);this.onToolChange();}
   usablePlot(i,tool=this.tool){
     if(this.garden.learning&&i>=3)return false;
     const p=this.garden.data.plots[i];
@@ -26,7 +23,11 @@ export class GardenInteractions {
   target(){
     const tool=this.requiredTool;
     if(!tool)return null;
-    if(!this.nearGarden)return {location:'yard',point:{...GARDEN_PLOTS[0],y:.65},label:'Bahçe'};
+    if(this.tool!==tool){
+      if(tool==='sow')return this.nearGarden?{ui:'inventory',label:'Çantandaki fasulye tohumu'}:{location:'yard',point:{...GARDEN_PLOTS[0],y:.65},label:'Bahçe'};
+      const p=GARDEN_TOOLS.find(p=>p.tool===tool);
+      return {location:'yard',point:{x:p.x,y:.85,z:p.z},label:tool==='sow'?'Fasulye tohumu':p.label};
+    }
     const i=GARDEN_PLOTS.map((p,i)=>({i,d:distance(p,this.player.position)})).filter(p=>this.usablePlot(p.i,tool)).sort((a,b)=>a.d-b.d)[0]?.i;
     return i==null?null:{location:'yard',point:{...GARDEN_PLOTS[i],y:.65},label:`${i+1}. toprak`,plotIndex:i};
   }
@@ -34,6 +35,7 @@ export class GardenInteractions {
     const tool=this.requiredTool;
     if(!tool)return null;
     if(!this.nearGarden)return 'Bahçeye git';
+    if(this.tool!==tool)return tool==='hoe'?'Bahçenin yanındaki çapayı al':tool==='sow'?BAG_INSTRUCTION.tr:'Sulama kabını al';
     const done=this.garden.data.plots.slice(0,3).filter(p=>tool==='hoe'?p.hoed:tool==='sow'?p.crop:p.wateredAt!=null).length;
     return `${tool==='hoe'?'İşaretli toprağı çapala':tool==='sow'?'İşaretli toprağa tohum ek':'İşaretli toprağı sula'} (${done}/3)`;
   }
@@ -41,6 +43,7 @@ export class GardenInteractions {
     const tool=this.requiredTool;
     if(!tool)return null;
     if(!this.nearGarden)return GARDEN_TEXT.yard.en;
+    if(this.tool!==tool)return tool==='sow'?BAG_INSTRUCTION.en:GARDEN_TEXT[tool].en;
     return GARDEN_TEXT[{hoe:'workHoe',sow:'workSow',water:'workWater'}[tool]].en;
   }
   canSelectSeed(kind){
@@ -51,27 +54,12 @@ export class GardenInteractions {
     if(!this.canSelectSeed(kind))return false;
     this.take('sow',seedCrop(kind));return true;
   }
-  /**
-   * What a bed needs next and the tool for it: empty → the hoe, hoed → seeds (the ones in hand, else any in the bag;
-   * beans in the lesson), sown and dry → the watering can. Null when nothing (or no seeds, or not this lesson step).
-   */
-  autoWork(i){
-    if(this.garden.learning&&i>=3)return null;
-    const p=this.garden.data.plots[i],need=this.requiredTool;
-    const tool=!p.hoed&&!p.crop?'hoe':p.hoed&&!p.crop?'sow':p.crop&&p.wateredAt==null?'water':null;
-    if(!tool||(need&&tool!==need))return null;
-    if(tool!=='sow')return {tool,crop:this.crop};
-    const crop=this.garden.learning?'bean':[this.crop,...Object.keys(CROPS)].find(c=>this.garden.seeds(c)>0);
-    return crop&&this.garden.seeds(crop)>0?{tool,crop}:null;
-  }
-  /** `quiet`: picked up by working a bed (its line once, not every time). */
-  take(tool,crop='bean',quiet=false) {
+  take(tool,crop='bean') {
     if(!['hoe','sow','water'].includes(tool))return false;
     this.tool=tool;this.crop=crop;
     this.player.holdGardenTool?.(tool,crop);
+    this.world.get('yard')?.setGardenToolTaken?.(tool); // (off its mat: it is in the hand now)
     this.onToolChange();
-    if(quiet&&this.told.has(tool))return true;
-    this.told.add(tool);
     const text=tool==='hoe'?'Çapa elinde. Bir toprağın yanına git ve tek tek çapala.':tool==='sow'?`${CROPS[crop].name} tohumu elinde. Çapalanmış toprağın yanına git.`:'Sulama kabı elinde. Ektiğin her göze can suyu ver.';
     this.toasts.show(text,GARDEN_TEXT[{hoe:'workHoe',sow:'workSow',water:'workWater'}[tool]].en);
     return true;
@@ -105,14 +93,6 @@ export class GardenInteractions {
         if(actionable)offer(p,`${VERBS[this.tool]} · ${i+1}. toprak`,()=>this.apply(i),4,i);
       });
     }
-    // standing at a bed with empty hands (or the wrong tool): its next job, the tool picked up on the way — no errand to the tools first
-    if(this.now()>=this.workingUntil){
-      GARDEN_PLOTS.forEach((p,i)=>{
-        if(this.tool&&(!this.requiredTool||this.tool===this.requiredTool)&&this.usablePlot(i))return; // (the tool in hand offers it already)
-        const w=this.autoWork(i);
-        if(w)offer(p,`${VERBS[w.tool]} · ${i+1}. toprak`,()=>{if(this.tool!==w.tool||this.crop!==w.crop)this.take(w.tool,w.crop,true);this.apply(i);},4,i);
-      });
-    }
     if(!this.garden.learning&&this.now()>=this.workingUntil){
       GARDEN_PLOTS.forEach((p,i)=>{
         if(this.garden.status(i).stage==='ready')offer(p,`Hasat et · ${i+1}. toprak`,()=>this.apply(i,'harvest'),5,i);
@@ -132,7 +112,7 @@ export class GardenInteractions {
     this.ripe=ready;this.ripeSeen=true;
   }
   update(_dt,t) {
-    this.onInventoryHint(false); // (seeds come out of the bag by themselves at a hoed bed)
+    this.onInventoryHint(this.available&&this.nearGarden&&this.requiredTool==='sow'&&this.tool!=='sow');
     if(!this.available){this.player.gardenPose?.(t,false);if(this.tool){this.clearTool();}this.world.get('yard').highlightGardenPlot?.(-1);return;}
     if(this.tool&&!this.nearGarden){this.clearTool();this.workingUntil=0;}
     if(this.requiredTool&&this.tool&&this.tool!==this.requiredTool)this.clearTool();

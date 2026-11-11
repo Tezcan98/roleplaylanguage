@@ -14,12 +14,8 @@ function setup(){
  const at=point=>{Object.assign(player.position,point);return walk.find(player.position);};
  return {state,garden,walk,story,world,at,held,advance:()=>{now+=1000;}};
 }
-test('at a bed with empty hands the hoe comes into the hand and that one bed is worked',()=>{
- const a=setup();let action=a.at(GARDEN_PLOTS[0]);assert.match(action.label,/Çapala · 1/);action.run();assert.equal(a.walk.tool,'hoe');assert.deepEqual(a.held,['hoe']);assert.equal(a.garden.data.plots[0].hoed,true);assert.equal(a.garden.data.plots[1].hoed,false);
- assert.equal(a.at(GARDEN_PLOTS[3]),null); // (the lesson's three beds only)
-});
 test('take the real hoe then work each nearby plot once; no menu or automatic multi-plot completion',()=>{
- const a=setup();
+ const a=setup();assert.equal(a.at(GARDEN_PLOTS[0]),null);
  let action=a.at(GARDEN_TOOLS[0]);assert.equal(action.label,'Çapayı al');action.run();assert.equal(a.walk.tool,'hoe');assert.deepEqual(a.held,['hoe']);
  action=a.at(GARDEN_PLOTS[0]);assert.match(action.label,/Çapala · 1/);action.run();assert.equal(a.garden.data.plots[0].hoed,true);assert.equal(a.garden.data.plots[1].hoed,false);assert.equal(a.state.flags['farm-hoed'],undefined);
  assert.equal(a.walk.apply(1),false);a.advance();a.at(GARDEN_PLOTS[1]).run();a.advance();a.at(GARDEN_PLOTS[2]).run();assert.equal(a.state.flags['farm-hoed'],true);
@@ -37,20 +33,20 @@ test('purchased seeds enter the inventory and harvest sale cannot overspend',()=
  a.garden.data.coins=2;assert.equal(a.garden.buy('tomato'),true);assert.equal(a.walk.selectSeed('domates-tohumu'),true);assert.equal(a.garden.seeds('tomato'),1);assert.equal(a.garden.data.coins,0);assert.equal(a.walk.crop,'tomato');
  a.garden.data.basket={bean:2};a.at({x:13,z:4.15}).run();assert.equal(a.garden.data.coins,6);assert.equal(a.garden.basketValue,0);
 });
-test('guidance goes straight to the unfinished soil (no errand to the tools first), not the generic garden hotspot',()=>{
- const a=setup();Object.assign(a.walk.player.position,GARDEN_PLOTS[1]);assert.equal(a.walk.target().plotIndex,1);assert.match(a.walk.objective(),/çapala \(0\/3\)/);
- Object.assign(a.walk.player.position,GARDEN_PLOTS[0]);assert.equal(a.walk.target().plotIndex,0);assert.match(a.walk.objective(),/çapala \(0\/3\)/);
- a.at(GARDEN_PLOTS[0]).run();assert.notEqual(a.walk.target().plotIndex,0);assert.match(a.walk.objective(),/1\/3/);
+test('guidance points to the needed tool, then the actual unfinished soil instead of the generic garden hotspot',()=>{
+ const a=setup();assert.deepEqual(a.walk.target().point,{x:GARDEN_TOOLS[0].x,y:.85,z:GARDEN_TOOLS[0].z});assert.match(a.walk.objective(),/çapayı al/);
+ a.walk.take('hoe');Object.assign(a.walk.player.position,GARDEN_PLOTS[0]);assert.equal(a.walk.target().plotIndex,0);assert.match(a.walk.objective(),/çapala \(0\/3\)/);
+ a.walk.apply(0);assert.notEqual(a.walk.target().plotIndex,0);assert.match(a.walk.objective(),/1\/3/);
 });
-test('sowing: the seeds come out of the bag at a hoed bed; no old props or duplicate objectives',()=>{
+test('screenshot regression: sowing points to inventory, not old props or duplicate objectives',()=>{
  const a=setup();for(let i=0;i<3;i++)a.garden.data.plots[i].hoed=true;a.state.flags['farm-hoed']=true;a.state.flags['farm-sidequest']=true;a.story.quest.id='farm-sow';
- a.walk.tool='hoe';a.walk.update(0,0);assert.equal(a.walk.tool,null);assert.equal(a.at(GARDEN_TOOLS[0]),null);assert.equal(a.garden.sideObjective(),null);assert.match(a.walk.objective(),/tohum ek \(0\/3\)/);
- assert.match(a.at(GARDEN_PLOTS[1]).label,/Tohum ek · 2/);assert.equal(a.walk.selectSeed('tohum'),true);assert.equal(a.walk.tool,'sow');assert.match(a.at(GARDEN_PLOTS[0]).label,/Tohum ek/);assert.equal(a.walk.target().plotIndex,0);
+ a.walk.tool='hoe';a.walk.update(0,0);assert.equal(a.walk.tool,null);assert.equal(a.at(GARDEN_TOOLS[0]),null);assert.equal(a.garden.sideObjective(),null);assert.match(a.walk.objective(),/Çantanı aç/);
+ assert.equal(a.walk.target().ui,'inventory');assert.equal(a.walk.selectSeed('tohum'),true);assert.equal(a.walk.tool,'sow');assert.match(a.at(GARDEN_PLOTS[0]).label,/Tohum ek/);assert.equal(a.walk.target().plotIndex,0);
 });
 test('quest marker resolves the live garden point and routes to the yard when elsewhere',async()=>{
  const THREE=await import('three');const {QuestMarker}=await import('../src/systems/QuestMarker.js');const a=setup();
  const marker=new QuestMarker({scene:new THREE.Scene(),story:{target:()=>a.walk.target()},world:{current:{id:'yard'},exitTowards:()=>({pos:new THREE.Vector3(2,0,3),markerY:2})},player:a.walk.player});
- Object.assign(a.walk.player.position,{x:8,z:1});assert.equal(marker.resolve().x,GARDEN_PLOTS[0].x);assert.equal(marker.resolve().y,.65);a.walk.take('hoe');Object.assign(a.walk.player.position,GARDEN_PLOTS[0]);assert.equal(marker.resolve().z,GARDEN_PLOTS[0].z);assert.equal(marker.resolve().y,.65);
+ assert.equal(marker.resolve().x,GARDEN_TOOLS[0].x);assert.equal(marker.resolve().y,.85);a.walk.take('hoe');Object.assign(a.walk.player.position,GARDEN_PLOTS[0]);assert.equal(marker.resolve().z,GARDEN_PLOTS[0].z);assert.equal(marker.resolve().y,.65);
  marker.world.current.id='house';assert.equal(marker.resolve().x,2);assert.equal(marker.atDoor,true);
 });
 
@@ -66,7 +62,7 @@ test('selecting seeds consumes nothing until sowing, wrong stage and remote inve
 });
 test('ripe crops are harvested directly with empty hands, without any basket pickup',()=>{
  const a=setup();a.state.flags['farm-watered']=true;a.story.quest.id='letter';let time=1000;a.garden.now=()=>time;
- assert.equal(a.walk.take('harvest'),false);a.garden.data.plots[0]={hoed:true,crop:'bean',wateredAt:null};assert.match(a.at(GARDEN_PLOTS[0]).label,/Sula · 1/); // (dry: its next job is water)
+ assert.equal(a.walk.take('harvest'),false);a.garden.data.plots[0]={hoed:true,crop:'bean',wateredAt:null};assert.equal(a.at(GARDEN_PLOTS[0]),null);
  a.garden.data.plots[0].wateredAt=time;time+=119999;assert.equal(a.at(GARDEN_PLOTS[0]),null);time++;
  const action=a.at(GARDEN_PLOTS[0]);assert.equal(action.label,'Hasat et · 1. toprak');action.run();assert.equal(a.walk.tool,null);assert.equal(a.garden.inventory.count('fasulye'),2);assert.deepEqual(a.held,[]);assert.equal(a.garden.data.plots[0].crop,null);
 });

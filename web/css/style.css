@@ -78,10 +78,6 @@ body.has-map #toasts{top:calc(env(safe-area-inset-top,0px) + 32px + var(--hud-h,
 .btn-g{display:block;font:600 13px Nunito,sans-serif;opacity:.8;margin-top:1px}.btn-g:empty{display:none}
 #act,.act-alt{line-height:1.15}
 #act[hidden],#joy[hidden],#run[hidden]{display:none}
-/* the garden tool in hand, in words (main.js showHeld): bottom middle, between the joystick and the action button */
-.held-chip{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:1px;background:rgba(255,248,230,.95);color:var(--ink);border:3px solid #E8452C;border-radius:16px;padding:6px 14px;box-shadow:0 3px 0 var(--wood2);font:700 16px Fredoka,'Trebuchet MS',sans-serif;white-space:nowrap}
-.held-chip small{font:600 12px Nunito,sans-serif;opacity:.75}
-.held-chip[hidden]{display:none}
 /* other things within reach: smaller buttons stacked above the action button */
 #act-more{position:absolute;right:20px;bottom:calc(env(safe-area-inset-bottom,0px) + 122px);display:flex;flex-direction:column-reverse;align-items:flex-end;gap:8px;pointer-events:none}
 .act-alt{pointer-events:auto;background:var(--parch);color:var(--ink);border:3px solid var(--wood);border-radius:16px;padding:0 16px;min-height:48px;font:700 16px Fredoka,'Trebuchet MS',sans-serif;cursor:pointer;box-shadow:0 3px 0 var(--wood2)}
