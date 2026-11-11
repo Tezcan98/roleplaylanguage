@@ -211,21 +211,21 @@ export class Yard extends Location {
       });
     });
     // A hoe and watering can are already at the plot; no extra fetch errands.
-    // (bright: GARDEN_TOOL_COLORS, the same as in the hand) on a white mat each: thin tools were lost on the green grass
+    // (bright: GARDEN_TOOL_COLORS, the same as in the hand) on one pale stone floor by the beds, with the sale crate:
+    // the garden's work corner — thin tools were lost on the green grass
     const TC = GARDEN_TOOL_COLORS;
-    GARDEN_TOOLS.forEach((t) => {
-      add(mf.at(mf.cyl(0.62, 0.62, 0.04, 0xFFFFFF, 28), t.x, 0.02, t.z));
-      add(mf.at(mf.torus(0.62, 0.035, 0xE8452C, 28), t.x, 0.045, t.z)).rotation.x = Math.PI / 2; // a red rim
-    });
-    const hoe = mf.group(); hoe.position.set(GARDEN_TOOLS[0].x, 0, GARDEN_TOOLS[0].z);
+    add(mf.at(mf.box(2.26, 0.05, 5.16, 0xB9AF9F), 12.85, 0.025, 2.35)); // the kerb
+    add(mf.at(mf.box(2.1, 0.06, 5.0, 0xF1ECE2), 12.85, 0.04, 2.35));
+    for (let z = -0.15 + 1; z < 4.85; z += 1) add(mf.at(mf.box(2.1, 0.062, 0.03, 0xD9D1C3), 12.85, 0.04, z)); // the joints between the slabs
+    const hoe = mf.group(); hoe.position.set(GARDEN_TOOLS[0].x, 0.07, GARDEN_TOOLS[0].z);
     const handle = mf.at(mf.cyl(0.05, 0.05, 1.3, TC.handle, 8), 0, 0.65, 0); handle.rotation.z = 0.3; hoe.add(handle);
     hoe.add(mf.at(mf.box(0.45, 0.1, 0.26, TC.hoe), 0.18, 0.08, 0)); add(this.live(hoe));
-    const can = mf.group(); can.position.set(GARDEN_TOOLS[1].x, 0, GARDEN_TOOLS[1].z);
+    const can = mf.group(); can.position.set(GARDEN_TOOLS[1].x, 0.07, GARDEN_TOOLS[1].z);
     can.add(mf.at(mf.cyl(0.22, 0.22, 0.42, TC.can, 12), 0, 0.23, 0));
     can.add(mf.at(mf.cyl(0.225, 0.225, 0.06, TC.band, 12), 0, 0.33, 0));
     const spout = mf.at(mf.cyl(0.05, 0.07, 0.5, TC.spout, 8), -0.28, 0.32, 0); spout.rotation.z = 0.9; can.add(spout); add(this.live(can));
     this.gardenTools = { hoe, water: can }; // (taken: gone from its mat, in the hand — setGardenToolTaken)
-    const crate = mf.group(); crate.position.set(13, 0, 4.15);
+    const crate = mf.group(); crate.position.set(13, 0.07, 4.15); // (on the stone floor)
     crate.add(mf.at(mf.box(.7, .08, .5, 0xA87848), 0, .08, 0));
     for (const side of [-1,1]) crate.add(mf.at(mf.box(.7, .28, .06, 0xB68A56), 0, .2, side*.25));
     for (const side of [-1,1]) crate.add(mf.at(mf.box(.06, .28, .5, 0xB68A56), side*.35, .2, 0)); add(crate);
@@ -287,6 +287,7 @@ export class Yard extends Location {
     const C2 = this.collision;
     const clear = [
       [-1.8, 1.8, -11, 24], [6, 12, -5.8, -0.2], [5.8, 12.2, 1.3, 6.7], [-10.8, -5.2, -6.3, -1.7], [-13.6, -8.4, 5.5, 8.5], [-5.2, -1.2, -8.2, -7.0],
+      [11.55, 14.15, -0.4, 5.1], // the garden's stone work corner (tools and crate)
     ];
     const blocked = (x, z) => (x + 3) ** 2 + (z + 5) ** 2 < 27
       || clear.some(([x0, x1, z0, z1]) => x > x0 && x < x1 && z > z0 && z < z1)
