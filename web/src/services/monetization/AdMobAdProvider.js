@@ -30,6 +30,7 @@ export class AdMobAdProvider extends AdProvider {
     this.ids = { rewarded: rewardedId || tests.rewarded, interstitial: interstitialId || tests.interstitial, banner: bannerId || tests.banner };
     this.testing = Object.fromEntries(Object.keys(TEST).map((k) => [k, this.ids[k] === tests[k]])); // test mode only for Google's test ids
     this.bannerOn = false;
+    this.bannerShown = false; // AdMob's banner is really on the screen (loaded), not only asked for
     this.ready = null;
   }
 
@@ -97,7 +98,7 @@ export class AdMobAdProvider extends AdProvider {
    */
   async showBanner({ compact = false } = {}) {
     if (this.bannerOn && this.#compact === compact) return;
-    if (this.bannerOn) { this.bannerOn = false; try { await AdMob.removeBanner(); } catch { /* not shown */ } } // the other size
+    if (this.bannerOn) { this.bannerOn = false; this.bannerShown = false; try { await AdMob.removeBanner(); } catch { /* not shown */ } } // the other size
     this.#compact = compact;
     this.bannerOn = true; this.#wanted = true;
     document.body.classList.add('banner-on'); // the menus leave room for it at the bottom (style.css --banner-h)
@@ -105,7 +106,7 @@ export class AdMobAdProvider extends AdProvider {
       await this.#init();
       this.#sized ??= AdMob.addListener(BannerAdPluginEvents.SizeChanged, (s) => { if (s?.height > 0) document.documentElement.style.setProperty('--banner-h', `${Math.ceil(s.height)}px`); });
       this.#watch ??= Promise.all([
-        AdMob.addListener(BannerAdPluginEvents.Loaded, () => { this.#backoff = 0; if (this.#wanted) this.onHouse?.(false); }),
+        AdMob.addListener(BannerAdPluginEvents.Loaded, () => { this.#backoff = 0; if (this.#wanted) { this.bannerShown = true; this.onHouse?.(false); } }),
         AdMob.addListener(BannerAdPluginEvents.FailedToLoad, () => this.#noAd()),
       ]).catch(() => {});
       if (!this.bannerOn) return; // left the menu meanwhile
@@ -125,7 +126,7 @@ export class AdMobAdProvider extends AdProvider {
   /** No AdMob banner now: ours in its place, AdMob asked again in a while. */
   #noAd() {
     if (!this.#wanted) return;
-    this.bannerOn = false; // (the plugin has removed its banner: the next showBanner makes a new one)
+    this.bannerOn = false; this.bannerShown = false; // (the plugin has removed its banner: the next showBanner makes a new one)
     this.onHouse?.(true);
     clearTimeout(this.#retry);
     const wait = [15000, 30000][this.#backoff++] ?? 60000;
@@ -133,7 +134,7 @@ export class AdMobAdProvider extends AdProvider {
   }
 
   async hideBanner() {
-    this.#wanted = false;
+    this.#wanted = false; this.bannerShown = false;
     clearTimeout(this.#retry);
     this.#backoff = 0;
     this.onHouse?.(false);

@@ -1041,7 +1041,7 @@ const idleAd = {
     const want = (this.idle > IDLE_BANNER || this.hold > 0) && modes.is('play') && roomy && !wallet.adFree;
     if (want !== this.on) { this.on = want; if (want) ads.showBanner({ compact: true }); else ads.hideBanner(); }
     const left = want && this.idle <= IDLE_BANNER ? Math.ceil(this.hold) : 0; // (standing still: the banner stays until a step, no count)
-    adClock.hidden = !(left > 0 && document.body.classList.contains('banner-on'));
+    adClock.hidden = !(left > 0 && (ads.bannerShown || !house.root.hidden)); // (only over a banner that came: asked for and still loading or empty, the count stood over nothing)
     if (!adClock.hidden) { const t = `${ui('Reklam', 'Ad')} · ${left} ${ui('sn', 's')}`; if (adClock.textContent !== t) adClock.textContent = t; }
   },
 };
