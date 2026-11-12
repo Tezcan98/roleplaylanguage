@@ -1,4 +1,4 @@
-import { AdMob, MaxAdContentRating, BannerAdSize, BannerAdPosition, BannerAdPluginEvents, RewardAdPluginEvents } from '@capacitor-community/admob';
+import { AdMob, MaxAdContentRating, BannerAdSize, BannerAdPosition, BannerAdPluginEvents, RewardAdPluginEvents, InterstitialAdPluginEvents } from '@capacitor-community/admob';
 import { AdProvider } from './AdProvider.js';
 
 // Google's test units: used until the real ones are in assets/manifest.json → "admob"
@@ -75,11 +75,14 @@ export class AdMobAdProvider extends AdProvider {
         try { await AdMob.prepareRewardVideoAd({ adId: this.ids.rewarded, isTesting: this.testing.rewarded }); break; }
         catch (e) { if (tries >= 2 || !/JavascriptEngine/i.test(String(e?.message ?? e))) throw e; await new Promise((r) => setTimeout(r, 1500)); }
       }
-      // closed before the end: the plugin's call never answers, so the "dismissed" event does
-      let off = null;
-      const closed = new Promise((r) => { AdMob.addListener(RewardAdPluginEvents.Dismissed, () => setTimeout(() => r(null), 300)).then((h) => { off = h; }); });
-      const reward = await Promise.race([AdMob.showRewardVideoAd(), closed]);
-      off?.remove?.();
+      // the reward from the call or from its event (now and then it came only after the ad was closed); the answer once
+      // the ad is gone (closed before the end: the plugin's call never answers)
+      let reward = null;
+      const earned = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (r) => { reward ??= r; });
+      const gone = this.#gone(RewardAdPluginEvents, 1200);
+      try { await Promise.race([gone, AdMob.showRewardVideoAd().then((r) => { reward ??= r; return gone; })]); }
+      finally { gone.cancel(); earned.remove(); }
+      if (!reward && gone.failed) this.lastError = 'The ad could not be shown'; // (the shop then says "no ad right now")
       return !!reward && Number(reward.amount ?? 0) > 0;
     } catch (e) {
       this.lastError = String(e?.message ?? e ?? '').slice(0, 120);
@@ -144,11 +147,34 @@ export class AdMobAdProvider extends AdProvider {
     try { await AdMob.removeBanner(); } catch { /* not shown */ }
   }
 
+  /**
+   * A promise for the end of a full-screen ad: closed, or it could not be shown (the plugin's own call never answers
+   * then, and the game waited for ever), `wait` ms after; or the game is on the screen again with no word of either
+   * (an event lost on the way back), and in 5 minutes at the most. `cancel()` takes its listeners away; `failed`: it could not be shown.
+   */
+  #gone(events, wait) {
+    const handles = [];
+    let hidden = false, end = null, over = false, cap = null;
+    const vis = () => { if (document.hidden) hidden = true; else if (hidden) setTimeout(() => end?.(), 2000); };
+    const promise = new Promise((resolve) => {
+      end = resolve;
+      document.addEventListener('visibilitychange', vis);
+      for (const name of [events.Dismissed, events.FailedToShow]) {
+        AdMob.addListener(name, () => { if (name === events.FailedToShow) promise.failed = true; setTimeout(resolve, wait); }).then((h) => { if (over) h.remove(); else handles.push(h); }).catch(() => {});
+      }
+      cap = setTimeout(resolve, 300_000);
+    });
+    promise.cancel = () => { over = true; clearTimeout(cap); document.removeEventListener('visibilitychange', vis); handles.forEach((h) => h.remove()); };
+    return promise;
+  }
+
   async showInterstitial() {
     try {
       await this.#init();
       await AdMob.prepareInterstitial({ adId: this.ids.interstitial, isTesting: this.testing.interstitial });
-      await AdMob.showInterstitial();
+      // the plugin answers as the ad opens: wait for it to be closed, or the next day / the next place began behind it
+      const gone = this.#gone(InterstitialAdPluginEvents, 300);
+      try { await AdMob.showInterstitial(); await gone; } finally { gone.cancel(); }
     } catch (e) {
       console.warn('[admob] interstitial failed', e); // no ad this time: the story just goes on
     }
