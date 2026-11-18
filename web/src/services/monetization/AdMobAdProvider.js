@@ -31,6 +31,7 @@ export class AdMobAdProvider extends AdProvider {
     this.testing = Object.fromEntries(Object.keys(TEST).map((k) => [k, this.ids[k] === tests[k]])); // test mode only for Google's test ids
     this.bannerOn = false;
     this.bannerShown = false; // AdMob's banner is really on the screen (loaded), not only asked for
+    this.fullscreen = false;
     this.ready = null;
   }
 
@@ -80,8 +81,9 @@ export class AdMobAdProvider extends AdProvider {
       let reward = null;
       const earned = await AdMob.addListener(RewardAdPluginEvents.Rewarded, (r) => { reward ??= r; });
       const gone = this.#gone(RewardAdPluginEvents, 1200);
+      this.fullscreen = true;
       try { await Promise.race([gone, AdMob.showRewardVideoAd().then((r) => { reward ??= r; return gone; })]); }
-      finally { gone.cancel(); earned.remove(); }
+      finally { this.fullscreen = false; gone.cancel(); earned.remove(); }
       if (!reward && gone.failed) this.lastError = 'The ad could not be shown'; // (the shop then says "no ad right now")
       return !!reward && Number(reward.amount ?? 0) > 0;
     } catch (e) {
@@ -174,7 +176,8 @@ export class AdMobAdProvider extends AdProvider {
       await AdMob.prepareInterstitial({ adId: this.ids.interstitial, isTesting: this.testing.interstitial });
       // the plugin answers as the ad opens: wait for it to be closed, or the next day / the next place began behind it
       const gone = this.#gone(InterstitialAdPluginEvents, 300);
-      try { await AdMob.showInterstitial(); await gone; } finally { gone.cancel(); }
+      this.fullscreen = true;
+      try { await AdMob.showInterstitial(); await gone; } finally { this.fullscreen = false; gone.cancel(); }
     } catch (e) {
       console.warn('[admob] interstitial failed', e); // no ad this time: the story just goes on
     }

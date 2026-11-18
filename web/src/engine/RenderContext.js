@@ -1,5 +1,19 @@
 import * as THREE from 'three';
 
+/**
+ * An entry-level phone GPU (or little memory): there the game is drawn at the screen's own pixel size, not more, and at
+ * most 60 frames a second — on such phones the GPU fell behind the frames it was sent and Android saw the app hang
+ * (Play's vitals: ANRs "GPU not responding", Redmi / VGO Tel phones).
+ */
+export function weakGpu(renderer, nav = navigator) {
+  if ((nav.deviceMemory ?? 8) <= 2) return true;
+  try {
+    const gl = renderer.getContext(), info = gl.getExtension('WEBGL_debug_renderer_info');
+    const name = String(info ? gl.getParameter(info.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+    return /PowerVR|IMG BXM|Mali-(T\d+|4\d\d|G31|G42|G51|G52|G57|G310)\b|Adreno \(TM\) ([345]\d\d|60\d|61\d)\b/i.test(name);
+  } catch { return false; }
+}
+
 /** Owns the WebGL renderer, the scene graph root, the camera and the two global lights. */
 export class RenderContext {
   #frame = 0;
@@ -7,7 +21,8 @@ export class RenderContext {
   constructor(host = document.body, { quality = 'high' } = {}) {
     this.quality = quality;
     const r = new THREE.WebGLRenderer({ antialias: quality === 'low', powerPreference: 'high-performance' });
-    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, quality === 'high' ? 2 : 1.25));
+    this.weak = weakGpu(r);
+    r.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.weak ? 1 : quality === 'high' ? 2 : 1.25));
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.toneMappingExposure = 1.05;
     r.setSize(innerWidth, innerHeight);

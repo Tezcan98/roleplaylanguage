@@ -13,6 +13,8 @@ export class AdProvider {
   async showInterstitial() {}
   /** A banner at the bottom of the screen (the square's menu); nothing on the website. */
   async showBanner() {}
+  /** A full-screen ad (a video, an interstitial) is up: the world is not drawn under it (core/Game.js rest). */
+  fullscreen = false;
   /** A banner is really on the screen (not only asked for). */
   bannerShown = false;
   async hideBanner() {}

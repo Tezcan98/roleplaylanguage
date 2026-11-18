@@ -308,6 +308,7 @@ const recognizer = params.has('fakemic') ? new ScriptedRecognizer()
 const speech = new SpeechEvaluator({ recognizer, detector: new LanguageDetector(), matcher: new AnswerMatcher() });
 // every ad event to our server too: live numbers (AdMob's own come a day or two late; server/src/AdStats.js)
 const adEvent = (e, f, d) => {
+  if (e === 'show' || (e === 'impression' && f === 'banner')) stats.count(`ad:${f}`); // (also beside how the game is played: do the ads seen go with less play?)
   if (!settings.get('deviceId')) settings.set('deviceId', Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => (b % 36).toString(36)).join('')); // (as the square makes it: one per device)
   const body = { e, f, v: appVersion, pid: settings.get('deviceId'), ...(d.valueMicros != null ? { micros: Number(d.valueMicros), cur: d.currencyCode } : {}), ...(e === 'fail' && Number.isInteger(d.code) ? { code: d.code, msg: String(d.message ?? '').slice(0, 80) } : {}) };
   import('@capacitor/core').then(({ CapacitorHttp }) => CapacitorHttp.post({ url: 'https://anadoluailesi.com.tr/api/ad-event', headers: { 'Content-Type': 'application/json' }, data: body })).catch(() => {});
@@ -1089,6 +1090,7 @@ const stats = new Stats({
   },
 });
 textbook.onProgress = (kind) => stats.count(`textbook:${kind}`);
+setInterval(() => { if (wallet.adFree) stats.count('adfree'); }, 60_000); // a minute played ad-free (the numbers page can tell those players apart)
 village.onStat = (key) => stats.count(key);
 { const open = shop.open.bind(shop); shop.open = (...a) => { stats.count('shop'); return open(...a); }; }
 { const ride = animals.ride.bind(animals); animals.ride = (h) => { stats.count('ride'); return ride(h); }; }
@@ -1180,11 +1182,11 @@ const parkPlay = new ParkPlay({ world, player, vocab, toasts });
 const game = new Game({ ambient: [kahveTalk, cirak, dama, yakarTop, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk, passAim], shotButton, passButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 // frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
-const applyFps = (v) => { game.fps = v === 'max' ? null : Number(v) || 30; };
+const applyFps = (v) => { game.fps = v === 'max' ? (ctx.weak ? 60 : null) : Number(v) || 30; }; // (a weak GPU: "Sınırsız" is 60 at most)
 if (!settings.get('fpsUnlimited1', false)) { settings.set('fps', defaultFps()); settings.set('fpsUnlimited1', true); } // once: everyone to unlimited (it was 30 on phones by default)
 applyFps(settings.get('fps', defaultFps()));
 game.start();
-game.rest = () => damaView.isOpen || chess.view?.isOpen; // a board on screen: the world isn't drawn under it
+game.rest = () => damaView.isOpen || chess.view?.isOpen || ads.fullscreen; // a board on screen: the world isn't drawn under it; nor under a full-screen ad (the GPU is the ad's)
 if (native) wireAppLifecycle(nativeKit.App, { dialogue, tts, village });
 
 // headscarves: off at home, on outside and for the prayer (mom, and Sare if she wears one)

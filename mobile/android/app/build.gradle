@@ -12,8 +12,8 @@ android {
         applicationId "com.anadolu" // the Play Console app record (the Java package, `namespace`, stays com.anadoluailesi.app)
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 38
-        versionName "1.0.37"
+        versionCode 39
+        versionName "1.0.38"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -39,6 +39,7 @@ android {
         release {
             if (keystoreFile.exists()) signingConfig signingConfigs.release
             minifyEnabled true // R8 (Google Play: less memory, faster); the plugins are kept whole (proguard-rules.pro)
+            shrinkResources true // and the resources nothing uses taken out (Play's vitals asked for it)
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -59,6 +60,7 @@ dependencies {
     implementation 'androidx.work:work-runtime:2.9.1' // NewsWorker: the hourly check of the server's message
     implementation 'com.google.guava:guava:33.0.0-android' // (WorkManager's ListenableFuture, for the compiler)
     implementation 'com.google.android.gms:play-services-games-v2:20.1.2' // Play Games sign-in (PlayGamesPlugin)
+    implementation 'com.google.android.gms:play-services-ads:25.4.0' // (the AdMob plugin's SDK, for MainActivity: its start off the main thread)
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
