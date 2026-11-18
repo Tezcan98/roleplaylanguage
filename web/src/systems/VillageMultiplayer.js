@@ -58,8 +58,9 @@ export class VillageMultiplayer {
    * @param {Object<string, { suffix: string, balls?: object[], label: string }>} o.places
    *   public places: location id → room suffix (the city server + suffix is the room), its shared balls
    */
-  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null, consent = null, canAsk = null }) {
-    Object.assign(this, { canAsk, net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog, consent });
+  /** `listenLang()`: { code, bcp } of the player's own language when the talk button listens in it (null: Turkish). */
+  constructor({ bus, net, voice, group = null, zones = {}, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms = [], healthUrl = '', choice = null, reportDialog = null, consent = null, canAsk = null, listenLang = () => null }) {
+    Object.assign(this, { canAsk, net, voice, group, zones, remotes, world, player, ptt, calls, usernames, settings, labels, toasts, recognizer, onFirstVisit, places, rooms, healthUrl, choice, reportDialog, consent, listenLang });
     this.stayOffline = false; // the server said so (a ban after a report): offline this game, without a word
     this.consentDeclined = false; // said no this time: offline in the square until the next game (or the menu)
     ptt.onReport = () => this.report();
@@ -102,6 +103,7 @@ export class VillageMultiplayer {
       const [tr, en] = until ? BLOCKED_TEXT.muted : BLOCKED_TEXT[reason === 'language' ? 'language' : 'harm'];
       this.toasts.show(tr.replace('{m}', Math.max(1, Math.ceil(((until ?? 0) - Date.now()) / 60000))), en);
     });
+    net.on('said', ({ text }) => { if (text) this.labels.bubble(this.player, text, null, 6); }); // what I said in my own language, as the others see it: in Turkish
     net.on('say', ({ id, text }) => { const c = this.remotes.get(id); if (c && !this.isBlocked(id, c.name)) this.labels.bubble(c, text, null, 6); });
     net.on('call-request', async ({ from, name, join = false, with: others = [] }) => {
       if (this.isBlocked(from, name)) { this.net.send({ type: 'call-answer', to: from, accept: false }); return; }
@@ -412,9 +414,10 @@ export class VillageMultiplayer {
     const until = Date.now() + 20000; // tapped and forgot: 20 s at most
     const parts = [];
     let problem = null;
+    const own = this.listenLang?.() ?? null; // the player's own language: the server turns it into Turkish
     while (this.ptt.on && Date.now() < until) {
       try {
-        const { transcript } = await this.recognizer.listen({ expected: ['Merhaba! Nasılsın?'] });
+        const { transcript } = await this.recognizer.listen({ expected: ['Merhaba! Nasılsın?'], ...(own ? { lang: own.bcp } : {}) });
         if (transcript) parts.push(transcript);
       } catch (e) {
         const msg = String(e?.message ?? e);
@@ -429,7 +432,7 @@ export class VillageMultiplayer {
     this.net.send({ type: 'talk', on: false });
     mic.then((track) => { this.#pttRec?.stop(); track?.stop(); });
     const text = parts.join(' ').trim();
-    if (text) this.say(text);
+    if (text) this.say(text, own?.code);
     else if (problem === 'permission') this.toasts.show('Mikrofon izni yok', 'Allow the microphone for this site in the browser settings');
     else if (problem === 'failed') { this.toasts.show('Konuşma yazıya çevrilemedi, yazarak gönder', 'Speech-to-text failed — type it instead'); this.ptt.typeInstead(); }
     else this.toasts.show('Seni duyamadım, bir daha dene', "Didn't catch that — try again");
@@ -446,10 +449,10 @@ export class VillageMultiplayer {
     } catch { return null; }
   }
 
-  /** A sentence for everyone here (spoken and turned into text, or typed). */
-  say(text) {
+  /** A sentence for everyone here (spoken and turned into text, or typed); `from`: said in that language (the others see it in Turkish). */
+  say(text, from = null) {
     if (!this.net.connected || !text) return;
-    this.net.send({ type: 'say', text });
+    this.net.send({ type: 'say', text, ...(from ? { from } : {}) });
     this.onStat?.('chat'); // (a count for the play numbers: never the words)
     this.labels.bubble(this.player, text, null, 6);
   }

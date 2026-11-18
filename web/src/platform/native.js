@@ -96,18 +96,22 @@ export async function updateGate(App) {
 const DAILY_ID = 7001;
 /**
  * "Bugünkü ödülünü al!" — a local notification the next day at 10:00 (and one more the day
- * after, in case the first was missed). Rescheduled every time the daily reward is taken.
+ * after, in case the first was missed), in Turkish and in the player's language. Rescheduled every
+ * time the daily reward is taken. With notifications allowed, the news from the server comes too
+ * (`News`: NewsPlugin.java, tools/push.mjs) — no card of its own any more.
  */
-export async function scheduleDailyReminder(LocalNotifications, { ask = false } = {}) {
+export async function scheduleDailyReminder(LocalNotifications, { ask = false, News = null } = {}) {
   try {
     const perm = await LocalNotifications.checkPermissions();
     // asked once, right after the first daily reward (not over the character setup); afterwards only rescheduled
     if (perm.display !== 'granted' && (!ask || (await LocalNotifications.requestPermissions()).display !== 'granted')) return;
+    News?.enable({ enabled: true }).catch(() => {}); // (an app from before 1.0.37 has no such plugin)
+    const meaning = gloss('Take today’s reward! Come every day and it grows.');
     await LocalNotifications.cancel({ notifications: [{ id: DAILY_ID }, { id: DAILY_ID + 1 }] }).catch(() => {});
     const at = (days) => { const d = new Date(); d.setDate(d.getDate() + days); d.setHours(10, 0, 0, 0); return d; };
     await LocalNotifications.schedule({
       notifications: [1, 2].map((days, i) => ({
-        id: DAILY_ID + i, title: `${gloss('My Turkish Family') || 'Türk Ailem'} 🎁`, body: 'Bugünkü ödülünü al! Her gün gelirsen ödül büyür.',
+        id: DAILY_ID + i, title: `${gloss('My Turkish Family') || 'Türk Ailem'} 🎁`, body: `Bugünkü ödülünü al! Her gün gelirsen ödül büyür.${meaning ? `\n${meaning}` : ''}`,
         schedule: { at: at(days) }, // not exact to the minute: no special alarm permission needed
       })),
     });

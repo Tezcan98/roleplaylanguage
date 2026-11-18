@@ -125,6 +125,20 @@ test('positions are broadcast; public speech is moderated and rate-limited', asy
   await a.close(); await b.close();
 });
 
+test('a bubble said in the player\'s own language reaches the room in Turkish (and the speaker sees it so)', async () => {
+  village.translator = { toTurkish: async (text, from) => (from === 'ar' && text === 'مرحبا كيف حالك' ? 'Merhaba, nasılsın?' : null) };
+  const a = await join('Rayan', 'own');
+  const b = await join('Umar', 'own');
+  a.send({ type: 'say', text: 'مرحبا كيف حالك', from: 'ar' });
+  assert.equal((await a.next('said')).text, 'Merhaba, nasılsın?');
+  assert.equal((await b.next('say')).text, 'Merhaba, nasılsın?');
+  await silence(1300);
+  a.send({ type: 'say', text: 'كلام سيء', from: 'ar' }); // not translated (refused): held back as not Turkish
+  assert.equal((await a.next('say-blocked')).reason, 'language');
+  village.translator = null;
+  await a.close(); await b.close();
+});
+
 test('voice: request needs consent, signalling only between partners, only a huge distance ends the call', async () => {
   const a = await join('Can', 'call');
   const b = await join('Zehra', 'call');

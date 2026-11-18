@@ -68,6 +68,7 @@ import { FeedbackView } from './ui/FeedbackView.js';
 import { ParkPlay } from './systems/ParkPlay.js';
 import { YakarTop } from './systems/YakarTop.js';
 import { Animals } from './systems/Animals.js';
+import { RideCompanion } from './systems/RideCompanion.js';
 import { Bicycle, bikeMount } from './systems/Bicycle.js';
 import { Scooters, scooterMount } from './systems/Scooter.js';
 import { KahveCirak } from './systems/KahveCirak.js';
@@ -163,7 +164,7 @@ import { DialogueView } from './ui/DialogueView.js';
 
 import { defaultGlossLang } from './i18n/Region.js';
 import { HindiNews } from './ui/HindiNews.js';
-import { gloss, ui, wordNote, loadGlossLang, glossLang, meaning, example, withGloss } from './i18n/Gloss.js';
+import { gloss, ui, wordNote, loadGlossLang, glossLang, glossInfo, meaning, example, withGloss } from './i18n/Gloss.js';
 import { man } from './content/characters.js';
 import { schoolDay } from './content/hotspots.js';
 import { setPlayerGender, setPlayerLook, playerGender, playerName, personalizeContent, setTeacher, teacherInfo } from './i18n/Persona.js';
@@ -490,6 +491,7 @@ const village = new VillageMultiplayer({
   places: { village: { suffix: '', balls: villageBalls, label: '' }, schoolyard: { suffix: '-okul', balls: [schoolBall], label: 'Okul bahçesi' } },
   world, player, settings, labels, toasts,
   ptt: new PushToTalk(host, { onChange: (on) => village.talk(on) }),
+  listenLang: () => (settings.get('pttOwnLang', true) ? ownSpeechLang() : null),
   calls: new CallUI(host, modes),
   reportDialog: new ReportDialog(host, modes), // "Şikayet et" (🚩 in the top bar and in the call bar)
   consent: new ConsentDialog(host, modes), // before the first time online: agree to the recording
@@ -502,7 +504,17 @@ const village = new VillageMultiplayer({
     button: 'Tamam',
   }),
   recognizer: chatRecognizer,
-});
+});// the square's talk button can listen in the player's own language: said in it, the others see it in Turkish (the server
+// translates it, then the usual checks — server/src/Translate.js); the chip over the button switches back to Turkish
+const SPEECH_LANG = Object.fromEntries([['ar', 'ar-SA'], ['en', 'en-US'], ['ur', 'ur-PK'], ['hi', 'hi-IN'], ['es', 'es-ES'], ['fr', 'fr-FR'], ['id', 'id-ID']]);
+function ownSpeechLang() { const code = glossLang(); return SPEECH_LANG[code] ? { code, bcp: SPEECH_LANG[code] } : null; }
+function pttLangChip() {
+  const own = ownSpeechLang(), on = !!own && settings.get('pttOwnLang', true);
+  village.ptt.setLang(own ? (on ? glossInfo()?.name ?? own.code : 'Türkçe') : null, on);
+}
+village.ptt.onLang = () => { settings.set('pttOwnLang', !settings.get('pttOwnLang', true)); pttLangChip(); };
+village.ptt.onAppear = pttLangChip;
+
 // "Meydan seç": another city's square — a tap on "👥 1 · Ankara" in the top bar, or the tile in the settings
 const roomCard = new RoomCard(host, modes, { villageServer });
 const pickRoom = async () => { const id = await roomCard.open(settings.get('serverRegion', DEFAULT_SERVER)); if (id) village.switchRoom(id); };
@@ -666,7 +678,19 @@ const animals = new Animals({
   offerMore: ads.hasRewarded ? async () => (await rideMore.ask({ title: '🐴 Süren doldu', text: 'Kısa bir video izle, 5 dakika daha ata bin!', en: 'Watch a short video and ride 5 more minutes!', yes: '📺 Video izle', no: 'Attan in' })) && ads.showRewarded() : null,
 });
 animals.build();
-bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') animals.leftPlace(); }); // the horse stays on the square
+// the first evening (content/addons/gunler.js d1-ride): on a horse, Elif gets on the next one and rides along to the fountain
+const rideAlong = new RideCompanion({ animals, cast, player });
+animals.onRide = () => { if (story.quest?.id === 'd1r-bin') { rideAlong.start('elif'); effects.run(['flag:d1r-ridden']); } };
+effects.register('ride-along-stop', () => rideAlong.stop());
+const rideTour = {
+  update(dt) {
+    rideAlong.update(dt);
+    if (story.quest?.id !== 'd1r-tour') return;
+    const p = marker.resolve();
+    if (p && Math.hypot(p.x - player.position.x, p.z - player.position.z) < 4) effects.run(['flag:d1r-toured']);
+  },
+};
+bus.on(EV.LOCATION, ({ id }) => { if (id !== 'village') { rideAlong.stop(); animals.leftPlace(); } }); // the horse stays on the square
 // scooters on the square (free)
 const scooters = new Scooters({ world, mf, player, toasts, vocab });
 scooters.build();
@@ -781,7 +805,7 @@ const dailyView = new DailyRewardView(host, modes);
 function takeDaily() {
   const d = wallet.takeDaily();
   if (d) toasts.show(`🎁 +${d.amount} kredi`, 'Daily reward');
-  if (native) scheduleDailyReminder(nativeKit.LocalNotifications, { ask: true }); // "Bugünkü ödülünü al!" tomorrow
+  if (native) scheduleDailyReminder(nativeKit.LocalNotifications, { ask: true, News: nativeKit.News }); // "Bugünkü ödülünü al!" tomorrow (and the server's news)
 }
 async function offerDaily() {
   const d = wallet.daily();
@@ -1105,7 +1129,7 @@ else {
   if (auto && !saved) { menu.hide(); introFirst().then(() => startNew()); } // (just made the character and the page reloaded: on into the game)
   else if (again && saved) { menu.hide(); continueGame(); } else offerDaily();
 }
-if (native) scheduleDailyReminder(nativeKit.LocalNotifications); // keep tomorrow's reminder
+if (native) scheduleDailyReminder(nativeKit.LocalNotifications, { News: nativeKit.News }); // keep tomorrow's reminder (and the news on, where notifications are allowed)
 // Before Continue, state is still empty: restore pending alerts from the saved garden.
 gardenNotifications?.sync({ plots: saved?.flags?.['farm-v2']?.plots ?? [] });
 // Play Games sign-in (silent for Play Games users): the player id goes with what they write, for the safety log
@@ -1179,7 +1203,7 @@ function continueGame(then) {
 
 
 const parkPlay = new ParkPlay({ world, player, vocab, toasts });
-const game = new Game({ ambient: [kahveTalk, cirak, dama, yakarTop, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk, passAim], shotButton, passButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
+const game = new Game({ ambient: [rideTour, kahveTalk, cirak, dama, yakarTop, talk, ney, music, jumpShown, library, cinema, ratePrompt, firstSteps, autoDoor, idleAd, feedbackAsk, parkPlay, gardenWalk, passAim], shotButton, passButton, help, prayer, village, toys, foliage: Foliage, modes, time, lighting, controller, cast, items, world, interactions, actionButton, joystick, marker, minimap, camera, labels, dialogue, story, player, ctx });
 
 // frames a second (⚙️ "Kare hızı"; on a phone 30 by default: 120 Hz screens drew 120 a second and ran hot)
 const applyFps = (v) => { game.fps = v === 'max' ? (ctx.weak ? 60 : null) : Number(v) || 30; }; // (a weak GPU: "Sınırsız" is 60 at most)
@@ -1275,4 +1299,4 @@ if (native && window.Capacitor?.getPlatform?.() === 'android' && CONFIG.update.l
 
 // Debug handle for automated play-throughs: open with ?debug
 if (params.has('debug')) { window.__progs = () => ctx.renderer.info.programs?.length ?? 0; window.__frame = () => new Promise((done) => { const i = ctx.renderer.info; i.autoReset = false; i.reset(); requestAnimationFrame(() => requestAnimationFrame(() => { const r = { calls: i.render.calls, triangles: i.render.triangles }; i.autoReset = true; done(r); })); }); } // (tests: shaders compiled so far, last frame's draw calls and triangles)
-if (params.has('debug')) window.__game = { celebration, garden, gardenWalk, items, menu, cinema, ratePrompt, firstSteps, parkPlay, feedback, yakarTop, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };
+if (params.has('debug')) window.__game = { rideAlong, celebration, garden, gardenWalk, items, menu, cinema, ratePrompt, firstSteps, parkPlay, feedback, yakarTop, dama, controller, scoldKid, idleAd, music, cirak, toasts, animals, bicycle, scooters, market, tableAndBins, labels, shop, ads, billing, ney, library, bus, football, squareFootball, talk, chess, camera, drill, settings, glossProbe: gloss, help, intro, prayer, joystick, interactions, village, lessons, textbook, wallet, travel, cast, free, toys, tts, game, story, marker, player, modes, world, dialogue, inventory, vocab, time };

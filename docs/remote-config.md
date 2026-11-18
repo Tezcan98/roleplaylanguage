@@ -7,7 +7,8 @@ türde bir değer (sayı yerine yazı, eksi sayı) yok sayılır, koddaki varsay
 
 | Anahtar | Ne |
 |---|---|
-| `prices.horseRide` | at kirası (kredi) |
+| `prices.horseRide` | at kirası (kredi; 0: atlar bedava, süre sınırı yok) |
+| `adTiers.low` / `adTiers.high` | ülkeye göre tam ekran reklam: `countries` listesindeki ülkelerde `interstitialEvery`, `afterChessEvery`, `travelChance` bunlarla değişir (ülkeyi sunucu söyler, bir sonraki açılışta geçerli) |
 | `prices.bikeLearn` | bisiklet öğrenmek (kredi) |
 | `prices.hd`, `prices.outfit`, `prices.aura`, `prices.adFree` | mağaza fiyatları (kredi) |
 | `prices.pepper` | Urfa biberi (kredi; mağazada "Yiyecek") |
@@ -32,3 +33,4 @@ türde bir değer (sayı yerine yazı, eksi sayı) yok sayılır, koddaki varsay
 
 Not: uygulama sürümü yeni bir şey getirdiğinde (yerli değişiklik), Play'de yayına girdikten sonra
 `update.latestApp`'i o sürümün versionCode'una çıkar.
+

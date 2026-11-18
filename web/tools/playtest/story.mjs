@@ -22,6 +22,8 @@ const STALL = Number(opt.stall ?? 25); // steps on the same quest before it coun
 const PLAY = {
   'hs-goal': () => window.__game.squareFootball.scored('a', true), // a goal of mine on the square's pitch
   'at-bin': () => { const g = window.__game; g.animals.ride(g.animals.horses()[0]); }, // the gift ride
+  'd1r-bin': () => { const g = window.__game; g.animals.ride(g.animals.horses()[0]); }, // the first evening's ride (Elif gets on the next horse)
+  'd1r-tour': () => { const g = window.__game, p = g.marker.resolve(); g.player.position.set(p.x + 1, 0, p.z + 1); }, // ride to the fountain
   'at-end': () => window.__game.animals.dismount(),
   'chess-play': () => { const c = window.__game.chess; c.playDede('w', false); setTimeout(() => c.resign(), 1500); }, // a game with İsmail Dede, given up
 };

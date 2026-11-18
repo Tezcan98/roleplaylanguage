@@ -17,6 +17,12 @@ const LABEL = {
 export class PushToTalk {
   #placed = '';
   #cap = 0;
+  /** The language chip: `name` of the language the button listens in now (null: no choice, Turkish only). */
+  setLang(name, own) {
+    this.langBtn.hidden = !name;
+    if (name) { this.langBtn.textContent = `🗣️ ${name}`; this.langBtn.classList.toggle('own', !!own); this.langBtn.title = own ? 'Kendi dilinde konuş: herkes Türkçesini görür' : 'Türkçe konuş'; }
+  }
+
   constructor(host, { onChange }) {
     this.onChange = onChange;
     this.on = false;
@@ -27,7 +33,9 @@ export class PushToTalk {
     this.reportBtn.hidden = true;
     this.zone = el('div', { class: 'pill zone-note' });
     this.zone.hidden = true;
-    this.root = el('div', { class: 'ptt-wrap' }, [this.zone, this.status, this.btn]);
+    // which language the button listens in: Turkish, or the player's own (said in it, it reaches the others in Turkish)
+    this.langBtn = el('button', { class: 'pill ptt-lang', attrs: { type: 'button', hidden: '' }, on: { click: () => this.onLang?.() } });
+    this.root = el('div', { class: 'ptt-wrap' }, [this.zone, this.status, this.langBtn, this.btn]);
     this.root.hidden = true;
     host.append(this.root);
     // on the left, under the task: alone in the square (offline: a tap connects; online: a tap picks another city)
@@ -77,6 +85,7 @@ export class PushToTalk {
     if (!visible) { this.set(false); this.typeBox.hidden = true; }
     const appearing = visible && this.root.hidden;
     this.root.hidden = !visible; this.status.hidden = !visible; this.reportBtn.hidden = !visible;
+    if (appearing) this.onAppear?.(); // (the language chip: the meanings' language may have changed meanwhile)
     if (!visible) this.#alone(null);
     // a small round mic button; its words ("Dokun, konuş") only the first few times, for a few seconds
     if (appearing) {

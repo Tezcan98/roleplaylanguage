@@ -37,6 +37,7 @@ const TASKS = {
 const MORE_SECONDS = 5 * 60;
 const RIDE_SPEED = 1.9; // × walking speed on horseback (same as PlayerController)
 export { RIDE_PRICE }; // (content/rides.js: credits for a ride of RIDE_SECONDS)
+const FREE = RIDE_PRICE <= 0; // riding costs nothing: a horse is yours as long as you like
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 
@@ -127,7 +128,7 @@ export class Animals {
   /** Interaction provider: get off, get on a free horse, or pet an animal. */
   find(pos) {
     const p = this.player;
-    if (p.mount) return p.mount.kind === 'horse' ? { label: `Attan in · ${this.#left()}`, dist: 0, priority: 3, run: () => this.dismount() } : null;
+    if (p.mount) return p.mount.kind === 'horse' ? { label: FREE ? 'Attan in' : `Attan in · ${this.#left()}`, dist: 0, priority: 3, run: () => this.dismount() } : null;
     const here = this.world.current?.id;
     let best = null;
     for (const a of this.#list) {
@@ -140,8 +141,8 @@ export class Animals {
     if (task && this.story?.quest?.id === task.quest) return { label: task.label, dist: d, priority: 2, run: () => this.#chore(task) };
     if (a.def.ride) {
       const mine = this.#rent?.horse === a;
-      if (!mine && this.#rent) return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) }; // one horse at a time
-      return { label: mine ? `Ata bin · ${this.#left()} kaldı` : `Ata bin · ${RIDE_SECONDS / 60} dk · ${RIDE_PRICE} kredi`, dist: d, priority: 1, run: () => this.ride(a) };
+      if (!mine && this.#rent && !FREE) return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) }; // one horse at a time
+      return { label: FREE ? 'Ata bin' : mine ? `Ata bin · ${this.#left()} kaldı` : `Ata bin · ${RIDE_SECONDS / 60} dk · ${RIDE_PRICE} kredi`, dist: d, priority: 1, run: () => this.ride(a) };
     }
     return { label: k.pet, dist: d, priority: 0, run: () => this.pet(a) }; // (its name, "🐑 koyun": a tap shows what it means; no "pet it")
   }
@@ -193,7 +194,8 @@ export class Animals {
   ride(a) {
     const p = this.player;
     const gift = this.story?.quest?.id === 'at-bin'; // the first ride with Hamdi the groom (content/addons/gunler.js): his treat
-    if (this.#rent?.horse !== a) { // a new ride: pay for RIDE_SECONDS
+    if (FREE) this.#rent = { horse: a, until: Infinity }; // riding is free (config.json prices.horseRide 0): no clock, no video for more
+    else if (this.#rent?.horse !== a) { // a new ride: pay for RIDE_SECONDS
       if (!gift && this.wallet && !this.wallet.trySpend(RIDE_PRICE)) { // not enough credits: the shop
         this.toasts.show(`Ata binmek ${RIDE_PRICE} kredi. Kredin yetmiyor.`, gloss('A ride costs credits. Get some in the shop.'));
         this.onShop?.();
@@ -206,8 +208,10 @@ export class Animals {
     a.play('idle');
     p.setMount(a);
     this.vocab.learn('at', 'horse'); this.vocab.learn('ata binmek', 'to ride a horse');
+    this.onRide?.(a); // (the story: the first evening's ride with Elif)
     if (gift) { this.toasts.show('Ata bindin! Bu biniş Hamdi Amca’dan hediye.', gloss('You are on horseback! This ride is a gift from Uncle Hamdi.')); this.effects?.run(['flag:at-bin-ridden']); return; }
-    this.toasts.show(`Ata bindin! ${RIDE_SECONDS / 60} dakika senin.`, gloss('You are on horseback! It is yours for a few minutes; get off and it waits for you.'));
+    if (FREE) this.toasts.show('Ata bindin! Köyü gez, istediğin zaman attan in.', gloss('You are on horseback! Ride around the village and get off whenever you like.'));
+    else this.toasts.show(`Ata bindin! ${RIDE_SECONDS / 60} dakika senin.`, gloss('You are on horseback! It is yours for a few minutes; get off and it waits for you.'));
   }
 
   dismount() {

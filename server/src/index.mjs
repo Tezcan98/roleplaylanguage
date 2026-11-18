@@ -48,6 +48,7 @@
 import { createServer } from 'node:http';
 import { dirname, join } from 'node:path';
 import { NameRegistry } from './NameRegistry.js';
+import { Translator } from './Translate.js';
 import { VillageServer } from './VillageServer.js';
 import { DEFAULT_ORIGINS, parseOrigins, originAllowed } from './origins.js';
 import { NpcChat } from './NpcChat.js';
@@ -158,7 +159,8 @@ const moderator = new Moderator({
 });
 const chessScores = new ChessScoreFile(env.CHESS_SCORES ?? '/tmp/yilmaz-chess-scores.json');
 const names = new NameRegistry(env.USERNAMES || (env.CHESS_SCORES ? join(dirname(env.CHESS_SCORES), 'usernames.json') : null)).load(); // next to the chess scores on the real server; without them (tests, a quick local run) only in memory
-const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit, voiceAudit, names, reports });
+const translator = env.GEMINI_API_KEY ? new Translator({ apiKey: env.GEMINI_API_KEY }) : null; // the talk button in the player's own language → Turkish
+const village = new VillageServer({ server: http, allowOrigin: (o) => originAllowed(o, origins), maxPerIp: Number(env.MAX_PER_IP ?? 8), clientIp, turn, chessScores: chessScores.load(), onChessScore: () => chessScores.save(), moderator, audit, voiceAudit, names, reports, translator });
 http.listen(port, host, () => console.log(`village server → ws://${host}:${port}/ws/village  (origins: ${origins.join(' ')}; npc chat ${chat.enabled ? 'on' : 'off'}; moderation ${moderator.provider}; safety log ${audit ? `on (${audit.days} days)` : 'off'}; turn ${village.turn ? 'on' : 'off'})`));
 
 for (const sig of ['SIGINT', 'SIGTERM']) {

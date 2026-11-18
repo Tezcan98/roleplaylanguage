@@ -122,7 +122,8 @@ export class VillageServer {
    *   (username "<expiry>:<id>", password HMAC-SHA1(secret, username)), valid for a day
    * @param {Map} [o.chessScores]  chess score board to start from; `onChessScore()` after every game (to save it)
    */
-  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null, voiceAudit = null, names = null, reports = null } = {}) {
+  constructor({ server, path = '/ws/village', log = console.log, allowOrigin = () => true, maxPerIp = Infinity, clientIp = (req) => req.socket.remoteAddress, turn = null, chessScores = new Map(), onChessScore = () => {}, moderator = new Moderator({ log }), audit = null, voiceAudit = null, names = null, reports = null, translator = null } = {}) {
+    this.translator = translator; // a bubble said in the player's own language → Turkish first (Translate.js)
     this.reports = reports; // player reports, what each said lately and the bans (Reports.js), or null
     this.names = names; // unique usernames (NameRegistry), or null: any name, numbered in a room
     this.moderator = moderator; // decides which public bubbles may be shown (word list, language, Jev / Laya)
@@ -228,7 +229,8 @@ export class VillageServer {
       case 'say':
         if (typeof msg.text !== 'string' || !msg.text.trim() || Date.now() - c.lastSay < SAY_GAP) return;
         c.lastSay = Date.now();
-        this.#say(c, msg.text.trim().slice(0, 140));
+        if (typeof msg.from === 'string' && msg.from !== 'tr' && this.translator) this.#sayFrom(c, msg.text.trim().slice(0, 140), msg.from);
+        else this.#say(c, msg.text.trim().slice(0, 140));
         break;
       case 'ball': {
         const n = [msg.x, msg.z, msg.vx, msg.vz];
@@ -422,6 +424,22 @@ export class VillageServer {
     if (c.strikes.length >= STRIKES) { c.mutedUntil = now + MUTE; c.strikes = []; }
     this.moderator.record({ room: c.room, name: c.name, id: c.id, text, reason: v.reason, by: v.by, muted: c.mutedUntil > now });
     this.#send(c, { type: 'say-blocked', reason: v.reason, ...(c.mutedUntil > now ? { until: c.mutedUntil } : {}) });
+  }
+
+  /**
+   * Said in the player's own language: in Turkish first, then as any bubble. The speaker sees the Turkish ('said');
+   * the safety log keeps the original beside it. Not translated: held back like any bubble that is not Turkish.
+   */
+  async #sayFrom(c, text, from) {
+    const tr = await this.translator.toTurkish(text, from);
+    if (!c.id) return;
+    if (!tr) {
+      this.audit?.write({ kind: 'say', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, text, from, shown: false, flag: 'untranslated' });
+      return this.#send(c, { type: 'say-blocked', reason: 'language' });
+    }
+    this.audit?.write({ kind: 'said-in', room: c.room, name: c.name, pid: c.pid, gid: c.gid, ip: c.ip, text, from, tr });
+    this.#send(c, { type: 'said', text: tr });
+    return this.#say(c, tr);
   }
 
   /** Into a talking zone (or out: null). The newcomer gets who is there and calls each of them. */

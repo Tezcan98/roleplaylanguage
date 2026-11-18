@@ -191,6 +191,7 @@ export class Npc extends Character {
 
   update(dt, t, player) {
     super.update(dt);
+    if (this.mount) { if (this.talking) this.faceTowards(player.position, 0.15); return; } // riding along (systems/RideCompanion.js moves her)
     this.gardenPose(t, !this.talking && performance.now() < (this.gardenHelpUntil ?? 0));
     if (this.behavior.swing) { this.#swing(player); return; }
     if (this.behavior.roam && !this.talking) { this.#roam(dt, t); return; }

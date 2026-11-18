@@ -30,7 +30,7 @@ export class GameState {
 
   snapshot() {
     const { day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table } = this;
-    return structuredClone({ v: 1, storyRevision: 5, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table });
+    return structuredClone({ v: 1, storyRevision: 6, day, minutes, chapter, quest, location, flags, inventory, taken, words, credits, heldBook, bookPage, bought, table });
   }
 
   restore(data) {
@@ -50,8 +50,10 @@ export class GameState {
     }
     // Revision 5 inserted d2-library after d2-school (chapter 7) and d4-imam after d4-home (chapter 14).
     if (storyRevision < 5 && this.chapter >= 7) this.chapter += this.chapter >= 15 ? 2 : 1;
+    // Revision 6 inserted d1-ride (the first evening's ride with Elif) after d1-afternoon (chapter 2).
+    if (storyRevision < 6 && this.chapter >= 3) this.chapter += 1;
     // Older night saves may not have collected the book yet. School still needs it.
-    if (this.chapter >= 4 && !this.inventory.kitap) this.inventory.kitap = 1;
+    if (this.chapter >= 5 && !this.inventory.kitap) this.inventory.kitap = 1;
     return true;
   }
 }

@@ -1,6 +1,8 @@
 import { man, GIRL, kidFace } from '../characters.js';
 /**
  * More days with the friends and the family:
+ *   Sunday evening (day 1): Elif from next door calls you to the horses on the square; you meet, both get on
+ *     a horse (riding is free) and she rides along with you to the fountain (systems/RideCompanion.js).
  *   Monday (day 2) after school: Elif and Can call you to the library on the square and you read
  *     together; Kerem and Defne, two children who read there every day, sit in its corner.
  *   Wednesday evening (day 4): dad sends you to Yusuf Hoca at the mosque with a question (when the
@@ -62,6 +64,30 @@ export default {
 
   chapters: [
     {
+      after: 'd1-afternoon',
+      chapter: {
+        id: 'd1-ride', day: 1, time: '17:00', location: 'yard', spawn: 'houseDoor',
+        cast: {
+          anne: ['yard', 'laundry', 'laundry'],
+          dede: ['yard', 'pergolaSeat', 'sitBench'],
+          baba: ['yard', 'car', 'repair'],
+          bakkal: ['village', 'bakkal', 'stand'],
+          elif: ['village', 'stableElif', 'stand'],
+        },
+        intro: {
+          num: 'Pazar · Bölüm 5', title: 'Elif’le at gezisi',
+          text: 'Bahçe kapısından bir kız sesleniyor: “Merhaba! Meydana gel, atlara binelim!” Bu, komşunuzun kızı Elif.',
+          en: 'A girl calls from the garden gate: “Hi! Come to the square, let’s ride the horses!” It is Elif, the neighbours’ daughter.',
+        },
+        quests: [
+          { id: 'd1r-elif', title: 'Elif çağırıyor', obj: 'Köy meydanına git, atların yanında Elif ile konuş', en: 'Go to the village square and talk to Elif by the horses', target: { npc: 'elif' }, minutes: 10 },
+          { id: 'd1r-bin', title: 'Ata bin!', obj: 'Bir atın yanına git ve ata bin (atlar artık bedava)', en: 'Go to a horse and ride it (the horses are free now)', target: { npc: 'seyis' }, complete: { flag: 'd1r-ridden' }, minutes: 10 },
+          { id: 'd1r-tour', title: 'Köy turu', obj: 'Elif’le beraber çeşmeye kadar at sür', en: 'Ride to the fountain together with Elif', target: { hotspot: 'village.fountain' }, complete: { flag: 'd1r-toured' }, minutes: 20 },
+          { id: 'd1r-end', title: 'Ne güzel bir gün!', obj: 'Elif ile konuş', en: 'Talk to Elif', target: { npc: 'elif' }, after: ['chapter'], minutes: 10 },
+        ],
+      },
+    },
+    {
       after: 'd2-school',
       chapter: {
         id: 'd2-library', day: 2, time: '15:30', location: 'village', spawn: 'schoolRoad',
@@ -72,7 +98,7 @@ export default {
           can: ['village', 'kitap2', 'sitBench'],
         },
         intro: {
-          num: 'Pazartesi · Bölüm 9', title: 'Kütüphanede',
+          num: 'Pazartesi · Bölüm 10', title: 'Kütüphanede',
           text: 'Okul çıkışı Elif seni çağırdı: “Kütüphaneye gidelim, beraber kitap okuyalım!” Can da geliyor. Kütüphane köy meydanında.',
           en: 'After school Elif called you: “Let’s go to the library and read together!” Can is coming too. The library is on the village square.',
         },
@@ -89,7 +115,7 @@ export default {
         id: 'd4-imam', day: 4, time: '19:00', location: 'house', spawn: 'door',
         cast: { ...HOME, ogretmen: null, elif: null, can: null, zehra: null },
         intro: {
-          num: 'Çarşamba · Bölüm 18', title: 'Hocaya bir soru',
+          num: 'Çarşamba · Bölüm 19', title: 'Hocaya bir soru',
           text: 'Akşam oldu. Babanın aklında bir soru var ve cevabını camideki Yusuf Hoca biliyor.',
           en: 'It is evening. Dad has a question on his mind, and Yusuf Hoca at the mosque knows the answer.',
         },
@@ -103,7 +129,7 @@ export default {
     // the second week: d7-afternoon (Sunday) is the last chapter of the first one
     {
       after: 'd7-afternoon',
-      chapter: schoolDay(5, 9, 'Pazartesi', 27, 'Yeni hafta, yeni ders',
+      chapter: schoolDay(5, 9, 'Pazartesi', 28, 'Yeni hafta, yeni ders',
         'Yeni bir hafta başladı! Bugün derste aileni anlatmayı öğreneceksin: annem, babam, kardeşim…',
         'A new week has begun! Today in class you will learn to talk about your family: my mother, my father, my sibling…',
         { id: 'w2-can', title: 'Can’ın daveti', obj: 'Can ile konuş', en: 'Talk to Can', target: { npc: 'can' }, minutes: 5 }),
@@ -119,7 +145,7 @@ export default {
           zehra: ['village', 'pitchZehra', 'stand'],
         },
         intro: {
-          num: 'Pazartesi · Bölüm 28', title: 'Halı sahada maç',
+          num: 'Pazartesi · Bölüm 29', title: 'Halı sahada maç',
           text: 'Okuldan sonra arkadaşların meydandaki halı sahada. Can seni takımına çağırıyor: maç zamanı!',
           en: 'After school your friends are at the pitch on the square. Can is calling you to his team: match time!',
         },
@@ -132,7 +158,7 @@ export default {
     },
     {
       after: 'd9-match',
-      chapter: schoolDay(6, 10, 'Salı', 29, 'Ne istersin?',
+      chapter: schoolDay(6, 10, 'Salı', 30, 'Ne istersin?',
         'Salı sabahı. Bugün derste yiyecekleri ve bir şey istemeyi öğreneceksin: “Su istiyorum, lütfen.”',
         'Tuesday morning. Today in class you will learn food, and how to ask for things: “I want water, please.”',
         { id: 'w2-elif', title: 'Elif’in sürprizi', obj: 'Elif ile konuş', en: 'Talk to Elif', target: { npc: 'elif' }, minutes: 5 }),
@@ -143,7 +169,7 @@ export default {
         id: 'd10-ride', day: 10, time: '16:00', location: 'village', spawn: 'schoolRoad',
         cast: { ...HOME, ogretmen: null, can: null, zehra: null, elif: ['village', 'stableElif', 'stand'] },
         intro: {
-          num: 'Salı · Bölüm 30', title: 'Atlara binelim',
+          num: 'Salı · Bölüm 31', title: 'Atlara binelim',
           text: 'Elif atların yanında seni bekliyor. Seyis Hamdi Amca bugün size ata binmeyi öğretecek!',
           en: 'Elif is waiting for you by the horses. Hamdi the groom is going to teach you to ride today!',
         },
@@ -157,7 +183,7 @@ export default {
     },
     {
       after: 'd10-ride',
-      chapter: schoolDay(7, 11, 'Çarşamba', 31, 'Sporlar ve oyunlar',
+      chapter: schoolDay(7, 11, 'Çarşamba', 32, 'Sporlar ve oyunlar',
         'Çarşamba sabahı. Bugün derste sporları ve sevdiğin şeyleri anlatmayı öğreneceksin: “Futbol oynamayı severim.”',
         'Wednesday morning. Today in class you will learn sports, and to say what you like doing: “I like playing football.”',
         { id: 'w2-zehra', title: 'Zehra’nın sorusu', obj: 'Zehra ile konuş', en: 'Talk to Zehra', target: { npc: 'zehra' }, minutes: 5 }),
@@ -174,7 +200,7 @@ export default {
           bakkal: ['village', 'bakkal', 'stand'],
         },
         intro: {
-          num: 'Çarşamba · Bölüm 32', title: 'Satrançta rövanş',
+          num: 'Çarşamba · Bölüm 33', title: 'Satrançta rövanş',
           text: 'Okuldan döndün. Dede asmanın altında, biraz dalgın. Meydandaki eski dostu İsmail Dede onu satrançta yenmiş…',
           en: 'You are back from school. Grandpa is under the vine, a little lost in thought. His old friend İsmail Dede on the square beat him at chess…',
         },
@@ -190,13 +216,26 @@ export default {
   dialogues: {
     elif: {
       start: (ctx) => {
-        const q = { 'lib-elif': 'libCall', 'lib-read': 'libShh', 'w2-elif': 'w2e1', 'at-elif': 'atCall', 'at-seyis': 'atWait', 'at-bin': 'atWait', 'at-end': 'atEnd' }[ctx.q];
+        const q = { 'd1r-elif': 'rideHi', 'd1r-bin': 'rideWait', 'd1r-tour': 'rideTour', 'd1r-end': 'rideEnd', 'lib-elif': 'libCall', 'lib-read': 'libShh', 'w2-elif': 'w2e1', 'at-elif': 'atCall', 'at-seyis': 'atWait', 'at-bin': 'atWait', 'at-end': 'atEnd' }[ctx.q];
         if (q) return q;
         if (ctx.chapter === 'd2-library') return 'libShh';
         if (ctx.chapter === 'd9-match') return 'hsKeeper';
         return undefined;
       },
       nodes: {
+        // the first evening: Elif meets you and rides along (the name in Turkish: said out loud)
+        rideHi: { ask: 'speak', say: 'Merhaba! Ben Elif, komşunuzun kızıyım. Sen yeni geldin, değil mi? Adın ne?', en: 'Hi! I’m Elif, the neighbours’ daughter. You’ve just come, haven’t you? What’s your name?',
+          words: [['komşu', 'neighbour'], ['yeni', 'new'], ['ad', 'name']],
+          expect: ['Benim adım', 'Adım'], keywords: ['adım'], show: 'Benim adım … (kendi adın)', showEn: 'My name is … (your own name)', next: 'rideAsk' },
+        rideAsk: { say: 'Memnun oldum! Hamdi Amca atları artık bedava veriyor. Hadi ata binelim, köyü beraber bir tur dönelim!', en: 'Nice to meet you! Uncle Hamdi lets us ride the horses for free now. Let’s ride and go round the village together!',
+          words: [['memnun oldum', 'nice to meet you'], ['bedava', 'free (of charge)'], ['tur', 'a round, a tour']],
+          options: [{ tr: 'Harika, hadi binelim!', en: 'Great, let’s ride!', do: ['quest'] }, { tr: 'Çok sevindim, hadi gidelim!', en: 'I’m so glad, let’s go!', do: ['quest'] }] },
+        rideWait: { say: 'Bir atın yanına git ve “Ata bin” de. Ben de yanındaki ata binerim!', en: 'Go next to a horse and choose “Ride”. I’ll get on the one next to it!', options: [{ tr: 'Tamam!', en: 'Okay!' }] },
+        rideTour: { say: 'Çeşmeye kadar gidelim! Sen önden git, ben arkandayım.', en: 'Let’s go as far as the fountain! You go in front, I’m right behind you.',
+          words: [['çeşme', 'fountain'], ['önden', 'in front'], ['arkanda', 'behind you']], options: [{ tr: 'Hadi!', en: 'Come on!' }] },
+        rideEnd: { say: 'Ne güzel bir turdu! Hava kararıyor, annen seni yemeğe bekler. Yarın okulda görüşürüz!', en: 'What a lovely ride! It’s getting dark, your mom will be waiting for you for dinner. See you at school tomorrow!',
+          words: [['hava kararıyor', 'it is getting dark'], ['görüşürüz', 'see you']],
+          options: [{ tr: 'Görüşürüz Elif, çok teşekkürler!', en: 'See you, Elif, thanks a lot!', do: ['ride-along-stop', 'quest'] }, { tr: 'Çok eğlendim, yarın görüşürüz!', en: 'I had so much fun, see you tomorrow!', do: ['ride-along-stop', 'quest'] }] },
         libCall: { say: 'Geldin! Burası köyün kütüphanesi. Can de burada. Gel, beraber kitap okuyalım!', en: 'You came! This is the village library. Can is here too. Come, let’s read together!',
           words: [['kütüphane', 'library'], ['beraber', 'together'], ['kitap okumak', 'to read a book']],
           options: [{ tr: 'Çok güzel fikir!', en: 'Great idea!', next: 'libQuiet' }] },

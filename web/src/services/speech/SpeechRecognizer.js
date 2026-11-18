@@ -24,10 +24,11 @@ export class WebSpeechRecognizer extends SpeechRecognizer {
 
   get supported() { return !!this.Impl; }
 
-  listen() {
+  /** `lang`: a BCP-47 tag to listen in another language this once (the square's talk button). */
+  listen({ lang = null } = {}) {
     return new Promise((resolve, reject) => {
       const r = new this.Impl();
-      r.lang = this.lang;
+      r.lang = lang ?? this.lang;
       r.interimResults = false;
       r.maxAlternatives = 3;
       let done = false;

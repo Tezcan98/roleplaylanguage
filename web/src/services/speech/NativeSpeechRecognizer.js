@@ -11,7 +11,8 @@ export class NativeSpeechRecognizer extends SpeechRecognizer {
 
   get supported() { return !!window.Capacitor?.isNativePlatform?.(); }
 
-  async listen({ expected = [] } = {}) {
+  /** `lang`: a BCP-47 tag to listen in another language than Turkish (the square's talk button). */
+  async listen({ expected = [], lang = 'tr-TR' } = {}) {
     if (!this.supported) throw new Error('Native speech recognition is only available on Android/iOS');
     const permission = await SpeechRecognition.requestPermissions();
     if (permission?.speechRecognition !== 'granted') throw new Error('Microphone permission denied');
@@ -52,7 +53,7 @@ export class NativeSpeechRecognizer extends SpeechRecognizer {
       this.#active = { finish, reject, expected, endSoon };
       try {
         const result = await SpeechRecognition.start({
-          language: 'tr-TR', maxResults: 3, partialResults: true, popup: false,
+          language: lang, maxResults: 3, partialResults: true, popup: false,
         });
         if (result?.matches?.length) {
           this.#last = result.matches[0];

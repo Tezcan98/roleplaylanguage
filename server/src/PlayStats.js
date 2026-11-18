@@ -249,6 +249,11 @@ export class PlayStats {
 
   /** The routes; true when it answered. */
   route(req, res, { clientIp = () => '' } = {}) {
+    if (req.url === '/api/play-event?where' && req.method === 'GET') { // the player's country (Cloudflare's): the app's ad tier (web/src/config/remote.js adTiers)
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ cc: /^[A-Z]{2}$/.test(String(req.headers['x-country'] ?? '').toUpperCase()) ? String(req.headers['x-country']).toUpperCase() : '' }));
+      return true;
+    }
     if (req.url === '/api/play-event' && req.method === 'GET') { // the counts only, for anyone (the app's pages come from another origin)
       res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=30', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify(this.online()));
